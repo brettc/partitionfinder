@@ -2,23 +2,18 @@ from pyparsing import Word, Dict, OneOrMore, alphas, nums, \
         Suppress, Optional, Group, stringEnd, delimitedList, \
         pythonStyleComment, ParseException, line, lineno, col
 
+
 test1 = r"""
 [partitions]
 Gene1_pos1 = 1-500 501-555\3
 Gene1_pos2 = 2-789\3
-Gene1_pos3 = 3-789\3
-Gene2_pos1 = 790-1449\3
-Gene2_pos2 = 791-1449\3
-Gene2_pos3 = 792-1449\3
-Gene3_pos1 = 1450-2208\3
-Gene3_pos2 = 1451-2208\3
-Gene3_pos3 = 1452-2208\3
-
-has_a_duplicate = 100-200 200-400
-			start_stop_problem    =   790-300;
-
-
-Gene3_pos1_2_3 = 1450-2208
+# Gene1_pos3 = 3-789\3
+# Gene2_pos1 = 790-1449\3
+# Gene2_pos2 = 791-1449\3
+# Gene2_pos3 = 792-1449\3
+# Gene3_pos1 = 1450-2208\3
+# Gene3_pos2 = 1451-2208\3
+# Gene3_pos3 = 1452-2208\3
 
 
 [schemes]
@@ -54,6 +49,7 @@ class Configuration(object):
         CLOSEB = Suppress(")")
         BACKSLASH = Suppress("\\")
         DASH = Suppress("-")
+        COMMA = Suppress(",")
 
         # Partition Parsing
         column = Word(nums)
@@ -62,23 +58,20 @@ class Configuration(object):
                    Optional(BACKSLASH +
                             column("step"))).setParseAction(self.part_action)
         partition = (partname("name") + EQUALS +
-                     OneOrMore(partdef)).setParseAction(self.part_def_action) + Optional(SEMI)
+                     OneOrMore(partdef + Optional(COMMA))).setParseAction(self.part_def_action) + Optional(SEMI)
         partlist = OneOrMore(partition)
 
         # Scheme Parsing
         schemename = Word(alphas + '_-' + nums)
         partnameref = partname.copy()
         partnameref.setParseAction(self.check_part_exists)
-        scheme = Group(OneOrMore(Group(OPENB +
-                                       delimitedList(partnameref("name")) +
+        scheme = Group(OneOrMore(Group(OPENB + delimitedList(partnameref) +
                                        CLOSEB)))
         schemedef = Group(schemename + EQUALS + scheme) + Optional(SEMI)
         schemelist = OneOrMore(schemedef)
 
-        self.config_parser = (
-            Suppress("[partitions]") + partlist + 
-            Suppress("[schemes]") + schemelist + 
-            stringEnd)
+        self.config_parser = (Suppress("[partitions]") + partlist + 
+                Suppress("[schemes]") + schemelist + stringEnd)
 
         # Setup internal lists
         self.parts = {}
@@ -98,15 +91,12 @@ class Configuration(object):
         if part_def.name in self.parts:
             raise ConfigurationError(text, loc, "Repeated Partition Name '%s'" %
                                      part_def.name)
-
-        # The actual partition definitions are defined as a list after the
-        # first element (the first element is the name)
+           # raise ParseException("", loc, "Repeated Def")
         self.parts[part_def.name] = part_def[1:]
 
-    def check_part_exists(self, text, loc, partref):
-        if partref.name not in self.parts:
-            raise ConfigurationError(text, loc, "Partition %s not defined" %
-                                     partref.name)
+    def check_part_exists(self, tokens):
+        pass
+        # assert tokens[0] in self.parts
 
     def parse_file(self, fname):
         s = open(fname, 'r').read()
