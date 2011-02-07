@@ -41,7 +41,6 @@ class ConfigurationError(Exception):
     def format_message(self):
         return "%s at line:%s, column:%s" % (self.msg, self.lineno, self.col)
         
-
 class Configuration(object):
     """Loads the Configuration files and validates them"""
     def __init__(self):

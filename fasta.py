@@ -2,7 +2,7 @@
 """
 
 from pyparsing import (
-    Word, Dict, OneOrMore, alphas, punc8bit, Suppress, Optional, Group, stringEnd,
+    Word, OneOrMore, alphas, Suppress, Optional, Group, stringEnd,
     delimitedList, ParseException, line, lineno, col, LineStart, restOfLine,
     LineEnd, White)
 
@@ -84,7 +84,6 @@ class Parser(object):
         return self.parse_configuration(s)
 
     def parse_configuration(self, s):
-        log.debug("Parsing ...")
         try:
             # We ignore the return as we build everything in the actions
             self.fasta.parseString(s)

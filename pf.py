@@ -1,39 +1,32 @@
-from optparse import OptionParser
 import logging
+log = logging.getLogger("config")
+
+from optparse import OptionParser
 import sys
 
-LEVELS = {'debug': logging.DEBUG,
-          'info': logging.INFO,
-          'warning': logging.WARNING,
-          'error': logging.ERROR,
-          'critical': logging.CRITICAL}
-
-if len(sys.argv) > 1:
-    level_name = sys.argv[1]
-    level = LEVELS.get(level_name, logging.NOTSET)
-    logging.basicConfig(level=level)
-
-logging.debug('This is a debug message')
-logging.info('This is an info message')
-logging.warning('This is a warning message')
-logging.error('This is an error message')
-logging.critical('This is a critical error message')
-
 def main():
-    usage = "usage: %prog [options] arg"
-    parser = OptionParser(usage)
-    parser.add_option("-f", "--file", dest="filename",
-                      help="read data from FILENAME")
-    parser.add_option("-v", "--verbose",
-                      action="store_true", dest="verbose")
-    parser.add_option("-q", "--quiet",
-                      action="store_false", dest="verbose")
+    usage = """usage: python %prog <folder_containing_config>
 
-    (options, args) = parser.parse_args()
-    if len(args) != 1:
-        parser.error("incorrect number of arguments")
-    if options.verbose:
-        print "reading %s..." % options.filename
+    README.txt should be here
+    """
+    parser = OptionParser(usage)
+    # parser.add_option("-f", "--file", dest="filename",
+                      # help="read data from FILENAME")
+    parser.add_option("-d", "--debug",
+                      action="store_true", dest="debug",
+                      help="show debug output")
+
+    options, args = parser.parse_args()
+    if options.debug:
+        level = logging.DEBUG
+    else:
+        level = logging.INFO
+
+
+    # Now evaluate
+
+    logging.basicConfig(level=level)
+    log.debug("Now showing all debug messages...")
 
 if __name__ == "__main__":
     main()
