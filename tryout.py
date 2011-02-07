@@ -10,9 +10,9 @@ curdir = path.dirname(path.abspath(__file__))
 subset_factory = SubsetFactory()
 
 
-partitions_filename = "%s/partition_finder/testfiles/test_partitions" %(curdir)
-alignment_filename = "%s/partition_finder/testfiles/test.fas" %(curdir)
-schemes_filename = "%s/partition_finder/testfiles/test_schemes2" %(curdir)
+partitions_filename = "%s/testfiles/test_partitions" %(curdir)
+alignment_filename = "%s/testfiles/test.fas" %(curdir)
+schemes_filename = "%s/testfiles/test_schemes2" %(curdir)
 
 all_minimal_subsets = process_partition_file(partitions_filename)
 

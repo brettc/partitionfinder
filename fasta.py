@@ -1,7 +1,13 @@
-from pyparsing import Word, Dict, OneOrMore, alphas, nums, \
-        Suppress, Optional, Group, stringEnd, delimitedList, \
-        pythonStyleComment, ParseException, line, lineno, col, \
-        LineStart, restOfLine, LineEnd, White
+"""Simple Fasta Parser
+"""
+
+from pyparsing import (
+    Word, Dict, OneOrMore, alphas, punc8bit, Suppress, Optional, Group, stringEnd,
+    delimitedList, ParseException, line, lineno, col, LineStart, restOfLine,
+    LineEnd, White)
+
+import logging
+log = logging.getLogger("fasta")
 
 
 test1 = r"""
@@ -17,7 +23,6 @@ CTTGAGGTACAGAATAACAGCGAG------AAGCTGGT
 >spp4
 
 CTCGAGGTGAAAAATGGTGATGCT------CGTCTGGT
-
 """
 
 class ConfigurationError(Exception):
@@ -36,46 +41,70 @@ class Parser(object):
     def __init__(self):
         super(Parser, self).__init__()
         self.make_syntax()
+        self.sequences = {}
 
     def make_syntax(self):
 
         # Some syntax that we need, but don't bother looking at
         GREATER = Suppress(">")
 
-        # Partition Parsing
+        # I think this covers it...
+        CODONS = Word(alphas + "!*-") 
+
         seqname = LineStart() + GREATER + restOfLine
-        seqcodons = OneOrMore(Word("AGCT-") +
-                              Suppress(LineEnd())).setParseAction(self.sequence_action)
+        seqcodons = OneOrMore(CODONS + Suppress(LineEnd()))
+        # A parse action to collect all the lines
+        seqcodons.setParseAction(self.join_codons_action)
 
-        seq = Group(seqname + seqcodons)
+        # Any sequence is the name follow by the codons
+        seq = seqname + seqcodons
+        seq.setParseAction(self.set_sequence_action)
 
+        # Main parser: one or more definitions 
         self.fasta = OneOrMore(seq) + stringEnd
 
-    def sequence_action(self, tokens):
+    def join_codons_action(self, text, loc, tokens):
+        # Simply join them together and send it back
         return "".join(tokens)
 
+    def set_sequence_action(self, text, loc, tokens):
+        seqname = tokens[0]
+        sequence = tokens[1]
+        log.debug("Found Sequence for %s" % seqname)
+
+        if seqname in self.sequences:
+            raise ConfigurationError(text, loc, "Repeated sequence name")
+
+        # We'll create it as we go
+        self.sequences[seqname] = sequence
+
     def parse_file(self, fname):
+        log.info("Reading File %s", fname)
         s = open(fname, 'r').read()
         return self.parse_configuration(s)
 
     def parse_configuration(self, s):
+        log.debug("Parsing ...")
         try:
             # We ignore the return as we build everything in the actions
-            return self.fasta.parseString(s)
+            self.fasta.parseString(s)
         except ConfigurationError, c:
-            print c.format_message()
-        except ParseException, p:
-            # print p.line
-            # print p.col, p.lineno
-            print str(p)
+            log.error(c.format_message())
+            self.error = True
 
 def parse_file(fname):
     p = Parser()
     return p.parse_file(fname)
 
-if __name__ == '__main__':
+def test_basic():
+    import sys
+    logging.basicConfig(stream=sys.stdout, level=logging.DEBUG)
     c = Parser()
-    print dict(c.parse_configuration(test1).asList())
+    c.parse_configuration(test1)
+    print c.sequences
+
+if __name__ == '__main__':
+    test_basic()
     # print c.parts
 
 

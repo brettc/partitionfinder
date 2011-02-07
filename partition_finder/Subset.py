@@ -88,7 +88,7 @@ class Subset(object):
 	def analyse_alignment(self):
 		"""analyse the alignment for a subset"""
 		thisfile_path = path.dirname(path.abspath(__file__))
-		modelgenerator_path = "%s/programs/modelgenerator.jar" %(thisfile_path)
+		modelgenerator_path = "%s/../programs/modelgenerator.jar" %(thisfile_path)
 		
 		output_filename = "%s_modelgenerator.out" %(self.alignment)
 
