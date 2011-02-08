@@ -6,22 +6,6 @@ import sys, os
 
 from partfinder import Configuration, ConfigurationError
 
-def load_configuration(pth):
-    """Read in the config file and get all the info ready to process. Raise an
-    exception if there are any errors"""
-
-    # Get an absolute path so the user is not confused about where we are
-    # looking
-    pth = os.path.abspath(pth)
-    if not os.path.exists(pth) or not os.path.isdir(pth):
-        log.error("No such folder: '%s'", pth)
-        raise ConfigurationError
-
-    log.info("Using folder: '%s'", pth)
-    config = Configuration(pth)
-    config.load()
-    return config
-
 def process_configuration(config):
     """Now process all the information we have"""
     log.info("Beginning processing...")
@@ -52,10 +36,13 @@ def main():
 
     # Right now try
     try:
-        config = load_configuration(args[0])
+        config = Configuration(args[0])
+        config.load()
         process_configuration(config)
     except ConfigurationError:
+        # log.error("Configuration error occurred. Please check log")
         return 1
+
 
     # Successful exit
     return 0

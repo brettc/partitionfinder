@@ -19,6 +19,7 @@ class ParserError(Exception):
         self.lineno = lineno(loc, text)
         self.msg = msg
 
+
     def format_message(self):
         return "%s at line:%s, column:%s" % (self.msg, self.lineno, self.col)
 
@@ -104,7 +105,7 @@ class Parser(object):
 
     def check_part_exists(self, text, loc, partref):
         if partref.name not in self.config.parts:
-            raise ConfigurationError(text, loc, "Partition %s not defined" %
+            raise ParserError(text, loc, "Partition %s not defined" %
                                      partref.name)
 
     def parse_file(self, fname):
@@ -112,8 +113,10 @@ class Parser(object):
         try:
             self.parse_configuration(s)
         except ParserError, p:
+            # Catch any parsing errors, print something out, then raise a
+            # configuration error
             log.error(p.format_message())
-            raise ConfigurationError()
+            raise ConfigurationError
 
     def parse_configuration(self, s):
         self.config_parser.ignore(pythonStyleComment).parseString(s)
@@ -121,21 +124,41 @@ class Parser(object):
 
 class Configuration(object):
     """We use this to hold all of the configuration info"""
-    def __init__(self, folder):
-        self.folder = folder # Base directory
-        self.config_file = os.path.join(self.folder, "partition_finder.cfg")
+    def __init__(self, base_path):
+        self.base_path = os.path.abspath(base_path)
+        if not os.path.exists(self.base_path) or \
+           not os.path.isdir(self.base_path):
+            log.error("No such folder: '%s'", self.base_path)
+            raise ConfigurationError
 
-        if not os.path.exists(self.config_file) or not os.path.isfile(self.config_file):
-            log.error("Configuration file '%s' does not exist",
-                      self.config_file)
-            raise ConfigurationError()
-                
+        # Ok, we know we have a folder...
+        log.info("Using folder: '%s'", self.base_path)
+
+        self.config_path = os.path.join(self.base_path, "partition_finder.cfg")
+        self.output_path = os.path.join(self.base_path, "output")
+
         self.parts = {}
 
     def load(self):
+        if not os.path.exists(self.config_path) or \
+           not os.path.isfile(self.config_path):
+            log.error("Configuration file '%s' does not exist",
+                      self.config_path)
+            raise ConfigurationError
+
         p = Parser(self)
-        log.debug("Loading configuration at '%s'", self.config_file)
-        p.parse_file(self.config_file)
+        log.debug("Loading configuration at '%s'", self.config_path)
+        p.parse_file(self.config_path)
+
+    def verify(self):
+        """Check that the parts are consistent"""
+        pass
+
+    def has_changed(self):
+        """check to see if the config has changed from when it was
+        last run"""
+        pass
+        # Write a signature out somewhere...
 
 
 test1 = r"""
