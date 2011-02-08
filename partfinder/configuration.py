@@ -1,5 +1,5 @@
 import logging
-log = logging.getLogger("configuration")
+log = logging.getLogger("config")
 
 import os
 
@@ -12,8 +12,8 @@ class ConfigurationError(Exception):
     pass
 
 class ParserError(Exception):
+    """Used for our own parsing problems"""
     def __init__(self, text, loc, msg):
-        """Used for our own parsing problems"""
         self.line = line(loc, text)
         self.col = col(loc, text)
         self.lineno = lineno(loc, text)
@@ -24,11 +24,22 @@ class ParserError(Exception):
         return "%s at line:%s, column:%s" % (self.msg, self.lineno, self.col)
 
 class Parser(object):
-    """Loads the Configuration files and validates them"""
-    def __init__(self, config):
-        # Create a configuration object. This is what we'll return 
-        self.config = config
+    """Parse configuration files
 
+    The results are put into the configuration object
+    """
+    def __init__(self, config):
+        self.init_config(config)
+        self.init_grammar()
+
+    def init_config(self, config):
+        self.config = config
+        config.parts = {}
+
+    def init_grammar(self):
+        """Set up the parsing classes
+        Any changes to the grammar of the config file be done here.
+        """
         # Some syntax that we need, but don't bother looking at
         SEMI = Suppress(";")
         EQUALS = Suppress("=")
@@ -44,6 +55,7 @@ class Parser(object):
         VALUE = Word(alphas + nums + '_-/.\\')
 
         # General Section 
+        # Just the assignment of variables
         general_def = (VARIABLE("name") + EQUALS +
                        VALUE("value")).setParseAction(self.def_variable_action) + Optional(SEMI)
         general = OneOrMore(general_def)
@@ -68,6 +80,8 @@ class Parser(object):
         schemedef = Group(schemename + EQUALS + scheme) + Optional(SEMI)
         schemelist = OneOrMore(schemedef)
 
+        # We've defined the grammar for each section. Here we just put it all
+        # together
         self.config_parser = (
             general + 
             Suppress("[partitions]") + partlist + 
@@ -120,7 +134,6 @@ class Parser(object):
 
     def parse_configuration(self, s):
         self.config_parser.ignore(pythonStyleComment).parseString(s)
-        return self.config
 
 class Configuration(object):
     """We use this to hold all of the configuration info"""
@@ -130,7 +143,6 @@ class Configuration(object):
            not os.path.isdir(self.base_path):
             log.error("No such folder: '%s'", self.base_path)
             raise ConfigurationError
-
 
         self.config_path = os.path.join(self.base_path, "partition_finder.cfg")
         self.output_path = os.path.join(self.base_path, "output")
@@ -142,7 +154,6 @@ class Configuration(object):
         # Ok, we know we have a folder...
         log.info("Using folder: '%s'", self.base_path)
 
-        self.parts = {}
 
     def load(self):
         if not os.path.exists(self.config_path) or \
@@ -160,8 +171,8 @@ class Configuration(object):
         log_output = logging.FileHandler(self.log_path, mode='w')
         log_output.setLevel(logging.DEBUG)
         formatter = logging.Formatter(
-            '%(asctime)s %(name)-12s %(levelname)-8s %(message)s')
-            # datefmt='%y-m-%d %H:%M')
+            '%(levelname)-8s | %(asctime)s | %(name)-10s | %(message)s',
+            datefmt="%Y-%m-%d %H:%M:%S")
         log_output.setFormatter(formatter)
         logging.getLogger('').addHandler(log_output)
 
@@ -174,37 +185,6 @@ class Configuration(object):
         last run"""
         pass
         # Write a signature out somewhere...
-
-
-test1 = r"""
-
-alignment = oeu
-
-[partitions]
-Gene1_pos1 = 1-789\3
-Gene1_pos2 = 2-789\3
-Gene1_pos3 = 3-789\3
-Gene2_pos1 = 790-1449\3
-Gene2_pos2 = 791-1449\3
-Gene2_pos3 = 792-1449\3
-Gene3_pos1 = 1450-2208\3
-Gene3_pos2 = 1451-2208\3
-Gene3_pos3 = 1452-2208\3
-
-[schemes]
-allsame			= 		(Gene1_pos1, Gene1_pos2, Gene1_pos3, Gene2_pos1, Gene2_pos2, Gene2_pos3, Gene3_pos1, Gene3_pos2, Gene3_pos3)
-by_gene 		= 		(Gene1_pos1, Gene1_pos2, Gene1_pos3) (Gene2_pos1, Gene2_pos2, Gene2_pos3) (Gene3_pos1, Gene3_pos2, Gene3_pos3)
-1_2_3	 		= 		(Gene1_pos1, Gene2_pos1, Gene3_pos1) (Gene1_pos2, Gene2_pos2, Gene3_pos2) (Gene1_pos3, Gene2_pos2, Gene3_pos3)
-1_2_3_by_gene	= 		(Gene1_pos1) (Gene1_pos2) (Gene1_pos3) (Gene2_pos1) (Gene2_pos2) (Gene2_pos3) (Gene3_pos1) (Gene3_pos2) (Gene3_pos3)
-12_3 			= 		(Gene1_pos1, Gene1_pos2, Gene2_pos1, Gene2_pos2, Gene3_pos1, Gene3_pos2) (Gene1_pos3, Gene2_pos3, Gene3_pos3)
-12_3_by_gene 	= 		(Gene1_pos1, Gene1_pos2) (Gene1_pos3) (Gene2_pos1, Gene2_pos2) (Gene2_pos3) (Gene3_pos1, Gene3_pos2) (Gene3_pos3)
-"""
-
-if __name__ == '__main__':
-    c = Parser()
-    config = c.parse_configuration(test1)
-    print config
-    # print c.parts
 
 
 

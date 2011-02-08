@@ -6,10 +6,6 @@ import sys, os
 
 from partfinder import Configuration, ConfigurationError
 
-def process_configuration(config):
-    """Now process all the information we have"""
-    log.info("Beginning processing...")
-
 def main():
     usage = """usage: python %prog <folder_containing_config>
 
@@ -20,12 +16,13 @@ def main():
                       # help="read data from FILENAME")
     parser.add_option("-v", "--verbose",
                       action="store_true", dest="verbose",
-                      help="show verbose output")
+                      help="Show verbose (debug) output")
 
     options, args = parser.parse_args()
+    # We should have one argument -- the folder to read the configuration from
     if not args:
         parser.print_help()
-        return 1
+        return 2
 
     if options.verbose:
         level = logging.DEBUG
@@ -40,13 +37,11 @@ def main():
         config.load()
         process_configuration(config)
     except ConfigurationError:
-        # log.error("Configuration error occurred. Please check log")
+        # Any exceptions and we fail
         return 1
-
 
     # Successful exit
     return 0
-
 
 if __name__ == "__main__":
     # Well behaved unix programs exits with 0 on success...
