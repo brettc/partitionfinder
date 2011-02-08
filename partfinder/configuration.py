@@ -131,11 +131,16 @@ class Configuration(object):
             log.error("No such folder: '%s'", self.base_path)
             raise ConfigurationError
 
-        # Ok, we know we have a folder...
-        log.info("Using folder: '%s'", self.base_path)
 
         self.config_path = os.path.join(self.base_path, "partition_finder.cfg")
         self.output_path = os.path.join(self.base_path, "output")
+        self.log_path = os.path.join(self.base_path, "partition_finder.log")
+
+        # Add a log file in this folder
+        self.init_log()
+
+        # Ok, we know we have a folder...
+        log.info("Using folder: '%s'", self.base_path)
 
         self.parts = {}
 
@@ -149,6 +154,16 @@ class Configuration(object):
         p = Parser(self)
         log.debug("Loading configuration at '%s'", self.config_path)
         p.parse_file(self.config_path)
+
+    def init_log(self):
+        """Add a log file in the folder"""
+        log_output = logging.FileHandler(self.log_path, mode='w')
+        log_output.setLevel(logging.DEBUG)
+        formatter = logging.Formatter(
+            '%(asctime)s %(name)-12s %(levelname)-8s %(message)s')
+            # datefmt='%y-m-%d %H:%M')
+        log_output.setFormatter(formatter)
+        logging.getLogger('').addHandler(log_output)
 
     def verify(self):
         """Check that the parts are consistent"""
