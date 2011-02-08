@@ -1,36 +1,17 @@
-from pyparsing import Word, Dict, OneOrMore, alphas, nums, \
-        Suppress, Optional, Group, stringEnd, delimitedList, \
-        pythonStyleComment, ParseException, line, lineno, col
+import logging
+log = logging.getLogger("configuration")
 
-test1 = r"""
-[partitions]
-Gene1_pos1 = 1-500 501-555\3
-Gene1_pos2 = 2-789\3
-Gene1_pos3 = 3-789\3
-Gene2_pos1 = 790-1449\3
-Gene2_pos2 = 791-1449\3
-Gene2_pos3 = 792-1449\3
-Gene3_pos1 = 1450-2208\3
-Gene3_pos2 = 1451-2208\3
-Gene3_pos3 = 1452-2208\3
+import os
 
-has_a_duplicate = 100-200 200-400
-			start_stop_problem    =   790-300;
-
-
-Gene3_pos1_2_3 = 1450-2208
-
-
-[schemes]
-allsame			= 		(Gene1_pos1, Gene1_pos2, Gene1_pos3, Gene2_pos1, Gene2_pos2, Gene2_pos3, Gene3_pos1, Gene3_pos2, Gene3_pos3)
-by_gene 		= 		(Gene1_pos1, Gene1_pos2, Gene1_pos3) (Gene2_pos1, Gene2_pos2, Gene2_pos3) (Gene3_pos1, Gene3_pos2, Gene3_pos3)
-1_2_3	 		= 		(Gene1_pos1, Gene2_pos1, Gene3_pos1) (Gene1_pos2, Gene2_pos2, Gene3_pos2) (Gene1_pos3, Gene2_pos2, Gene3_pos3)
-1_2_3_by_gene	= 		(Gene1_pos1) (Gene1_pos2) (Gene1_pos3) (Gene2_pos1) (Gene2_pos2) (Gene2_pos3) (Gene3_pos1) (Gene3_pos2) (Gene3_pos3)
-12_3 			= 		(Gene1_pos1, Gene1_pos2, Gene2_pos1, Gene2_pos2, Gene3_pos1, Gene3_pos2) (Gene1_pos3, Gene2_pos3, Gene3_pos3)
-12_3_by_gene 	= 		(Gene1_pos1, Gene1_pos2) (Gene1_pos3) (Gene2_pos1, Gene2_pos2) (Gene2_pos3) (Gene3_pos1, Gene3_pos2) (Gene3_pos3)
-"""
+from pyparsing import (
+    Word, Dict, OneOrMore, alphas, nums, Suppress, Optional, Group, stringEnd,
+    delimitedList, pythonStyleComment, ParseException, line, lineno, col,
+    Keyword)
 
 class ConfigurationError(Exception):
+    pass
+
+class ParserError(Exception):
     def __init__(self, text, loc, msg):
         """Used for our own parsing problems"""
         self.line = line(loc, text)
@@ -40,11 +21,12 @@ class ConfigurationError(Exception):
 
     def format_message(self):
         return "%s at line:%s, column:%s" % (self.msg, self.lineno, self.col)
-        
-class Configuration(object):
+
+class Parser(object):
     """Loads the Configuration files and validates them"""
-    def __init__(self):
-        super(Configuration, self).__init__()
+    def __init__(self, config):
+        # Create a configuration object. This is what we'll return 
+        self.config = config
 
         # Some syntax that we need, but don't bother looking at
         SEMI = Suppress(";")
@@ -53,6 +35,17 @@ class Configuration(object):
         CLOSEB = Suppress(")")
         BACKSLASH = Suppress("\\")
         DASH = Suppress("-")
+
+        ALIGN = Keyword("alignment")
+        SCHEMES = Keyword("schemes")
+
+        VARIABLE = Word(alphas + nums + "-_")
+        VALUE = Word(alphas + nums + '_-/.\\')
+
+        # General Section 
+        general_def = (VARIABLE("name") + EQUALS +
+                       VALUE("value")).setParseAction(self.def_variable_action) + Optional(SEMI)
+        general = OneOrMore(general_def)
 
         # Partition Parsing
         column = Word(nums)
@@ -75,12 +68,18 @@ class Configuration(object):
         schemelist = OneOrMore(schemedef)
 
         self.config_parser = (
+            general + 
             Suppress("[partitions]") + partlist + 
             Suppress("[schemes]") + schemelist + 
             stringEnd)
 
-        # Setup internal lists
-        self.parts = {}
+    def def_variable_action(self, text, loc, var_def):
+        """Define a variable -- we'll check here if it is allowable"""
+        if var_def.name == "alignment":
+            self.config.alignment_file = var_def.value
+        else:
+            raise ParserError(text, loc, "'%s' is not an allowable setting" %
+                                 var_def.name)
 
     def part_action(self, part):
         """Turn the 2 or 3 tokens into a tuple, supplying a default if needed"""
@@ -94,34 +93,80 @@ class Configuration(object):
 
     def part_def_action(self, text, loc, part_def):
         """We have everything we need here to make a partition"""
-        if part_def.name in self.parts:
-            raise ConfigurationError(text, loc, "Repeated Partition Name '%s'" %
+        if part_def.name in self.config.parts:
+            raise ParserError(text, loc, "Repeated Partition Name '%s'" %
                                      part_def.name)
 
         # The actual partition definitions are defined as a list after the
         # first element (the first element is the name)
-        self.parts[part_def.name] = part_def[1:]
+        log.debug("Found partition %s", part_def.name)
+        self.config.parts[part_def.name] = part_def[1:]
 
     def check_part_exists(self, text, loc, partref):
-        if partref.name not in self.parts:
+        if partref.name not in self.config.parts:
             raise ConfigurationError(text, loc, "Partition %s not defined" %
                                      partref.name)
 
     def parse_file(self, fname):
         s = open(fname, 'r').read()
-        return self.parse_configuration(s)
+        try:
+            self.parse_configuration(s)
+        except ParserError, p:
+            log.error(p.format_message())
+            raise ConfigurationError()
 
     def parse_configuration(self, s):
-        try:
-            # We ignore the return as we build everything in the actions
-            self.config_parser.ignore(pythonStyleComment).parseString(s)
-        except ConfigurationError, c:
-            print c.format_message()
+        self.config_parser.ignore(pythonStyleComment).parseString(s)
+        return self.config
+
+class Configuration(object):
+    """We use this to hold all of the configuration info"""
+    def __init__(self, folder):
+        self.folder = folder # Base directory
+        self.config_file = os.path.join(self.folder, "partition_finder.cfg")
+
+        if not os.path.exists(self.config_file) or not os.path.isfile(self.config_file):
+            log.error("Configuration file '%s' does not exist",
+                      self.config_file)
+            raise ConfigurationError()
+                
+        self.parts = {}
+
+    def load(self):
+        p = Parser(self)
+        log.debug("Loading configuration at '%s'", self.config_file)
+        p.parse_file(self.config_file)
+
+
+test1 = r"""
+
+alignment = oeu
+
+[partitions]
+Gene1_pos1 = 1-789\3
+Gene1_pos2 = 2-789\3
+Gene1_pos3 = 3-789\3
+Gene2_pos1 = 790-1449\3
+Gene2_pos2 = 791-1449\3
+Gene2_pos3 = 792-1449\3
+Gene3_pos1 = 1450-2208\3
+Gene3_pos2 = 1451-2208\3
+Gene3_pos3 = 1452-2208\3
+
+[schemes]
+allsame			= 		(Gene1_pos1, Gene1_pos2, Gene1_pos3, Gene2_pos1, Gene2_pos2, Gene2_pos3, Gene3_pos1, Gene3_pos2, Gene3_pos3)
+by_gene 		= 		(Gene1_pos1, Gene1_pos2, Gene1_pos3) (Gene2_pos1, Gene2_pos2, Gene2_pos3) (Gene3_pos1, Gene3_pos2, Gene3_pos3)
+1_2_3	 		= 		(Gene1_pos1, Gene2_pos1, Gene3_pos1) (Gene1_pos2, Gene2_pos2, Gene3_pos2) (Gene1_pos3, Gene2_pos2, Gene3_pos3)
+1_2_3_by_gene	= 		(Gene1_pos1) (Gene1_pos2) (Gene1_pos3) (Gene2_pos1) (Gene2_pos2) (Gene2_pos3) (Gene3_pos1) (Gene3_pos2) (Gene3_pos3)
+12_3 			= 		(Gene1_pos1, Gene1_pos2, Gene2_pos1, Gene2_pos2, Gene3_pos1, Gene3_pos2) (Gene1_pos3, Gene2_pos3, Gene3_pos3)
+12_3_by_gene 	= 		(Gene1_pos1, Gene1_pos2) (Gene1_pos3) (Gene2_pos1, Gene2_pos2) (Gene2_pos3) (Gene3_pos1, Gene3_pos2) (Gene3_pos3)
+"""
 
 if __name__ == '__main__':
-    c = Configuration()
-    c.parse_configuration(test1)
-    print c.parts
+    c = Parser()
+    config = c.parse_configuration(test1)
+    print config
+    # print c.parts
 
 
 
