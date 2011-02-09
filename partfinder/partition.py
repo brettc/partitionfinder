@@ -55,7 +55,7 @@ class Partition(object):
         return "Partition '%s' made of %s" % (self.name, outlist)
 
 class PartitionSet(object):
-    """A set of partitions loaded from a configuration file"""
+    """The set of all partitions loaded from a configuration file"""
     def __init__(self):
         self.parts = {}
 
@@ -102,12 +102,10 @@ class PartitionSet(object):
     def __contains__(self, k):
         return k in self.parts
 
-    def __len__(self):
-        return len(self.columnset)
 
 def test_partition():
     p = Partition("A", [[1, 10, 3]])
-    assert p.columns == [1, 4, 7]
+    assert p.columns == [0, 3, 6, 9]
 
     # >>> p = Partition("A", [[1, 10, 1],[1, 10, 2]])
     # PartitionError

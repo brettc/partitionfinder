@@ -11,7 +11,8 @@ from pyparsing import (
 # debugging
 # ParserElement.verbose_stacktrace = True
 
-from partition import Partition, PartitionError, PartitionSet
+from partition import PartitionSet, PartitionError
+from scheme import Scheme, SchemeSet, SchemeError
 
 class ParserError(Exception):
     """Used for our own parsing problems"""
@@ -30,8 +31,7 @@ class Parser(object):
     The results are put into the configuration object
     """
     def __init__(self, config):
-        # Note that config can be None, in which case the parser is being run
-        # in test mode and does nothing but check grammar.
+        # Config is filled out with objects that the parser creates
         self.config = config
         self.init_grammar()
 
@@ -71,7 +71,7 @@ class Parser(object):
         partlist = OneOrMore(Group(partition))
         partlist.setParseAction(self.finalise_partitions)
 
-        self.partset = PartitionSet()
+        self.partitions = PartitionSet()
 
         # Scheme Parsing
         schemename = Word(alphas + '_-' + nums)
@@ -97,12 +97,14 @@ class Parser(object):
 
     def define_variable(self, text, loc, var_def):
         """Define a variable -- we'll check here if it is allowable"""
-        if var_def.name == "alignment":
+        if var_def.name == "alignment_file":
             if self.config:
-                self.config.alignment_file = var_def.value
+                self.config.alignment = var_def.value
         else:
             raise ParserError(text, loc, "'%s' is not an allowable setting" %
                                  var_def.name)
+        log.debug("Setting '%s' to '%s'", var_def.name, var_def.value)
+
     def define_range(self, part):
         """Turn the 2 or 3 tokens into integers, supplying a default if needed"""
         fromc = int(part.start)
@@ -117,7 +119,7 @@ class Parser(object):
         """We have everything we need here to make a partition"""
         try:
             p = Partition(part_def.name, part_def.parts)
-            self.partset.add_partition(p)
+            self.partitions.add_partition(p)
         except PartitionError:
             raise ParserError(text, loc, "Partition definition error '%s'" % part_def.name)
         else:
@@ -126,12 +128,12 @@ class Parser(object):
     def finalise_partitions(self, text, loc, partref):
         """Validate the partitions"""
         try:
-            self.partset.validate()
+            self.partitions.validate()
         except PartitionError:
             raise ParserError(text, loc, "Partition definition error '%s'" % part_def.name)
 
     def check_part_exists(self, text, loc, partref):
-        if partref.name not in self.partset:
+        if partref.name not in self.partitions:
             raise ParserError(text, loc, "Partition %s not defined" %
                                      partref.name)
     
@@ -146,10 +148,13 @@ class Parser(object):
     def parse_configuration(self, s):
         self.result = self.config_parser.ignore(pythonStyleComment).parseString(s)
 
+        # Add the stuff to the configuration that was passed in
+        self.config.partitions = self.partitions
+
 if __name__ == '__main__':
     logging.basicConfig(level=logging.DEBUG)
     test_config = r"""
-alignment = test.fas 
+alignment_file = ./test.fas 
 
 # schemes = section # Use the stuff defined below
 # schemes = greedy
