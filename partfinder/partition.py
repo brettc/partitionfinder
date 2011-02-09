@@ -31,6 +31,9 @@ class Partition(object):
             start, stop, step = p
             # Actually, this is all we need do to deal with both issues...
             start -= 1 
+            if start >= stop:
+                log.error("Partition '%s' has ", name)
+                raise PartitionError
             columns.extend(range(start, stop, step))
 
         # Normalise it all

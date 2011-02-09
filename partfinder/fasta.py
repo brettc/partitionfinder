@@ -1,29 +1,13 @@
 """Simple Fasta Parser
 """
+import logging
+log = logging.getLogger("fasta")
 
 from pyparsing import (
     Word, OneOrMore, alphas, Suppress, Optional, Group, stringEnd,
     delimitedList, ParseException, line, lineno, col, LineStart, restOfLine,
     LineEnd, White)
 
-import logging
-log = logging.getLogger("fasta")
-
-
-test1 = r"""
->spp1
-CTTGAGGTTCAGAATGGTAATGAA------GTGCTGGT
-GCTGGAAGTTCAGCAGCAGCTCGGCGGCGG
->spp2
-CTT
-
-GAGGTACAAAATGGTAATGAG------AGCCTGGTG
->spp3
-CTTGAGGTACAGAATAACAGCGAG------AAGCTGGT
->spp4
-
-CTCGAGGTGAAAAATGGTGATGCT------CGTCTGGT
-"""
 
 class ConfigurationError(Exception):
     def __init__(self, text, loc, msg):
@@ -96,6 +80,20 @@ def parse_file(fname):
     return p.parse_file(fname)
 
 def test_basic():
+    test1 = r"""
+>spp1
+CTTGAGGTTCAGAATGGTAATGAA------GTGCTGGT
+GCTGGAAGTTCAGCAGCAGCTCGGCGGCGG
+>spp2
+CTT
+
+GAGGTACAAAATGGTAATGAG------AGCCTGGTG
+>spp3
+CTTGAGGTACAGAATAACAGCGAG------AAGCTGGT
+>spp4
+
+CTCGAGGTGAAAAATGGTGATGCT------CGTCTGGT
+"""
     import sys
     logging.basicConfig(stream=sys.stdout, level=logging.DEBUG)
     c = Parser()
