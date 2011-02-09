@@ -11,7 +11,7 @@ from pyparsing import (
 # debugging
 # ParserElement.verbose_stacktrace = True
 
-from partition import PartitionSet, PartitionError
+from partition import Partition, PartitionSet, PartitionError
 from scheme import Scheme, SchemeSet, SchemeError
 
 class ParserError(Exception):
@@ -33,6 +33,8 @@ class Parser(object):
     def __init__(self, config):
         # Config is filled out with objects that the parser creates
         self.config = config
+        self.partitions = PartitionSet()
+        self.schemes = SchemeSet(self.partitions)
         self.init_grammar()
 
     def init_grammar(self):
@@ -40,7 +42,7 @@ class Parser(object):
         Any changes to the grammar of the config file be done here.
         """
         # Some syntax that we need, but don't bother looking at
-        SEMI = Suppress(";")
+        SEMIOPT = Optional(Suppress(";"))
         EQUALS = Suppress("=")
         OPENB = Suppress("(")
         CLOSEB = Suppress(")")
@@ -55,8 +57,7 @@ class Parser(object):
 
         # General Section 
         # Just the assignment of variables
-        general_def = (VARIABLE("name") + EQUALS + VALUE("value") +
-                       Optional(SEMI))
+        general_def = VARIABLE("name") + EQUALS + VALUE("value") + SEMIOPT
         general_def.setParseAction(self.define_variable)
         general = OneOrMore(Group(general_def))
 
@@ -66,12 +67,12 @@ class Parser(object):
         partdef = column("start") + DASH + column("end") + Optional(BACKSLASH + column("step"))
         partdef.setParseAction(self.define_range)
         partdeflist = Group(OneOrMore(Group(partdef)))
-        partition = (partname("name") + EQUALS + partdeflist("parts") + Optional(SEMI))
+        partition = partname("name") + EQUALS + partdeflist("parts") + SEMIOPT
         partition.setParseAction(self.define_partition)
         partlist = OneOrMore(Group(partition))
         partlist.setParseAction(self.finalise_partitions)
 
-        self.partitions = PartitionSet()
+
 
         # Scheme Parsing
         schemename = Word(alphas + '_-' + nums)
@@ -79,12 +80,10 @@ class Parser(object):
         partnameref.setParseAction(self.check_part_exists)
         subset = Group(OPENB + delimitedList(partnameref("name")) + CLOSEB)
         scheme = Group(OneOrMore(subset))
-        schemedef = (schemename("name") + EQUALS + scheme("scheme")) + Optional(SEMI)
+        schemedef = schemename("name") + EQUALS + scheme("scheme") + SEMIOPT
         schemedef.setParseAction(self.define_schema)
-        schemelist = OneOrMore(Group(schemedef))
 
-        # Record all the partitions we see
-        self.schemes_seen = set()
+        schemelist = OneOrMore(Group(schemedef))
 
         # We've defined the grammar for each section. Here we just put it all
         # together
@@ -138,8 +137,12 @@ class Parser(object):
                                      partref.name)
     
     def define_schema(self, text, loc, scheme_def):
-        print scheme_def.name
-        print scheme_def.scheme
+        try:
+            sch = Scheme(self.schemes, scheme_def.name, scheme_def.scheme)
+        except SchemeError:
+            raise ParserError(text, loc, "Scheme definition error '%s'" %
+                                     scheme_def.name)
+
 
     def parse_file(self, fname):
         s = open(fname, 'r').read()
@@ -150,6 +153,7 @@ class Parser(object):
 
         # Add the stuff to the configuration that was passed in
         self.config.partitions = self.partitions
+        self.config.schemes = self.schemes
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.DEBUG)
@@ -179,12 +183,15 @@ by_gene         = (Gene1_pos1, Gene1_pos2, Gene1_pos3) (Gene2_pos1, Gene2_pos2, 
 12_3_by_gene    = (Gene1_pos1, Gene1_pos2) (Gene1_pos3) (Gene2_pos1, Gene2_pos2) (Gene2_pos3) (Gene3_pos1, Gene3_pos2) (Gene3_pos3)
 """
 
-    p = Parser(None)
+    class Conf(object):
+        pass
+    p = Parser(Conf())
     try:
         p.parse_configuration(test_config)
     except ParserError as p:
         log.error(p.format_message())
     else:
         print p.result
+        print p.schemes.schemes
     
 
