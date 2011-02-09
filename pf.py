@@ -7,20 +7,20 @@ import sys, os
 from partfinder import Configuration, ConfigurationError
 
 def main():
-    usage = """usage: python %prog <folder_containing_config>
+    usage = """usage: python %prog [-v] <foldername>
 
     README.txt should be here
     """
     parser = OptionParser(usage)
-    # parser.add_option("-f", "--file", dest="filename",
-                      # help="read data from FILENAME")
     parser.add_option("-v", "--verbose",
                       action="store_true", dest="verbose",
-                      help="Show verbose (debug) output")
+                      help="show verbose (debug) output")
 
     options, args = parser.parse_args()
-    # We should have one argument -- the folder to read the configuration from
+
+    # We should have one argument: the folder to read the configuration from
     if not args:
+        # Otherwise exit, printing the help
         parser.print_help()
         return 2
 
