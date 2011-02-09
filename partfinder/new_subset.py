@@ -5,11 +5,13 @@ from alignIO import import_fasta_as_dict
 from run_modelselection import run_modelgenerator, extract_results_modelgenerator
 
 class Subset(object):
-	"""these are the building blocks of partitioning schemes - each one has a given set of alignment columns
-	as well as it's own alignment file, and output files from e.g. modelgenerator,
-	each subset has likelihood scores, numbers of parameters, etc. etc.
-	some subsets will be made up of a single minimal subset,
-	but most will be made up of >1 minimal subset
+	"""A set of alignment columns 
+
+    These are the building blocks of partitioning schemes - each one has a
+    given set of alignment columns as well as it's own alignment file, and
+    output files from e.g. modelgenerator, each subset has likelihood scores,
+    numbers of parameters, etc. etc.  some subsets will be made up of a single
+    minimal subset, but most will be made up of >1 minimal subset
 	"""
 	def __init__(self, allminimalsubsets, input_aln_path, description, models=None):
 		self.allminimalsubsets	= allminimalsubsets	#a dict of all of the MinimalSubset objects, which identify the partitions
