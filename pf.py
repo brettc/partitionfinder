@@ -7,15 +7,19 @@ import sys, os
 from partfinder import Configuration, ConfigurationError
 
 def main():
-    usage = """usage: python %prog [-v] <foldername>
+    usage = """usage: python %prog [-vc] <foldername>
 
     README.txt should be here
     """
     parser = OptionParser(usage)
-    parser.add_option("-v", "--verbose",
-                      action="store_true", dest="verbose",
-                      help="show verbose (debug) output")
-
+    parser.add_option(
+        "-v", "--verbose",
+        action="store_true", dest="verbose",
+        help="show verbose (debug) output")
+    parser.add_option(
+        "-c", "--check-only",
+        action="store_true", dest="check",
+        help="Just check the configuration files, don't do any processing")
     # Other options...?
     # --dry-run
     # --force-restart

@@ -5,6 +5,7 @@ import os
 
 from partition import Partition
 from parser import Parser, ParserError
+from fasta import read_fasta, FastaError
 
 from pyparsing import (
     Word, Dict, OneOrMore, alphas, nums, Suppress, Optional, Group, stringEnd,
@@ -14,14 +15,21 @@ from pyparsing import (
 class ConfigurationError(Exception):
     pass
 
+def _check_file(pth):
+    if not os.path.exists(pth) or not os.path.isfile(pth):
+        log.error("No such file: '%s'", pth)
+        raise ConfigurationError
+
+def _check_folder(pth):
+    if not os.path.exists(pth) or not os.path.isdir(pth):
+        log.error("No such folder: '%s'", pth)
+        raise ConfigurationError
+
 class Configuration(object):
     """We use this to hold all of the configuration info"""
     def __init__(self, base_path):
         self.base_path = os.path.abspath(base_path)
-        if not os.path.exists(self.base_path) or \
-           not os.path.isdir(self.base_path):
-            log.error("No such folder: '%s'", self.base_path)
-            raise ConfigurationError
+        _check_folder(self.base_path)
 
         self.config_path = os.path.join(self.base_path, "partition_finder.cfg")
         self.output_path = os.path.join(self.base_path, "output")
@@ -32,11 +40,7 @@ class Configuration(object):
         self.init_log()
 
     def load(self):
-        if not os.path.exists(self.config_path) or \
-           not os.path.isfile(self.config_path):
-            log.error("Configuration file '%s' does not exist",
-                      self.config_path)
-            raise ConfigurationError
+        _check_file(self.config_path)
 
         log.info("Loading configuration at '%s'", self.config_path)
         try:
@@ -48,6 +52,18 @@ class Configuration(object):
             # this part of the process
             log.error(p.format_message())
             raise ConfigurationError
+
+        self.alignment_path = os.path.join(self.base_path,
+                                           self.alignment_file)
+        _check_file(self.alignment_path)
+
+        # Now read in the sequence as part of the loading
+        try:
+            self.sequence = read_fasta(self.alignment_path)
+        except FastaError:
+            log.error("Cannot load Fasta file '%s'" % self.alignment_path)
+            raise ConfigurationError
+
 
     def init_log(self):
         """Add a full debug log file in the folder"""

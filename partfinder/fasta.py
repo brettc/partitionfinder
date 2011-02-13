@@ -8,21 +8,12 @@ from pyparsing import (
     delimitedList, ParseException, line, lineno, col, LineStart, restOfLine,
     LineEnd, White)
 
-class ParserError(Exception):
-    def __init__(self, text, loc, msg):
-        """Used for our own parsing problems"""
-        self.line = line(loc, text)
-        self.col = col(loc, text)
-        self.lineno = lineno(loc, text)
-        self.msg = msg
+class FastaError(Exception):
+    pass
 
-    def format_message(self):
-        return "%s at line:%s, column:%s" % (self.msg, self.lineno, self.col)
-        
-class Parser(object):
+class FastaParser(object):
     """Loads the Parser files and validates them"""
     def __init__(self):
-        super(Parser, self).__init__()
         self.make_syntax()
         self.sequences = {}
 
@@ -56,29 +47,31 @@ class Parser(object):
         log.debug("Found Sequence for %s" % seqname)
 
         if seqname in self.sequences:
-            raise ConfigurationError(text, loc, "Repeated sequence name")
+            log.error("Repeated species name '%s' at line %d", seqname,
+                      lineno(loc, text))
+            raise FastaError
 
         # We'll create it as we go
         self.sequences[seqname] = sequence
 
     def parse_file(self, fname):
-        log.info("Reading File %s", fname)
+        log.info("Reading Fasta File '%s'", fname)
         s = open(fname, 'r').read()
         return self.parse_configuration(s)
 
     def parse_configuration(self, s):
-        try:
-            # We ignore the return as we build everything in the actions
-            self.fasta.parseString(s)
-        except ConfigurationError, c:
-            log.error(c.format_message())
-            self.error = True
+        self.fasta.parseString(s)
 
-def parse_file(fname):
-    p = Parser()
+def read_fasta(fname):
+    p = FastaParser()
     return p.parse_file(fname)
 
-
+def write_file(fname, fasta_dict):
+    f = open(fname, 'w')
+    for species, sequence in fasta_dict:
+        f.write(">%s\n" % species)
+        f.write("%s\n" % sequence)
+        
 
 def test_basic():
     test1 = r"""
