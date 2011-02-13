@@ -26,6 +26,11 @@ class Subset(object):
             self.columnset |= part.columnset
         self.columns.sort()
 
+    @property
+    def string_identifier(self):
+        return '_'.join(sorted(list(self.subset_id)))
+
+
         # self.allminimalsubsets    = allminimalsubsets #a dict of all of the MinimalSubset objects, which identify the partitions
         # self.input_aln_path   = input_aln_path    #the filepath of the main alignment that this subset is derived from
         # self.description      = description       #a description of the subset supplied by the user, as a string
@@ -49,8 +54,17 @@ class Subset(object):
         # self.parse_results()
         # self.get_bests()
     
-    # def create_alignment(self):
-        # """create an alignment for this subset"""
+    def write_alignment(self, config):
+        """create an alignment for this subset"""
+        align = {}
+
+        # Pull out the columns we need
+        for species, old_seq in config.alignment:
+            new_seq = ''.join([old_seq[i] for i in self.columns])
+            align[species] = new_seq
+
+        print align
+
         # input_aln_dir = path.dirname(path.abspath(self.input_aln_path))
         # aln_dir = "%s/subset_alignments" %(input_aln_dir)     
         # aln_name = list(self.identifier)

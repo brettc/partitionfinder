@@ -8,7 +8,7 @@ class SchemeError(Exception):
 
 class Scheme(object):
     def __init__(self, schemeset, name, subsets):
-        """A set of partitions"""
+        """A set of sets of partitions"""
         self.schemeset = schemeset
         self.name = name
 
@@ -18,13 +18,36 @@ class Scheme(object):
             subset = self.schemeset.get_subset(subset_id)
             self.subsets.append(subset)
 
-        # Now check that the scheme is complete...
-        all_columns = set()
+        # Now check that the scheme is complete without duplications...
+        # Gather all the names ...
+        all_names = []
         for subset in self.subsets:
-            all_columns |= subset.columnset
+            all_names += list(subset.subset_id)
 
-        if all_columns != self.schemeset.partitions.columnset:
-            log.error("Scheme '%s' does not contain all partitions", name)
+        # ... check for duplicates
+        all_names_set = set()
+        duplicates = []
+        for nm in all_names:
+            if nm in all_names_set:
+                duplicates.append(nm)
+            else:
+                all_names_set.add(nm)
+
+        if duplicates:
+            log.error("Scheme '%s' contains duplicate partitions: %s", 
+                      name,
+                      ', '.join(duplicates)
+                     )
+            raise SchemeError
+
+        # Check for missing
+        all_partitions = set(self.schemeset.partitions.names())
+        missing = all_partitions - all_names_set
+        if missing:
+            log.error("Scheme '%s' is missing partitions: %s", 
+                      name,
+                      ', '.join(list(missing))
+                     )
             raise SchemeError
 
         # Finally, add it to the schemeset
@@ -68,3 +91,13 @@ class SchemeSet(object):
             raise SchemeError
         self.schemes[scheme.name] = scheme
 
+    def analyse(self, config):
+        # Analyse all of the subsets...
+        for s in self.subsets.values():
+            print s.create_alignment(config)
+
+
+
+    # Easy iteration
+    def __iter__(self):
+        return iter(self.schemes.itervalues())

@@ -32,7 +32,8 @@ class Partition(object):
             # Actually, this is all we need do to deal with both issues...
             start -= 1 
             if start >= stop:
-                log.error("Partition '%s' has ", name)
+                log.error("Partition '%s' has beginning after end (%s > %s)",
+                          name, start, stop)
                 raise PartitionError
             columns.extend(range(start, stop, step))
 
@@ -86,6 +87,8 @@ class PartitionSet(object):
         self.columns.sort()
         self.columnset |= p.columnset
 
+        log.debug("Created %s", p)
+
     def validate(self):
         """Internal check -- just for gaps now"""
         # It is sorted -- so the last one is the biggest
@@ -104,6 +107,9 @@ class PartitionSet(object):
 
     def __contains__(self, k):
         return k in self.parts
+
+    def names(self):
+        return self.parts.keys()
 
 
 def test_partition():

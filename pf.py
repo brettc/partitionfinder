@@ -16,6 +16,10 @@ def main():
                       action="store_true", dest="verbose",
                       help="show verbose (debug) output")
 
+    # Other options...?
+    # --dry-run
+    # --force-restart
+    #
     options, args = parser.parse_args()
 
     # We should have one argument: the folder to read the configuration from
@@ -29,18 +33,23 @@ def main():
     else:
         level = logging.INFO
 
-    logging.basicConfig(level=level)
+    logging.basicConfig(
+        format='%(levelname)-8s | %(message)s',
+        level=level
+    )
 
     # Right now try
     try:
         config = Configuration(args[0])
         config.load()
-        process_configuration(config)
+        # process_configuration(config)
     except ConfigurationError:
+        log.error("Failure: Please correct problems and rerun")
         # Any exceptions and we fail
         return 1
 
     # Successful exit
+    log.info("Success: processing complete.")
     return 0
 
 if __name__ == "__main__":

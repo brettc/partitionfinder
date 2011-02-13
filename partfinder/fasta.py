@@ -8,8 +8,7 @@ from pyparsing import (
     delimitedList, ParseException, line, lineno, col, LineStart, restOfLine,
     LineEnd, White)
 
-
-class ConfigurationError(Exception):
+class ParserError(Exception):
     def __init__(self, text, loc, msg):
         """Used for our own parsing problems"""
         self.line = line(loc, text)
@@ -78,6 +77,8 @@ class Parser(object):
 def parse_file(fname):
     p = Parser()
     return p.parse_file(fname)
+
+
 
 def test_basic():
     test1 = r"""

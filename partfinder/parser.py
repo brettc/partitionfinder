@@ -30,6 +30,10 @@ class Parser(object):
 
     The results are put into the configuration object
     """
+
+    # These will get set in the configuration passed in
+    required_variables = ['alignment_file']
+
     def __init__(self, config):
         # Config is filled out with objects that the parser creates
         self.config = config
@@ -60,6 +64,7 @@ class Parser(object):
         general_def = VARIABLE("name") + EQUALS + VALUE("value") + SEMIOPT
         general_def.setParseAction(self.define_variable)
         general = OneOrMore(Group(general_def))
+        general.setParseAction(self.check_variables)
 
         # Partition Parsing
         column = Word(nums)
@@ -71,7 +76,6 @@ class Parser(object):
         partition.setParseAction(self.define_partition)
         partlist = OneOrMore(Group(partition))
         partlist.setParseAction(self.finalise_partitions)
-
 
 
         # Scheme Parsing
@@ -96,13 +100,19 @@ class Parser(object):
 
     def define_variable(self, text, loc, var_def):
         """Define a variable -- we'll check here if it is allowable"""
-        if var_def.name == "alignment_file":
-            if self.config:
-                self.config.alignment = var_def.value
-        else:
+        if var_def.name not in self.required_variables:
             raise ParserError(text, loc, "'%s' is not an allowable setting" %
                                  var_def.name)
-        log.debug("Setting '%s' to '%s'", var_def.name, var_def.value)
+        else:
+            self.config.alignment_file = var_def.value
+            log.debug("Setting '%s' to '%s'", var_def.name, var_def.value)
+
+    def check_variables(self, text, loc, var_def):
+        # Add the stuff to the configuration that was passed in
+        # We should check that all the parameters are defined too...
+        for var in self.required_variables:
+            if not hasattr(self.config, var):
+                raise ParserError(text, loc, "No '%s' defined in the configuration" % var)
 
     def define_range(self, part):
         """Turn the 2 or 3 tokens into integers, supplying a default if needed"""
@@ -120,16 +130,14 @@ class Parser(object):
             p = Partition(part_def.name, part_def.parts)
             self.partitions.add_partition(p)
         except PartitionError:
-            raise ParserError(text, loc, "Partition definition error '%s'" % part_def.name)
-        else:
-            log.debug("Added %s", p)
+            raise ParserError(text, loc, "Error in '%s' can be found" % part_def.name)
 
     def finalise_partitions(self, text, loc, partref):
         """Validate the partitions"""
         try:
             self.partitions.validate()
         except PartitionError:
-            raise ParserError(text, loc, "Partition definition error '%s'" % part_def.name)
+            raise ParserError(text, loc, "Error in '%s' can be found" % part_def.name)
 
     def check_part_exists(self, text, loc, partref):
         if partref.name not in self.partitions:
@@ -140,9 +148,8 @@ class Parser(object):
         try:
             sch = Scheme(self.schemes, scheme_def.name, scheme_def.scheme)
         except SchemeError:
-            raise ParserError(text, loc, "Scheme definition error '%s'" %
+            raise ParserError(text, loc, "Error in '%s' can be found" %
                                      scheme_def.name)
-
 
     def parse_file(self, fname):
         s = open(fname, 'r').read()
@@ -151,7 +158,7 @@ class Parser(object):
     def parse_configuration(self, s):
         self.result = self.config_parser.ignore(pythonStyleComment).parseString(s)
 
-        # Add the stuff to the configuration that was passed in
+
         self.config.partitions = self.partitions
         self.config.schemes = self.schemes
 
@@ -175,7 +182,8 @@ Gene3_pos2 = 1451-2208\3
 Gene3_pos3 = 1452-2208\3
 
 [schemes]
-allsame         = (Gene1_pos1, Gene1_pos2, Gene1_pos3, Gene2_pos1, Gene2_pos2, Gene2_pos3, Gene3_pos1, Gene3_pos2, Gene3_pos3)
+allsame         = (Gene1_pos1, Gene1_pos2, Gene1_pos3, Gene2_pos1, Gene2_pos2,
+Gene2_pos3, Gene3_pos1, Gene3_pos2, Gene3_pos3)
 by_gene         = (Gene1_pos1, Gene1_pos2, Gene1_pos3) (Gene2_pos1, Gene2_pos2, Gene2_pos3) (Gene3_pos1, Gene3_pos2, Gene3_pos3)
 1_2_3           = (Gene1_pos1, Gene2_pos1, Gene3_pos1) (Gene1_pos2, Gene2_pos2, Gene3_pos2) (Gene1_pos3, Gene2_pos3, Gene3_pos3)
 1_2_3_by_gene   = (Gene1_pos1) (Gene1_pos2) (Gene1_pos3) (Gene2_pos1) (Gene2_pos2) (Gene2_pos3) (Gene3_pos1) (Gene3_pos2) (Gene3_pos3)
@@ -185,11 +193,24 @@ by_gene         = (Gene1_pos1, Gene1_pos2, Gene1_pos3) (Gene2_pos1, Gene2_pos2, 
 
     class Conf(object):
         pass
-    p = Parser(Conf())
+    c = Conf()
+    p = Parser(c)
     try:
         p.parse_configuration(test_config)
     except ParserError as p:
         log.error(p.format_message())
+
+    # for s in c.schemes:
+        # print s.name
+        # for ss in s.subsets:
+            # print ss.subset_id
+
+    for sub in c.schemes.subsets:
+        print sub
+        
+
+            # print ss.string_identifier
+        # print name
     # else:
         # print p.schemes.subsets
     

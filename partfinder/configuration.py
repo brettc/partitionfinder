@@ -31,9 +31,6 @@ class Configuration(object):
         log.info("Using folder: '%s'", self.base_path)
         self.init_log()
 
-        # Define the empty stuff to fill out
-        self.partitions = {}
-
     def load(self):
         if not os.path.exists(self.config_path) or \
            not os.path.isfile(self.config_path):
@@ -41,7 +38,7 @@ class Configuration(object):
                       self.config_path)
             raise ConfigurationError
 
-        log.debug("Loading configuration at '%s'", self.config_path)
+        log.info("Loading configuration at '%s'", self.config_path)
         try:
             p = Parser(self)
             self.processing = p.parse_file(self.config_path)
@@ -62,17 +59,8 @@ class Configuration(object):
             datefmt="%Y-%m-%d %H:%M:%S")
         log_output.setFormatter(formatter)
         logging.getLogger('').addHandler(log_output)
+        # logging.getLogger('').setLevel(logging.DEBUG)
         log.debug("Log file created at '%s'", self.log_path)
-
-    def add_partition(self, name, params):
-        if name in self.partitions:
-            log.error("Cannot duplication partition names: '%s'", name)
-            raise ConfigurationError 
-        self.partitions[name] = Partition(name, params) 
-
-    def verify(self):
-        """Check that the parts are consistent"""
-        pass
 
     def has_changed(self):
         """check to see if the config has changed from when it was
