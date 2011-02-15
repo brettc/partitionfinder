@@ -7,30 +7,9 @@ import sys, os
 from partfinder import Configuration, ConfigurationError, ProcessingError
 
 def main():
-    usage = """usage: python %prog [options] <foldername>
+    usage = """usage: python %prog [-vc] <foldername>
 
-    Lots of stuff here explaining what is going on.
-
-    Examples: 
-        python pf.py example
-
-        Analyse what is in the 'example' sub-folder in the current folder.
-
-        python pf.py -v example
-
-        Analyse what is in the 'example' sub-folder in the current folder,
-        but show all the debug output
-
-        python pf.py -c ~/data/frogs
-
-        Check the configuration files in the folder data/frogs in the current
-        user's home folder.
-
-        python pf.py --force-restart ~/data/frogs
-
-        Deletes any data produced by the previous runs (which is in
-        ~/data/frogs/output) and starts afresh
-
+    README.txt should be here
     """
     parser = OptionParser(usage)
     parser.add_option(
@@ -40,12 +19,10 @@ def main():
     parser.add_option(
         "-c", "--check-only",
         action="store_true", dest="check_only",
-        help="just check the configuration files, don't do any processing")
-    parser.add_option(
-        "--force-restart",
-        action="store_true", dest="force_restart",
-        help="delete all previous output and start afresh (!)")
-
+        help="Just check the configuration files, don't do any processing")
+    # Other options...?
+    # --force-restart
+    #
     options, args = parser.parse_args()
 
     # We should have one argument: the folder to read the configuration from
@@ -54,47 +31,45 @@ def main():
         parser.print_help()
         return 2
 
-    handler = logging.StreamHandler(sys.stdout)
-    fmt = logging.Formatter('%(levelname)-8s | %(message)s')
-    handler.setFormatter(fmt)
-    logging.getLogger('').addHandler(handler)
-    # Set the base logger to do debugging (as we track this in the log file)
-    logging.getLogger('').setLevel(logging.DEBUG)
-
-    # We want to control the logging level separately for this particular
-    # handler
     if options.verbose:
-        handler.setLevel(logging.DEBUG)
+        level = logging.DEBUG
     else:
-        handler.setLevel(logging.INFO)
+        level = logging.INFO
+
+    logging.basicConfig(
+        format='%(levelname)-8s | %(message)s',
+        level=level
+    )
 
     # Load, using the first argument as the folder
     try:
-        config = Configuration(args[0], options.force_restart)
+        config = Configuration(args[0])
         config.load()
-        log.info("Configuration appears to be okay.")
-        if options.check_only:
-            log.info("Exiting without processing as requested...")
-        else:
-            # Now try processing everything....
-            log.info("Beginning processing.")
-            config.process()
-        # Successful exit
-        log.info("Success: processing complete.")
-        return 0
-
     except ConfigurationError:
         log.error("Configuration Failure: Please correct problems and rerun")
+        # Any exceptions and we fail
+        return 1
+
+    log.info("Configuration appears to be okay.")
+    if options.check_only:
+        log.info("Exiting without processing as requested...")
+        return 0
+
+    # Now try processing everything....
+    log.info("Beginning processing.")
+    try:
+        config.process()
     except ProcessingError:
         log.error("Processing Error!")
+        return 1
 
-    # Failure
-    return 1
+    # Successful exit
+    log.info("Success: processing complete.")
+    return 0
 
 if __name__ == "__main__":
     # Well behaved unix programs exits with 0 on success...
-    # sys.argv = ['arg', '-v', '--force-restart', 'example']
-    sys.argv = ['arg', '-v', 'example']
+    # sys.argv = ['arg', '-v', 'example']
     # sys.argv = ['arg', 'example']
     # sys.argv = ['arg', '-vc', 'example']
     sys.exit(main())
