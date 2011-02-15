@@ -83,10 +83,6 @@ class Subset(object):
         write_fasta(align_path, align)
         self.align_path = align_path
 
-
-
-
-
     # def analyse_alignment(self):
         # """analyse the alignment for a subset"""
         # thisfile_path = path.dirname(path.abspath(__file__))
