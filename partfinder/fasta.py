@@ -44,7 +44,7 @@ class FastaParser(object):
     def set_sequence_action(self, text, loc, tokens):
         seqname = tokens[0]
         sequence = tokens[1]
-        log.debug("Found Sequence for %s" % seqname)
+        log.debug("Found Sequence for %s: %s...", seqname, sequence[:20])
 
         if seqname in self.sequences:
             log.error("Repeated species name '%s' at line %d", seqname,
@@ -55,20 +55,22 @@ class FastaParser(object):
         self.sequences[seqname] = sequence
 
     def parse_file(self, fname):
-        log.info("Reading Fasta File '%s'", fname)
         s = open(fname, 'r').read()
         return self.parse_configuration(s)
 
     def parse_configuration(self, s):
         self.fasta.parseString(s)
+        return self.sequences
 
 def read_fasta(fname):
     p = FastaParser()
+    log.debug("Parsing fasta file '%s'", fname)
     return p.parse_file(fname)
 
-def write_file(fname, fasta_dict):
+def write_fasta(fname, fasta_dict):
     f = open(fname, 'w')
-    for species, sequence in fasta_dict:
+    log.debug("Writing fasta file '%s'", fname)
+    for species, sequence in fasta_dict.iteritems():
         f.write(">%s\n" % species)
         f.write("%s\n" % sequence)
         

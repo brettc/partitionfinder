@@ -1,8 +1,14 @@
+import logging
+log = logging.getLogger("subset")
+from fasta import write_fasta
+import os
+
 # from os import path, mkdir
 # from MinimalSubsets import process_partition_file
 # from string import strip, join
 # from alignIO import import_fasta_as_dict
 # from run_modelselection import run_modelgenerator, extract_results_modelgenerator
+#
 
 class Subset(object):
     """A set of alignment columns 
@@ -26,10 +32,14 @@ class Subset(object):
             self.columnset |= part.columnset
         self.columns.sort()
 
-    @property
-    def string_identifier(self):
-        return '_'.join(sorted(list(self.subset_id)))
+    def process(self, config):
+        """Do all the processing"""
+        self.write_alignment(config)
 
+    @property
+    def fname(self):
+        s = ['[%s]' % sid for sid in sorted(list(self.subset_id))]
+        return ''.join(s) + ".fasta"
 
         # self.allminimalsubsets    = allminimalsubsets #a dict of all of the MinimalSubset objects, which identify the partitions
         # self.input_aln_path   = input_aln_path    #the filepath of the main alignment that this subset is derived from
@@ -58,41 +68,25 @@ class Subset(object):
         """create an alignment for this subset"""
         align = {}
 
+        align_path = os.path.join(config.output_path, self.fname)
+        if os.path.exists(align_path):
+            log.debug(
+                "Fasta file '%s' already exists, not rewriting",
+                os.path.basename(align_path))
+            return 
+
         # Pull out the columns we need
-        for species, old_seq in config.alignment:
+        for species, old_seq in config.sequence.iteritems():
             new_seq = ''.join([old_seq[i] for i in self.columns])
             align[species] = new_seq
 
-        print align
+        write_fasta(align_path, align)
+        self.align_path = align_path
 
-        # input_aln_dir = path.dirname(path.abspath(self.input_aln_path))
-        # aln_dir = "%s/subset_alignments" %(input_aln_dir)     
-        # aln_name = list(self.identifier)
-        # aln_name.sort() #sorting it means that even if a user defines subsets differently in different places, I can still recognise them as the same thing
-        # aln_name = '_'.join(aln_name)
-        # self.alignment = "%s/%s.fasta" %(aln_dir, aln_name)
 
-        # #make the alignments directory if it wasn't already there
-        # if not(path.isdir(aln_dir)):
-            # mkdir(aln_dir)    
-        # 
-        # #write the alignment file if it wasn't already there
-        # if not(path.isfile(self.alignment)):
-            # cols = []
-            # for min_subset in self.minimalsubsets:
-                # cols = cols + min_subset.columns
-            # cols.sort()
-            # 
-            # #load the input alignment from the file, and write it to a new file
-            # input_aln = import_fasta_as_dict(self.input_aln_path)
-            # output_file = open(self.alignment, 'w')
-            # for seq_name in input_aln:
-                # old_seq = input_aln[seq_name] 
-                # new_seq = [old_seq[i] for i in cols]
-                # new_seq = ''.join(new_seq)
-                # output_file.write("%s%s\n" %(seq_name, new_seq))
-            # output_file.close()
-            
+
+
+
     # def analyse_alignment(self):
         # """analyse the alignment for a subset"""
         # thisfile_path = path.dirname(path.abspath(__file__))

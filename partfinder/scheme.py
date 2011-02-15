@@ -96,8 +96,6 @@ class SchemeSet(object):
         for s in self.subsets.values():
             print s.create_alignment(config)
 
-
-
     # Easy iteration
     def __iter__(self):
         return iter(self.schemes.itervalues())
