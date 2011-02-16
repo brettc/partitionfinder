@@ -60,6 +60,23 @@ class Configuration(object):
 
         self.find_modelgenerator()
 
+    def find_modelgenerator(self):
+        """Make sure we know where the java file is..."""
+    
+        pth = os.path.abspath(__file__)
+        # Split off the name and the directory...
+        pth, notused = os.path.split(pth)
+        pth, notused = os.path.split(pth)
+        # Now go back down into programs...
+        pth = os.path.join(pth, "programs", "modelgenerator.jar")
+        pth = os.path.normpath(pth)
+
+        log.debug("Checking for modelgenerator program")
+        _check_file(pth)
+        log.debug("Modelgenerator program found at '%s'" % pth)
+
+        self.modelgen_path = pth
+
 
     def load(self):
         _check_file(self.config_path)
@@ -86,23 +103,6 @@ class Configuration(object):
             log.error("Cannot load Fasta file '%s'" % self.alignment_path)
             raise ConfigurationError
 
-    def find_modelgenerator(self):
-        """Make sure we know where the java file is..."""
-    
-        pth = os.path.abspath(__file__)
-        # Split off the name and the directory...
-        pth, notused = os.path.split(pth)
-        pth, notused = os.path.split(pth)
-        # Now go back down into programs...
-        pth = os.path.join(pth, "programs", "modelgenerator.jar")
-        pth = os.path.normpath(pth)
-
-        log.debug("Checking for modelgenerator program")
-        _check_file(pth)
-        log.debug("Modelgenerator program found at '%s'" % pth)
-
-        self.modelgen_path = pth
-
     def init_log(self):
         """Add a full debug log file in the folder"""
         log.info("Using full log in: '%s'", self.log_path)
@@ -122,7 +122,6 @@ class Configuration(object):
         # TODO Write a signature out somewhere...
 
     def process(self):
-
         # TODO: This is one way to do it...
         # Or we could do it by scheme?
         

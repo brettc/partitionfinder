@@ -111,6 +111,7 @@ class PartitionSet(object):
                 p.name, columnset_to_string(overlap))
             raise PartitionError
 
+        p.partition_set = self
         self.parts[p.name] = p
         self.columns.extend(p.columns)
         self.columns.sort()

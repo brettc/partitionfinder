@@ -11,7 +11,7 @@ import os
 #
 
 class Subset(object):
-    """A set of alignment columns 
+    """A Subset of Partitions
 
     These are the building blocks of partitioning schemes - each one has a
     given set of alignment columns as well as it's own alignment file, and

@@ -7,16 +7,13 @@ class SchemeError(Exception):
     pass
 
 class Scheme(object):
-    def __init__(self, schemeset, name, subsets):
+    def __init__(self, name, *subsets):
         """A set of sets of partitions"""
-        self.schemeset = schemeset
+        # self.schemeset = schemeset
         self.name = name
 
-        self.subsets = []
-        for subset_def in subsets:
-            subset_id = self.make_subset_id(subset_def)
-            subset = self.schemeset.get_subset(subset_id)
-            self.subsets.append(subset)
+        for s in subsets:
+            self.subsets.add((subset)
 
         # Now check that the scheme is complete without duplications...
         # Gather all the names ...
@@ -74,14 +71,27 @@ class SchemeSet(object):
         self.schemes = {}
         self.subsets = {}
 
-    def get_subset(self, subset_id):
+    def get_subset(self, schemename, partlist):
         """Return an existing subset or make a new one"""
-        if subset_id in self.subsets:
-            return self.subsets[subset_id]
+
+        partset = set()
+        # This is laborious, but we can error check
+        for p in partlist:
+            if p in partset:
+                log.error(
+                    "Partitions '%s' is duplicated within a subset in Scheme '%s'",
+                    p.name, schemename)
+                raise PartitionError
+            partset.add(p)
+
+        # Freeze it. We can use the set of partitions as a key
+        partset = frozenset(partset)
+        if partset in self.subsets:
+            return self.subsets[partset]
 
         # Create a new subset
-        sub = Subset(self.partitions, subset_id)
-        self.subsets[subset_id] = sub
+        sub = Subset(partset)
+        self.subsets[partset] = sub
         return sub
 
     def add_scheme(self, scheme):
