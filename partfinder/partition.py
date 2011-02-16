@@ -12,15 +12,17 @@ def columnset_to_string(colset):
 
 class Partition(object):
     """A set of columns from an alignment"""
-    def __init__(self, pset, name, partlist):
+    def __init__(self, name, partlist):
         """A named partition
 
         The partlist should be a list of column definitions
         e.g. [[1, 100, 3],[100, 155, 2]]
         """
-        self.partition_set = pset
         self.name = name
-        self.parts = partlist
+        self.parts = []
+
+        # This will get set later, when they are added to PartitionSet
+        self.partition_set = None
 
         # We now need to convert to column definitions. Note that these are
         # zero based, which is not how they are specified in the config. So we
@@ -46,6 +48,7 @@ class Partition(object):
                           name, start, stop)
                 raise PartitionError
             columns.extend(range(start, stop, step))
+            self.parts.append((start, stop, step))
 
         # Normalise it all
         columns.sort()
@@ -60,8 +63,6 @@ class Partition(object):
         self.columns = columns
         self.columnset = columnset
 
-        # Finally, add it to the PartitionSet
-        pset.add_partition(self)
 
     def __repr__(self):
         outlist = ", ".join(["%s-%s\\%s" % tuple(p) for p in self.parts])
@@ -73,18 +74,30 @@ class Partition(object):
 
 class PartitionSet(object):
     """The set of all partitions loaded from a configuration file"""
-    def __init__(self):
+    def __init__(self, *partitions):
+        """A set of Partitions"""
         self.parts = {}
 
         # All of the columns
         self.columns = []
         self.columnset = set()
 
+        # Freeze it afterwards
+        self.finalised = False
+
+        for p in partitions:
+            self.add_partition(p)
+        self.finalise()
+
     def __str__(self):
         return "PartitionSet(" + ", ".join([str(p) for p in self.parts.values()]) + ")"
 
     def add_partition(self, p):
         """Check for overlap (= intersection)"""
+        if self.finalised:
+            log.error("Cannot add partitions when to set that is finalised")
+            raise PartitionError
+
         if p.name in self.parts:
             log.error(
                 "Attempt to add partition '%s' which already exists", 
@@ -105,7 +118,7 @@ class PartitionSet(object):
 
         log.debug("Created %s", p)
 
-    def validate(self):
+    def finalise(self):
         """Internal check -- just for gaps now"""
         # It is sorted -- so the last one is the biggest
         colmax = self.columns[-1]
@@ -116,6 +129,8 @@ class PartitionSet(object):
             log.warn(
                 "These columns are missing from the partition definitions: %s", 
                 columnset_to_string(leftout))
+
+        self.finalised = True
 
     # We can treat this like a bit like a dictionary
     def __getitem__(self, k):
@@ -128,11 +143,18 @@ class PartitionSet(object):
         return self.parts.keys()
 
 
-def test_partition():
-    p = Partition("A", [[1, 10, 3]])
-    assert p.columns == [0, 3, 6, 9]
-
+# def test_partition():
+    # p = Partition("A", [[1, 10, 3]])
+    # assert p.columns == [0, 3, 6, 9]
     # >>> p = Partition("A", [[1, 10, 1],[1, 10, 2]])
     # PartitionError
     # """
+if __name__ == '__main__':
+    import logging
+    logging.basicConfig()
+    p1 = Partition('one', [[2, 10],[5, 12]])
+    p1 = Partition('one', [[2, 10]])
+    p2 = Partition('two', [[9, 20]])
+    ps = PartitionSet(p1, p2)
 
+    # print ps
