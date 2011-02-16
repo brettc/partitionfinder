@@ -12,12 +12,13 @@ def columnset_to_string(colset):
 
 class Partition(object):
     """A set of columns from an alignment"""
-    def __init__(self, name, partlist):
+    def __init__(self, pset, name, partlist):
         """A named partition
 
         The partlist should be a list of column definitions
         e.g. [[1, 100, 3],[100, 155, 2]]
         """
+        self.partition_set = pset
         self.name = name
         self.parts = partlist
 
@@ -28,7 +29,16 @@ class Partition(object):
         # definitions assume inclusive...
         columns = []
         for p in partlist:
-            start, stop, step = p
+
+            # Make sure it is sensible
+            if len(p) < 2 or len(p) > 3:
+                log.error("Partition definition '%s' should contain a list of start, a stop, and an optional step", self.name)
+                raise PartitionError
+            if len(p) == 2:
+                start, stop = p
+                step = 1
+            else:
+                start, stop, step = p
             # Actually, this is all we need do to deal with both issues...
             start -= 1 
             if start >= stop:
@@ -50,13 +60,16 @@ class Partition(object):
         self.columns = columns
         self.columnset = columnset
 
+        # Finally, add it to the PartitionSet
+        pset.add_partition(self)
+
     def __repr__(self):
         outlist = ", ".join(["%s-%s\\%s" % tuple(p) for p in self.parts])
         return "Partition<%s: %s>" % (self.name, outlist)
 
     def __str__(self):
         outlist = " and ".join(["%s-%s\\%s" % tuple(p) for p in self.parts])
-        return "Partition '%s' made of %s" % (self.name, outlist)
+        return "Partition('%s', (%s))" % (self.name, outlist)
 
 class PartitionSet(object):
     """The set of all partitions loaded from a configuration file"""
@@ -66,6 +79,9 @@ class PartitionSet(object):
         # All of the columns
         self.columns = []
         self.columnset = set()
+
+    def __str__(self):
+        return "PartitionSet(" + ", ".join([str(p) for p in self.parts.values()]) + ")"
 
     def add_partition(self, p):
         """Check for overlap (= intersection)"""

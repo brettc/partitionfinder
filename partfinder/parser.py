@@ -127,8 +127,8 @@ class Parser(object):
     def define_partition(self, text, loc, part_def):
         """We have everything we need here to make a partition"""
         try:
-            p = Partition(part_def.name, part_def.parts)
-            self.partitions.add_partition(p)
+            # Creation adds it to set
+            Partition(self.partitions, part_def.name, part_def.parts)
         except PartitionError:
             raise ParserError(text, loc, "Error in '%s' can be found" % part_def.name)
 
@@ -146,6 +146,7 @@ class Parser(object):
     
     def define_schema(self, text, loc, scheme_def):
         try:
+
             sch = Scheme(self.schemes, scheme_def.name, scheme_def.scheme)
         except SchemeError:
             raise ParserError(text, loc, "Error in '%s' can be found" %
@@ -205,6 +206,7 @@ by_gene         = (Gene1_pos1, Gene1_pos2, Gene1_pos3) (Gene2_pos1, Gene2_pos2, 
         # for ss in s.subsets:
             # print ss.subset_id
 
+    print c.partitions
     for sub in c.schemes.subsets:
         print sub
         
