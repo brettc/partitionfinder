@@ -12,14 +12,12 @@ def columnset_to_string(colset):
 
 class Partition(object):
     """A set of columns from an alignment"""
-    def __init__(self, name, partlist):
+    def __init__(self, name, *partlist):
         """A named partition
 
-        The partlist should be a list of column definitions
-        e.g. [[1, 100, 3],[100, 155, 2]]
         """
         self.name = name
-        self.parts = []
+        parts = []
 
         # This will get set later, when they are added to PartitionSet
         self.partition_set = None
@@ -41,14 +39,16 @@ class Partition(object):
                 step = 1
             else:
                 start, stop, step = p
-            # Actually, this is all we need do to deal with both issues...
-            start -= 1 
             if start >= stop:
                 log.error("Partition '%s' has beginning after end (%s > %s)",
                           name, start, stop)
                 raise PartitionError
-            columns.extend(range(start, stop, step))
-            self.parts.append((start, stop, step))
+
+            # Actually, subtracting 1 deals with both issues...
+            columns.extend(range(start-1, stop, step))
+            parts.append((start, stop, step))
+
+        self.parts = tuple(parts)
 
         # Normalise it all
         columns.sort()
@@ -69,8 +69,8 @@ class Partition(object):
         return "Partition<%s: %s>" % (self.name, outlist)
 
     def __str__(self):
-        outlist = " and ".join(["%s-%s\\%s" % tuple(p) for p in self.parts])
-        return "Partition('%s', (%s))" % (self.name, outlist)
+        outlist = ", ".join(["%s-%s\\%s" % tuple(p) for p in self.parts])
+        return "Partition('%s', %s)" % (self.name, outlist)
 
 class PartitionSet(object):
     """The set of all partitions loaded from a configuration file"""
@@ -99,16 +99,14 @@ class PartitionSet(object):
             raise PartitionError
 
         if p.name in self.parts:
-            log.error(
-                "Attempt to add partition '%s' which already exists", 
-                p.name)
+            log.error( "Attempt to add %s which already exists", p)
             raise PartitionError
 
         overlap = self.columnset & p.columnset
         if overlap:
             log.error(
-                "Partition '%s' overlaps with previous partitions at columns %s",
-                p.name, columnset_to_string(overlap))
+                "%s overlaps with previous partitions at columns %s",
+                p, columnset_to_string(overlap))
             raise PartitionError
 
         p.partition_set = self
@@ -153,9 +151,9 @@ class PartitionSet(object):
 if __name__ == '__main__':
     import logging
     logging.basicConfig()
-    p1 = Partition('one', [[2, 10],[5, 12]])
-    p1 = Partition('one', [[2, 10]])
-    p2 = Partition('two', [[9, 20]])
+    p1 = Partition('one', (1, 10))
+    p2 = Partition('two', (11, 20))
     ps = PartitionSet(p1, p2)
+    print ps
 
     # print ps

@@ -1,36 +1,40 @@
 import logging
 log = logging.getLogger("subset")
-from fasta import write_fasta
 import os
 
-# from os import path, mkdir
-# from MinimalSubsets import process_partition_file
-# from string import strip, join
-# from alignIO import import_fasta_as_dict
-# from run_modelselection import run_modelgenerator, extract_results_modelgenerator
-#
+class SubsetError(Exception):
+    pass
 
 class Subset(object):
     """A Subset of Partitions
-
-    These are the building blocks of partitioning schemes - each one has a
-    given set of alignment columns as well as it's own alignment file, and
-    output files from e.g. modelgenerator, each subset has likelihood scores,
-    numbers of parameters, etc. etc.  some subsets will be made up of a single
-    minimal subset, but most will be made up of >1 minimal subset
     """
-    def __init__(self, partitions, subset_id):
-        self.partitions = partitions
-        self.subset_id = subset_id
+    def __init__(self, *parts):
+
+        partset = set()
+        for p in parts:
+            if p.partition_set is None:
+                log.error("You cannot add a Partition to a Subset until \
+                          the Partition belongs to a PartitionSet")
+                raise SubsetError
+
+            if p in partset:
+                log.error("%s is duplicated in a Subset", p)
+                raise SubsetError
+
+            partset.add(p)
+
+        self.partitions = frozenset(partset)
         
         # Append all of the columns in the partition
         self.columns = []
         self.columnset = set()
-        for part_name in subset_id:
-            part = self.partitions[part_name]
-            self.columns += part.columns
-            self.columnset |= part.columnset
+        for p in parts:
+            self.columns += p.columns
+            self.columnset |= p.columnset
         self.columns.sort()
+
+    def __str__(self):
+        return "Subset(" + ', '.join([str(p) for p in self.partitions]) + ")"
 
     def process(self, config):
         """Do all the processing"""
@@ -126,4 +130,18 @@ class Subset(object):
                 # self.lnL_best = model
                 # lnL_best = self.lnL[model]
         # 
-            # 
+if __name__ == '__main__':
+    import logging
+    logging.basicConfig()
+    from partition import Partition, PartitionSet
+
+    pa = Partition('a', (1, 10, 3))
+    pb = Partition('b', (2, 10, 3))
+    pc = Partition('c', (3, 10, 3))
+    ps = PartitionSet(pa, pb, pc)
+
+    s = Subset(pa, pa)
+    print s
+
+
+
