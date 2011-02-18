@@ -17,7 +17,7 @@ class Partition(object):
 
         """
         self.name = name
-        parts = []
+        description = []
 
         # This will get set later, when they are added to PartitionSet
         self.partition_set = None
@@ -46,9 +46,9 @@ class Partition(object):
 
             # Actually, subtracting 1 deals with both issues...
             columns.extend(range(start-1, stop, step))
-            parts.append((start, stop, step))
+            description.append((start, stop, step))
 
-        self.parts = tuple(parts)
+        self.description = tuple(description)
 
         # Normalise it all
         columns.sort()
@@ -63,20 +63,19 @@ class Partition(object):
         self.columns = columns
         self.columnset = columnset
 
-
     def __repr__(self):
-        outlist = ", ".join(["%s-%s\\%s" % tuple(p) for p in self.parts])
+        outlist = ", ".join(["%s-%s\\%s" % tuple(p) for p in self.description])
         return "Partition<%s: %s>" % (self.name, outlist)
 
     def __str__(self):
-        outlist = ", ".join(["%s-%s\\%s" % tuple(p) for p in self.parts])
-        return "Partition('%s', %s)" % (self.name, outlist)
+        outlist = ", ".join(["%s-%s\\%s" % tuple(p) for p in self.description])
+        return "Partition(%s, %s)" % (self.name, outlist)
 
 class PartitionSet(object):
     """The set of all partitions loaded from a configuration file"""
     def __init__(self, *partitions):
         """A set of Partitions"""
-        self.parts = {}
+        self.parts_by_name = {}
 
         # All of the columns
         self.columns = []
@@ -88,9 +87,10 @@ class PartitionSet(object):
         for p in partitions:
             self.add_partition(p)
         self.finalise()
+        self.partitions = frozenset(partitions)
 
     def __str__(self):
-        return "PartitionSet(" + ", ".join([str(p) for p in self.parts.values()]) + ")"
+        return "PartitionSet(%s)" % ", ".join([str(p) for p in self.partitions])
 
     def add_partition(self, p):
         """Check for overlap (= intersection)"""
@@ -98,19 +98,20 @@ class PartitionSet(object):
             log.error("Cannot add partitions when to set that is finalised")
             raise PartitionError
 
-        if p.name in self.parts:
-            log.error( "Attempt to add %s which already exists", p)
+        if p.name in self.parts_by_name:
+            log.error( "Attempt to add %s when that name already exists", p)
             raise PartitionError
 
         overlap = self.columnset & p.columnset
         if overlap:
             log.error(
-                "%s overlaps with previous partitions at columns %s",
+                "%s overlaps with previously defined partitions at columns %s",
                 p, columnset_to_string(overlap))
             raise PartitionError
 
         p.partition_set = self
-        self.parts[p.name] = p
+        self.parts_by_name[p.name] = p
+
         self.columns.extend(p.columns)
         self.columns.sort()
         self.columnset |= p.columnset
@@ -120,26 +121,28 @@ class PartitionSet(object):
     def finalise(self):
         """Internal check -- just for gaps now"""
         # It is sorted -- so the last one is the biggest
-        colmax = self.columns[-1]
-        fullset = set(range(colmax))
-        leftout = fullset - self.columnset
+        self.colmin = self.columns[0]
+        self.colmax = self.columns[-1]
+        self.fullset = set(range(self.colmin, self.colmax+1))
+        leftout = self.fullset - self.columnset
         if leftout:
             # This does not raise an error
             log.warn(
-                "These columns are missing from the partition definitions: %s", 
+                "Columns range from %s to %s, but these columns are missing: %s", 
+                self.colmin+1, self.colmax+1,
                 columnset_to_string(leftout))
 
         self.finalised = True
 
     # We can treat this like a bit like a dictionary
     def __getitem__(self, k):
-        return self.parts[k]
+        return self.parts_by_name[k]
 
     def __contains__(self, k):
-        return k in self.parts
+        return k in self.parts_by_name
 
     def names(self):
-        return self.parts.keys()
+        return self.parts_by_name.keys()
 
 
 # def test_partition():
