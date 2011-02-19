@@ -12,7 +12,8 @@ from pyparsing import (
 # ParserElement.verbose_stacktrace = True
 
 from partition import Partition, PartitionSet, PartitionError
-from scheme import Scheme, SchemeSet, SchemeError
+from scheme import Scheme, SchemeError
+from subset import Subset, SubsetError
 
 class ParserError(Exception):
     """Used for our own parsing problems"""
@@ -37,8 +38,8 @@ class Parser(object):
     def __init__(self, config):
         # Config is filled out with objects that the parser creates
         self.config = config
-        self.partitions = PartitionSet()
-        self.schemes = SchemeSet(self.partitions)
+        self.partitions = []
+        self.schemes = []
         self.init_grammar()
 
     def init_grammar(self):
@@ -128,27 +129,35 @@ class Parser(object):
         """We have everything we need here to make a partition"""
         try:
             # Creation adds it to set
-            Partition(self.partitions, part_def.name, part_def.parts)
+            p = Partition(part_def.name, *tuple(part_def.parts))
+            self.partitions.append(p)
         except PartitionError:
             raise ParserError(text, loc, "Error in '%s' can be found" % part_def.name)
 
     def finalise_partitions(self, text, loc, partref):
         """Validate the partitions"""
         try:
-            self.partitions.validate()
+            self.partition_set = PartitionSet(*tuple(self.partitions))
         except PartitionError:
             raise ParserError(text, loc, "Error in '%s' can be found" % part_def.name)
 
     def check_part_exists(self, text, loc, partref):
-        if partref.name not in self.partitions:
+        if partref.name not in self.partition_set:
             raise ParserError(text, loc, "Partition %s not defined" %
                                      partref.name)
     
     def define_schema(self, text, loc, scheme_def):
         try:
+            # We need to turn the names into actual partitions and subsets
+            subs = []
+            for subset_def in scheme_def.scheme:
+                # Get the partitions from the names
+                parts = [self.partition_set[nm] for nm in subset_def]
+                # create a subset
+                subs.append(Subset(*tuple(parts)))
 
-            sch = Scheme(self.schemes, scheme_def.name, scheme_def.scheme)
-        except SchemeError:
+            self.schemes.append(Scheme(scheme_def.name, *tuple(subs)))
+        except (SchemeError, SubsetError):
             raise ParserError(text, loc, "Error in '%s' can be found" %
                                      scheme_def.name)
 
@@ -185,7 +194,7 @@ Gene3_pos3 = 1452-2208\3
 [schemes]
 allsame         = (Gene1_pos1, Gene1_pos2, Gene1_pos3, Gene2_pos1, Gene2_pos2,
 Gene2_pos3, Gene3_pos1, Gene3_pos2, Gene3_pos3)
-by_gene         = (Gene1_pos1, Gene1_pos2, Gene1_pos3) (Gene2_pos1, Gene2_pos2, Gene2_pos3) (Gene3_pos1, Gene3_pos2, Gene3_pos3)
+by_gene         = (Gene1_pos2, Gene1_pos2, Gene1_pos3) (Gene2_pos1, Gene2_pos2, Gene2_pos3) (Gene3_pos1, Gene3_pos2, Gene3_pos3)
 1_2_3           = (Gene1_pos1, Gene2_pos1, Gene3_pos1) (Gene1_pos2, Gene2_pos2, Gene3_pos2) (Gene1_pos3, Gene2_pos3, Gene3_pos3)
 1_2_3_by_gene   = (Gene1_pos1) (Gene1_pos2) (Gene1_pos3) (Gene2_pos1) (Gene2_pos2) (Gene2_pos3) (Gene3_pos1) (Gene3_pos2) (Gene3_pos3)
 12_3            = (Gene1_pos1, Gene1_pos2, Gene2_pos1, Gene2_pos2, Gene3_pos1, Gene3_pos2) (Gene1_pos3, Gene2_pos3, Gene3_pos3)
@@ -206,9 +215,6 @@ by_gene         = (Gene1_pos1, Gene1_pos2, Gene1_pos3) (Gene2_pos1, Gene2_pos2, 
         # for ss in s.subsets:
             # print ss.subset_id
 
-    print c.partitions
-    for sub in c.schemes.subsets:
-        print sub
         
 
             # print ss.string_identifier

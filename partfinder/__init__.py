@@ -1,1 +1,1 @@
-import configuration as config
+import config
