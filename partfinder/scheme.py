@@ -43,7 +43,6 @@ class Scheme(object):
         ss = ', '.join([str(s) for s in self.subsets])
         return "Scheme(%s, %s)" % (self.name, ss)
 
-
 class SchemeSet(object):
     """All the schemes added, and also a list of all unique subsets"""
     def __init__(self, partitions):

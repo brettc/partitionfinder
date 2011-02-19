@@ -58,21 +58,24 @@ class Subset(object):
         if self.partitions in self._results_cache:
             log.debug("Returning cached result for %s", self)
             return self._results_cache[self.partitions]
-        return self._really_analyse()
 
-    def _really_analyse(self):
         log.debug("Calculating result for %s", self)
-        result = SubsetResult()
+        result = self._really_analyse()
         self._results_cache[self.partitions] = result
         return result
 
-        # print self.make_filename()
+    def _really_analyse(self):
+        self.write_alignment()
+        result = SubsetResult()
 
-    def write_alignment(self, config):
+
+        return result
+
+    def write_alignment(self):
         """create an alignment for this subset"""
         align = {}
-
-        align_path = os.path.join(config.output_path, self.fname)
+        self.fname = self.make_filename()
+        align_path = os.path.join(config.settings.output_path, self.fname)
         if os.path.exists(align_path):
             log.debug(
                 "Fasta file '%s' already exists, not rewriting",
@@ -90,10 +93,10 @@ class Subset(object):
     def __iter__(self):
         return iter(self.partitions)
 
-
 if __name__ == '__main__':
     import logging
     logging.basicConfig(level=logging.DEBUG)
+    import config
     from partition import Partition, PartitionSet
 
     pa = Partition('a', (1, 10, 3))
@@ -103,6 +106,9 @@ if __name__ == '__main__':
 
     s1 = Subset(pa, pb)
     s2 = Subset(pa, pb)
+
+    config.initialise("~/tmp", True)
+
     s1.analyse()
     s2.analyse()
     

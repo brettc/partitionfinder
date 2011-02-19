@@ -16,6 +16,7 @@ class FastaParser(object):
     def __init__(self):
         self.make_syntax()
         self.sequences = {}
+        self.seqlen = None
 
     def make_syntax(self):
 
@@ -51,6 +52,15 @@ class FastaParser(object):
                       lineno(loc, text))
             raise FastaError
 
+        if self.seqlen is None:
+            self.seqlen = len(sequence)
+        else:
+            if len(sequence) != self.seqlen:
+                log.error("Sequence length of %s at line %d "
+                          "differs from previous sequences", seqname,
+                      lineno(loc, text))
+                raise FastaError
+
         # We'll create it as we go
         self.sequences[seqname] = sequence
 
@@ -78,17 +88,13 @@ def write_fasta(fname, fasta_dict):
 if __name__ == '__main__':
     test1 = r"""
 >spp1
-CTTGAGGTTCAGAATGGTAATGAA------GTGCTGGT
-GCTGGAAGTTCAGCAGCAGCTCGGCGGCGG
+CTTGAGGTTCAGAATGGTAATGAA------GTGCTGG
 >spp2
-CTT
-
-GAGGTACAAAATGGTAATGAG------AGCCTGGTG
+CTTGAGGTACAAAATGGTAATGAG------AGCCTGG
 >spp3
-CTTGAGGTACAGAATAACAGCGAG------AAGCTGGT
+CTTGAGGTACAGAATAACAGCGAG------AAGCTGG
 >spp4
-
-CTCGAGGTGAAAAATGGTGATGCT------CGTCTGGT
+CTCGAGGTGAAAAATGGTGATGCT------CGTCTGG
 """
     import sys
     logging.basicConfig(level=logging.DEBUG)
