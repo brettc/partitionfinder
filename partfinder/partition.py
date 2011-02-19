@@ -10,6 +10,89 @@ def columnset_to_string(colset):
     # Add one, cos we converted to zero base...
     return ', '.join([str(x+1) for x in s])
 
+class AllPartitions(object):
+    """The set of all partitions loaded from a configuration file"""
+    def __init__(self):
+        """A set of Partitions"""
+        self.parts_by_name = {}
+        self.partitions = set()
+
+        # All of the columns
+        self.columns = []
+        self.columnset = set()
+
+        self.finalised = False
+
+    def __str__(self):
+        return "AllPartitions(%s)" % ", ".join([str(p) for p in self.partitions])
+
+    def add_partition(self, p):
+        """Check for overlap (= intersection)"""
+        if self.finalised:
+            log.error("Cannot add partitions after a Scheme has been created")
+            raise PartitionError
+
+        if p.name in self.parts_by_name:
+            log.error("Attempt to add %s when that name already exists", p)
+            raise PartitionError
+
+        overlap = []
+        for otherp in all_partitions:
+            if p.columnset & otherp.columnset:
+                overlap.append(str(otherp))
+        if overlap:
+            log.error("%s overlaps with previously defined "
+                      "partitions: %s",
+                      p, ", ".join(overlap))
+            raise PartitionError
+
+        # Assign the partition to this set
+        p.partition_set = self
+
+        # Make sure we can look up by name
+        self.parts_by_name[p.name] = p
+        self.partitions.add(p)
+
+        # Merge all the columns
+        self.columns.extend(p.columns)
+        self.columns.sort()
+        self.columnset |= p.columnset
+
+    def finalise(self):
+        """Internal check -- just for gaps now
+        
+        This is called when the first scheme is created
+        """
+        # It is sorted -- so the last one is the biggest
+        self.colmin = self.columns[0]
+        self.colmax = self.columns[-1]
+        self.fullset = set(range(self.colmin, self.colmax+1))
+        leftout = self.fullset - self.columnset
+        if leftout:
+            # This does not raise an error, just a warning
+            log.warn(
+                "Columns in all partitions range from %s to %s, "
+                "but these columns are missing: %s", 
+                self.colmin+1, self.colmax+1,
+                columnset_to_string(leftout))
+
+        self.finalised = True
+
+    # We can treat this like a bit like a dictionary
+    def __iter__(self):
+        return iter(self.partitions)
+
+    def __getitem__(self, k):
+        return self.parts_by_name[k]
+
+    def __contains__(self, k):
+        return k in self.parts_by_name
+
+    def names(self):
+        return self.parts_by_name.keys()
+
+all_partitions = AllPartitions()
+
 class Partition(object):
     """A set of columns from an alignment"""
     def __init__(self, name, *partlist):
@@ -65,6 +148,7 @@ class Partition(object):
         self.columns = columns
         self.columnset = columnset
 
+        all_partitions.add_partition(self)
         log.debug("Created %s", self)
 
     def __repr__(self):
@@ -75,88 +159,12 @@ class Partition(object):
         outlist = ", ".join(["%s-%s\\%s" % tuple(p) for p in self.description])
         return "Partition(%s, %s)" % (self.name, outlist)
 
-class PartitionSet(object):
-    """The set of all partitions loaded from a configuration file"""
-    def __init__(self, *partitions):
-        """A set of Partitions"""
-        self.parts_by_name = {}
-
-        # All of the columns
-        self.columns = []
-        self.columnset = set()
-
-        # Freeze it afterwards
-        self.finalised = False
-
-        for p in partitions:
-            self.add_partition(p)
-        self.finalise()
-        self.partitions = frozenset(partitions)
-
-        log.debug("Created %s", self)
-
-    def __str__(self):
-        return "PartitionSet(%s)" % ", ".join([str(p) for p in self.partitions])
-
-    def add_partition(self, p):
-        """Check for overlap (= intersection)"""
-        if self.finalised:
-            log.error("Cannot add partitions when to set that is finalised")
-            raise PartitionError
-
-        if p.name in self.parts_by_name:
-            log.error("Attempt to add %s when that name already exists", p)
-            raise PartitionError
-
-        overlap = self.columnset & p.columnset
-        if overlap:
-            log.error("%s overlaps with previously defined \
-                      partitions at columns %s",
-                      p, columnset_to_string(overlap))
-            raise PartitionError
-
-        # Assign the partition to this set
-        p.partition_set = self
-
-        # Make sure we can look up by name
-        self.parts_by_name[p.name] = p
-
-        # Merge all the columns
-        self.columns.extend(p.columns)
-        self.columns.sort()
-        self.columnset |= p.columnset
-
-    def finalise(self):
-        """Internal check -- just for gaps now"""
-        # It is sorted -- so the last one is the biggest
-        self.colmin = self.columns[0]
-        self.colmax = self.columns[-1]
-        self.fullset = set(range(self.colmin, self.colmax+1))
-        leftout = self.fullset - self.columnset
-        if leftout:
-            # This does not raise an error, just a warning
-            log.warn(
-                "Columns range from %s to %s, but these columns are missing: %s", 
-                self.colmin+1, self.colmax+1,
-                columnset_to_string(leftout))
-
-        self.finalised = True
-
-    # We can treat this like a bit like a dictionary
-    def __getitem__(self, k):
-        return self.parts_by_name[k]
-
-    def __contains__(self, k):
-        return k in self.parts_by_name
-
-    def names(self):
-        return self.parts_by_name.keys()
 
 if __name__ == '__main__':
     import logging
     logging.basicConfig(level=logging.DEBUG)
     p1 = Partition('one', (1, 10))
-    p2 = Partition('two', (11, 20))
-    ps = PartitionSet(p1, p2)
+    p2 = Partition('two', (1, 20))
+    # ps = PartitionSet(p1, p2)
 
     # print ps

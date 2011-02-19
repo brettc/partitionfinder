@@ -65,7 +65,7 @@ class Subset(object):
         return result
 
     def _really_analyse(self):
-        self.write_alignment()
+        # self.write_alignment()
         result = SubsetResult()
 
 
@@ -97,20 +97,20 @@ if __name__ == '__main__':
     import logging
     logging.basicConfig(level=logging.DEBUG)
     import config
-    from partition import Partition, PartitionSet
+    from partition import Partition
+    config.initialise("~/tmp", True)
 
     pa = Partition('a', (1, 10, 3))
     pb = Partition('b', (2, 10, 3))
     pc = Partition('c', (3, 10, 3))
-    ps = PartitionSet(pa, pb, pc)
 
     s1 = Subset(pa, pb)
     s2 = Subset(pa, pb)
+    s3 = Subset(pc)
 
-    config.initialise("~/tmp", True)
 
     s1.analyse()
     s2.analyse()
-    
+    s3.analyse()
 
 

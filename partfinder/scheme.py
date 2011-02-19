@@ -2,6 +2,7 @@ import logging
 log = logging.getLogger("scheme")
 
 from subset import Subset
+from partition import all_partitions
 
 class SchemeError(Exception):
     pass
@@ -37,6 +38,10 @@ class Scheme(object):
                       name, ', '.join([str(p) for p in missing]))
             raise SchemeError
 
+        # This locks down whether new partitions can be created
+        if not all_partitions.finalised:
+            all_partitions.finalise()
+        
         log.debug("Created %s", self)
 
     def __str__(self):
@@ -70,12 +75,11 @@ class SchemeSet(object):
 if __name__ == '__main__':
     import logging
     logging.basicConfig(level=logging.DEBUG)
-    from partition import Partition, PartitionSet
+    from partition import Partition
     from subset import Subset
 
     pa = Partition('a', (1, 10, 3))
     pb = Partition('b', (2, 10, 3))
-    pc = Partition('c', (3, 10, 3))
-    ps = PartitionSet(pa, pb, pc)
-    s = Scheme('x', Subset(pa), Subset(pc), Subset(pb))
+    # pc = Partition('c', (3, 10, 3))
+    s = Scheme('x', Subset(pa), Subset(pb))
     

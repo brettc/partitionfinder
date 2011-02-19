@@ -11,7 +11,7 @@ from pyparsing import (
 # debugging
 # ParserElement.verbose_stacktrace = True
 
-from partition import Partition, PartitionSet, PartitionError
+from partition import Partition, PartitionError, all_partitions
 from scheme import Scheme, SchemeError
 from subset import Subset, SubsetError
 
@@ -77,7 +77,6 @@ class Parser(object):
         partition = partname("name") + EQUALS + partdeflist("parts") + SEMIOPT
         partition.setParseAction(self.define_partition)
         partlist = OneOrMore(Group(partition))
-        partlist.setParseAction(self.finalise_partitions)
 
 
         # Scheme Parsing
@@ -138,22 +137,16 @@ class Parser(object):
         except PartitionError:
             raise ParserError(text, loc, "Error in '%s' can be found" % part_def.name)
 
-    def finalise_partitions(self, text, loc, partref):
-        """Validate the partitions"""
-        try:
-            self.partition_set = PartitionSet(*tuple(self.partitions))
-        except PartitionError:
-            raise ParserError(text, loc, "Error in '%s' can be found" % part_def.name)
 
     def check_part_exists(self, text, loc, partref):
-        if partref.name not in self.partition_set:
+        if partref.name not in all_partitions:
             raise ParserError(text, loc, "Partition %s not defined" %
                                      partref.name)
 
     def define_subset(self, text, loc, subset_def):
         try:
             # Get the partitions from the names
-            parts = [self.partition_set[nm] for nm in subset_def[0]]
+            parts = [all_partitions[nm] for nm in subset_def[0]]
             # create a subset
             self.subsets.append(Subset(*tuple(parts)))
         except SubsetError:
