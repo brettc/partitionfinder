@@ -57,6 +57,7 @@ class Settings(object):
         self.modelgen_path = pth
 
     def load(self):
+        settings.config_path = os.path.join(settings.base_path, "partition_finder.cfg")
         _check_file(self.config_path)
 
         log.info("Loading configuration at '%s'", self.config_path)
@@ -81,28 +82,10 @@ class Settings(object):
             log.error("Cannot load Fasta file '%s'" % self.alignment_path)
             raise ConfigurationError
 
-
-    def has_changed(self):
-        """Check if changed from previous run
-        """
-        # TODO Write a signature out somewhere...
-
-    def process(self):
-        # TODO: This is one way to do it...
-        # Or we could do it by scheme?
-        
-        # Go through all the subsets and run them
-        for ss_id, ss in self.schemes.subsets.iteritems():
-            ss.process(self)
-
-        # for sch in self.schemes:
-            # scheme.assess()
-
-
 init_done = False
 settings = Settings()
 
-def initialise(pth='.', force_restart=False):
+def initialise(pth, force_restart=False):
     global init_done
 
     pth = os.path.expanduser(pth)
@@ -112,13 +95,9 @@ def initialise(pth='.', force_restart=False):
     settings.force_restart = force_restart
 
     _check_folder(settings.base_path)
-    # Add a log file in this folder
     log.info("Using folder: '%s'", settings.base_path)
 
     create_debug_log()
-
-    # Check all the folders and files we need...
-    settings.config_path = os.path.join(settings.base_path, "partition_finder.cfg")
 
     settings.output_path = os.path.join(settings.base_path, "output")
     if settings.force_restart:
