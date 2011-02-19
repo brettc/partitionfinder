@@ -15,11 +15,12 @@ class Scheme(object):
         partitions = set()
         duplicates = []
         for s in subsets:
-            if s in self.subsets:
-                duplicates.append(s)
-            else:
-                self.subsets.add(s)
-                partitions |= s.partitions
+            for p in s:
+                if p in partitions:
+                    duplicates.append(str(p))
+                else:
+                    partitions.add(p)
+            self.subsets.add(s)
 
         if duplicates:
             log.error("Scheme '%s' contains duplicate partitions: %s", 

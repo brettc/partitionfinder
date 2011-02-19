@@ -87,6 +87,9 @@ class Subset(object):
         write_fasta(align_path, align)
         self.align_path = align_path
 
+    def __iter__(self):
+        return iter(self.partitions)
+
 
 if __name__ == '__main__':
     import logging
