@@ -75,7 +75,7 @@ def write_fasta(fname, fasta_dict):
         f.write("%s\n" % sequence)
         
 
-def test_basic():
+if __name__ == '__main__':
     test1 = r"""
 >spp1
 CTTGAGGTTCAGAATGGTAATGAA------GTGCTGGT
@@ -91,14 +91,9 @@ CTTGAGGTACAGAATAACAGCGAG------AAGCTGGT
 CTCGAGGTGAAAAATGGTGATGCT------CGTCTGGT
 """
     import sys
-    logging.basicConfig(stream=sys.stdout, level=logging.DEBUG)
-    c = Parser()
+    logging.basicConfig(level=logging.DEBUG)
+    c = FastaParser()
     c.parse_configuration(test1)
-    print c.sequences
-
-if __name__ == '__main__':
-    test_basic()
-    # print c.parts
 
 
 

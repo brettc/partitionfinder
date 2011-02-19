@@ -4,7 +4,7 @@ log = logging.getLogger("main")
 from optparse import OptionParser
 import sys, os
 
-from partfinder import Configuration, ConfigurationError, ProcessingError
+from partfinder import config
 
 def main():
     usage = """usage: python %prog [-vc] <foldername>
@@ -43,9 +43,8 @@ def main():
 
     # Load, using the first argument as the folder
     try:
-        config = Configuration(args[0])
-        config.load()
-    except ConfigurationError:
+        config.initialise(args[0])
+    except config.ConfigurationError:
         log.error("Configuration Failure: Please correct problems and rerun")
         # Any exceptions and we fail
         return 1
@@ -71,7 +70,7 @@ if __name__ == "__main__":
     # Well behaved unix programs exits with 0 on success...
     # sys.argv = ['arg', '-v', 'example']
     # sys.argv = ['arg', 'example']
-    # sys.argv = ['arg', '-vc', 'example']
+    sys.argv = ['arg', '-vc', 'example']
     sys.exit(main())
 
 

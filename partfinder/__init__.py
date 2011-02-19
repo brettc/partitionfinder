@@ -1,1 +1,1 @@
-from configuration import Configuration, ConfigurationError, ProcessingError
+import configuration as config

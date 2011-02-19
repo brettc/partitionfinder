@@ -7,10 +7,7 @@ from partition import Partition
 from parser import Parser, ParserError
 from fasta import read_fasta, FastaError
 
-from pyparsing import (
-    Word, Dict, OneOrMore, alphas, nums, Suppress, Optional, Group, stringEnd,
-    delimitedList, pythonStyleComment, ParseException, line, lineno, col,
-    Keyword)
+__all__ =  ["ConfigurationError", "settings", "initialise"]
 
 class ConfigurationError(Exception):
     pass
@@ -36,29 +33,11 @@ def _make_folder(pth):
     else:
         os.mkdir(pth)
 
-class Configuration(object):
-    """We use this to hold all of the configuration info"""
-    def __init__(self, base_path, force_restart):
-        self.base_path = os.path.abspath(base_path)
-        self.force_restart = force_restart
-        _check_folder(self.base_path)
-        # Add a log file in this folder
-        log.info("Using folder: '%s'", self.base_path)
 
-        self.log_path = os.path.join(self.base_path, "partition_finder.log")
-        self.init_log()
-
-        # Check all the folders and files we need...
-        self.config_path = os.path.join(self.base_path, "partition_finder.cfg")
-
-        self.output_path = os.path.join(self.base_path, "output")
-        if self.force_restart:
-            log.warning("Deleting all previous workings in '%s'", self.output_path)
-            shutil.rmtree(self.output_path)
-
-        _make_folder(self.output_path)
-
-        self.find_modelgenerator()
+class Settings(object):
+    """This holds the configuration info"""
+    def __init__(self):
+        pass
 
     def find_modelgenerator(self):
         """Make sure we know where the java file is..."""
@@ -76,7 +55,6 @@ class Configuration(object):
         log.debug("Modelgenerator program found at '%s'" % pth)
 
         self.modelgen_path = pth
-
 
     def load(self):
         _check_file(self.config_path)
@@ -103,18 +81,6 @@ class Configuration(object):
             log.error("Cannot load Fasta file '%s'" % self.alignment_path)
             raise ConfigurationError
 
-    def init_log(self):
-        """Add a full debug log file in the folder"""
-        log.info("Using full log in: '%s'", self.log_path)
-
-        # Append to the log file. we'll get multiple runs then
-        log_output = logging.FileHandler(self.log_path, mode='a')
-        log_output.setLevel(logging.DEBUG)
-        formatter = logging.Formatter(
-            '%(levelname)-8s | %(asctime)s | %(name)-10s | %(message)s',
-            datefmt="%Y-%m-%d %H:%M:%S")
-        log_output.setFormatter(formatter)
-        logging.getLogger('').addHandler(log_output)
 
     def has_changed(self):
         """Check if changed from previous run
@@ -133,4 +99,54 @@ class Configuration(object):
             # scheme.assess()
 
 
+init_done = False
+settings = Settings()
 
+def initialise(pth='.', force_restart=False):
+    global init_done
+
+    pth = os.path.expanduser(pth)
+    pth = os.path.expandvars(pth)
+    pth = os.path.normpath(pth)
+    settings.base_path = pth
+    settings.force_restart = force_restart
+
+    _check_folder(settings.base_path)
+    # Add a log file in this folder
+    log.info("Using folder: '%s'", settings.base_path)
+
+    create_debug_log()
+
+    # Check all the folders and files we need...
+    settings.config_path = os.path.join(settings.base_path, "partition_finder.cfg")
+
+    settings.output_path = os.path.join(settings.base_path, "output")
+    if settings.force_restart:
+        if os.path.exists(settings.output_path):
+            log.warning("Deleting all previous workings in '%s'", settings.output_path)
+            shutil.rmtree(settings.output_path)
+
+    _make_folder(settings.output_path)
+
+    settings.find_modelgenerator()
+
+    init_done = True
+
+def create_debug_log():
+    """Add a full debug log file in the folder"""
+    settings.log_path = os.path.join(settings.base_path, "partition_finder.log")
+    log.info("Full log is in: '%s'", settings.log_path)
+
+    # Append to the log file. we'll get multiple runs then
+    log_output = logging.FileHandler(settings.log_path, mode='a')
+    log_output.setLevel(logging.DEBUG)
+    formatter = logging.Formatter(
+        '%(levelname)-8s | %(asctime)s | %(name)-10s | %(message)s',
+        datefmt="%Y-%m-%d %H:%M:%S")
+    log_output.setFormatter(formatter)
+    logging.getLogger('').addHandler(log_output)
+
+if __name__ == '__main__':
+    import logging
+    logging.basicConfig(level=logging.DEBUG)
+    initialise("~/tmp", True)

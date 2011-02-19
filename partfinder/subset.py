@@ -60,7 +60,6 @@ class Subset(object):
             return self._results_cache[self.partitions]
         return self._really_analyse()
 
-
     def _really_analyse(self):
         log.debug("Calculating result for %s", self)
         result = SubsetResult()

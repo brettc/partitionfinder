@@ -26,20 +26,18 @@ class Scheme(object):
                       name, ', '.join(duplicates))
             raise SchemeError
 
-        # Get out a partition and get the set
+        # Hm. It seems this is the only way to get just one item out of a set
+        # as pop would remove one...
         pset = iter(partitions).next().partition_set
+        # Set difference
         missing = pset.partitions - partitions
         if missing:
             log.error("Scheme '%s' is missing partitions: %s", 
-                      name,
-                      ', '.join([str(p) for p in missing])
-                     )
+                      name, ', '.join([str(p) for p in missing]))
             raise SchemeError
 
-        # Finally, add it to the schemeset
-        log.debug("Creating %s", self)
-        # schemeset.add_scheme(self)
-        #
+        log.debug("Created %s", self)
+
     def __str__(self):
         ss = ', '.join([str(s) for s in self.subsets])
         return "Scheme(%s, %s)" % (self.name, ss)
@@ -76,7 +74,7 @@ if __name__ == '__main__':
     from subset import Subset
 
     pa = Partition('a', (1, 10, 3))
-    pb = Partition('b', (3, 20, 3))
+    pb = Partition('b', (2, 10, 3))
     pc = Partition('c', (3, 10, 3))
     ps = PartitionSet(pa, pb, pc)
     s = Scheme('x', Subset(pa), Subset(pc), Subset(pb))

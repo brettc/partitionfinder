@@ -32,7 +32,9 @@ class Partition(object):
 
             # Make sure it is sensible
             if len(p) < 2 or len(p) > 3:
-                log.error("Partition definition '%s' should contain a list of start, a stop, and an optional step", self.name)
+                log.error("The Partition '%s' should contain\
+                          a list of start, a stop, and an optional step",
+                          self.name)
                 raise PartitionError
             if len(p) == 2:
                 start, stop = p
@@ -63,6 +65,8 @@ class Partition(object):
         self.columns = columns
         self.columnset = columnset
 
+        log.debug("Created %s", self)
+
     def __repr__(self):
         outlist = ", ".join(["%s-%s\\%s" % tuple(p) for p in self.description])
         return "Partition<%s: %s>" % (self.name, outlist)
@@ -89,6 +93,8 @@ class PartitionSet(object):
         self.finalise()
         self.partitions = frozenset(partitions)
 
+        log.debug("Created %s", self)
+
     def __str__(self):
         return "PartitionSet(%s)" % ", ".join([str(p) for p in self.partitions])
 
@@ -99,24 +105,26 @@ class PartitionSet(object):
             raise PartitionError
 
         if p.name in self.parts_by_name:
-            log.error( "Attempt to add %s when that name already exists", p)
+            log.error("Attempt to add %s when that name already exists", p)
             raise PartitionError
 
         overlap = self.columnset & p.columnset
         if overlap:
-            log.error(
-                "%s overlaps with previously defined partitions at columns %s",
-                p, columnset_to_string(overlap))
+            log.error("%s overlaps with previously defined \
+                      partitions at columns %s",
+                      p, columnset_to_string(overlap))
             raise PartitionError
 
+        # Assign the partition to this set
         p.partition_set = self
+
+        # Make sure we can look up by name
         self.parts_by_name[p.name] = p
 
+        # Merge all the columns
         self.columns.extend(p.columns)
         self.columns.sort()
         self.columnset |= p.columnset
-
-        log.debug("Created %s", p)
 
     def finalise(self):
         """Internal check -- just for gaps now"""
@@ -126,7 +134,7 @@ class PartitionSet(object):
         self.fullset = set(range(self.colmin, self.colmax+1))
         leftout = self.fullset - self.columnset
         if leftout:
-            # This does not raise an error
+            # This does not raise an error, just a warning
             log.warn(
                 "Columns range from %s to %s, but these columns are missing: %s", 
                 self.colmin+1, self.colmax+1,
@@ -144,19 +152,11 @@ class PartitionSet(object):
     def names(self):
         return self.parts_by_name.keys()
 
-
-# def test_partition():
-    # p = Partition("A", [[1, 10, 3]])
-    # assert p.columns == [0, 3, 6, 9]
-    # >>> p = Partition("A", [[1, 10, 1],[1, 10, 2]])
-    # PartitionError
-    # """
 if __name__ == '__main__':
     import logging
-    logging.basicConfig()
+    logging.basicConfig(level=logging.DEBUG)
     p1 = Partition('one', (1, 10))
     p2 = Partition('two', (11, 20))
     ps = PartitionSet(p1, p2)
-    print ps
 
     # print ps
