@@ -87,7 +87,11 @@ settings = Settings()
 
 def initialise(pth, force_restart=False):
     global init_done
+    if init_done:
+        log.error("Cannot initialise more than once")
+        raise ConfigurationError
 
+    # Allow for user and environment variables
     pth = os.path.expanduser(pth)
     pth = os.path.expandvars(pth)
     pth = os.path.normpath(pth)
@@ -124,6 +128,8 @@ def create_debug_log():
         datefmt="%Y-%m-%d %H:%M:%S")
     log_output.setFormatter(formatter)
     logging.getLogger('').addHandler(log_output)
+    # Mark a new session so it is easy to read in the log file
+    log.debug("------------------ NEW LOG SESSION BEGINS -----------------")
 
 if __name__ == '__main__':
     import logging
