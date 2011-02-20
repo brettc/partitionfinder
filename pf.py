@@ -76,7 +76,8 @@ def main():
         else:
             # Now try processing everything....
             log.info("Beginning processing.")
-            config.process()
+            config.load()
+            # config.process()
         # Successful exit
         log.info("Success: processing complete.")
         return 0
