@@ -1,24 +1,23 @@
-"""Simple Fasta Parser
+"""Loading and Saving Alignment Files
+
+    Fasta is currently the only thing supported
 """
 import logging
-log = logging.getLogger("fasta")
+log = logging.getLogger("alignment")
 
 from pyparsing import (
     Word, OneOrMore, alphas, Suppress, Optional, Group, stringEnd,
     delimitedList, ParseException, line, lineno, col, LineStart, restOfLine,
     LineEnd, White)
 
-class FastaError(Exception):
+class AlignmentError(Exception):
     pass
 
 class FastaParser(object):
     """Loads the Parser files and validates them"""
     def __init__(self):
-        self.make_syntax()
         self.sequences = {}
         self.seqlen = None
-
-    def make_syntax(self):
 
         # Some syntax that we need, but don't bother looking at
         GREATER = Suppress(">")
@@ -50,7 +49,7 @@ class FastaParser(object):
         if seqname in self.sequences:
             log.error("Repeated species name '%s' at line %d", seqname,
                       lineno(loc, text))
-            raise FastaError
+            raise AlignmentError
 
         if self.seqlen is None:
             self.seqlen = len(sequence)
@@ -59,7 +58,7 @@ class FastaParser(object):
                 log.error("Sequence length of %s at line %d "
                           "differs from previous sequences", seqname,
                       lineno(loc, text))
-                raise FastaError
+                raise AlignmentError
 
         # We'll create it as we go
         self.sequences[seqname] = sequence
@@ -71,6 +70,10 @@ class FastaParser(object):
     def parse_configuration(self, s):
         self.fasta.parseString(s)
         return self.sequences
+
+# class Alignment(object):
+    # def __init__(self):
+        # pass
 
 def read_fasta(fname):
     p = FastaParser()
