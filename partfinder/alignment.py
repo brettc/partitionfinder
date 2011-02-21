@@ -8,7 +8,10 @@ log = logging.getLogger("alignment")
 from pyparsing import (
     Word, OneOrMore, alphas, Suppress, Optional, Group, stringEnd,
     delimitedList, ParseException, line, lineno, col, LineStart, restOfLine,
-    LineEnd, White)
+    LineEnd, White, Literal)
+
+import modelgen
+import tempfile
 
 class AlignmentError(Exception):
     pass
@@ -20,76 +23,136 @@ class FastaParser(object):
         self.seqlen = None
 
         # Some syntax that we need, but don't bother looking at
-        GREATER = Suppress(">")
+        GREATER = Literal(">")
 
         # I think this covers it...
         CODONS = Word(alphas + "!*-") 
 
-        seqname = LineStart() + GREATER + restOfLine
+        seqname = Suppress(LineStart() + GREATER) + restOfLine
+        seqname.setParseAction(lambda toks: "".join(toks))
         seqcodons = OneOrMore(CODONS + Suppress(LineEnd()))
-        # A parse action to collect all the lines
-        seqcodons.setParseAction(self.join_codons_action)
+        seqcodons.setParseAction(lambda toks: "".join(toks))
 
         # Any sequence is the name follow by the codons
-        seq = seqname + seqcodons
-        seq.setParseAction(self.set_sequence_action)
+        seq = Group(seqname("species") + seqcodons("codons"))
 
         # Main parser: one or more definitions 
-        self.fasta = OneOrMore(seq) + stringEnd
+        self.root_parser = OneOrMore(seq) + stringEnd
 
-    def join_codons_action(self, text, loc, tokens):
-        # Simply join them together and send it back
-        return "".join(tokens)
-
-    def set_sequence_action(self, text, loc, tokens):
-        seqname = tokens[0]
-        sequence = tokens[1]
-        log.debug("Found Sequence for %s: %s...", seqname, sequence[:20])
-
-        if seqname in self.sequences:
-            log.error("Repeated species name '%s' at line %d", seqname,
-                      lineno(loc, text))
+    def parse(self, s):
+        try:
+            defs = self.root_parser.parseString(s)
+        except ParseException, p:
+            log.error(p.format_message())
             raise AlignmentError
 
-        if self.seqlen is None:
-            self.seqlen = len(sequence)
-        else:
-            if len(sequence) != self.seqlen:
-                log.error("Sequence length of %s at line %d "
-                          "differs from previous sequences", seqname,
-                      lineno(loc, text))
-                raise AlignmentError
+        # Don't make a dictionary, as we want to check it for repeats
+        return [(x.species, x.codons) for x in defs]
 
-        # We'll create it as we go
-        self.sequences[seqname] = sequence
+the_parser = FastaParser()
 
-    def parse_file(self, fname):
-        s = open(fname, 'r').read()
-        return self.parse_configuration(s)
+class Alignment(object):
+    def __init__(self, *defs):
+        """A series of species / sequences
 
-    def parse_configuration(self, s):
-        self.fasta.parseString(s)
-        return self.sequences
+        e.g 
+        
+        Alignment(("dog", "GATC"), ("cat", "GATT"))
+        """
 
-# class Alignment(object):
-    # def __init__(self):
-        # pass
+    def from_parser_output(self, defs):
+        species = {}
+        sequence_len = None
+        for spec, seq in defs: 
+            log.debug("Found Sequence for %s: %s...", spec, seq[:20])
+            if spec in species:
+                log.error("Repeated species name '%s' is repeated "
+                          "in alignment", spec)
+                raise AlignmentError 
 
-def read_fasta(fname):
-    p = FastaParser()
-    log.debug("Parsing fasta file '%s'", fname)
-    return p.parse_file(fname)
+            if sequence_len is None:
+                sequence_len = len(seq)
+            else:
+                if len(seq) != sequence_len:
+                    log.error("Sequence length of %s "
+                              "differs from previous sequences", spec)
+                    raise AlignmentError
 
-def write_fasta(fname, fasta_dict):
-    f = open(fname, 'w')
-    log.debug("Writing fasta file '%s'", fname)
-    for species, sequence in fasta_dict.iteritems():
-        f.write(">%s\n" % species)
-        f.write("%s\n" % sequence)
+        self.species = species
+        self.sequence_length = sequence_len
+
+    def from_file(self):
+        pass
+
+    def write(self, fd):
+        # f = open(pth, 'w')
+        # log.debug("Writing fasta file '%s'", pth)
+        for species, sequence in self.species.iteritems():
+            fd.write(">%s\n" % species)
+            fd.write("%s\n" % sequence)
+
+    def exists(self):
+        pass
+
+    def from_columns(self, source, columns):
+        pass
+
+    def path(self):
+        raise NotImplemented
+
+    def analyse(self):
         
 
+        pass
+        # modelgen stuff here
+
+class SubsetAlignment(Alignment):
+    """Created on the fly, if it doesn't already exist"""
+    def __init__(self, unique_name, columns):
+        # First, check to see if it exists already. If so, don't bother
+        # creating it again.
+        #
+
+        pass
+
+    def path(self):
+        return config.settings.output_path
+
+
+class SourceAlignment(Alignment):
+    """Read from file"""
+    def __init__(self, source_name):
+        pass
+
+    def path(self):
+        return config.settings.base_path
+
+class TestAlignment(SourceAlignment):
+    """Good for testing stuff"""
+    def __init__(self, text):
+        self.name = "unknown"
+        self.saved = False
+        defs = the_parser.parse(text)
+        self.from_parser_output(defs)
+
+    @property
+    def path(self):
+        if not self.saved:
+            self._tempfile = tempfile.NamedTemporaryFile()
+            log.debug("Writing alignment to %s", self._tempfile.name)
+            self.write(self._tempfile.file)
+            self.saved = True
+
+        return self._tempfile.name
+
+
 if __name__ == '__main__':
-    test1 = r"""
+    import sys
+    import modelgen
+    import config
+    logging.basicConfig(level=logging.DEBUG)
+    config.initialise("~/tmp")
+    a = TestAlignment(r"""
 >spp1
 CTTGAGGTTCAGAATGGTAATGAA------GTGCTGG
 >spp2
@@ -98,12 +161,9 @@ CTTGAGGTACAAAATGGTAATGAG------AGCCTGG
 CTTGAGGTACAGAATAACAGCGAG------AAGCTGG
 >spp4
 CTCGAGGTGAAAAATGGTGATGCT------CGTCTGG
-"""
-    import sys
-    logging.basicConfig(level=logging.DEBUG)
-    c = FastaParser()
-    c.parse_configuration(test1)
+""")
 
+    modelgen.run(a.path)
 
 
 

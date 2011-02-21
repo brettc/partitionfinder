@@ -65,10 +65,9 @@ class Subset(object):
         return result
 
     def _really_analyse(self):
-        # self.write_alignment()
-        result = SubsetResult()
-
-
+        fname = self.make_filename()
+        sa = SubsetAlignment(fname, self.columns)
+        result = sa.analyse()
         return result
 
     def write_alignment(self):
