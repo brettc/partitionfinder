@@ -279,27 +279,28 @@ Analysis took: 0 minutes 5 seconds
 """
 
 from pyparsing import (
-    Word, Dict, OneOrMore, alphas, nums, Suppress, Optional, Group, stringEnd,
-    delimitedList, pythonStyleComment, ParseException, line, lineno, col,
-    Keyword, ParserElement, ParseException, LineStart, SkipTo, LineEnd,
+    Word, OneOrMore, alphas, nums, Suppress, Group, stringEnd, ParseException,
+    line, lineno, col, LineStart, SkipTo, LineEnd,
     )
 
+# A line of repeating -----
 TABLEHEADER = LineStart() + Word("-") + LineEnd()
 INTEGER = Word(nums)
 FLOAT = Word(nums + '.-')
 MODEL = Word(alphas + nums + '+')
 
+preamble = Suppress(
+    SkipTo(TABLEHEADER) + TABLEHEADER + SkipTo(TABLEHEADER) + TABLEHEADER)
+
 RGROUP = Group(FLOAT + MODEL + FLOAT)
 
-row = (LineStart() + INTEGER + RGROUP + RGROUP + RGROUP + Suppress(LineEnd()))
+row = (LineStart() + Suppress(INTEGER) + RGROUP + RGROUP + RGROUP + Suppress(LineEnd()))
 
 timing = Group(Suppress("Analysis took:") + INTEGER + Suppress("minutes") + INTEGER
                + Suppress("seconds"))
 
-       # + FLOAT + FLOAT + MODEL
-    # + FLOAT + LineEnd())
-outparser = (Suppress(SkipTo(TABLEHEADER) + TABLEHEADER + SkipTo(TABLEHEADER) +
-                     TABLEHEADER) + OneOrMore(row) + timing + stringEnd)
+outparser = preamble + Group(OneOrMore(row)) + timing + stringEnd
+
 res = outparser.parseString(testing)
 print res
 
