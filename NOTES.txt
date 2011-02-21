@@ -1,0 +1,17 @@
+
+# TODO:
+
+* Move fasta into a sequence.py file. Have a sequence class. It will know how to
+get columns out and stuff
+
+
+
+# DONE:
+
+* Maybe should have an implicit universal configuration. Just keep it in
+configuration? Stop trying to be so object-oriented?
+
+* Get rid of partition sets. Just add to a list. When the first scheme is
+  created we make it and lock it.
+
+vi: ft=markdown
