@@ -68,9 +68,8 @@ class Subset(object):
 
     def _really_analyse(self):
         fname = self.make_filename()
-        sa = alignment.SubsetAlignment(fname, 
-                                       config.settings.source_alignment,
-                                       self)
+        sa = alignment.SubsetAlignment(
+            fname, config.settings.source_alignment, self)
         return sa.analyse()
 
     def __iter__(self):

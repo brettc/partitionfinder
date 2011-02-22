@@ -147,11 +147,13 @@ class Alignment(object):
         fresh_analysis = True
         if self.analysis_exists():
             # The analysis has already been written!
-            log.debug("Read in previous analysis of %s", self)
+            log.debug("Reading in previous analysis of %s", self)
             output = file(self.analysis_path, 'r').read()
             fresh_analysis = False
         else:
             output = modelgen.run(self.source_path)
+            log.debug("Saving analysis output of %s to %s", self,
+                      self.analysis_path)
             open(self.analysis_path, 'w').write(output)
 
         log.debug("Parsing ModelGenerator output for %s", self)

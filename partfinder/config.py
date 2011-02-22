@@ -1,5 +1,6 @@
 import logging
 log = logging.getLogger("config")
+from logging.handlers import RotatingFileHandler
 
 import os, shutil
 
@@ -86,7 +87,11 @@ def create_debug_log():
     log.info("Full log is in: '%s'", settings.log_path)
 
     # Append to the log file. we'll get multiple runs then
-    log_output = logging.FileHandler(settings.log_path, mode='a')
+    log_output = RotatingFileHandler(
+        settings.log_path,
+        maxBytes=100*1024,
+        backupCount=5,
+    )
     log_output.setLevel(logging.DEBUG)
     formatter = logging.Formatter(
         '%(levelname)-8s | %(asctime)s | %(name)-10s | %(message)s',
