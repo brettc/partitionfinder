@@ -8,6 +8,7 @@ from pyparsing import (
     delimitedList, pythonStyleComment, ParseException, line, lineno, col,
     Keyword, ParserElement, ParseException)
 
+import config
 # debugging
 # ParserElement.verbose_stacktrace = True
 
@@ -35,9 +36,9 @@ class Parser(object):
     # These will get set in the configuration passed in
     required_variables = ['alignment_file']
 
-    def __init__(self, config):
+    def __init__(self):
         # Config is filled out with objects that the parser creates
-        self.config = config
+        # self.config = config
         self.partitions = []
         self.schemes = []
         self.subsets = []
@@ -108,14 +109,14 @@ class Parser(object):
             raise ParserError(text, loc, "'%s' is not an allowable setting" %
                                  var_def.name)
         else:
-            self.config.alignment_file = var_def.value
+            config.settings.alignment_file = var_def.value
             log.debug("Setting '%s' to '%s'", var_def.name, var_def.value)
 
     def check_variables(self, text, loc, var_def):
         # Add the stuff to the configuration that was passed in
         # We should check that all the parameters are defined too...
         for var in self.required_variables:
-            if not hasattr(self.config, var):
+            if not hasattr(config.settings, var):
                 raise ParserError(text, loc, "No '%s' defined in the configuration" % var)
 
     def define_range(self, part):
@@ -168,10 +169,6 @@ class Parser(object):
 
     def parse_configuration(self, s):
         self.result = self.config_parser.ignore(pythonStyleComment).parseString(s)
-
-
-        self.config.partitions = self.partitions
-        self.config.schemes = self.schemes
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.DEBUG)

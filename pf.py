@@ -58,25 +58,25 @@ def main():
     fmt = logging.Formatter('%(levelname)-8s | %(message)s')
     handler.setFormatter(fmt)
     logging.getLogger('').addHandler(handler)
-    # Set the base logger to do debugging (as we track this in the log file)
-    logging.getLogger('').setLevel(logging.DEBUG)
 
     if options.verbose:
         level = logging.DEBUG
     else:
         level = logging.INFO
 
+    logging.getLogger().setLevel(logging.DEBUG)
+    handler.setLevel(level)
+
     # Load, using the first argument as the folder
     try:
         config.initialise(args[0])
-        # config.load()
+        config.load()
         # log.info("Configuration appears to be okay.")
         if options.check_only:
             log.info("Exiting without processing as requested...")
         else:
             # Now try processing everything....
-            log.info("Beginning processing.")
-            config.load()
+            log.info("Beginning processing...")
             # config.process()
         # Successful exit
         log.info("Success: processing complete.")
@@ -89,9 +89,9 @@ def main():
 
 if __name__ == "__main__":
     # Well behaved unix programs exits with 0 on success...
-    sys.argv = ['arg', '-v', 'example']
+    # sys.argv = ['arg', '-v', 'example']
     # sys.argv = ['arg', 'example']
-    # sys.argv = ['arg', '-vc', 'example']
+    sys.argv = ['arg', '-vc', 'example']
     sys.exit(main())
 
 

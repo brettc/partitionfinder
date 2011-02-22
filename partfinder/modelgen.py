@@ -55,7 +55,6 @@ class ModelGeneratorResult(object):
     def __str__(self):
         return "ModelGeneratorResult()"
 
-# Make the parser a singleton
 class Parser(object):
     def __init__(self):
 
@@ -111,7 +110,6 @@ class Parser(object):
 the_parser = Parser()
 
 def parse(input_string):
-    log.debug("Parsing ModelGenerator output....")
     return the_parser.parse(input_string)
 
 if __name__ == '__main__':

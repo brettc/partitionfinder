@@ -5,7 +5,6 @@ import os, shutil
 
 from partition import Partition
 from parser import Parser, ParserError
-from fasta import read_fasta, FastaError
 
 __all__ =  ["ConfigurationError", "settings", "initialise"]
 
@@ -103,8 +102,8 @@ def load():
 
     log.info("Loading configuration at '%s'", settings.config_path)
     try:
-        p = Parser(self)
-        self.processing = p.parse_file(self.config_path)
+        p = Parser()
+        p.parse_file(settings.config_path)
     except ParserError, p:
         # Catch any parsing errors, print something out, then raise a
         # configuration error, as this is the general error we expect from
@@ -112,16 +111,16 @@ def load():
         log.error(p.format_message())
         raise ConfigurationError
 
-    self.alignment_path = os.path.join(self.base_path,
-                                        self.alignment_file)
-    _check_file(self.alignment_path)
+    settings.alignment_path = os.path.join(settings.base_path,
+                                        settings.alignment_file)
+    _check_file(settings.alignment_path)
 
     # Now read in the sequence as part of the loading
-    try:
-        self.sequence = read_fasta(self.alignment_path)
-    except FastaError:
-        log.error("Cannot load Fasta file '%s'" % self.alignment_path)
-        raise ConfigurationError
+    # try:
+        # self.sequence = read_fasta(settings.alignment_path)
+    # except FastaError:
+        # log.error("Cannot load Fasta file '%s'" % self.alignment_path)
+        # raise ConfigurationError
 
 def find_modelgenerator():
     """Make sure we know where the java file is..."""

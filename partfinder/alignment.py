@@ -1,23 +1,25 @@
-"""Loading and Saving Alignment Files
+"""Loading, Saving, Parsing and Analysing Alignment Files
 
     Fasta is currently the only thing supported
 """
 import logging
 log = logging.getLogger("alignment")
 
+import tempfile
+import os
+
 from pyparsing import (
     Word, OneOrMore, alphas, Suppress, Optional, Group, stringEnd,
     delimitedList, ParseException, line, lineno, col, LineStart, restOfLine,
     LineEnd, White, Literal)
 
-import modelgen
-import tempfile
+import config, modelgen
 
 class AlignmentError(Exception):
     pass
 
 class FastaParser(object):
-    """Loads the Parser files and validates them"""
+    """Parses a fasta definition and returns species codon pairs"""
     def __init__(self):
         self.sequences = {}
         self.seqlen = None
@@ -43,26 +45,50 @@ class FastaParser(object):
         try:
             defs = self.root_parser.parseString(s)
         except ParseException, p:
-            log.error(p.format_message())
+            log.error("Error in Fasta Parsing:" + str(p))
             raise AlignmentError
 
-        # Don't make a dictionary, as we want to check it for repeats
+        # Don't make a dictionary yet, as we want to check it for repeats
         return [(x.species, x.codons) for x in defs]
 
+# Stateless singleton parser
 the_parser = FastaParser()
 
 class Alignment(object):
-    def __init__(self, *defs):
-        """A series of species / sequences
+    def __init__(self, name):
+        self.name = name
+        log.debug("Created %s", self)
 
-        e.g 
-        
-        Alignment(("dog", "GATC"), ("cat", "GATT"))
-        """
+    def __str__(self):
+        return "Alignment(%s)" % self.name
+
+    @property
+    def source_path(self):
+        return self.path + ".fasta"
+
+    @property
+    def analysis_path(self):
+        return self.path + ".out"
+
+    @property
+    def path(self):
+        # Defer to something that get's defined differently in subclasses
+        # And cache it.
+        if not hasattr(self, "_path"):
+            self._path = self.get_path()
+            log.debug("making path %s", self._path)
+        return self._path
+
+    def get_path(self):
+        # Don't use this class -- use one of the subclasses below
+        raise NotImplemented
 
     def from_parser_output(self, defs):
+        """A series of species / sequences tuples
+        e.g def = ("dog", "GATC"), ("cat", "GATT")
+        """
         species = {}
-        sequence_len = None
+        slen = None
         for spec, seq in defs: 
             log.debug("Found Sequence for %s: %s...", spec, seq[:20])
             if spec in species:
@@ -70,89 +96,113 @@ class Alignment(object):
                           "in alignment", spec)
                 raise AlignmentError 
 
-            if sequence_len is None:
-                sequence_len = len(seq)
+            # Assign it
+            species[spec] = seq
+
+            if slen is None:
+                slen = len(seq)
             else:
-                if len(seq) != sequence_len:
+                if len(seq) != slen:
                     log.error("Sequence length of %s "
                               "differs from previous sequences", spec)
                     raise AlignmentError
 
         self.species = species
-        self.sequence_length = sequence_len
+        self.sequence_length = slen
 
-    def from_file(self):
-        pass
+    def read_source(self):
+        if not self.exists():
+            log.error("Cannot find sequence file '%s'", self.source_path)
+            raise AlignmentError
 
-    def write(self, fd):
-        # f = open(pth, 'w')
-        # log.debug("Writing fasta file '%s'", pth)
+        log.debug("Roading fasta file '%s'", self.source_path)
+        text = open(self.source_path, 'r').read()
+        self.from_parser_output(the_parser.parse(text))
+        
+    def write_source(self):
+        fd = open(self.source_path, 'w')
+        log.debug("Writing %s to fasta file '%s'", self, self.source_path)
         for species, sequence in self.species.iteritems():
             fd.write(">%s\n" % species)
             fd.write("%s\n" % sequence)
 
-    def exists(self):
-        pass
+    def source_exists(self):
+        return os.path.exists(self.source_path)
+    def analysis_exists(self):
+        return os.path.exists(self.analysis_path)
 
-    def from_columns(self, source, columns):
+    def check_against_saved(self):
+        # TODO: check that it is the same...?
         pass
-
-    def path(self):
-        raise NotImplemented
 
     def analyse(self):
-        
+        if self.source_exists():
+            # We're already written a file of this name
+            log.debug("%s already found at '%s'", self, self.source_path)
+            self.check_against_saved()
+        else:
+            # Otherwise write it out
+            self.write_source()
 
-        pass
-        # modelgen stuff here
+        fresh_analysis = True
+        if self.analysis_exists():
+            # The analysis has already been written!
+            log.debug("Read in previous analysis of %s", self)
+            output = file(self.analysis_path, 'r').read()
+            fresh_analysis = False
+        else:
+            output = modelgen.run(self.source_path)
+            open(self.analysis_path, 'w').write(output)
 
-class SubsetAlignment(Alignment):
-    """Created on the fly, if it doesn't already exist"""
-    def __init__(self, unique_name, columns):
-        # First, check to see if it exists already. If so, don't bother
-        # creating it again.
-        #
+        log.debug("Parsing ModelGenerator output for %s", self)
+        result = modelgen.parse(output)
 
-        pass
-
-    def path(self):
-        return config.settings.output_path
-
+        if fresh_analysis:
+            # Show them how long it took.
+            log.debug("New analysis of %s took %d seconds", self, result.processing_time)
+        return result
 
 class SourceAlignment(Alignment):
-    """Read from file"""
-    def __init__(self, source_name):
-        pass
+    """The source alignment that is found in the config folder"""
+    def __init__(self, name):
+        Alignment.__init__(self, name)
+        self.read_source()
 
-    def path(self):
-        return config.settings.base_path
+    def get_path(self):
+        return os.path.join(config.settings.base_path, self.name)
 
-class TestAlignment(SourceAlignment):
+class SubsetAlignment(Alignment):
+    """Created an alignment based on some others and a subset definition"""
+    def __init__(self, name, source, subset):
+        """create an alignment for this subset"""
+        Alignment.__init__(self, name)
+        # First, check to see if it exists already. If so, don't bother
+        # creating it again.
+        # self.species = species
+        # self.sequence_length = slen
+        # TODO Check sequence len against subset 
+        species = {}
+
+        # Pull out the columns we need
+        for sname, old_seq in source.species.iteritems():
+            new_seq = ''.join([old_seq[i] for i in subset.columns])
+            species[sname] = new_seq
+        self.species = species
+
+    def get_path(self):
+        return os.path.join(config.settings.output_path, self.name)
+
+class TestAlignment(Alignment):
     """Good for testing stuff"""
-    def __init__(self, text):
-        self.name = "unknown"
-        self.saved = False
-        defs = the_parser.parse(text)
-        self.from_parser_output(defs)
+    def __init__(self, name, text):
+        Alignment.__init__(self, name)
+        self.from_parser_output(the_parser.parse(text))
 
-    @property
-    def path(self):
-        if not self.saved:
-            self._tempfile = tempfile.NamedTemporaryFile()
-            log.debug("Writing alignment to %s", self._tempfile.name)
-            self.write(self._tempfile.file)
-            self.saved = True
-
-        return self._tempfile.name
-
+    def get_path(self):
+        return os.path.join(config.settings.output_path, self.name)
 
 if __name__ == '__main__':
-    import sys
-    import modelgen
-    import config
-    logging.basicConfig(level=logging.DEBUG)
-    config.initialise("~/tmp")
-    a = TestAlignment(r"""
+    test_alignment = r"""
 >spp1
 CTTGAGGTTCAGAATGGTAATGAA------GTGCTGG
 >spp2
@@ -161,12 +211,12 @@ CTTGAGGTACAAAATGGTAATGAG------AGCCTGG
 CTTGAGGTACAGAATAACAGCGAG------AAGCTGG
 >spp4
 CTCGAGGTGAAAAATGGTGATGCT------CGTCTGG
-""")
-
-    modelgen.run(a.path)
-
-
-
+    """
+    logging.basicConfig(level=logging.DEBUG)
+    config.initialise("~/tmp")
+    a = TestAlignment('test', test_alignment)
+    res = a.analyse()
+    # print res.AIC
 
 
 

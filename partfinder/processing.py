@@ -1,6 +1,15 @@
 import multiprocessing
 import subprocess
 
+def process(s):
+    pass
+
+def multiprocess_all(s):
+    pass
+
+def process_all(s):
+    pass
+
 def work(cmd):
     # return subprocess.call(cmd, shell=False)
     p = subprocess.Popen('ctags -R .'.split(),

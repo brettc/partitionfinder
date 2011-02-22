@@ -2,7 +2,8 @@ import logging
 log = logging.getLogger("subset")
 import os
 
-from fasta import write_fasta
+# from alignment import SubsetAlignment
+import alignment
 
 class SubsetError(Exception):
     pass
@@ -51,10 +52,11 @@ class Subset(object):
 
     def make_filename(self):
         s = sorted([p.name for p in self.partitions])
-        return '-'.join(s) + ".fasta"
+        return '-'.join(s)
 
     def analyse(self):
-        # Check first to see if we've got the results
+        # Check first to see if we've got the results, otherwise calculate and
+        # cache them.
         if self.partitions in self._results_cache:
             log.debug("Returning cached result for %s", self)
             return self._results_cache[self.partitions]
@@ -66,28 +68,10 @@ class Subset(object):
 
     def _really_analyse(self):
         fname = self.make_filename()
-        sa = SubsetAlignment(fname, self.columns)
-        result = sa.analyse()
-        return result
-
-    def write_alignment(self):
-        """create an alignment for this subset"""
-        align = {}
-        self.fname = self.make_filename()
-        align_path = os.path.join(config.settings.output_path, self.fname)
-        if os.path.exists(align_path):
-            log.debug(
-                "Fasta file '%s' already exists, not rewriting",
-                os.path.basename(align_path))
-            return 
-
-        # Pull out the columns we need
-        for species, old_seq in config.sequence.iteritems():
-            new_seq = ''.join([old_seq[i] for i in self.columns])
-            align[species] = new_seq
-
-        write_fasta(align_path, align)
-        self.align_path = align_path
+        sa = alignment.SubsetAlignment(fname, 
+                                       config.settings.source_alignment,
+                                       self)
+        return sa.analyse()
 
     def __iter__(self):
         return iter(self.partitions)
@@ -98,6 +82,17 @@ if __name__ == '__main__':
     import config
     from partition import Partition
     config.initialise("~/tmp", True)
+    a = alignment.TestAlignment('test', r"""
+>spp1
+CTTGAGGTTCAGAATGGTAATGAA------GTGCTGG
+>spp2
+CTTGAGGTACAAAATGGTAATGAG------AGCCTGG
+>spp3
+CTTGAGGTACAGAATAACAGCGAG------AAGCTGG
+>spp4
+CTCGAGGTGAAAAATGGTGATGCT------CGTCTGG
+    """)
+    config.settings.source_alignment = a
 
     pa = Partition('a', (1, 10, 3))
     pb = Partition('b', (2, 10, 3))
@@ -106,7 +101,6 @@ if __name__ == '__main__':
     s1 = Subset(pa, pb)
     s2 = Subset(pa, pb)
     s3 = Subset(pc)
-
 
     s1.analyse()
     s2.analyse()
