@@ -8,13 +8,10 @@ from pyparsing import (
     delimitedList, pythonStyleComment, ParseException, line, lineno, col,
     Keyword, ParserElement, ParseException)
 
-import config
 # debugging
 # ParserElement.verbose_stacktrace = True
 
-from partition import Partition, PartitionError, all_partitions
-from scheme import Scheme, SchemeError
-from subset import Subset, SubsetError
+import partition, scheme, subset
 
 class ParserError(Exception):
     """Used for our own parsing problems"""
@@ -36,9 +33,11 @@ class Parser(object):
     # These will get set in the configuration passed in
     required_variables = ['alignment_file']
 
-    def __init__(self):
-        # Config is filled out with objects that the parser creates
-        # self.config = config
+    def __init__(self, settings):
+        # For adding variables
+        self.settings = settings
+
+        # Use these to keep track of stuff that is going on in parser
         self.partitions = []
         self.schemes = []
         self.subsets = []
@@ -109,14 +108,14 @@ class Parser(object):
             raise ParserError(text, loc, "'%s' is not an allowable setting" %
                                  var_def.name)
         else:
-            config.settings.alignment_file = var_def.value
+            self.settings.alignment_file = var_def.value
             log.debug("Setting '%s' to '%s'", var_def.name, var_def.value)
 
     def check_variables(self, text, loc, var_def):
         # Add the stuff to the configuration that was passed in
         # We should check that all the parameters are defined too...
         for var in self.required_variables:
-            if not hasattr(config.settings, var):
+            if not hasattr(self.settings, var):
                 raise ParserError(text, loc, "No '%s' defined in the configuration" % var)
 
     def define_range(self, part):
@@ -133,24 +132,24 @@ class Parser(object):
         """We have everything we need here to make a partition"""
         try:
             # Creation adds it to set
-            p = Partition(part_def.name, *tuple(part_def.parts))
+            p = partition.Partition(part_def.name, *tuple(part_def.parts))
             self.partitions.append(p)
-        except PartitionError:
+        except partition.PartitionError:
             raise ParserError(text, loc, "Error in '%s' can be found" % part_def.name)
 
 
     def check_part_exists(self, text, loc, partref):
-        if partref.name not in all_partitions:
+        if partref.name not in partition.all_partitions:
             raise ParserError(text, loc, "Partition %s not defined" %
                                      partref.name)
 
     def define_subset(self, text, loc, subset_def):
         try:
             # Get the partitions from the names
-            parts = [all_partitions[nm] for nm in subset_def[0]]
+            parts = [partition.all_partitions[nm] for nm in subset_def[0]]
             # create a subset
-            self.subsets.append(Subset(*tuple(parts)))
-        except SubsetError:
+            self.subsets.append(subset.Subset(*tuple(parts)))
+        except subset.SubsetError:
             raise ParserError(text, loc, "Error creating subset...")
     
     def define_schema(self, text, loc, scheme_def):
@@ -158,8 +157,8 @@ class Parser(object):
             # Clear out the subsets as we need to reuse it
             subs = tuple(self.subsets)
             self.subsets = []
-            self.schemes.append(Scheme(scheme_def.name, *subs))
-        except (SchemeError, SubsetError):
+            self.schemes.append(scheme.Scheme(scheme_def.name, *subs))
+        except (scheme.SchemeError, subset.SubsetError):
             raise ParserError(text, loc, "Error in '%s' can be found" %
                                      scheme_def.name)
 

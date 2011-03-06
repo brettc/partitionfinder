@@ -76,7 +76,6 @@ class Alignment(object):
         # And cache it.
         if not hasattr(self, "_path"):
             self._path = self.get_path()
-            log.debug("making path %s", self._path)
         return self._path
 
     def get_path(self):
@@ -90,7 +89,7 @@ class Alignment(object):
         species = {}
         slen = None
         for spec, seq in defs: 
-            log.debug("Found Sequence for %s: %s...", spec, seq[:20])
+            # log.debug("Found Sequence for %s: %s...", spec, seq[:20])
             if spec in species:
                 log.error("Repeated species name '%s' is repeated "
                           "in alignment", spec)
@@ -106,18 +105,18 @@ class Alignment(object):
                     log.error("Sequence length of %s "
                               "differs from previous sequences", spec)
                     raise AlignmentError
-
-        self.species = species
-        self.sequence_length = slen
+        log.debug("Found %d species with sequence length %d", 
+                  len(species), slen)
+        return species, slen
 
     def read_source(self):
-        if not self.exists():
+        if not self.source_exists():
             log.error("Cannot find sequence file '%s'", self.source_path)
             raise AlignmentError
 
-        log.debug("Roading fasta file '%s'", self.source_path)
+        log.debug("Reading fasta file '%s'", self.source_path)
         text = open(self.source_path, 'r').read()
-        self.from_parser_output(the_parser.parse(text))
+        return self.from_parser_output(the_parser.parse(text))
         
     def write_source(self):
         fd = open(self.source_path, 'w')
@@ -131,22 +130,29 @@ class Alignment(object):
     def analysis_exists(self):
         return os.path.exists(self.analysis_path)
 
-    def check_against_saved(self):
-        # TODO: check that it is the same...?
-        pass
+    def same_as_saved(self):
+        spec, slen = self.read_source()
+        if spec == self.species:
+            log.debug("Are same")
+            return True
+        else:
+            log.warning("different")
+            return False
 
     def analyse(self):
         if self.source_exists():
             # We're already written a file of this name
-            log.debug("%s already found at '%s'", self, self.source_path)
-            self.check_against_saved()
+            log.debug("%s already exists at '%s'", self, self.source_path)
+            if self.same_as_saved():
+                log.debug("%s Same", self)
+                same_as = True
+                XXXXXXXX
         else:
             # Otherwise write it out
             self.write_source()
 
         fresh_analysis = True
         if self.analysis_exists():
-            # The analysis has already been written!
             log.debug("Reading in previous analysis of %s", self)
             output = file(self.analysis_path, 'r').read()
             fresh_analysis = False
@@ -198,7 +204,9 @@ class TestAlignment(Alignment):
     """Good for testing stuff"""
     def __init__(self, name, text):
         Alignment.__init__(self, name)
-        self.from_parser_output(the_parser.parse(text))
+        s, l = self.from_parser_output(the_parser.parse(text))
+        self.species = s
+        self.seqlen = l
 
     def get_path(self):
         return os.path.join(config.settings.output_path, self.name)
@@ -206,13 +214,13 @@ class TestAlignment(Alignment):
 if __name__ == '__main__':
     test_alignment = r"""
 >spp1
-CTTGAGGTTCAGAATGGTAATGAA------GTGCTGG
+ATTGAGGTTCAGAATGGTAATGAA------GTGCTGG
 >spp2
 CTTGAGGTACAAAATGGTAATGAG------AGCCTGG
 >spp3
 CTTGAGGTACAGAATAACAGCGAG------AAGCTGG
 >spp4
-CTCGAGGTGAAAAATGGTGATGCT------CGTCTGG
+ATCGAGGTGAAAAATGGTGATGCT------CGTCTGG
     """
     logging.basicConfig(level=logging.DEBUG)
     config.initialise("~/tmp")

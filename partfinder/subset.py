@@ -2,23 +2,16 @@ import logging
 log = logging.getLogger("subset")
 import os
 
-# from alignment import SubsetAlignment
 import alignment
 
 class SubsetError(Exception):
     pass
 
-class SubsetResult(object):
-    def __init__(self):
-        pass
-
-    def __str__(self):
-        return "SubsetResult!"
+results_cache = {}
 
 class Subset(object):
     """A Subset of Partitions
     """
-    _results_cache = {}
 
     def __init__(self, *parts):
 
@@ -57,13 +50,13 @@ class Subset(object):
     def analyse(self):
         # Check first to see if we've got the results, otherwise calculate and
         # cache them.
-        if self.partitions in self._results_cache:
+        if self.partitions in results_cache:
             log.debug("Returning cached result for %s", self)
-            return self._results_cache[self.partitions]
+            return results_cache[self.partitions]
 
         log.debug("Calculating result for %s", self)
         result = self._really_analyse()
-        self._results_cache[self.partitions] = result
+        results_cache[self.partitions] = result
         return result
 
     def _really_analyse(self):

@@ -51,6 +51,10 @@ class Scheme(object):
         all_schemes.add_scheme(self)
         log.debug("Created %s", self)
 
+    def analyse(self):
+        results = [s.analyse() for s in self.subsets]
+        return results
+
     def __str__(self):
         ss = ', '.join([str(s) for s in self.subsets])
         return "Scheme(%s, %s)" % (self.name, ss)

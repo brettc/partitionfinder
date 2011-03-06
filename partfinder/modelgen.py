@@ -132,7 +132,7 @@ CTCGAGGTGAAAAATGGTGATGCT------CGTCTGG
     outp = run(outname)
     # outp = open('output.txt', 'r').read()
     result = parse(outp)
-    print result.AIC
+    # print result.AIC
     print result.processing_time
 
 

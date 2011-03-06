@@ -1,4 +1,30 @@
 
+# How to calculate the AIC for schemes (from ROB)
+
+I've written a little phyml demo in our shared dropbox. Read the Explanation
+file and hopefully it makes sense. Turns out there's a (hopefully minor) bug in
+the new thing he wrote for us, I'm going to play around with it tonight and see
+if I can figure it out. If not, I'll get in touch with him tomorrow.
+
+For the subsets -> Schemes stuff:
+
+Each subset should have a list of models, and the lnL of each model (this is
+calculated with the new, buggy, bit of PhyML), and the number of parameters in
+each model.
+
+For each model in this list, we can then calculate the AIC as follows: AIC=2(k-lnL). 
+
+Where k is the number of parameters in the model. I will write down a list of
+models and p's soon, it'll just be a simple lookup.
+
+This AIC allows us to pick the 'best' model for each subset. 
+
+To calculate the AIC for a scheme, we do this: AIC=2(k-lnL) but now, lnL is the
+sum of  the  lnL's of all the subsets in that scheme, and k is the sum of all
+the k's of the subsets in that scheme, PLUS (2n-3), where N is the number of
+sequences in the dataset (2n-3 is the number of branchlengths), PLUS the number
+of subsets in the scheme minus 1.
+
 # TODO:
 
 * Move fasta into a sequence.py file. Have a sequence class. It will know how to

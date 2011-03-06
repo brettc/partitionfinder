@@ -4,10 +4,9 @@ from logging.handlers import RotatingFileHandler
 
 import os, shutil
 
-from partition import Partition
-from parser import Parser, ParserError
+import parser
 
-__all__ =  ["ConfigurationError", "settings", "initialise"]
+# __all__ =  ["ConfigurationError", "settings", "initialise"]
 
 class ConfigurationError(Exception):
     pass
@@ -89,7 +88,7 @@ def create_debug_log():
     # Append to the log file. we'll get multiple runs then
     log_output = RotatingFileHandler(
         settings.log_path,
-        maxBytes=100*1024,
+        maxBytes=100*1024, # 100K will do?
         backupCount=5,
     )
     log_output.setLevel(logging.DEBUG)
@@ -107,7 +106,7 @@ def load():
 
     log.info("Loading configuration at '%s'", settings.config_path)
     try:
-        p = Parser()
+        p = parser.Parser(settings)
         p.parse_file(settings.config_path)
     except ParserError, p:
         # Catch any parsing errors, print something out, then raise a
@@ -119,13 +118,6 @@ def load():
     settings.alignment_path = os.path.join(settings.base_path,
                                         settings.alignment_file)
     _check_file(settings.alignment_path)
-
-    # Now read in the sequence as part of the loading
-    # try:
-        # self.sequence = read_fasta(settings.alignment_path)
-    # except FastaError:
-        # log.error("Cannot load Fasta file '%s'" % self.alignment_path)
-        # raise ConfigurationError
 
 def find_modelgenerator():
     """Make sure we know where the java file is..."""
