@@ -21,6 +21,7 @@ class Scheme(object):
         for s in subsets:
             for p in s:
                 if p in partitions:
+                    # This is an error -- we'll collect them up
                     duplicates.append(str(p))
                 else:
                     partitions.add(p)
@@ -29,6 +30,7 @@ class Scheme(object):
 
         self.part_subsets = frozenset(part_subsets)
 
+        # Report the errors 
         if duplicates:
             log.error("Scheme '%s' contains duplicate partitions: %s", 
                       name, ', '.join(duplicates))
@@ -37,17 +39,19 @@ class Scheme(object):
         # Hm. It seems this is the only way to get just one item out of a set
         # as pop would remove one...
         pset = iter(partitions).next().partition_set
-        # Set difference
+
+        # Do a set-difference to see what is missing...
         missing = pset.partitions - partitions
         if missing:
             log.error("Scheme '%s' is missing partitions: %s", 
                       name, ', '.join([str(p) for p in missing]))
             raise SchemeError
 
-        # This locks down whether new partitions can be created
+        # This locks down whether new partitions can be created.
         if not all_partitions.finalised:
             all_partitions.finalise()
         
+        # Now add to all_schemes -- more possibility of errors, see below
         all_schemes.add_scheme(self)
         log.debug("Created %s", self)
 
@@ -86,7 +90,6 @@ class AllSchemes(object):
     # Easy iteration
     def __iter__(self):
         return iter(self.schemes_by_name.itervalues())
-
 
 # Container for all schemes that are created
 all_schemes = AllSchemes()

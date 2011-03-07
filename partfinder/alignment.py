@@ -9,50 +9,66 @@ import tempfile
 import os
 
 from pyparsing import (
-    Word, OneOrMore, alphas, Suppress, Optional, Group, stringEnd,
+    Word, OneOrMore, alphas, nums, Suppress, Optional, Group, stringEnd,
     delimitedList, ParseException, line, lineno, col, LineStart, restOfLine,
-    LineEnd, White, Literal)
+    LineEnd, White, Literal, Combine, Or, MatchFirst)
 
 import config, modelgen
 
 class AlignmentError(Exception):
     pass
 
-class FastaParser(object):
+class AlignmentParser(object):
     """Parses a fasta definition and returns species codon pairs"""
+    
+    # I think this covers it...
+    CODONS = Word(alphas + "!*-") 
+
     def __init__(self):
         self.sequences = {}
         self.seqlen = None
 
+        self.root_parser = self.phylip_parser() + stringEnd
+        # self.root_parser = self.phylip_parser() + stringEnd
+
+    def fasta_parser(self):
         # Some syntax that we need, but don't bother looking at
         GREATER = Literal(">")
 
-        # I think this covers it...
-        CODONS = Word(alphas + "!*-") 
-
         seqname = Suppress(LineStart() + GREATER) + restOfLine
         seqname.setParseAction(lambda toks: "".join(toks))
-        seqcodons = OneOrMore(CODONS + Suppress(LineEnd()))
+        seqcodons = OneOrMore(self.CODONS + Suppress(LineEnd()))
         seqcodons.setParseAction(lambda toks: "".join(toks))
 
         # Any sequence is the name follow by the codons
         seq = Group(seqname("species") + seqcodons("codons"))
-
+        sequences = OneOrMore(seq)
         # Main parser: one or more definitions 
-        self.root_parser = OneOrMore(seq) + stringEnd
+        return sequences("sequences")
+
+    def phylip_parser(self):
+
+        INTEGER = Word(nums) 
+        header = Group(INTEGER("species_count") +
+                       INTEGER("codon_count") + restOfLine)
+
+        seqname = Word(alphas + nums, max=10)
+        seq = Group(seqname("species") + self.CODONS("codons")) + Suppress(LineEnd())
+        sequences = OneOrMore(seq)
+        return header("header") + sequences("sequences")
 
     def parse(self, s):
         try:
             defs = self.root_parser.parseString(s)
         except ParseException, p:
-            log.error("Error in Fasta Parsing:" + str(p))
+            log.error("Error in Alignment Parsing:" + str(p))
             raise AlignmentError
 
         # Don't make a dictionary yet, as we want to check it for repeats
-        return [(x.species, x.codons) for x in defs]
+        return [(x.species, x.codons) for x in defs.sequences]
 
 # Stateless singleton parser
-the_parser = FastaParser()
+the_parser = AlignmentParser()
 
 class Alignment(object):
     def __init__(self, name):
@@ -211,7 +227,28 @@ class TestAlignment(Alignment):
     def get_path(self):
         return os.path.join(config.settings.output_path, self.name)
 
-if __name__ == '__main__':
+def test_phylip():
+    test_alignment = r"""165 4000
+X GCCGGCGGGGAAA
+	B	GCCGGCGGGGAAA
+	C	GCCGGCGGGGAAG
+	D	GCCAGCGGGGAAG
+	E	GCCCGGGGGGAAG
+	F	GCCCGTGGGGAAG
+	G	GCCGGCGAGGAAG
+	H	GCCAGCGGGGAAA
+	I	GCCGGCGGGGAAG
+	J	GCCGGCGGGGAAG
+	K	GCCGGCGGGGAAT
+	L	GCCGGCGGGGAAA
+	M	GTCGGCGGGGAAA
+	N	GCCGGCGGGGAAA
+	O	GCCGGCGGGGAAA
+	P	GCCGGCGGGGAAT
+"""
+    print the_parser.parse(test_alignment)
+
+def test_fasta():
     test_alignment = r"""
 >spp1
 ATTGAGGTTCAGAATGGTAATGAA------GTGCTGG
@@ -225,8 +262,9 @@ ATCGAGGTGAAAAATGGTGATGCT------CGTCTGG
     logging.basicConfig(level=logging.DEBUG)
     config.initialise("~/tmp")
     a = TestAlignment('test', test_alignment)
-    res = a.analyse()
+    print a
+    # res = a.analyse()
     # print res.AIC
 
-
-
+if __name__ == '__main__':
+    test_phylip()
