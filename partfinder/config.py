@@ -11,9 +11,6 @@ import parser
 class ConfigurationError(Exception):
     pass
 
-class ProcessingError(Exception):
-    pass
-
 def _check_file(pth):
     if not os.path.exists(pth) or not os.path.isfile(pth):
         log.error("No such file: '%s'", pth)
@@ -76,7 +73,7 @@ def initialise(pth, force_restart=False):
 
     _make_folder(settings.output_path)
 
-    find_modelgenerator()
+    find_program()
 
     init_done = True
 
@@ -119,21 +116,40 @@ def load():
                                         settings.alignment_file)
     _check_file(settings.alignment_path)
 
-def find_modelgenerator():
-    """Make sure we know where the java file is..."""
+def find_program():
+    """Locate the binary ..."""
+
+    # TODO: This is a bit crap... maybe look at how other's do it
+    # We should really just try and run it. Can we just run it to see what
+    # version it is?
+    #
+    # try:
+        # p = Popen(cmd, stdout=PIPE, stderr=STDOUT)
+        # out = p.communicate()[0].decode()
+        # for k, v in CC_SIGNATURE.items():
+            # m = v.search(out)
+            # if m:
+                # return k
+    # except OSError:
+        # pass
+    # return None
+
+    program_name = 'phyml'
+    # if sys.platform == 'win32':
+        # program_name += ".exe"
 
     pth = os.path.abspath(__file__)
     # Split off the name and the directory...
     pth, notused = os.path.split(pth)
     pth, notused = os.path.split(pth)
     # Now go back down into programs...
-    pth = os.path.join(pth, "programs", "modelgenerator.jar")
+    pth = os.path.join(pth, "programs", program_name)
     pth = os.path.normpath(pth)
 
-    log.debug("Checking for modelgenerator program")
+    log.debug("Checking for program %s", program_name)
     _check_file(pth)
-    log.debug("Modelgenerator program found at '%s'" % pth)
-    settings.modelgen_path = pth
+    log.debug("Found at '%s'" % pth)
+    settings.program_path = pth
 
 if __name__ == '__main__':
     import logging

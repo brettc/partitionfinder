@@ -47,8 +47,8 @@ def run(params):
         shutil.rmtree(output_dir)
 
     if p.returncode != 0:
-        log.error("Modelgenerator program failed to execute successfully")
-        raise ModelGeneratorError
+        log.error("program failed to execute successfully")
+        raise PhymlError
 
     # Otherwise this should contain the output. It will need parsing
     return output
@@ -82,14 +82,14 @@ class Parser(object):
         model = (MODEL_LABEL + MODEL("model"))
 
         # Shorthand...
-        def NextLabel(label, val):
+        def nextbit(label, val):
             return Suppress(SkipTo(label)) + val
 
         # Just look for these things
         self.root_parser = \
-                NextLabel(MODEL_LABEL, model) +\
-                NextLabel(LNL_LABEL, lnl) +\
-                NextLabel(TIME_LABEL, time)
+                nextbit(MODEL_LABEL, model) +\
+                nextbit(LNL_LABEL, lnl) +\
+                nextbit(TIME_LABEL, time)
 
     def parse(self, text):
         try:
