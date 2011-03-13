@@ -19,10 +19,6 @@ class PhymlError(Exception):
 def make_tree():
     pass
 
-# DAMN - we get to do different analysis PER subset...
-# So we need to analyse each one differently..
-# So we need to rename the fuckers FOR EACH run. That sucks.
-# OK -- we should copy it to a NEW file with extension, then DELETE it
 def analyse(program, model, alignment, tree):
 
     analysis, output = analysis_path(alignment, model)
