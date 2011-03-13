@@ -148,7 +148,7 @@ def find_program():
 
     log.debug("Checking for program %s", program_name)
     _check_file(pth)
-    log.debug("Found at '%s'" % pth)
+    log.debug("Found program %s at '%s'", program_name, pth)
     settings.program_path = pth
 
 if __name__ == '__main__':

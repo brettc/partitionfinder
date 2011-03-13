@@ -15,6 +15,10 @@ from pyparsing import (
 
 import config, modelgen
 
+# No longer using fasta, but we'll keep it around for the moment...
+# alignment_format = 'fasta'
+alignment_format = 'phy'
+
 class AlignmentError(Exception):
     pass
 
@@ -28,8 +32,11 @@ class AlignmentParser(object):
         self.sequences = {}
         self.seqlen = None
 
-        self.root_parser = self.phylip_parser() + stringEnd
-        # self.root_parser = self.phylip_parser() + stringEnd
+        # TODO: We should be able to read both of these...!
+        if alignment_format == 'phy':
+            self.root_parser = self.phylip_parser() + stringEnd
+        elif alignment_format == 'fasta':
+            self.root_parser = self.fasta_parser() + stringEnd
 
     def fasta_parser(self):
         # Some syntax that we need, but don't bother looking at
@@ -49,8 +56,10 @@ class AlignmentParser(object):
     def phylip_parser(self):
 
         INTEGER = Word(nums) 
+        INTEGER.setParseAction(lambda x: int(x[0]))
+
         header = Group(INTEGER("species_count") +
-                       INTEGER("codon_count") + restOfLine)
+                       INTEGER("codon_count") + Suppress(restOfLine))
 
         seqname = Word(alphas + nums, max=10)
         seq = Group(seqname("species") + self.CODONS("codons")) + Suppress(LineEnd())
@@ -63,6 +72,16 @@ class AlignmentParser(object):
         except ParseException, p:
             log.error("Error in Alignment Parsing:" + str(p))
             raise AlignmentError
+
+        # if we have a header, do some checking
+        if defs.header:
+            if len(defs.sequences) != defs.header.species_count:
+                log.error("Bad Alignment file: species count does not match")
+                raise AlignmentError
+
+            if len(defs.sequences[0][1]) != defs.header.codon_count:
+                log.error("Bad Alignment file: codon count does not match")
+                raise AlignmentError
 
         # Don't make a dictionary yet, as we want to check it for repeats
         return [(x.species, x.codons) for x in defs.sequences]
@@ -80,7 +99,7 @@ class Alignment(object):
 
     @property
     def source_path(self):
-        return self.path + ".fasta"
+        return self.path + "." + alignment_format
 
     @property
     def analysis_path(self):
@@ -133,13 +152,37 @@ class Alignment(object):
         log.debug("Reading fasta file '%s'", self.source_path)
         text = open(self.source_path, 'r').read()
         return self.from_parser_output(the_parser.parse(text))
-        
+
     def write_source(self):
+        if alignment_format == 'phy':
+            self.write_phylip()
+        elif alignment_format is 'fasta':
+            self.write_fasta()
+
+        log.error("Undefined Alignment Format")
+        raise AlignmentError
+
+    def write_fasta(self):
         fd = open(self.source_path, 'w')
         log.debug("Writing %s to fasta file '%s'", self, self.source_path)
         for species, sequence in self.species.iteritems():
             fd.write(">%s\n" % species)
             fd.write("%s\n" % sequence)
+
+    def write_phylip(self):
+        fd = open(self.source_path, 'w')
+        log.debug("Writing %s to phylip file '%s'", self, self.source_path)
+
+        species_count = len(self.species)
+        codon_count = len(iter(self.species.itervalues()).next())
+
+        fd.write("%d %d\n" % (species_count, codon_count))
+        for species, sequence in self.species.iteritems():
+            # Species is max 10 long, clip it and fill with spaces
+            shortened = species[:9].ljust(10, ' ')
+            fd.write(shortened)
+            fd.write(sequence)
+            fd.write("\n")
 
     def source_exists(self):
         return os.path.exists(self.source_path)
@@ -228,8 +271,10 @@ class TestAlignment(Alignment):
         return os.path.join(config.settings.output_path, self.name)
 
 def test_phylip():
-    test_alignment = r"""165 4000
-X GCCGGCGGGGAAA
+    logging.basicConfig(level=logging.DEBUG)
+    config.initialise("~/tmp")
+    test_alignment = r"""16 13
+A GCCGGCGGGGAAA
 	B	GCCGGCGGGGAAA
 	C	GCCGGCGGGGAAG
 	D	GCCAGCGGGGAAG
