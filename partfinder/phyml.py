@@ -5,7 +5,7 @@ log = logging.getLogger("phyml")
 
 import config
 
-import subprocess, shlex, tempfile, os, shutil
+import subprocess, shlex, tempfile, os, shutil, sys
 
 from pyparsing import (
     Word, Literal, alphas, nums, Suppress, Group, stringEnd, ParseException,
@@ -22,9 +22,20 @@ def make_tree():
 # DAMN - we get to do different analysis PER subset...
 # So we need to analyse each one differently..
 # So we need to rename the fuckers FOR EACH run. That sucks.
+# OK -- we should copy it to a NEW file with extension, then DELETE it
 def analyse(program, model, alignment, tree):
+
+    analysis, output = analysis_path(alignment, model)
+
+    # Make a copy or a symlink so that we don't overwrite different model runs
+    # of the same alignment
+    if sys.platform in ("darwin", "unix"):
+        os.symlink(alignment, analysis)
+    else:
+        shutil.copyfile(alignment, analysis)
+
     command = "%s -i %s -u %s -m %s -c 8 -a e -o lr -b 0 --constrained_lens" % (
-        program, alignment, tree, model)
+        program, analysis, tree, model)
 
     log.debug("Running command '%s'", command)
 
@@ -44,11 +55,21 @@ def analyse(program, model, alignment, tree):
         log.error(stderr)
         raise PhymlError
 
-    pth, ext = os.path.splitext(alignment)
-    output_path = pth + ".phy_phyml_stats.txt"
+    # Now get rid of this -- we have the original 
+    os.remove(analysis)
 
-    # Return the output path
-    return output_path
+    # Return the output path, where we can read the info
+    return output
+
+def analysis_path(alignment, model):
+    pth, ext = os.path.splitext(alignment)
+
+    analyse = pth + "[" + model + "]" + ext
+
+    pth, ext = os.path.splitext(analyse)
+    output = pth + ".phy_phyml_stats.txt"
+
+    return analyse, output
 
 class PhymlResult(object):
     def __init__(self, model, lnl, seconds):
