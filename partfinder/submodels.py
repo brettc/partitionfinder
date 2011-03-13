@@ -41,7 +41,7 @@ def get_submodels(N):
     [0, 1, 2, 2]
     [0, 1, 2, 3]
     """
-    log.debug("Generating all submodels for this many %s partitions", N)
+    log.debug("Generating submodels for %s partitions", N)
     result = []
     submodel_generator(result, [], 1, N)
     log.debug("Resulting number of partitions is %s", len(result))

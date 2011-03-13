@@ -14,7 +14,9 @@ class AllPartitions(object):
     """The set of all partitions loaded from a configuration file"""
     def __init__(self):
         """A set of Partitions"""
+        self.sequence = 0
         self.parts_by_name = {}
+        self.parts_by_number = {}
         self.partitions = set()
 
         # All of the columns
@@ -51,6 +53,8 @@ class AllPartitions(object):
 
         # Make sure we can look up by name
         self.parts_by_name[p.name] = p
+        self.parts_by_number[self.sequence] = p
+        self.sequence += 1
         self.partitions.add(p)
 
         # Merge all the columns
@@ -82,7 +86,12 @@ class AllPartitions(object):
     def __iter__(self):
         return iter(self.partitions)
 
+    def __len__(self):
+        return len(self.partitions)
+
     def __getitem__(self, k):
+        if type(k) is int:
+            return self.parts_by_number[k]
         return self.parts_by_name[k]
 
     def __contains__(self, k):
@@ -95,10 +104,12 @@ all_partitions = AllPartitions()
 
 class Partition(object):
     """A set of columns from an alignment"""
-    def __init__(self, name, *partlist):
+    def __init__(self, name=None, *partlist):
         """A named partition
 
         """
+        # if name is None:
+            # name = str(all_partitions.sequence)
         self.name = name
         description = []
 
@@ -164,7 +175,9 @@ if __name__ == '__main__':
     import logging
     logging.basicConfig(level=logging.DEBUG)
     p1 = Partition('one', (1, 10))
-    p2 = Partition('two', (1, 20))
+    p2 = Partition('two', (11, 20))
+
+    print all_partitions[0]
     # ps = PartitionSet(p1, p2)
 
     # print ps

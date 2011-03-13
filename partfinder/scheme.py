@@ -98,6 +98,15 @@ def generate_all_schemes():
     import subset
     import submodels
     # TODO
+    partnum = len(all_partitions)
+    mods = submodels.get_submodels(partnum)
+    for m in mods:
+        subs = {}
+        for i, subnum in enumerate(m):
+            insub = subs.setdefault(subnum, [])
+            insub.append(i)
+        print subs
+
 
 if __name__ == '__main__':
     import logging
@@ -109,7 +118,8 @@ if __name__ == '__main__':
     pb = Partition('b', (2, 10, 3))
     pc = Partition('c', (3, 10, 3))
 
+    generate_all_schemes()
     # This should give us an error!
-    s = Scheme('x', Subset(pa, pc), Subset(pb))
-    s = Scheme('y', Subset(pa, pc), Subset(pb))
+    # s = Scheme('x', Subset(pa, pc), Subset(pb))
+    # s = Scheme('y', Subset(pa, pc), Subset(pb))
     

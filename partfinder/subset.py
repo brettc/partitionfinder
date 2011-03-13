@@ -61,9 +61,10 @@ if __name__ == '__main__':
     pc = Partition('c', (3, 10, 3))
 
     s1 = Subset(pa, pb)
-    s2 = Subset(pa, pb)
+    s2 = Subset(pa, pb, pc)
     s3 = Subset(pc)
 
     print s1.name
+    print s2.name
 
 
