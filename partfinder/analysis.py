@@ -1,6 +1,9 @@
 import multiprocessing
 import subprocess
 
+import scheme, subset, partition
+
+results_cache = {}
 
 def process(s):
     pass
@@ -20,6 +23,12 @@ def work(cmd):
 
     stdout, stderr = p.communicate()
     return stdout
+
+def multi():
+    count = multiprocessing.cpu_count()
+    pool = multiprocessing.Pool(processes=count)
+    x = pool.map(work, ['ls'] * 20)
+    print x
 
 class Subset:
     # From Subset
@@ -107,10 +116,6 @@ class X:
         raise NotImplemented
 
 if __name__ == '__main__':
-    count = multiprocessing.cpu_count()
-    pool = multiprocessing.Pool(processes=count)
-    x = pool.map(work, ['ls'] * 20)
-    print x
 
 """
 # 1. Try multiprocessing using pool

@@ -7,7 +7,6 @@ import alignment
 class SubsetError(Exception):
     pass
 
-results_cache = {}
 
 class Subset(object):
     """A Subset of Partitions
