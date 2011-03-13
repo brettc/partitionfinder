@@ -73,9 +73,18 @@ def initialise(pth, force_restart=False):
 
     _make_folder(settings.output_path)
 
+    settings.test_path = os.path.join(get_root_install_path(), 'tests')
+
     find_program()
 
     init_done = True
+
+def get_root_install_path():
+    pth = os.path.abspath(__file__)
+    # Split off the name and the directory...
+    pth, notused = os.path.split(pth)
+    pth, notused = os.path.split(pth)
+    return pth
 
 def create_debug_log():
     """Add a full debug log file in the folder"""
@@ -138,12 +147,8 @@ def find_program():
     # if sys.platform == 'win32':
         # program_name += ".exe"
 
-    pth = os.path.abspath(__file__)
-    # Split off the name and the directory...
-    pth, notused = os.path.split(pth)
-    pth, notused = os.path.split(pth)
     # Now go back down into programs...
-    pth = os.path.join(pth, "programs", program_name)
+    pth = os.path.join(get_root_install_path(), "programs", program_name)
     pth = os.path.normpath(pth)
 
     log.debug("Checking for program %s", program_name)
@@ -151,7 +156,15 @@ def find_program():
     log.debug("Found program %s at '%s'", program_name, pth)
     settings.program_path = pth
 
+def report_settings():
+    log.debug("Settings are as follows:")
+    for x in settings.__dict__:
+        if not x.startswith('__'):
+            log.debug("%s: %s", x, getattr(settings, x))
+
 if __name__ == '__main__':
     import logging
     logging.basicConfig(level=logging.DEBUG)
     initialise("~/tmp", True)
+    report_settings()
+        

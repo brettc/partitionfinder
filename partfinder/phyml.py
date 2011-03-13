@@ -15,43 +15,40 @@ from pyparsing import (
 class PhymlError(Exception):
     pass
 
-def run(params):
-    # Run it in a temporary directory, so we can ditch all the output.
-    output_dir = tempfile.mkdtemp()
-    log.debug("Created temporary folder %s for phyml output", output_dir)
+# This should generate a bootstrap tree 
+def make_tree():
+    pass
 
-    model = "HKY"
-    binary_path = config.settings.program_path
-    alignment_path = "xxx.phy"
-    tree_path = "xxx_tree.phy"
-    # How does this work?
-    output_path = alignment + ".phy_phyml_stats.txt"
+# DAMN - we get to do different analysis PER subset...
+# So we need to analyse each one differently..
+# So we need to rename the fuckers FOR EACH run. That sucks.
+def analyse(program, model, alignment, tree):
+    command = "%s -i %s -u %s -m %s -c 8 -a e -o lr -b 0 --constrained_lens" % (
+        program, alignment, tree, model)
 
-    command = "%s -i %s -u %s -m %s -c 8 -a e  --free_rates -o r -b 0" % (
-        binary_path, alignment_path, tree_path, model)
+    log.debug("Running command '%s'", command)
 
-    try:
-        log.debug("Running command '%s'", command)
+    # Note: We use shlex.split as it does a proper job of handling command
+    # lines that are complex
+    p = subprocess.Popen(
+        shlex.split(command),
+        shell=False,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE)
 
-        # Note: We use shlex.split as it does a proper job of handling command
-        # lines that are complex
-        p = subprocess.Popen(
-            shlex.split(command),
-            shell=False,
-            cwd=output_dir,
-            stdout=subprocess.PIPE)
-        stdout, stderr = p.communicate()
-        output = open(output_path, 'rb').read()
-    finally:
-        log.debug("Removing temporary folder %s", output_dir)
-        shutil.rmtree(output_dir)
+    # Capture the output, we might put it into the errors
+    stdout, stderr = p.communicate()
 
     if p.returncode != 0:
-        log.error("program failed to execute successfully")
+        log.error("program failed to execute successfully: output follows")
+        log.error(stderr)
         raise PhymlError
 
-    # Otherwise this should contain the output. It will need parsing
-    return output
+    pth, ext = os.path.splitext(alignment)
+    output_path = pth + ".phy_phyml_stats.txt"
+
+    # Return the output path
+    return output_path
 
 class PhymlResult(object):
     def __init__(self, model, lnl, seconds):
@@ -92,16 +89,18 @@ class Parser(object):
                 nextbit(TIME_LABEL, time)
 
     def parse(self, text):
+        log.info("Parsing phyml output...")
         try:
             tokens = self.root_parser.parseString(text)
         except ParseException, p:
             log.error(p.format_message())
             raise PhymlError
 
-        return PhymlResult(
-            lnl=tokens.lnl, 
-            seconds=tokens.seconds, 
-            model=tokens.model)
+        result = PhymlResult(
+            lnl=tokens.lnl, seconds=tokens.seconds, model=tokens.model)
+
+        log.info("Parsed phyml output is %s", result)
+        return result
 
         # We'll scan for what we want, rather than parse the whole thing
         # for match in self.match_parser.scanString(text):
@@ -116,58 +115,13 @@ the_parser = Parser()
 def parse(text):
     return the_parser.parse(text)
 
-typical_output = r"""
- oooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo
-                                  ---  PhyML 20110223  ---                                             
-                            http://www.atgc-montpellier.fr/phyml                                          
-                         Copyright CNRS - Universite Montpellier II                                 
- oooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo
-
-. Sequence filename: 			part1.phy
-. Data set: 				#1
-. Tree topology: 			fixed
-. Initial tree: 			user tree (optimised_start_tree.phy)
-. Model of nucleotides substitution: 	HKY85
-. Number of taxa: 			16
-. Log-likelihood: 			-14771.02516
-. Unconstrained likelihood: 		-5085.09326
-. Parsimony: 				2017
-. Tree size: 				0.09873
-. Discrete gamma model: 		No
-  - Number of categories: 		8
-  - Relative rate in class 1: 		1.00000 [prop=0.125000] 		
-  - Relative rate in class 2: 		1.00000 [prop=0.125000] 		
-  - Relative rate in class 3: 		1.00000 [prop=0.125000] 		
-  - Relative rate in class 4: 		1.00000 [prop=0.125000] 		
-  - Relative rate in class 5: 		1.00000 [prop=0.125000] 		
-  - Relative rate in class 6: 		1.00000 [prop=0.125000] 		
-  - Relative rate in class 7: 		1.00000 [prop=0.125000] 		
-  - Relative rate in class 8: 		1.00000 [prop=0.125000] 		
-. Transition/transversion ratio: 	1.649
-. Nucleotides frequencies:
-  - f(A)= 0.19025
-  - f(C)= 0.32044
-  - f(G)= 0.29719
-  - f(T)= 0.19212
-
-. Run ID:				none
-. Random seed:				1299409504
-. Subtree patterns aliasing:		no
-. Version:				20110223
-. Time used:				0h0m2s (2 seconds)
-
- oooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo
- Suggested citations:
- S. Guindon, JF. Dufayard, V. Lefort, M. Anisimova, W. Hordijk, O. Gascuel
- "New algorithms and methods to estimate maximum-likelihood phylogenies: assessing the performance of PhyML 3.0."
- Systematic Biology. 2010. 59(3):307-321.
-
- S. Guindon & O. Gascuel
- "A simple, fast, and accurate algorithm to estimate large phylogenies by maximum likelihood"
- Systematic Biology. 2003. 52(5):696-704.
- oooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo
-"""
-
 if __name__ == '__main__':
+    logging.basicConfig(level=logging.DEBUG)
+    config.initialise("~/tmp")
+    s = config.settings
+    al = os.path.join(s.test_path, 'part1.phy')
+    tr = os.path.join(s.test_path, 'start_tree_correct.phy')
+    out_pth = analyse(s.program_path, "HKY", al, tr)
+    output = open(out_pth, 'rb').read()
     p = Parser()
-    print p.parse(typical_output)
+    res = p.parse(output)
