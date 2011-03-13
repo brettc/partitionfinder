@@ -94,6 +94,11 @@ class AllSchemes(object):
 # Container for all schemes that are created
 all_schemes = AllSchemes()
 
+def generate_all_schemes():
+    import subset
+    import submodels
+    # TODO
+
 if __name__ == '__main__':
     import logging
     logging.basicConfig(level=logging.DEBUG)

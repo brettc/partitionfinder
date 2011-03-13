@@ -1,6 +1,4 @@
-"""Loading, Saving, Parsing and Analysing Alignment Files
-
-    Fasta is currently the only thing supported
+"""Loading, Saving, Parsing Alignment Files
 """
 import logging
 log = logging.getLogger("alignment")
@@ -13,9 +11,10 @@ from pyparsing import (
     delimitedList, ParseException, line, lineno, col, LineStart, restOfLine,
     LineEnd, White, Literal, Combine, Or, MatchFirst)
 
-import config, modelgen
+import config
 
 # No longer using fasta, but we'll keep it around for the moment...
+# Should really detect which it is...
 # alignment_format = 'fasta'
 alignment_format = 'phy'
 
@@ -62,7 +61,14 @@ class AlignmentParser(object):
                        INTEGER("codon_count") + Suppress(restOfLine))
 
         seqname = Word(alphas + nums, max=10)
-        seq = Group(seqname("species") + self.CODONS("codons")) + Suppress(LineEnd())
+
+        # Take a copy and disallow line breaks in the codons
+        codons = self.CODONS.copy()
+        codons.setWhitespaceChars(" \t")
+        codonrepeats = OneOrMore(codons)
+
+        codonrepeats.setParseAction(lambda x: ''.join(x))
+        seq = Group(seqname("species") + codonrepeats("codons")) + Suppress(LineEnd())
         sequences = OneOrMore(seq)
         return header("header") + sequences("sequences")
 
@@ -72,6 +78,7 @@ class AlignmentParser(object):
         except ParseException, p:
             log.error("Error in Alignment Parsing:" + str(p))
             raise AlignmentError
+        print defs
 
         # if we have a header, do some checking
         if defs.header:
@@ -96,26 +103,6 @@ class Alignment(object):
 
     def __str__(self):
         return "Alignment(%s)" % self.name
-
-    @property
-    def source_path(self):
-        return self.path + "." + alignment_format
-
-    @property
-    def analysis_path(self):
-        return self.path + ".out"
-
-    @property
-    def path(self):
-        # Defer to something that get's defined differently in subclasses
-        # And cache it.
-        if not hasattr(self, "_path"):
-            self._path = self.get_path()
-        return self._path
-
-    def get_path(self):
-        # Don't use this class -- use one of the subclasses below
-        raise NotImplemented
 
     def from_parser_output(self, defs):
         """A series of species / sequences tuples
@@ -144,34 +131,34 @@ class Alignment(object):
                   len(species), slen)
         return species, slen
 
-    def read_source(self):
-        if not self.source_exists():
-            log.error("Cannot find sequence file '%s'", self.source_path)
+    def read(self, pth):
+        if not os.path.exists(pth):
+            log.error("Cannot find sequence file '%s'", pth)
             raise AlignmentError
 
-        log.debug("Reading fasta file '%s'", self.source_path)
-        text = open(self.source_path, 'r').read()
+        log.debug("Reading alignment file '%s'", pth)
+        text = open(pth, 'r').read()
         return self.from_parser_output(the_parser.parse(text))
 
-    def write_source(self):
+    def write(self, pth):
         if alignment_format == 'phy':
-            self.write_phylip()
+            self.write_phylip(pth)
         elif alignment_format is 'fasta':
-            self.write_fasta()
+            self.write_fasta(pth)
 
         log.error("Undefined Alignment Format")
         raise AlignmentError
 
-    def write_fasta(self):
-        fd = open(self.source_path, 'w')
-        log.debug("Writing %s to fasta file '%s'", self, self.source_path)
+    def write_fasta(self, pth):
+        fd = open(pth, 'w')
+        log.debug("Writing %s to fasta file '%s'", self, pth)
         for species, sequence in self.species.iteritems():
             fd.write(">%s\n" % species)
             fd.write("%s\n" % sequence)
 
-    def write_phylip(self):
-        fd = open(self.source_path, 'w')
-        log.debug("Writing %s to phylip file '%s'", self, self.source_path)
+    def write_phylip(self, pth):
+        fd = open(pth, 'w')
+        log.debug("Writing %s to phylip file '%s'", self, pth)
 
         species_count = len(self.species)
         codon_count = len(iter(self.species.itervalues()).next())
@@ -184,59 +171,14 @@ class Alignment(object):
             fd.write(sequence)
             fd.write("\n")
 
-    def source_exists(self):
-        return os.path.exists(self.source_path)
-    def analysis_exists(self):
-        return os.path.exists(self.analysis_path)
-
-    def same_as_saved(self):
-        spec, slen = self.read_source()
-        if spec == self.species:
-            log.debug("Are same")
-            return True
-        else:
-            log.warning("different")
-            return False
-
-    def analyse(self):
-        if self.source_exists():
-            # We're already written a file of this name
-            log.debug("%s already exists at '%s'", self, self.source_path)
-            if self.same_as_saved():
-                log.debug("%s Same", self)
-                same_as = True
-                XXXXXXXX
-        else:
-            # Otherwise write it out
-            self.write_source()
-
-        fresh_analysis = True
-        if self.analysis_exists():
-            log.debug("Reading in previous analysis of %s", self)
-            output = file(self.analysis_path, 'r').read()
-            fresh_analysis = False
-        else:
-            output = modelgen.run(self.source_path)
-            log.debug("Saving analysis output of %s to %s", self,
-                      self.analysis_path)
-            open(self.analysis_path, 'w').write(output)
-
-        log.debug("Parsing ModelGenerator output for %s", self)
-        result = modelgen.parse(output)
-
-        if fresh_analysis:
-            # Show them how long it took.
-            log.debug("New analysis of %s took %d seconds", self, result.processing_time)
-        return result
-
 class SourceAlignment(Alignment):
     """The source alignment that is found in the config folder"""
     def __init__(self, name):
         Alignment.__init__(self, name)
-        self.read_source()
+        # self.read_source()
 
-    def get_path(self):
-        return os.path.join(config.settings.base_path, self.name)
+    # def get_path(self):
+        # return os.path.join(config.settings.base_path, self.name)
 
 class SubsetAlignment(Alignment):
     """Created an alignment based on some others and a subset definition"""
@@ -267,8 +209,8 @@ class TestAlignment(Alignment):
         self.species = s
         self.seqlen = l
 
-    def get_path(self):
-        return os.path.join(config.settings.output_path, self.name)
+    # def get_path(self):
+        # return os.path.join(config.settings.output_path, self.name)
 
 def test_phylip():
     logging.basicConfig(level=logging.DEBUG)
@@ -278,18 +220,18 @@ A GCCGGCGGGGAAA
 	B	GCCGGCGGGGAAA
 	C	GCCGGCGGGGAAG
 	D	GCCAGCGGGGAAG
-	E	GCCCGGGGGGAAG
+E	GCCCGGGGGGAAG
 	F	GCCCGTGGGGAAG
 	G	GCCGGCGAGGAAG
 	H	GCCAGCGGGGAAA
 	I	GCCGGCGGGGAAG
-	J	GCCGGCGGGGAAG
+	J	GCC GGCGGGGAAG
 	K	GCCGGCGGGGAAT
 	L	GCCGGCGGGGAAA
 	M	GTCGGCGGGGAAA
 	N	GCCGGCGGGGAAA
 	O	GCCGGCGGGGAAA
-	P	GCCGGCGGGGAAT
+	P	GCC GGCGGGGAAT
 """
     print the_parser.parse(test_alignment)
 
