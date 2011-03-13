@@ -16,8 +16,8 @@ class Subset(object):
         partset = set()
         for p in parts:
             if p.partition_set is None:
-                log.error("You cannot add a Partition to a Subset until \
-                          the Partition belongs to a PartitionSet")
+                log.error("You cannot add a Partition to a Subset until "
+                          "the Partition belongs to a PartitionSet")
                 raise SubsetError
 
             if p in partset:

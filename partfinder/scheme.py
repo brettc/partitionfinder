@@ -87,6 +87,8 @@ class AllSchemes(object):
         self.schemes_by_name[scheme.name] = scheme
         self.schemes_by_subsets[scheme.part_subsets] = scheme
 
+    def __len__(self):
+        return len(self.schemes_by_name)
     # Easy iteration
     def __iter__(self):
         return iter(self.schemes_by_name.itervalues())
@@ -95,18 +97,34 @@ class AllSchemes(object):
 all_schemes = AllSchemes()
 
 def generate_all_schemes():
+    """Convert the abstract schema given by the algorithm into subsets"""
     import subset
     import submodels
-    # TODO
+
+    # Make sure that no schemes have been defined!
+    if len(all_schemes) > 0:
+        log.error("Cannot generate schemes if some already exist!")
+        raise SchemeError
+    
     partnum = len(all_partitions)
+    # Now generate the pattern for this many partitions
     mods = submodels.get_submodels(partnum)
+    scheme_name = 1
     for m in mods:
         subs = {}
-        for i, subnum in enumerate(m):
-            insub = subs.setdefault(subnum, [])
-            insub.append(i)
-        print subs
+        # We use the numbers returned to group the different subsets
+        for sub_index, grouping in enumerate(m):
+            insub = subs.setdefault(grouping, [])
+            insub.append(sub_index)
+        # We now have what we need to create a subset. Each entry will have a
+        # set of values which are the index for the partition
+        created_subsets = []
+        for sub_indexes in subs.values():
+            sub = Subset(*tuple([all_partitions[i] for i in sub_indexes]))
+            created_subsets.append(sub)
 
+        Scheme(str(scheme_name), *tuple(created_subsets))
+        scheme_name += 1
 
 if __name__ == '__main__':
     import logging
@@ -117,9 +135,9 @@ if __name__ == '__main__':
     pa = Partition('a', (1, 10, 3))
     pb = Partition('b', (2, 10, 3))
     pc = Partition('c', (3, 10, 3))
+    s = Scheme('x', Subset(pa, pc), Subset(pb))
 
     generate_all_schemes()
     # This should give us an error!
-    # s = Scheme('x', Subset(pa, pc), Subset(pb))
     # s = Scheme('y', Subset(pa, pc), Subset(pb))
     
