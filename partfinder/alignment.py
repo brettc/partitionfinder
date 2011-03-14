@@ -96,9 +96,8 @@ class AlignmentParser(object):
 the_parser = AlignmentParser()
 
 class Alignment(object):
-    def __init__(self, name):
-        self.name = name
-        log.debug("Created %s", self)
+    def __init__(self):
+        pass
 
     def __str__(self):
         return "Alignment(%s)" % self.name
@@ -175,21 +174,11 @@ class Alignment(object):
             fd.write(sequence)
             fd.write("\n")
 
-class SourceAlignment(Alignment):
-    """The source alignment that is found in the config folder"""
-    def __init__(self, name):
-        Alignment.__init__(self, name)
-        self.path = os.path.join(config.settings.base_path, self.name)
-        self.read(self.path)
-
-    # def get_path(self):
-        # return os.path.join(config.settings.base_path, self.name)
-
 class SubsetAlignment(Alignment):
     """Created an alignment based on some others and a subset definition"""
-    def __init__(self, name, source, subset):
+    def __init__(self, source, subset):
         """create an alignment for this subset"""
-        Alignment.__init__(self, name)
+        Alignment.__init__(self)
 
         # Pull out the columns we need
         for sname, old_seq in source.species.iteritems():
@@ -197,17 +186,11 @@ class SubsetAlignment(Alignment):
             species[sname] = new_seq
         self.species = species
 
-    def get_path(self):
-        return os.path.join(config.settings.output_path, self.name)
-
 class TestAlignment(Alignment):
     """Good for testing stuff"""
-    def __init__(self, name, text):
-        Alignment.__init__(self, name)
+    def __init__(self, text):
+        Alignment.__init__(self)
         self.from_parser_output(the_parser.parse(text))
-
-    # def get_path(self):
-        # return os.path.join(config.settings.output_path, self.name)
 
 def test_phylip():
     logging.basicConfig(level=logging.DEBUG)
