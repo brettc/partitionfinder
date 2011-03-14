@@ -185,9 +185,8 @@ if __name__ == '__main__':
     test_config = r"""
 alignment = test.fas 
 
-# schemes = section # Use the stuff defined below
-# schemes = greedy
 # models = JC 
+#
 models = all
 
 [partitions]
