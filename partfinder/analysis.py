@@ -5,12 +5,31 @@ import subprocess
 
 import config, scheme, subset, partition
 
-def analyse_subset_model(subset, model):
-    # This is the core unit!
+# def collect_results():
+    # pass
+# def analyse_subset_model(subset, model):
 
 def analyse_subset(s):
-    for m in models:
-        do a model analysis
+    pass
+    # Here is a sketch of the algorithm
+    # TODO
+    # Write the file
+    # Maybe it is there already?
+    # If so, is it the same?
+    # If yes, continue, otherwise we have an error condition
+    #
+    # NOW Check for the different model outputs
+    #
+    # Are they there?
+    # Is so read them in
+    #
+    # Otherwise RUN the program for each model on this subset alignment
+    # NOTE: Here is where we could easily add multiprocessing...?
+    #
+    # Now read them in.
+    #
+    # Collect the subset results
+    # Decide on the best and set it in the subset
 
 def multiprocess_all(s):
     pass

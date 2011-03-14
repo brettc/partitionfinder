@@ -24,23 +24,24 @@ class Subset(object):
             obj = object.__new__(cls)
             Subset._cache[cacheid] = obj
 
-            # Now initialise it
-            partset = set()
+            # Error checking....
+            tempparts = set()
             for p in parts:
                 if p.partition_set is None:
                     log.error("You cannot add a Partition to a Subset until "
                               "the Partition belongs to a PartitionSet")
                     raise SubsetError
 
-                if p in partset:
+                if p in tempparts:
                     log.error("%s is duplicated in a Subset", p)
                     raise SubsetError
 
-                partset.add(p)
+                tempparts.add(p)
 
-            obj.partitions = frozenset(partset)
+            obj.partitions = cacheid
             
-            # Append all of the columns in the partition
+            # Append all of the columns in the partition -- I think these are
+            # useful...
             obj.columns = []
             obj.columnset = set()
             for p in parts:
@@ -48,6 +49,9 @@ class Subset(object):
                 obj.columnset |= p.columnset
             obj.columns.sort()
             log.debug("Created %s", obj)
+        # else:
+            # log.debug("Reused %s", obj)
+
         return obj
 
     # def __init__(self, *parts):
@@ -77,7 +81,7 @@ if __name__ == '__main__':
 
     s1 = Subset(pa, pb)
     s2 = Subset(pa, pb)
-    s2 = Subset(pa, pc)
+    s3 = Subset(pa, pc)
     print s1 is s2
     # s2 = Subset(pa, pb, pc)
     # s3 = Subset(pc)

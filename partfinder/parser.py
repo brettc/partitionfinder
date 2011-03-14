@@ -204,7 +204,7 @@ by_gene         = (Gene1_pos1, Gene1_pos2, Gene1_pos3) (Gene2_pos1, Gene2_pos2, 
     p = Parser(c)
     try:
         p.parse_configuration(test_config)
-    except ParserError as p:
+    except ParserError, p:
         log.error(p.format_message())
 
     # for s in c.schemes:

@@ -12,27 +12,12 @@ from pyparsing import (
     line, lineno, col, LineStart, SkipTo, LineEnd,
     )
 
+from phyml_models import get_model_commandline
+
 class PhymlError(Exception):
     pass
 
-# This should generate a bootstrap tree 
-def make_tree():
-    pass
-
-def analyse(program, model, alignment, tree):
-
-    analysis, output = analysis_path(alignment, model)
-
-    # Make a copy or a symlink so that we don't overwrite different model runs
-    # of the same alignment
-    if sys.platform in ("darwin", "unix"):
-        os.symlink(alignment, analysis)
-    else:
-        shutil.copyfile(alignment, analysis)
-
-    command = "%s -i %s -u %s -m %s -c 8 -a e -o lr -b 0 --constrained_lens" % (
-        program, analysis, tree, model)
-
+def run_phyml(command):
     log.debug("Running command '%s'", command)
 
     # Note: We use shlex.split as it does a proper job of handling command
@@ -51,11 +36,79 @@ def analyse(program, model, alignment, tree):
         log.error(stderr)
         raise PhymlError
 
+def dupfile(src, dst):
+    # Make a copy or a symlink so that we don't overwrite different model runs
+    # of the same alignment
+    
+    # TODO maybe this should throw...?
+    if os.path.exists(dst):
+        os.remove(dst)
+    if sys.platform in ("darwin", "unix"):
+        os.symlink(src, dst)
+    else:
+        shutil.copyfile(src, dst)
+
+# This should generate a bootstrap tree 
+def make_tree(program, alignment):
+
+    # We can get a rough (but probably correct!) topology using BioNJ, this is like
+    # Neighbour joining but a little bit better. Turns out we can do this already
+    # with PhyML like this:
+
+    # TODO: put into a temp folder?
+
+    # First get the BioNJ topology like this:
+    command = "%s -i %s -o n -b 0" % (program, alignment)
+    run_phyml(command)
+
+    treepth = tree_path(alignment)
+    dirpth, fname = os.path.split(treepth)
+    print dirpth, fname
+    newpth = os.path.join(dirpth, 'tree.phy')
+    log.debug("Moving %s to %s", dirpth, newpth)
+    os.rename(treepth, newpth) 
+
+    # in our case (well behaved data) we get the right topology already like
+    # this, and nearly correct branchlengths too. Even so, we might want to
+    # re-estimate branchlengths from scratch using a better model.
+
+    # To do that, first rename the tree 
+
+    # mv 1_2_3_4_simulated.phy_phyml_tree.txt BioNJ_start_tree.phy
+
+    # now, we run PhyML asking it to re-optimise the branch lenghts according to
+    # some model, but not to mess with the topology
+
+    # ./phyml -i 1_2_3_4_simulated.phy -u BioNJ_start_tree.phy -m HKY -c 4 -a e -o lr -b 0
+
+    # using "-o lr" will optimise the model parameters and brlens together. This
+    # is important since the two interact, i.e. good brlens require good model
+    # parameters.
+
+    # mv 1_2_3_4_simulated.phy_phyml_tree.txt optimised_start_tree.phy
+
+
+def analyse(program, model, alignment, tree):
+    """Do the analysis -- this will overwrite stuff!"""
+
+    analysis, output = analysis_path(alignment, model)
+
+    dupfile(alignment, analysis)
+
+    model_params = get_model_commandline(model)
+
+    command = "%s -i %s -u %s %s" % (program, analysis, tree, model_params)
+    run_phyml(command)
+
     # Now get rid of this -- we have the original 
     os.remove(analysis)
 
     # Return the output path, where we can read the info
     return output
+
+def tree_path(alignment):
+    pth, ext = os.path.splitext(alignment)
+    return pth + ".phy_phyml_tree.txt"
 
 def analysis_path(alignment, model):
     pth, ext = os.path.splitext(alignment)
@@ -74,9 +127,8 @@ class PhymlResult(object):
         self.seconds = seconds
 
     def __str__(self):
-        return "PhymlResult(model:%s, lnl:%s, secs:%s)" % (self.model,
-                                                           self.lnl,
-                                                           self.seconds)
+        return "PhymlResult(model:%s, lnl:%s, secs:%s)" % (
+            self.model, self.lnl, self.seconds) 
 
 class Parser(object):
     def __init__(self):
@@ -119,13 +171,6 @@ class Parser(object):
         log.info("Parsed phyml output is %s", result)
         return result
 
-        # We'll scan for what we want, rather than parse the whole thing
-        # for match in self.match_parser.scanString(text):
-            # tokens = match[0]
-            # # print tokens
-            # if tokens.lnl: print tokens.lnl
-            # if tokens.time: print tokens.time[2]
-
 # Stateless, so safe
 the_parser = Parser()
 
@@ -134,11 +179,36 @@ def parse(text):
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.DEBUG)
-    config.initialise("~/tmp")
+
+    import tempfile
+
+    tmp = tempfile.mkdtemp()
+    config.initialise(tmp)
+
     s = config.settings
     al = os.path.join(s.test_path, 'part1.phy')
+    make_tree(s.program_path, al)
+
+
+def test1():
+    import phyml_models 
+    import tempfile
+
+    tmp = tempfile.mkdtemp()
+    config.initialise(tmp)
+
+    s = config.settings
+    # TODO Copy to temp
+    al = os.path.join(s.test_path, 'part1.phy')
+
     tr = os.path.join(s.test_path, 'start_tree_correct.phy')
-    out_pth = analyse(s.program_path, "HKY", al, tr)
-    output = open(out_pth, 'rb').read()
-    p = Parser()
-    res = p.parse(output)
+
+    for model in phyml_models.get_all_models():
+        print "Analysing using model %s:" % model,
+        out_pth = analyse(s.program_path, model, al, tr)
+        output = open(out_pth, 'rb').read()
+        res = parse(output)
+        print res.lnl
+
+
+    shutil.rmdir(tmp)
