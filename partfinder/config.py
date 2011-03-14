@@ -82,7 +82,7 @@ def initialise(pth, force_restart=False):
     # Setup the testing path
     # TODO Should really just run a bunch of tests with --run-tests option
     # How do we do this with nose?
-    # settings.test_path = os.path.join(get_root_install_path(), 'tests')
+    settings.test_path = os.path.join(get_root_install_path(), 'tests')
 
     find_program()
 
