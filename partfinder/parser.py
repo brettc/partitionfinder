@@ -6,12 +6,12 @@ import os
 from pyparsing import (
     Word, Dict, OneOrMore, alphas, nums, Suppress, Optional, Group, stringEnd,
     delimitedList, pythonStyleComment, ParseException, line, lineno, col,
-    Keyword, ParserElement, ParseException)
+    Keyword, ParserElement, ParseException, MatchFirst)
 
 # debugging
 # ParserElement.verbose_stacktrace = True
 
-import partition, scheme, subset
+import partition, scheme, subset, phyml_models
 
 class ParserError(Exception):
     """Used for our own parsing problems"""
@@ -31,8 +31,6 @@ class Parser(object):
     """
 
     # These will get set in the configuration passed in
-    required_variables = ['alignment_file']
-
     def __init__(self, settings):
         # For adding variables
         self.settings = settings
@@ -55,18 +53,18 @@ class Parser(object):
         BACKSLASH = Suppress("\\")
         DASH = Suppress("-")
 
-        ALIGN = Keyword("alignment")
-        SCHEMES = Keyword("schemes")
+        # Top Section
+        FILENAME = Word(alphas + nums + '-_.')
+        alignmentdef = Keyword('alignment') + EQUALS + FILENAME + SEMIOPT
+        alignmentdef.setParseAction(self.set_alignment)
 
-        VARIABLE = Word(alphas + nums + "-_")
-        VALUE = Word(alphas + nums + '_-/.\\')
-
-        # General Section 
-        # Just the assignment of variables
-        general_def = VARIABLE("name") + EQUALS + VALUE("value") + SEMIOPT
-        general_def.setParseAction(self.define_variable)
-        general = OneOrMore(Group(general_def))
-        general.setParseAction(self.check_variables)
+        MODELNAME = Word(alphas + nums + '+')
+        modellist = delimitedList(MODELNAME)
+        modeldef = Keyword("models") + EQUALS + Group(
+            (Keyword("all") | Keyword("MrBayes"))("predefined") | 
+            Group(modellist)("userlist")) + SEMIOPT
+        modeldef.setParseAction(self.set_models)
+        topsection = alignmentdef + modeldef
 
         # Partition Parsing
         column = Word(nums)
@@ -77,7 +75,7 @@ class Parser(object):
         partition = partname("name") + EQUALS + partdeflist("parts") + SEMIOPT
         partition.setParseAction(self.define_partition)
         partlist = OneOrMore(Group(partition))
-
+        partsection = Suppress("[partitions]") + partlist
 
         # Scheme Parsing
         schemename = Word(alphas + '_-' + nums)
@@ -93,30 +91,40 @@ class Parser(object):
 
         schemelist = OneOrMore(Group(schemedef))
 
+        schemealgo = Keyword("search") + EQUALS + (
+            Keyword("all") | Keyword("greedy") | Keyword("user"))
+        schemealgo.setParseAction(self.set_scheme_algorithm)
+        schemesection = Suppress("[schemes]") + schemealgo + schemelist 
+
         # We've defined the grammar for each section. Here we just put it all
         # together
-        self.config_parser = (
-            general
-            + Suppress("[partitions]") + partlist
-            + Suppress("[schemes]") + schemelist 
-            + stringEnd
-        )
+        self.config_parser = (topsection + partsection + schemesection + stringEnd)
 
-    def define_variable(self, text, loc, var_def):
-        """Define a variable -- we'll check here if it is allowable"""
-        if var_def.name not in self.required_variables:
-            raise ParserError(text, loc, "'%s' is not an allowable setting" %
-                                 var_def.name)
+    def set_alignment(self, text, loc, tokens):
+        self.settings.alignment = tokens[1]
+        # TODO Make sure it is readable!
+        # raise ParserError(text, loc, "No '%s' defined in the configuration" % var)
+
+    def set_scheme_algorithm(self, text, loc, tokens):
+        self.settings.search_algorithm = tokens[1]
+
+    def set_models(self, text, loc, tokens):
+        all_mods = set(phyml_models.get_all_models())
+        mods = tokens[1]
+        if mods.userlist:
+            self.settings.models = []
+            # It is a list of models
+            for m in mods.userlist:
+                if m not in all_mods:
+                    raise ParserError(
+                        text, loc, "'%s' is not a valid model" % m)
+                self.settings.models.append(m)
         else:
-            self.settings.alignment_file = var_def.value
-            log.debug("Setting '%s' to '%s'", var_def.name, var_def.value)
-
-    def check_variables(self, text, loc, var_def):
-        # Add the stuff to the configuration that was passed in
-        # We should check that all the parameters are defined too...
-        for var in self.required_variables:
-            if not hasattr(self.settings, var):
-                raise ParserError(text, loc, "No '%s' defined in the configuration" % var)
+            modsgroup = mods.predefined
+            if modsgroup == "all":
+                self.settings.models = list(all_mods)
+            else:
+                pass
 
     def define_range(self, part):
         """Turn the 2 or 3 tokens into integers, supplying a default if needed"""
@@ -170,12 +178,17 @@ class Parser(object):
         self.result = self.config_parser.ignore(pythonStyleComment).parseString(s)
 
 if __name__ == '__main__':
-    logging.basicConfig(level=logging.DEBUG)
+    logging.basicConfig()
+    # logging.basicConfig(level=logging.DEBUG)
+    # import config
+    # config.initialise_temp()
     test_config = r"""
-alignment_file = ./test.fas 
+alignment = test.fas 
 
 # schemes = section # Use the stuff defined below
 # schemes = greedy
+# models = JC 
+models = all
 
 [partitions]
 Gene1_pos1 = 1-789\3
@@ -189,6 +202,8 @@ Gene3_pos2 = 1451-2208\3
 Gene3_pos3 = 1452-2208\3
 
 [schemes]
+search = all
+
 allsame         = (Gene1_pos1, Gene1_pos2, Gene1_pos3, Gene2_pos1, Gene2_pos2,
 Gene2_pos3, Gene3_pos1, Gene3_pos2, Gene3_pos3)
 by_gene         = (Gene1_pos1, Gene1_pos2, Gene1_pos3) (Gene2_pos1, Gene2_pos2, Gene2_pos3) (Gene3_pos1, Gene3_pos2, Gene3_pos3)
@@ -206,6 +221,9 @@ by_gene         = (Gene1_pos1, Gene1_pos2, Gene1_pos3) (Gene2_pos1, Gene2_pos2, 
         p.parse_configuration(test_config)
     except ParserError, p:
         log.error(p.format_message())
+    
+    print c.__dict__
+    
 
     # for s in c.schemes:
         # print s.name

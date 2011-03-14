@@ -97,10 +97,11 @@ the_parser = AlignmentParser()
 
 class Alignment(object):
     def __init__(self):
-        pass
+        self.species = {}
+        self.seqlen = 0
 
     def __str__(self):
-        return "Alignment(%s)" % self.name
+        return "Alignment(%s species, %s codons)" % self.species, self.seqlen
 
     def same_as(self, other):
         return self.seqlen == other.seqlen and self.species == other.species
@@ -131,6 +132,7 @@ class Alignment(object):
         log.debug("Found %d species with sequence length %d", 
                   len(species), slen)
 
+        # Overwrite these
         self.species = species
         self.seqlen = slen
 
@@ -154,14 +156,14 @@ class Alignment(object):
 
     def write_fasta(self, pth):
         fd = open(pth, 'w')
-        log.debug("Writing %s to fasta file '%s'", self, pth)
+        log.debug("Writing fasta file '%s'", pth)
         for species, sequence in self.species.iteritems():
             fd.write(">%s\n" % species)
             fd.write("%s\n" % sequence)
 
     def write_phylip(self, pth):
         fd = open(pth, 'w')
-        log.debug("Writing %s to phylip file '%s'", self, pth)
+        log.debug("Writing phylip file '%s'", pth)
 
         species_count = len(self.species)
         codon_count = len(iter(self.species.itervalues()).next())

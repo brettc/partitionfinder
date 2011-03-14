@@ -6,8 +6,6 @@ import os, shutil
 
 import parser
 
-# __all__ =  ["ConfigurationError", "settings", "initialise"]
-
 class ConfigurationError(Exception):
     pass
 
@@ -30,7 +28,7 @@ def _make_folder(pth):
         os.mkdir(pth)
 
 class Settings(object):
-    """This holds the configuration info"""
+    """This holds the user configuration info"""
     def __init__(self):
         pass
 
@@ -43,8 +41,17 @@ class Settings(object):
 
         return self.__dict__[name]
 
+class Data(object):
+    """Used to hold global data"""
+    def __init__(self):
+        pass
+
+    # def load_example(self):
+        # pass
+
 init_done = False
 settings = Settings()
+data = Data()
 
 def initialise(pth, force_restart=False):
     global init_done
@@ -75,8 +82,7 @@ def initialise(pth, force_restart=False):
     # Setup the testing path
     # TODO Should really just run a bunch of tests with --run-tests option
     # How do we do this with nose?
-    settings.test_path = os.path.join(get_root_install_path(), 'tests')
-    settings.test_alignment = os.path.join(settings.test_path, 'part1.phy')
+    # settings.test_path = os.path.join(get_root_install_path(), 'tests')
 
     find_program()
 
@@ -160,6 +166,7 @@ def find_program():
     settings.program_path = pth
 
 def remove_tempdir(pth):
+    log.debug("Removing temp folder %s", pth)
     shutil.rmtree(pth)
 
 def initialise_temp():
@@ -167,10 +174,13 @@ def initialise_temp():
     import atexit
     tmp = tempfile.mkdtemp()
     atexit.register(remove_tempdir, tmp)
-    initialise(tmp)
-    # test_alignment = 'part1.phy'
-    # shutil.copy(settings.test_path
-    # settings.
+    initialise(tmp, True)
+
+def initialise_example():
+    # NOTE: this overwrites everything!
+    example_path = os.path.join(get_root_install_path(), 'example')
+    initialise(example_path, True)
+    load()
 
 def report_settings():
     log.debug("Settings are as follows:")
@@ -180,11 +190,7 @@ def report_settings():
 
 if __name__ == '__main__':
     import logging
-    import tempfile
-    tmp = tempfile.mkdtemp()
-
     logging.basicConfig(level=logging.DEBUG)
-    initialise(tmp, True)
+    initialise_temp()
     report_settings()
     
-    shutil.rmtree(tmp)

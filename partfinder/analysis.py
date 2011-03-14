@@ -17,7 +17,7 @@ def analyse_subset(sub):
         return
 
     # Make an Alignment from the source, using this subset
-    sub_alignment = alignment.SubsetAlignment(sub.name, settings.source, sub)
+    sub_alignment = alignment.SubsetAlignment(settings.source, sub)
 
     # Let's get a filename
     alignment_pth = os.path.join(settings.output_path, sub.name + '.phy')
