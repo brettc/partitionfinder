@@ -9,25 +9,26 @@ from partfinder import config
 def main():
     usage = """usage: python %prog [options] <foldername>
 
-    PartitionFinder is designed to discover optimal partitioning schemes for DNA sequence alignments
-    It it also useful for finding the best model of sequence evolution for one or more partitions
+    PartitionFinder is designed to discover optimal partitioning schemes for
+    DNA sequence alignments. It it also useful for finding the best model of
+    sequence evolution for one or more partitions.
 
-    The Input:		
-    <foldername>: the full path to a folder containing:
-        A configuration file (partition_finder.cfg). (Example in the example folder)
-        A DNA alignment in Phylip format
+    The Input: <foldername>: the full path to a folder containing:
+        - A configuration file (partition_finder.cfg)
+        - A DNA alignment in Phylip format
+    Take a look at the included 'example' folder for more details.
 
-    The Output:
-        A file in the same directory as the .cfg file, named 'alignment_pf_output.txt'
-		This file contains information on the best partitioning scheme, and the best model for each partiiton
+    The Output: A file in the same directory as the .cfg file, named
+    'alignment_pf_output.txt' This file contains information on the best
+    partitioning scheme, and the best model for each partiiton
 
     Usage Examples: 
         >python pf.py example
         Analyse what is in the 'example' sub-folder in the current folder.
 
         >python pf.py -v example
-        Analyse what is in the 'example' sub-folder in the current folder,
-        but show all the debug output
+        Analyse what is in the 'example' sub-folder in the current folder, but
+        show all the debug output
 
         >python pf.py -c ~/data/frogs
         Check the configuration files in the folder data/frogs in the current
@@ -36,7 +37,6 @@ def main():
         >python pf.py --force-restart ~/data/frogs
         Deletes any data produced by the previous runs (which is in
         ~/data/frogs/output) and starts afresh
-
     """
     parser = OptionParser(usage)
     parser.add_option(
