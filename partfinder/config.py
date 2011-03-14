@@ -166,7 +166,14 @@ def report_settings():
 
 if __name__ == '__main__':
     import logging
+    import tempfile
+
+    tmp = tempfile.mkdtemp()
+    config.initialise(tmp)
+
+
     logging.basicConfig(level=logging.DEBUG)
     initialise("~/tmp", True)
     report_settings()
-        
+    
+    shutil.rmdir(tmp)
