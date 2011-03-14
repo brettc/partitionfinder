@@ -135,7 +135,8 @@ if __name__ == '__main__':
     pa = Partition('a', (1, 10, 3))
     pb = Partition('b', (2, 10, 3))
     pc = Partition('c', (3, 10, 3))
-    s = Scheme('x', Subset(pa, pc), Subset(pb))
+    pd = Partition('d', (11, 20))
+    # s = Scheme('x', Subset(pa, pc), Subset(pb))
 
     generate_all_schemes()
     # This should give us an error!

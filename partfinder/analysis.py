@@ -1,17 +1,22 @@
+"""This is where everything comes together, and we do the analysis"""
+
 import multiprocessing
 import subprocess
 
-import scheme, subset, partition
+import config, scheme, subset, partition
 
-results_cache = {}
+def analyse_subset_model(subset, model):
+    # This is the core unit!
 
-def process(s):
-    pass
+def analyse_subset(s):
+    for m in models:
+        do a model analysis
 
 def multiprocess_all(s):
     pass
 
-def process_all(s):
+def process_all_schemes():
+    # This really amounts to processing all of the subsets
     pass
 
 def work(cmd):
@@ -116,6 +121,7 @@ class X:
         raise NotImplemented
 
 if __name__ == '__main__':
+    pass
 
 """
 # 1. Try multiprocessing using pool

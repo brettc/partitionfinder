@@ -29,7 +29,6 @@ def _make_folder(pth):
     else:
         os.mkdir(pth)
 
-
 class Settings(object):
     """This holds the configuration info"""
     def __init__(self):
@@ -73,6 +72,9 @@ def initialise(pth, force_restart=False):
 
     _make_folder(settings.output_path)
 
+    # Setup the testing path
+    # TODO Should really just run a bunch of tests with --run-tests option
+    # How do we do this with nose?
     settings.test_path = os.path.join(get_root_install_path(), 'tests')
 
     find_program()
