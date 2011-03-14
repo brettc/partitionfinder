@@ -1,58 +1,80 @@
 """This is where everything comes together, and we do the analysis"""
 
-import multiprocessing
-import subprocess
+import logging
+log = logging.getLogger("analysis")
 
-import config, scheme, subset, partition
+import os
 
-# def collect_results():
-    # pass
-# def analyse_subset_model(subset, model):
+import alignment, scheme, subset, partition, phyml
+from config import settings
 
-def analyse_subset(s):
+class AnalysisError(Exception):
     pass
-    # Here is a sketch of the algorithm
-    # TODO
-    # Write the file
+
+def analyse_subset(sub):
+    # Has it already been done?
+    if sub.has_analysis:
+        return
+
+    # Make an Alignment from the source, using this subset
+    sub_alignment = alignment.SubsetAlignment(sub.name, settings.source, sub)
+
+    # Let's get a filename
+    alignment_pth = os.path.join(settings.output_path, sub.name + '.phy')
+
     # Maybe it is there already?
-    # If so, is it the same?
-    # If yes, continue, otherwise we have an error condition
-    #
-    # NOW Check for the different model outputs
-    #
-    # Are they there?
-    # Is so read them in
-    #
-    # Otherwise RUN the program for each model on this subset alignment
-    # NOTE: Here is where we could easily add multiprocessing...?
-    #
-    # Now read them in.
-    #
+    if os.path.exists(alignment_pth):
+        log.debug("Found existing alignment file %s", alignment_pth)
+        old_align = SubsetAlignment(sub.name)
+        old_align.read(alignment_pth)
+
+        # It had better be the same!
+        if not old_align.same_as(sub_alignment):
+            log.error("It looks like you have changed something in the "
+                      "configuration and I cannot trust the old analysis."
+                      "You'll need to run the program with --force-restart")
+            raise AnalysisError
+    else:
+        # We need to write it
+        sub_alignment.write(alignment_pth)
+
+    results = []
+    for model in settings.models:
+        pass
+        # results.append(phyml.
+
     # Collect the subset results
     # Decide on the best and set it in the subset
 
-def multiprocess_all(s):
-    pass
+def analyse_scheme(sch):
+    for sub in sch:
+        analyse_subset(sub)
 
-def process_all_schemes():
-    # This really amounts to processing all of the subsets
-    pass
+    # Now piece together the bits
 
-def work(cmd):
-    # return subprocess.call(cmd, shell=False)
-    p = subprocess.Popen('ctags -R .'.split(),
-                            shell=False,
-                            stdout=subprocess.PIPE,
-                            stderr=subprocess.PIPE)
+def analyse_all_schemes():
+    """Process everything!"""
+    # First make a tree
+    #
+    for sch in scheme.all_schemes:
+        analyse_scheme(sch)
 
-    stdout, stderr = p.communicate()
-    return stdout
+    # Now check the best
 
-def multi():
-    count = multiprocessing.cpu_count()
-    pool = multiprocessing.Pool(processes=count)
-    x = pool.map(work, ['ls'] * 20)
-    print x
+if __name__ == '__main__':
+    # logging.basicConfig()
+    logging.basicConfig(level=logging.DEBUG)
+    import config
+    config.initialise("~/tmp", True)
+    settings.alignment = "test.phy"
+    tree_pth = phyml.make_tree(settings.program_path, settings.alignment)
+    settings.tree = tree_pth
+    settings.source = alignment.SourceAlignment(settings.alignment)
+
+    p1 = partition.Partition('one', (1, 10))
+    p2 = partition.Partition('two', (11, 20))
+    scheme.generate_all_schemes()
+    analyse_all_schemes()
 
 class Subset:
     # From Subset
@@ -138,52 +160,3 @@ class X:
     def get_path(self):
         # Don't use this class -- use one of the subclasses below
         raise NotImplemented
-
-if __name__ == '__main__':
-    pass
-
-"""
-# 1. Try multiprocessing using pool
-
-# 2. QUEUES
-#
-def worker():
-    while True:
-        item = q.get()
-        do_work(item)
-        q.task_done()
-
-q = Queue()
-for i in range(num_worker_threads):
-     t = Thread(target=worker)
-     t.daemon = True
-     t.start()
-
-for item in source():
-    q.put(item)
-
-q.join()       # block until all tasks are done
-
-# 3. threading + subprocess
-import threading
-import subprocess
-
-class MyClass(threading.Thread):
-    def __init__(self):
-        self.stdout = None
-        self.stderr = None
-        threading.Thread.__init__(self)
-
-    def run(self):
-        p = subprocess.Popen('rsync -av /etc/passwd /tmp'.split(),
-                             shell=False,
-                             stdout=subprocess.PIPE,
-                             stderr=subprocess.PIPE)
-
-        self.stdout, self.stderr = p.communicate()
-
-myclass = MyClass()
-myclass.start()
-myclass.join()
-print myclass.stdout
-"""

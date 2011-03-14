@@ -55,9 +55,8 @@ class Scheme(object):
         all_schemes.add_scheme(self)
         log.debug("Created %s", self)
 
-    def analyse(self):
-        results = [s.analyse() for s in self.subsets]
-        return results
+    def __iter__(self):
+        return iter(self.subsets)
 
     def __str__(self):
         ss = ', '.join([str(s) for s in self.subsets])
@@ -120,7 +119,7 @@ def generate_all_schemes():
         # set of values which are the index for the partition
         created_subsets = []
         for sub_indexes in subs.values():
-            sub = Subset(*tuple([all_partitions[i] for i in sub_indexes]))
+            sub = subset.Subset(*tuple([all_partitions[i] for i in sub_indexes]))
             created_subsets.append(sub)
 
         Scheme(str(scheme_name), *tuple(created_subsets))

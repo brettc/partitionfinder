@@ -76,6 +76,7 @@ def initialise(pth, force_restart=False):
     # TODO Should really just run a bunch of tests with --run-tests option
     # How do we do this with nose?
     settings.test_path = os.path.join(get_root_install_path(), 'tests')
+    settings.test_alignment = os.path.join(settings.test_path, 'part1.phy')
 
     find_program()
 
@@ -157,6 +158,19 @@ def find_program():
     _check_file(pth)
     log.debug("Found program %s at '%s'", program_name, pth)
     settings.program_path = pth
+
+def remove_tempdir(pth):
+    shutil.rmtree(pth)
+
+def initialise_temp():
+    import tempfile
+    import atexit
+    tmp = tempfile.mkdtemp()
+    atexit.register(remove_tempdir, tmp)
+    initialise(tmp)
+    # test_alignment = 'part1.phy'
+    # shutil.copy(settings.test_path
+    # settings.
 
 def report_settings():
     log.debug("Settings are as follows:")

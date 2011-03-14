@@ -48,44 +48,45 @@ def dupfile(src, dst):
     else:
         shutil.copyfile(src, dst)
 
+def mvfile(src, dst):
+    pass
+
 # This should generate a bootstrap tree 
 def make_tree(program, alignment):
-
     # We can get a rough (but probably correct!) topology using BioNJ, this is like
     # Neighbour joining but a little bit better. Turns out we can do this already
     # with PhyML like this:
+    log.debug("Making a tree for %s", alignment)
 
     # TODO: put into a temp folder?
 
     # First get the BioNJ topology like this:
     command = "%s -i %s -o n -b 0" % (program, alignment)
     run_phyml(command)
-
-    treepth = tree_path(alignment)
-    dirpth, fname = os.path.split(treepth)
-    print dirpth, fname
-    newpth = os.path.join(dirpth, 'tree.phy')
-    log.debug("Moving %s to %s", dirpth, newpth)
-    os.rename(treepth, newpth) 
+    output_path = tree_path(alignment)
 
     # in our case (well behaved data) we get the right topology already like
     # this, and nearly correct branchlengths too. Even so, we might want to
     # re-estimate branchlengths from scratch using a better model.
 
     # To do that, first rename the tree 
+    dirpth, fname = os.path.split(output_path)
+    tree_pth = os.path.join(dirpth, 'bionj_tree.phy')
+    log.debug("Moving %s to %s", output_path, tree_pth)
+    os.rename(output_path, tree_pth) 
 
-    # mv 1_2_3_4_simulated.phy_phyml_tree.txt BioNJ_start_tree.phy
-
-    # now, we run PhyML asking it to re-optimise the branch lenghts according to
-    # some model, but not to mess with the topology
-
-    # ./phyml -i 1_2_3_4_simulated.phy -u BioNJ_start_tree.phy -m HKY -c 4 -a e -o lr -b 0
-
+    # now, we run PhyML asking it to re-optimise the branch lengths according to
+    # some model, but not to mess with the topology.
+    #
     # using "-o lr" will optimise the model parameters and brlens together. This
     # is important since the two interact, i.e. good brlens require good model
     # parameters.
+    command = "%s -i %s -u %s -m GTR -c 4 -a e -v e -o lr -b 0" % (
+        program, alignment, tree_pth)
+    run_phyml(command)
 
-    # mv 1_2_3_4_simulated.phy_phyml_tree.txt optimised_start_tree.phy
+    # Now return the path of the final tree alignment
+    return tree_path(alignment)
 
 
 def analyse(program, model, alignment, tree):

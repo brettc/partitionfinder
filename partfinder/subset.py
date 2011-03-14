@@ -48,6 +48,8 @@ class Subset(object):
                 obj.columns += p.columns
                 obj.columnset |= p.columnset
             obj.columns.sort()
+
+            obj.has_analysis = False
             log.debug("Created %s", obj)
         # else:
             # log.debug("Reused %s", obj)

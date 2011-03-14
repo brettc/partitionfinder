@@ -78,7 +78,6 @@ class AlignmentParser(object):
         except ParseException, p:
             log.error("Error in Alignment Parsing:" + str(p))
             raise AlignmentError
-        print defs
 
         # if we have a header, do some checking
         if defs.header:
@@ -103,6 +102,9 @@ class Alignment(object):
 
     def __str__(self):
         return "Alignment(%s)" % self.name
+
+    def same_as(self, other):
+        return self.seqlen == other.seqlen and self.species == other.species
 
     def from_parser_output(self, defs):
         """A series of species / sequences tuples
@@ -129,7 +131,9 @@ class Alignment(object):
                     raise AlignmentError
         log.debug("Found %d species with sequence length %d", 
                   len(species), slen)
-        return species, slen
+
+        self.species = species
+        self.seqlen = slen
 
     def read(self, pth):
         if not os.path.exists(pth):
@@ -138,16 +142,16 @@ class Alignment(object):
 
         log.debug("Reading alignment file '%s'", pth)
         text = open(pth, 'r').read()
-        return self.from_parser_output(the_parser.parse(text))
+        self.from_parser_output(the_parser.parse(text))
 
     def write(self, pth):
         if alignment_format == 'phy':
             self.write_phylip(pth)
         elif alignment_format is 'fasta':
             self.write_fasta(pth)
-
-        log.error("Undefined Alignment Format")
-        raise AlignmentError
+        else:
+            log.error("Undefined Alignment Format")
+            raise AlignmentError
 
     def write_fasta(self, pth):
         fd = open(pth, 'w')
@@ -175,7 +179,8 @@ class SourceAlignment(Alignment):
     """The source alignment that is found in the config folder"""
     def __init__(self, name):
         Alignment.__init__(self, name)
-        # self.read_source()
+        self.path = os.path.join(config.settings.base_path, self.name)
+        self.read(self.path)
 
     # def get_path(self):
         # return os.path.join(config.settings.base_path, self.name)
@@ -185,12 +190,6 @@ class SubsetAlignment(Alignment):
     def __init__(self, name, source, subset):
         """create an alignment for this subset"""
         Alignment.__init__(self, name)
-        # First, check to see if it exists already. If so, don't bother
-        # creating it again.
-        # self.species = species
-        # self.sequence_length = slen
-        # TODO Check sequence len against subset 
-        species = {}
 
         # Pull out the columns we need
         for sname, old_seq in source.species.iteritems():
@@ -205,9 +204,7 @@ class TestAlignment(Alignment):
     """Good for testing stuff"""
     def __init__(self, name, text):
         Alignment.__init__(self, name)
-        s, l = self.from_parser_output(the_parser.parse(text))
-        self.species = s
-        self.seqlen = l
+        self.from_parser_output(the_parser.parse(text))
 
     # def get_path(self):
         # return os.path.join(config.settings.output_path, self.name)
