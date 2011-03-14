@@ -49,7 +49,6 @@ def get_submodels(N):
 
 def count_submodels(N):
     """Count the number of submodels we've got
-
     These are the right numbers...
     >>> print count_submodels(1)
     1
@@ -66,3 +65,7 @@ if __name__ == "__main__":
     import doctest
     doctest.testmod()
     
+    print "Getting All Submodels for N=5"
+    result = get_submodels(5)
+    for a in result:
+        print a

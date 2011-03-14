@@ -70,10 +70,13 @@ class Subset(object):
 
 if __name__ == '__main__':
     import logging
+    import tempfile
     logging.basicConfig(level=logging.DEBUG)
     import config
     from partition import Partition
-    config.initialise("~/tmp", True)
+
+    tmp = tempfile.mkdtemp()
+    config.initialise(tmp, True)
 
     pa = Partition('a', (1, 10, 3))
     pb = Partition('b', (2, 10, 3))
@@ -82,7 +85,9 @@ if __name__ == '__main__':
     s1 = Subset(pa, pb)
     s2 = Subset(pa, pb)
     s3 = Subset(pa, pc)
+    s4 = Subset(pa, pb)
     print s1 is s2
+    print s1
     # s2 = Subset(pa, pb, pc)
     # s3 = Subset(pc)
 

@@ -116,7 +116,7 @@ def load():
     try:
         p = parser.Parser(settings)
         p.parse_file(settings.config_path)
-    except ParserError, p:
+    except parser.ParserError, p:
         # Catch any parsing errors, print something out, then raise a
         # configuration error, as this is the general error we expect from
         # this part of the process
@@ -167,13 +167,10 @@ def report_settings():
 if __name__ == '__main__':
     import logging
     import tempfile
-
     tmp = tempfile.mkdtemp()
-    config.initialise(tmp)
-
 
     logging.basicConfig(level=logging.DEBUG)
-    initialise("~/tmp", True)
+    initialise(tmp, True)
     report_settings()
     
-    shutil.rmdir(tmp)
+    shutil.rmtree(tmp)
