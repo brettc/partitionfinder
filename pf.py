@@ -9,25 +9,31 @@ from partfinder import config
 def main():
     usage = """usage: python %prog [options] <foldername>
 
-    Lots of stuff here explaining what is going on.
+    PartitionFinder is designed to discover optimal partitioning schemes for DNA sequence alignments
+    It it also useful for finding the best model of sequence evolution for one or more partitions
 
-    Examples: 
-        python pf.py example
+    The Input:		
+    <foldername>: the full path to a folder containing:
+        A configuration file (partition_finder.cfg). (Example in the example folder)
+        A DNA alignment in Phylip format
 
+    The Output:
+        A file in the same directory as the .cfg file, named 'alignment_pf_output.txt'
+		This file contains information on the best partitioning scheme, and the best model for each partiiton
+
+    Usage Examples: 
+        >python pf.py example
         Analyse what is in the 'example' sub-folder in the current folder.
 
-        python pf.py -v example
-
+        >python pf.py -v example
         Analyse what is in the 'example' sub-folder in the current folder,
         but show all the debug output
 
-        python pf.py -c ~/data/frogs
-
+        >python pf.py -c ~/data/frogs
         Check the configuration files in the folder data/frogs in the current
         user's home folder.
 
-        python pf.py --force-restart ~/data/frogs
-
+        >python pf.py --force-restart ~/data/frogs
         Deletes any data produced by the previous runs (which is in
         ~/data/frogs/output) and starts afresh
 
@@ -91,7 +97,7 @@ if __name__ == "__main__":
     # Well behaved unix programs exits with 0 on success...
     # sys.argv = ['arg', '-v', 'example']
     # sys.argv = ['arg', 'example']
-    sys.argv = ['arg', '-vc', 'example']
+    # sys.argv = ['arg', '-vc', 'example']
     sys.exit(main())
 
 

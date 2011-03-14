@@ -1,6 +1,6 @@
 """Loading, Saving, Parsing Alignment Files
 """
-import logging
+import logging, shutil
 log = logging.getLogger("alignment")
 
 import tempfile
@@ -194,11 +194,10 @@ class TestAlignment(Alignment):
 
 def test_phylip():
     logging.basicConfig(level=logging.DEBUG)
-    config.initialise("~/tmp")
     test_alignment = r"""16 13
-A GCCGGCGGGGAAA
-	B	GCCGGCGGGGAAA
-	C	GCCGGCGGGGAAG
+Aalksfj GCCGGCGGGGA-A
+	Bla	GCCGGCGGGGAAA
+	Ca	GCCGGCGGGGAAG
 	D	GCCAGCGGGGAAG
 E	GCCCGGGGGGAAG
 	F	GCCCGTGGGGAAG
@@ -227,11 +226,16 @@ CTTGAGGTACAGAATAACAGCGAG------AAGCTGG
 ATCGAGGTGAAAAATGGTGATGCT------CGTCTGG
     """
     logging.basicConfig(level=logging.DEBUG)
-    config.initialise("~/tmp")
     a = TestAlignment('test', test_alignment)
     print a
     # res = a.analyse()
     # print res.AIC
 
 if __name__ == '__main__':
+    import tempfile
+    tmp = tempfile.mkdtemp()
+    config.initialise(tmp)
+
     test_phylip()
+    
+    shutil.rmtree(tmp)

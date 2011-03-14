@@ -22,18 +22,11 @@ def run_phyml(command):
 
     # Note: We use shlex.split as it does a proper job of handling command
     # lines that are complex
-    p = subprocess.Popen(
-        shlex.split(command),
-        shell=False,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE)
-
-    # Capture the output, we might put it into the errors
-    stdout, stderr = p.communicate()
-
-    if p.returncode != 0:
-        log.error("program failed to execute successfully: output follows")
-        log.error(stderr)
+    try:
+        subprocess.check_call(shlex.split(command), shell=False)
+	
+    except subprocess.CalledProcessError:
+        log.error("command '%s' failed to execute successfully", command)
         raise PhymlError
 
 def dupfile(src, dst):
