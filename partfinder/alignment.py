@@ -235,9 +235,5 @@ ATCGAGGTGAAAAATGGTGATGCT------CGTCTGG
 
 if __name__ == '__main__':
     import tempfile
-    tmp = tempfile.mkdtemp()
-    config.initialise(tmp)
-
+    config.initialise_temp()
     test_phylip()
-    
-    shutil.rmtree(tmp)
