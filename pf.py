@@ -6,6 +6,7 @@ import sys, os
 
 from partfinder import config
 
+
 def main():
     usage = """usage: python %prog [options] <foldername>
 

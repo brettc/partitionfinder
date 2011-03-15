@@ -27,66 +27,10 @@ def _make_folder(pth):
     else:
         os.mkdir(pth)
 
-class Settings(object):
-    """This holds the user configuration info"""
-    def __init__(self):
-        pass
-
-    def __getattr__(self, name):
-        if name not in self.__dict__:
-            log.error("The setting '%s' is not defined. "
-                      "Did you initialise the configuration?", 
-                      name)
-            raise ConfigurationError
-
-        return self.__dict__[name]
-
-class Data(object):
-    """Used to hold global data"""
-    def __init__(self):
-        pass
-
-    # def load_example(self):
-        # pass
-
-init_done = False
-settings = Settings()
-data = Data()
-
-def initialise(pth, force_restart=False):
-    global init_done
-    if init_done:
-        log.error("Cannot initialise more than once")
-        raise ConfigurationError
-
-    # Allow for user and environment variables
-    pth = os.path.expanduser(pth)
-    pth = os.path.expandvars(pth)
-    pth = os.path.normpath(pth)
-    settings.base_path = pth
-    settings.force_restart = force_restart
-
-    _check_folder(settings.base_path)
-    log.info("Using folder: '%s'", settings.base_path)
-
-    create_debug_log()
-
-    settings.output_path = os.path.join(settings.base_path, "output")
-    if settings.force_restart:
-        if os.path.exists(settings.output_path):
-            log.warning("Deleting all previous workings in '%s'", settings.output_path)
-            shutil.rmtree(settings.output_path)
-
-    _make_folder(settings.output_path)
-
-    # Setup the testing path
-    # TODO Should really just run a bunch of tests with --run-tests option
-    # How do we do this with nose?
-    settings.test_path = os.path.join(get_root_install_path(), 'tests')
-
-    find_program()
-
-    init_done = True
+def _make_output_dir(name):
+    pth = os.path.join(settings.output_path, name)
+    _make_folder(pth)
+    return pth
 
 def get_root_install_path():
     pth = os.path.abspath(__file__)
@@ -115,6 +59,67 @@ def create_debug_log():
     # Mark a new session so it is easy to read in the log file
     log.debug("------------------ NEW LOG SESSION BEGINS -----------------")
 
+class Settings(object):
+    """This holds the user configuration info"""
+    def __init__(self):
+        pass
+
+    def __getattr__(self, name):
+        if name not in self.__dict__:
+            log.error("The setting '%s' is not defined. "
+                      "Did you initialise the configuration?", 
+                      name)
+            raise ConfigurationError
+
+        return self.__dict__[name]
+
+init_done = False
+settings = Settings()
+
+# class Data(object):
+    # """Used to hold global data"""
+    # def __init__(self):
+        # pass
+# data = Data()
+
+def initialise(pth, force_restart=False):
+    global init_done
+    if init_done:
+        log.error("Cannot initialise more than once")
+        raise ConfigurationError
+
+    # Allow for user and environment variables
+    pth = os.path.expanduser(pth)
+    pth = os.path.expandvars(pth)
+    pth = os.path.normpath(pth)
+    settings.base_path = pth
+    settings.force_restart = force_restart
+
+    _check_folder(settings.base_path)
+    log.info("Using folder: '%s'", settings.base_path)
+
+    create_debug_log()
+
+    settings.output_path = os.path.join(settings.base_path, "output")
+    if settings.force_restart:
+        if os.path.exists(settings.output_path):
+            log.warning("Deleting all previous workings in '%s'", settings.output_path)
+            shutil.rmtree(settings.output_path)
+
+    _make_folder(settings.output_path)
+
+    settings.phyml_path = _make_output_dir("phyml")
+    settings.results_path = _make_output_dir("results")
+
+    # Setup the testing path
+    # TODO Should really just run a bunch of tests with --run-tests option
+    # How do we do this with nose?
+    settings.test_path = os.path.join(get_root_install_path(), 'tests')
+
+    find_program()
+
+    init_done = True
+
 def load():
     settings.config_path = os.path.join(settings.base_path, "partition_finder.cfg")
     _check_file(settings.config_path)
@@ -134,36 +139,6 @@ def load():
                                         settings.alignment_file)
     _check_file(settings.alignment_path)
 
-def find_program():
-    """Locate the binary ..."""
-
-    # TODO: This is a bit crap... maybe look at how other's do it
-    # We should really just try and run it. Can we just run it to see what
-    # version it is?
-    #
-    # try:
-        # p = Popen(cmd, stdout=PIPE, stderr=STDOUT)
-        # out = p.communicate()[0].decode()
-        # for k, v in CC_SIGNATURE.items():
-            # m = v.search(out)
-            # if m:
-                # return k
-    # except OSError:
-        # pass
-    # return None
-
-    program_name = 'phyml'
-    # if sys.platform == 'win32':
-        # program_name += ".exe"
-
-    # Now go back down into programs...
-    pth = os.path.join(get_root_install_path(), "programs", program_name)
-    pth = os.path.normpath(pth)
-
-    log.debug("Checking for program %s", program_name)
-    _check_file(pth)
-    log.debug("Found program %s at '%s'", program_name, pth)
-    settings.program_path = pth
 
 def remove_tempdir(pth):
     log.debug("Removing temp folder %s", pth)
@@ -176,10 +151,10 @@ def initialise_temp():
     atexit.register(remove_tempdir, tmp)
     initialise(tmp, True)
 
-def initialise_example():
+def initialise_example(force_restart=False):
     # NOTE: this overwrites everything!
     example_path = os.path.join(get_root_install_path(), 'example')
-    initialise(example_path, True)
+    initialise(example_path, force_restart)
     load()
 
 def report_settings():
