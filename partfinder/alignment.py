@@ -234,6 +234,4 @@ ATCGAGGTGAAAAATGGTGATGCT------CGTCTGG
     # print res.AIC
 
 if __name__ == '__main__':
-    import tempfile
-    config.initialise_temp()
     test_phylip()
