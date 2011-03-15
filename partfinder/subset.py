@@ -11,6 +11,8 @@ class SubsetError(Exception):
 class Subset(object):
     """A Subset of Partitions
     """
+
+    # TODO: changes this to AllSubsets?
     _cache = weakref.WeakValueDictionary()
 
     # CLEVER BIT:
