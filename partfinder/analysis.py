@@ -161,13 +161,17 @@ class Analysis(object):
     def analyse_scheme(self, sch, models):
         for sub in sch:
             self.analyse_subset(sub, models)
-        # sch.assemble_results()
 
-    def analyse_all_schemes():
+        # AIC needs to number of sequences 
+        number_of_seq = len(self.alignment.species)
+        sch.assemble_results(number_of_seq)
+
+    def analyse_all_schemes(models):
         """Process everything!"""
         for sch in scheme.all_schemes:
-            analyse_scheme(sch)
-        # Now check the best
+            analyse_scheme(sch, models)
+
+        # TODO Now write out the best
     
 if __name__ == '__main__':
     logging.basicConfig(level=logging.DEBUG)
@@ -187,8 +191,8 @@ spp4     CTCGAGGTGAAAAATGGTGATGCT------CGTCTGGTGCTGGAAGTTCAGCAGCAGCTGGGTGGTGGCGT
     apath = "/Users/brett/tmp/test.phy"
     output_path = "/Users/brett/tmp/output"
     alignment.write(apath)
-    # a = Analysis(apath, output_path, False)
-    a = Analysis(apath, output_path, True, threads=-1)
+    a = Analysis(apath, output_path, False)
+    # a = Analysis(apath, output_path, True, threads=-1)
 
     pa = Partition('a', (1, 1000, 3))
     pb = Partition('b', (2, 1000, 3))
@@ -198,7 +202,7 @@ spp4     CTCGAGGTGAAAAATGGTGATGCT------CGTCTGGTGCTGGAAGTTCAGCAGCAGCTGGGTGGTGGCGT
     sch = Scheme('a', s1, s2)
 
     models = "JC+I JC K80 TrNef K81".split()
-    models = phyml_models.get_all_models()
+    # models = phyml_models.get_all_models()
     a.analyse_scheme(sch, models)
 
 

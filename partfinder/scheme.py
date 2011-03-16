@@ -62,6 +62,34 @@ class Scheme(object):
         ss = ', '.join([str(s) for s in self.subsets])
         return "Scheme(%s, %s)" % (self.name, ss)
 
+    def assemble_results(self, nseq):
+        # ROB SAYS:
+        # To calculate the AIC for a scheme, we do this: AIC=2(k-lnL) but now, lnL is the
+        # sum of the  lnL's of all the subsets in that scheme, and k is the sum of all
+        # the k's of the subsets in that scheme, PLUS (2n-3), where N is the number of
+        # sequences in the dataset (2n-3 is the number of branchlengths), PLUS the number
+        # of subsets in the scheme minus 1.
+        nsubs = len(self.subsets)
+        sum_k = sum([s.best_params for s in self])
+        self.lnl = sum([s.best_lnl for s in self])
+        self.aic = 2 * ((sum_k + nsubs + nseq - 1) - self.sum_lnl)
+
+    def write_summary(self, path):
+        """
+        Best Scheme:
+        Scheme Name
+        Scheme description
+        Scheme lnL
+        Scheme AIC
+
+        Best models for subsets in best scheme:
+        Subset_description		Best_model		Alignment_file
+        1-200\3 2-200\3			HKY+I+G			/subset_output/part1_part2.phy
+        """
+        # TODO
+        pass
+
+
 class AllSchemes(object):
     """All the schemes added, and also a list of all unique subsets"""
     def __init__(self):

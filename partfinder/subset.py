@@ -53,7 +53,7 @@ class Subset(object):
             obj.columns.sort()
 
             obj.results = {}
-            obj.best_AIC = None
+            obj.best_aic = None
             obj.best_model = None
             log.debug("Created %s", obj)
         # else:
@@ -78,26 +78,28 @@ class Subset(object):
     def add_model_result(self, model, result):
         result.model = model
         result.params = phyml_models.get_num_params(model)
-        result.AIC = 2 * (result.params - result.lnl)
+        result.aic = 2 * (result.params - result.lnl)
         if model in self.results:
             log.error("Can't add model result %s, it already exists in %s",
                     model, self)
         self.results[model] = result
 
-        if self.best_AIC is None or result.AIC > self.best_AIC:
-            self.best_AIC = result.AIC
+        if self.best_aic is None or result.aic > self.best_aic:
+            self.best_lnl = result.lnl
+            self.best_aic = result.aic
             self.best_model = result.model
+            self.best_params = result.params
 
     _template = "%-15s | %-15s | %-15s\n"
     def write_summary(self, path):
         # Sort everything
-        model_results = [(r.AIC, r) for r in self.results.values()]
+        model_results = [(r.aic, r) for r in self.results.values()]
         model_results.sort()
         f = open(path, 'w')
         f.write("Results for %s\n\n" % self)
         f.write(Subset._template % ("Model", "lNL", "AIC"))
         for aic, r in model_results:
-            f.write(Subset._template % (r.model, r.lnl, r.AIC))
+            f.write(Subset._template % (r.model, r.lnl, r.aic))
 
 if __name__ == '__main__':
     import logging
