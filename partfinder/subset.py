@@ -51,7 +51,7 @@ class Subset(object):
                 obj.columnset |= p.columnset
             obj.columns.sort()
 
-            obj.has_analysis = False
+            obj.results = {}
             log.debug("Created %s", obj)
         # else:
             # log.debug("Reused %s", obj)
@@ -71,6 +71,13 @@ class Subset(object):
 
     def __iter__(self):
         return iter(self.partitions)
+
+    def summarise(self):
+        pass
+
+    def write(self, path):
+        pass
+
 
 if __name__ == '__main__':
     import logging

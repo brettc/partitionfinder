@@ -2,15 +2,14 @@
 # Modified and vastly simplified from here
 # http://code.activestate.com/recipes/203871/
 #
+import logging
+log = logging.getLogger("threadpool")
 import threading
 from time import sleep
 import sys, os
 
 # Taken from the multiprocessing library
 def cpu_count():
-    '''
-    Returns the number of CPUs in the system
-    '''
     if sys.platform == 'win32':
         try:
             num = int(os.environ['NUMBER_OF_PROCESSORS'])
@@ -34,14 +33,26 @@ def cpu_count():
 
 _cpus = cpu_count()
 
-class Pool:
-    def __init__(self, tasks, numthreads=None):
+class Pool(object):
+    def __init__(self, tasks, numthreads=-1):
         """Initialize the thread pool with numthreads workers and all tasks"""
+        self.more_tasks = True
         self.tasks = tasks
         self.tasklock = threading.Condition(threading.Lock())
         self.threads = []
-        if numthreads is None:
+
+        numtasks = len(tasks)
+        if numtasks == 0:
+            log.warning("You did not give any tasks to do...")
+            self.more_tasks = False
+            return 
+
+        if numthreads <= 1:
             numthreads = _cpus
+        if numtasks < numthreads:
+            numthreads = numtasks
+
+        log.debug("Creating %s threads for %s tasks", numthreads, numtasks)
         for i in range(numthreads):
             t = Thread(self)
             self.threads.append(t)
@@ -51,16 +62,20 @@ class Pool:
         self.tasklock.acquire()
         try:
             if self.tasks == []:
-                return (None, None, None)
+                self.more_tasks = False
+                return None, None
             else:
                 return self.tasks.pop(0)
         finally:
             self.tasklock.release()
     
     def join(self):
-        # Wait for tasks to finish
-        while self.tasks != []:
+        # Wait till all tasks have been taken
+        while self.more_tasks:
             sleep(.1)
+        # ... now wait for them all to finish
+        for t in self.threads:
+            t.join()
 
 class Thread(threading.Thread):
     def __init__(self, pool):
@@ -69,48 +84,9 @@ class Thread(threading.Thread):
         
     def run(self):
         while 1:
-            cmd, args, callback = self.pool.next_task()
-            # If there's nothing to do, just sleep a bit
+            cmd, args = self.pool.next_task()
+            # If there's nothing to do, return
             if cmd is None:
                 break
-            elif callback is None:
-                cmd(args)
-            else:
-                callback(cmd(args))
-    
-# Usage example
-if __name__ == "__main__":
-    import subprocess, shlex
+            result = cmd(*args)
 
-    def command_task(command):
-        print 'starting', command
-        p = subprocess.Popen(
-            shlex.split(command),
-            shell=False,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE)
-
-        # Capture the output, we might put it into the errors
-        stdout, stderr = p.communicate()
-        print 'done', command
-        return stdout
-
-    def callback(output):
-        print 'done', len(output)
-
-    # Insert tasks into the queue and let them run
-    tasks = [
-    (command_task, 'find /Users/brett/Dropbox -name "B*"', callback),
-    (command_task, 'find /Users/brett/Dropbox -name "Brett*"', callback),
-    (command_task, 'find /Users/brett/Dropbox -name "Brett*"', callback),
-    (command_task, 'find /Users/brett/Library -name "Brett*"', callback),
-    (command_task, 'find /Users/brett/Dropbox -name "Brett*"', callback),
-    (command_task, 'find /Users/brett/Dropbox -name "Brett*"', callback),
-    (command_task, 'find /Users/brett/Dropbox -name "Brett*"', callback),
-    (command_task, 'find /Users/brett/Dropbox -name "Brett*"', callback),
-    ]
-
-    pool = Pool(tasks)
-    # print command_task('find /Users/brett/Dropbox -name "Brett*"')
-    # When all tasks are finished, allow the threads to terminate
-    pool.join()

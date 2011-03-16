@@ -185,8 +185,9 @@ class SubsetAlignment(Alignment):
         # Pull out the columns we need
         for sname, old_seq in source.species.iteritems():
             new_seq = ''.join([old_seq[i] for i in subset.columns])
-            species[sname] = new_seq
-        self.species = species
+            self.species[sname] = new_seq
+        self.seqlen = len(new_seq)
+
 
 class TestAlignment(Alignment):
     """Good for testing stuff"""

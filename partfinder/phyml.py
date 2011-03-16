@@ -60,11 +60,11 @@ def run_phyml(command):
         _phyml_binary = find_program()
 
     # Add in the command file
+    log.debug("Running 'phyml %s'", command)
     command = "%s %s" % (_phyml_binary, command)
 
     # Note: We use shlex.split as it does a proper job of handling command
     # lines that are complex
-    log.debug("Running command '%s'", command)
     p = subprocess.Popen(
         shlex.split(command),
         shell=False,
@@ -180,12 +180,9 @@ class Parser(object):
         LNL_LABEL = Literal("Log-likelihood:")
         TIME_LABEL = Literal("Time used:")
         HMS = Word(nums + "hms") # A bit rough...
-        MODEL_LABEL = Literal("Model of nucleotides substitution:")
-        MODEL = Word(alphas + nums)
 
         lnl = (LNL_LABEL + FLOAT("lnl"))
         time = (TIME_LABEL + HMS("time") + OB + INTEGER("seconds") + Suppress("seconds") + CB)
-        model = (MODEL_LABEL + MODEL("model"))
 
         # Shorthand...
         def nextbit(label, val):
@@ -193,22 +190,21 @@ class Parser(object):
 
         # Just look for these things
         self.root_parser = \
-                nextbit(MODEL_LABEL, model) +\
                 nextbit(LNL_LABEL, lnl) +\
                 nextbit(TIME_LABEL, time)
 
     def parse(self, text):
-        log.info("Parsing phyml output...")
+        # log.info("Parsing phyml output...")
         try:
             tokens = self.root_parser.parseString(text)
         except ParseException, p:
-            log.error(p.format_message())
+            log.error(str(p))
             raise PhymlError
 
         result = PhymlResult(
             lnl=tokens.lnl, seconds=tokens.seconds, model=tokens.model)
 
-        log.info("Parsed phyml output is %s", result)
+        # log.info("Parsed phyml output is %s", result)
         return result
 
 # Stateless, so safe
