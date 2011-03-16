@@ -82,10 +82,10 @@ class Analysis(object):
         models_to_do = models_reqd - models_done
         # Empty set means we're done
         if not models_to_do:
+            # log.debug("Using cached results %s, models %s", sub, ", ".join(list(models)))
             return
 
-        log.debug("About to analyse %s using models %s",
-                 sub, ",".join(list(models)))
+        log.debug("About to analyse %s using models %s", sub, ", ".join(list(models)))
 
         # Make an Alignment from the source, using this subset
         sub_alignment = SubsetAlignment(self.alignment, sub)
@@ -107,18 +107,18 @@ class Analysis(object):
             # We need to write it
             sub_alignment.write(sub_path)
 
-        # Ok. Try and read in some previous analyses
+        # Try and read in some previous analyses
         self.parse_results(sub, sub_path, models_to_do)
         if not models_to_do:
             return
 
-        # Ok, now what is left, we actually have to analyse...
+        # What is left, we actually have to analyse...
         if self.threads == 1:
             self.run_models_concurrent(sub, sub_path, models_to_do)
         else:
             self.run_models_threaded(sub, sub_path, models_to_do)
 
-        # Now parse the models we've done
+        # Now parse the models we've just done
         self.parse_results(sub, sub_path, models_to_do)
 
         # This should be empty NOW!
@@ -127,16 +127,24 @@ class Analysis(object):
                       ", ".join(list(models_to_do)))
             raise AnalysisError
 
+        # If we made it to here, we should write out the new summary
+        sub_summary_path = os.path.join(self.results_path, sub.name + '.txt')
+        sub.write_summary(sub_summary_path)
+
     def parse_results(self, sub, sub_path, models_to_do):
+        """Read in the results and parse them"""
         mdone = []
         for m in list(models_to_do):
             a_path, out_path = phyml.analysis_path(sub_path, m)
             if os.path.exists(out_path):
                 sub_output = open(out_path, 'rb').read()
-                sub.results[m] = phyml.parse(sub_output)
-
+                # Annotate with the parameters of the model
+                result = phyml.parse(sub_output)
+                sub.add_model_result(m, result)
                 # Remove the current model from remaining ones
                 models_to_do.remove(m)
+                
+                # Just used for below
                 mdone.append(m)
 
         log.debug("Loaded analysis for %s, models %s", sub, ", ".join(mdone))
@@ -146,7 +154,6 @@ class Analysis(object):
             phyml.analyse(m, sub_path, self.tree_path)
 
     def run_models_threaded(self, sub, sub_path, models_to_do):
-        # Assume all goes well....
         tasks = [(phyml.analyse, (m, sub_path, self.tree_path)) for m in models_to_do]
         pool = threadpool.Pool(tasks, self.threads)
         pool.join()
@@ -154,16 +161,14 @@ class Analysis(object):
     def analyse_scheme(self, sch, models):
         for sub in sch:
             self.analyse_subset(sub, models)
+        # sch.assemble_results()
 
     def analyse_all_schemes():
         """Process everything!"""
-        # First make a tree
-        #
         for sch in scheme.all_schemes:
             analyse_scheme(sch)
         # Now check the best
     
-
 if __name__ == '__main__':
     logging.basicConfig(level=logging.DEBUG)
     # logging.basicConfig(level=logging.INFO)
@@ -182,8 +187,8 @@ spp4     CTCGAGGTGAAAAATGGTGATGCT------CGTCTGGTGCTGGAAGTTCAGCAGCAGCTGGGTGGTGGCGT
     apath = "/Users/brett/tmp/test.phy"
     output_path = "/Users/brett/tmp/output"
     alignment.write(apath)
-    a = Analysis(apath, output_path, False)
-    # a = Analysis(apath, output_path, True)
+    # a = Analysis(apath, output_path, False)
+    a = Analysis(apath, output_path, True, threads=-1)
 
     pa = Partition('a', (1, 1000, 3))
     pb = Partition('b', (2, 1000, 3))
@@ -193,19 +198,7 @@ spp4     CTCGAGGTGAAAAATGGTGATGCT------CGTCTGGTGCTGGAAGTTCAGCAGCAGCTGGGTGGTGGCGT
     sch = Scheme('a', s1, s2)
 
     models = "JC+I JC K80 TrNef K81".split()
+    models = phyml_models.get_all_models()
     a.analyse_scheme(sch, models)
-    # a.analyse_subset(s1, models)
-    # a.analyse_subset(s1, models=["JC+G"])
-    # a.analyse_subset(s1, models=phyml_models.get_all_models())
-    # for k, v in s1.results.items():
-        # print k, v
 
-    # tree_pth = phyml.make_tree(settings.program_path, settings.alignment)
-    # settings.tree = tree_pth
-    # settings.source = alignment.SourceAlignment(settings.alignment)
-
-    # p1 = partition.Partition('one', (1, 10))
-    # p2 = partition.Partition('two', (11, 20))
-    # scheme.generate_all_schemes()
-    # analyse_all_schemes()
 

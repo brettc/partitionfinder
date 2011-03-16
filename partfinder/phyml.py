@@ -161,14 +161,12 @@ def analysis_path(alignment, model):
     return analyse, output
 
 class PhymlResult(object):
-    def __init__(self, model, lnl, seconds):
+    def __init__(self, lnl, seconds):
         self.lnl = lnl
-        self.model = model
         self.seconds = seconds
 
     def __str__(self):
-        return "PhymlResult(model:%s, lnl:%s, secs:%s)" % (
-            self.model, self.lnl, self.seconds) 
+        return "PhymlResult(lnl:%s, secs:%s)" % (self.lnl, self.seconds) 
 
 class Parser(object):
     def __init__(self):
@@ -201,11 +199,7 @@ class Parser(object):
             log.error(str(p))
             raise PhymlError
 
-        result = PhymlResult(
-            lnl=tokens.lnl, seconds=tokens.seconds, model=tokens.model)
-
-        # log.info("Parsed phyml output is %s", result)
-        return result
+        return PhymlResult(lnl=tokens.lnl, seconds=tokens.seconds)
 
 # Stateless, so safe
 the_parser = Parser()

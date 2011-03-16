@@ -4,6 +4,7 @@ import os
 import weakref
 
 import alignment
+import phyml_models
 
 class SubsetError(Exception):
     pass
@@ -52,6 +53,8 @@ class Subset(object):
             obj.columns.sort()
 
             obj.results = {}
+            obj.best_AIC = None
+            obj.best_model = None
             log.debug("Created %s", obj)
         # else:
             # log.debug("Reused %s", obj)
@@ -72,12 +75,29 @@ class Subset(object):
     def __iter__(self):
         return iter(self.partitions)
 
-    def summarise(self):
-        pass
+    def add_model_result(self, model, result):
+        result.model = model
+        result.params = phyml_models.get_num_params(model)
+        result.AIC = 2 * (result.params - result.lnl)
+        if model in self.results:
+            log.error("Can't add model result %s, it already exists in %s",
+                    model, self)
+        self.results[model] = result
 
-    def write(self, path):
-        pass
+        if self.best_AIC is None or result.AIC > self.best_AIC:
+            self.best_AIC = result.AIC
+            self.best_model = result.model
 
+    _template = "%-15s | %-15s | %-15s\n"
+    def write_summary(self, path):
+        # Sort everything
+        model_results = [(r.AIC, r) for r in self.results.values()]
+        model_results.sort()
+        f = open(path, 'w')
+        f.write("Results for %s\n\n" % self)
+        f.write(Subset._template % ("Model", "lNL", "AIC"))
+        for aic, r in model_results:
+            f.write(Subset._template % (r.model, r.lnl, r.AIC))
 
 if __name__ == '__main__':
     import logging

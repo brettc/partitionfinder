@@ -20,7 +20,7 @@ models and p's soon, it'll just be a simple lookup.
 This AIC allows us to pick the 'best' model for each subset. 
 
 To calculate the AIC for a scheme, we do this: AIC=2(k-lnL) but now, lnL is the
-sum of  the  lnL's of all the subsets in that scheme, and k is the sum of all
+sum of the  lnL's of all the subsets in that scheme, and k is the sum of all
 the k's of the subsets in that scheme, PLUS (2n-3), where N is the number of
 sequences in the dataset (2n-3 is the number of branchlengths), PLUS the number
 of subsets in the scheme minus 1.
