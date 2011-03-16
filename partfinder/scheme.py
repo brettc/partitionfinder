@@ -16,6 +16,7 @@ class Scheme(object):
         # This one is a set of frozensets of partitions...
         part_subsets = set()
 
+        # This is really long-winded, but it is mainly for error-checking
         partitions = set()
         duplicates = []
         for s in subsets:
@@ -72,22 +73,25 @@ class Scheme(object):
         nsubs = len(self.subsets)
         sum_k = sum([s.best_params for s in self])
         self.lnl = sum([s.best_lnl for s in self])
-        self.aic = 2 * ((sum_k + nsubs + nseq - 1) - self.sum_lnl)
+        self.aic = 2 * ((sum_k + nsubs + nseq - 1) - self.lnl)
 
+    _header_template = "%-15s: %s\n"
+    _subset_template = "%-20s | %-20s | %-40s\n"
     def write_summary(self, path):
-        """
-        Best Scheme:
-        Scheme Name
-        Scheme description
-        Scheme lnL
-        Scheme AIC
-
-        Best models for subsets in best scheme:
-        Subset_description		Best_model		Alignment_file
-        1-200\3 2-200\3			HKY+I+G			/subset_output/part1_part2.phy
-        """
-        # TODO
-        pass
+        f = open(path, 'wb')
+        f.write(Scheme._header_template % ("Scheme Name", self.name))
+        f.write(Scheme._header_template % ("Scheme lnL", self.lnl))
+        f.write(Scheme._header_template % ("Scheme AIC", self.aic))
+        f.write("\n")
+        f.write(Scheme._subset_template % (
+            "Subset Partitions", "Best Model", "Alignment"))
+        for sub in self:
+            desc = []
+            for part in sub:
+                desc.extend(part.description)
+            parts = ' '.join(["%s-%s\\%s" % tuple(d) for d in desc])
+            f.write(Scheme._subset_template % (
+                parts, sub.best_model, sub.alignment_path))
 
 
 class AllSchemes(object):
@@ -137,6 +141,7 @@ def generate_all_schemes():
     # Now generate the pattern for this many partitions
     mods = submodels.get_submodels(partnum)
     scheme_name = 1
+    scheme_list = []
     for m in mods:
         subs = {}
         # We use the numbers returned to group the different subsets
@@ -150,8 +155,11 @@ def generate_all_schemes():
             sub = subset.Subset(*tuple([all_partitions[i] for i in sub_indexes]))
             created_subsets.append(sub)
 
-        Scheme(str(scheme_name), *tuple(created_subsets))
+        scheme_list.append(
+            Scheme(str(scheme_name), *tuple(created_subsets)))
         scheme_name += 1
+
+    return scheme_list
 
 if __name__ == '__main__':
     import logging

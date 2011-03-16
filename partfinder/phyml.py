@@ -91,30 +91,27 @@ def dupfile(src, dst):
     else:
         shutil.copyfile(src, dst)
 
-def mvfile(src, dst):
-    pass
-
 # This should generate a bootstrap tree 
-def make_tree(alignment):
+def make_tree(alignment_path):
     # We can get a rough (but probably correct!) topology using BioNJ, this is like
     # Neighbour joining but a little bit better. Turns out we can do this already
     # with PhyML like this:
-    log.debug("Making a tree for %s", alignment)
+    log.debug("Making a tree for %s", alignment_path)
 
     # First get the BioNJ topology like this:
-    command = "-i %s -o n -b 0" % (alignment)
+    command = "-i %s -o n -b 0" % (alignment_path)
     run_phyml(command)
-    output_path = tree_path(alignment)
+    output_path = make_tree_path(alignment_path)
 
     # in our case (well behaved data) we get the right topology already like
     # this, and nearly correct branchlengths too. Even so, we might want to
     # re-estimate branchlengths from scratch using a better model.
 
     # To do that, first rename the tree 
-    dirpth, fname = os.path.split(output_path)
-    tree_pth = os.path.join(dirpth, 'bionj_tree.phy')
-    log.debug("Moving %s to %s", output_path, tree_pth)
-    os.rename(output_path, tree_pth) 
+    dir_path, fname = os.path.split(output_path)
+    tree_path = os.path.join(dir_path, 'bionj_tree.phy')
+    log.debug("Moving %s to %s", output_path, tree_path)
+    os.rename(output_path, tree_path) 
 
     # now, we run PhyML asking it to re-optimise the branch lengths according to
     # some model, but not to mess with the topology.
@@ -123,42 +120,37 @@ def make_tree(alignment):
     # is important since the two interact, i.e. good brlens require good model
     # parameters.
     command = "-i %s -u %s -m GTR -c 4 -a e -v e -o lr -b 0" % (
-        alignment, tree_pth)
+        alignment_path, tree_path)
     run_phyml(command)
+
+    # Ditch the old tree
+    os.remove(tree_path)
 
     # Now return the path of the final tree alignment
-    return tree_path(alignment)
+    return output_path
 
-def analyse(model, alignment, tree):
+def analyse(model, alignment_path, analysis_path, tree_path):
     """Do the analysis -- this will overwrite stuff!"""
 
-    analysis, output = analysis_path(alignment, model)
-    dupfile(alignment, analysis)
-
+    # Move it to a new name to stop phyml stomping on different model analyses
+    dupfile(alignment_path, analysis_path)
     model_params = get_model_commandline(model)
 
-    command = "-i %s -u %s %s" % (analysis, tree, model_params)
+    command = "-i %s -u %s %s" % (analysis_path, tree_path, model_params)
     run_phyml(command)
 
-    # Now get rid of this -- we have the original 
-    os.remove(analysis)
+    # Now get rid of this -- we have the original elsewhere
+    os.remove(analysis_path)
 
-    # Return the output path, where we can read the info
-    return output
-
-def tree_path(alignment):
-    pth, ext = os.path.splitext(alignment)
+def make_tree_path(alignment_path):
+    pth, ext = os.path.splitext(alignment_path)
     return pth + ".phy_phyml_tree.txt"
 
-def analysis_path(alignment, model):
-    pth, ext = os.path.splitext(alignment)
-
-    analyse = pth + "[" + model + "]" + ext
-
-    pth, ext = os.path.splitext(analyse)
-    output = pth + ".phy_phyml_stats.txt"
-
-    return analyse, output
+def make_analysis_path(root_path, name, model):
+    analyse_path = os.path.join(root_path, name + "[" + model + "].phy")
+    pth, ext = os.path.splitext(analyse_path)
+    output_path = pth + ".phy_phyml_stats.txt"
+    return analyse_path, output_path
 
 class PhymlResult(object):
     def __init__(self, lnl, seconds):
@@ -222,12 +214,12 @@ spp4     CTCGAGGTGAAAAATGGTGATGCT------CGTCTGGTGCTGGAAGTTCAGCAGCAGCTGGGTGGTGGCGT
     tmp = tempfile.mkdtemp()
     pth = os.path.join(tmp, 'test.phy')
     alignment.write(pth)
-    tree_pth = make_tree(pth)
-    log.info("Tree is %s:", open(tree_pth).read())
+    tree_path = make_tree(pth)
+    log.info("Tree is %s:", open(tree_path).read())
 
     for model in phyml_models.get_all_models():
         log.info("Analysing using model %s:" % model)
-        out_pth = analyse(model, pth, tree_pth)
+        out_pth = analyse(model, pth, tree_path)
         output = open(out_pth, 'rb').read()
         res = parse(output)
         log.info("Result is %s", res)
