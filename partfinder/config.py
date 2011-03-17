@@ -33,7 +33,7 @@ def create_debug_log():
     # Append to the log file. we'll get multiple runs then
     log_output = RotatingFileHandler(
         settings.log_path,
-        maxBytes=100*1024, # 100K will do?
+        maxBytes=1024*1024, # 1MG will do? TODO: stop generating so much shit....
         backupCount=5,
     )
     log_output.setLevel(logging.DEBUG)

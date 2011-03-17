@@ -51,6 +51,13 @@ def main():
         "--force-restart",
         action="store_true", dest="force_restart",
         help="delete all previous output and start afresh (!)")
+    parser.add_option(
+        "-p", "--processes", 
+        type="int", dest="processes", default=1, metavar="N",
+        help="Number of concurrent processes to use."
+        " Use -1 to match the number of cpus on the machine."
+        " The default is to use 1."
+    )
     
     options, args = parser.parse_args()
 
@@ -85,7 +92,7 @@ def main():
                 s.alignment_path,
                 s.analysis_path,
                 options.force_restart,
-                # threads=-1
+                threads=options.processes,
             )
             if s.search_algorithm == 'all':
                 anal.analyse_all_possible(s.models)
