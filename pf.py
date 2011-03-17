@@ -4,8 +4,7 @@ log = logging.getLogger("main")
 from optparse import OptionParser
 import sys, os
 
-from partfinder import config
-
+from partfinder import config, analysis
 
 def main():
     usage = """usage: python %prog [options] <foldername>
@@ -76,14 +75,25 @@ def main():
 
     # Load, using the first argument as the folder
     try:
-        config.initialise(args[0])
-        config.load()
-        # log.info("Configuration appears to be okay.")
+        config.load(args[0])
         if options.check_only:
             log.info("Exiting without processing as requested...")
         else:
             # Now try processing everything....
-            log.info("Beginning processing...")
+            s = config.settings
+            anal = analysis.Analysis(
+                s.alignment_path,
+                s.analysis_path,
+                options.force_restart,
+                # threads=-1
+            )
+            if s.search_algorithm == 'all':
+                anal.analyse_all_possible(s.models)
+            else:
+                log.error("Search algorithm %s is not yet implemented", 
+                          s.search_algorithm)
+                raise NotImplemented
+
             # config.process()
         # Successful exit
         log.info("Success: processing complete.")

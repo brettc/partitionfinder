@@ -84,12 +84,17 @@ def dupfile(src, dst):
     # of the same alignment
     
     # TODO maybe this should throw...?
-    if os.path.exists(dst):
-        os.remove(dst)
-    if sys.platform in ("darwin", "unix"):
-        os.symlink(src, dst)
-    else:
-        shutil.copyfile(src, dst)
+    try:
+        if os.path.exists(dst):
+            os.remove(dst)
+        if sys.platform in ("darwin", "unix"):
+            os.symlink(src, dst)
+        else:
+            shutil.copyfile(src, dst)
+    except OSError:
+        log.error("Cannot link/copy file %s to %s", src, dst)
+        raise PhymlError
+
 
 # This should generate a bootstrap tree 
 def make_tree(alignment_path):

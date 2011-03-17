@@ -2,8 +2,7 @@ import logging
 log = logging.getLogger("config")
 from logging.handlers import RotatingFileHandler
 
-import os, shutil
-
+import os
 import parser
 
 class ConfigurationError(Exception):
@@ -18,19 +17,6 @@ def _check_folder(pth):
     if not os.path.exists(pth) or not os.path.isdir(pth):
         log.error("No such folder: '%s'", pth)
         raise ConfigurationError
-
-def _make_folder(pth):
-    if os.path.exists(pth):
-        if not os.path.isdir(pth):
-            log.error("Cannot create folder '%s'", pth)
-            raise ConfigurationError
-    else:
-        os.mkdir(pth)
-
-def _make_output_dir(name):
-    pth = os.path.join(settings.output_path, name)
-    _make_folder(pth)
-    return pth
 
 def get_root_install_path():
     pth = os.path.abspath(__file__)
@@ -73,56 +59,24 @@ class Settings(object):
 
         return self.__dict__[name]
 
-init_done = False
 settings = Settings()
 
-# class Data(object):
-    # """Used to hold global data"""
-    # def __init__(self):
-        # pass
-# data = Data()
-
-def initialise(pth, force_restart=False):
-    global init_done
-    if init_done:
-        log.error("Cannot initialise more than once")
-        raise ConfigurationError
-
+def load(pth):
     # Allow for user and environment variables
     pth = os.path.expanduser(pth)
     pth = os.path.expandvars(pth)
     pth = os.path.normpath(pth)
-    settings.base_path = pth
-    settings.force_restart = force_restart
+    # pth = os.path.abspath(pth)
 
+    settings.base_path = pth
     _check_folder(settings.base_path)
     log.info("Using folder: '%s'", settings.base_path)
-
     create_debug_log()
 
-    settings.output_path = os.path.join(settings.base_path, "output")
-    if settings.force_restart:
-        if os.path.exists(settings.output_path):
-            log.warning("Deleting all previous workings in '%s'", settings.output_path)
-            shutil.rmtree(settings.output_path)
-
-    _make_folder(settings.output_path)
-
-    settings.phyml_path = _make_output_dir("phyml")
-    settings.results_path = _make_output_dir("results")
-
-    # Setup the testing path
-    # TODO Should really just run a bunch of tests with --run-tests option
-    # How do we do this with nose?
-    settings.test_path = os.path.join(get_root_install_path(), 'tests')
-
-    find_program()
-
-    init_done = True
-
-def load():
     settings.config_path = os.path.join(settings.base_path, "partition_finder.cfg")
     _check_file(settings.config_path)
+
+    settings.analysis_path = os.path.join(settings.base_path, "analysis")
 
     log.info("Loading configuration at '%s'", settings.config_path)
     try:
@@ -136,26 +90,9 @@ def load():
         raise ConfigurationError
 
     settings.alignment_path = os.path.join(settings.base_path,
-                                        settings.alignment_file)
+                                        settings.alignment)
     _check_file(settings.alignment_path)
-
-
-def remove_tempdir(pth):
-    log.debug("Removing temp folder %s", pth)
-    shutil.rmtree(pth)
-
-def initialise_temp():
-    import tempfile
-    import atexit
-    tmp = tempfile.mkdtemp()
-    atexit.register(remove_tempdir, tmp)
-    initialise(tmp, True)
-
-def initialise_example(force_restart=False):
-    # NOTE: this overwrites everything!
-    example_path = os.path.join(get_root_install_path(), 'example')
-    initialise(example_path, force_restart)
-    load()
+    report_settings()
 
 def report_settings():
     log.debug("Settings are as follows:")
@@ -166,6 +103,5 @@ def report_settings():
 if __name__ == '__main__':
     import logging
     logging.basicConfig(level=logging.DEBUG)
-    initialise_temp()
     report_settings()
     

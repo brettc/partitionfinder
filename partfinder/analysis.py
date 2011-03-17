@@ -153,13 +153,18 @@ class Analysis(object):
             if os.path.exists(out_path):
                 sub_output = open(out_path, 'rb').read()
                 # Annotate with the parameters of the model
-                result = phyml.parse(sub_output)
-                sub.add_model_result(m, result)
-                # Remove the current model from remaining ones
-                models_to_do.remove(m)
-                
-                # Just used for below
-                mdone.append(m)
+                try:
+                    result = phyml.parse(sub_output)
+                    sub.add_model_result(m, result)
+                    # Remove the current model from remaining ones
+                    models_to_do.remove(m)
+                    
+                    # Just used for below
+                    mdone.append(m)
+                except phyml.PhymlError:
+                    log.warning("Failed loading parse output from %s."
+                              "Output maybe corrupted. I'll running it again.",
+                              out_path)
 
         if mdone:
             log.debug("Loaded analysis for %s, models %s", sub, ", ".join(mdone))

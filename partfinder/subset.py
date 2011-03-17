@@ -84,7 +84,7 @@ class Subset(object):
                     model, self)
         self.results[model] = result
 
-        if self.best_aic is None or result.aic > self.best_aic:
+        if self.best_aic is None or result.aic < self.best_aic:
             self.best_lnl = result.lnl
             self.best_aic = result.aic
             self.best_model = result.model

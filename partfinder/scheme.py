@@ -110,10 +110,10 @@ class AllSchemes(object):
         if scheme.part_subsets in self.schemes_by_subsets:
             existing_scheme = \
                     self.schemes_by_subsets[scheme.part_subsets]
-            log.error(
+            log.warning(
                 "Scheme named %s being added is identical to existing %s",
                 scheme.name, existing_scheme)
-            raise SchemeError
+            # raise SchemeError
 
         self.schemes_by_name[scheme.name] = scheme
         self.schemes_by_subsets[scheme.part_subsets] = scheme
@@ -133,9 +133,9 @@ def generate_all_schemes():
     import submodels
 
     # Make sure that no schemes have been defined!
-    if len(all_schemes) > 0:
-        log.error("Cannot generate schemes if some already exist!")
-        raise SchemeError
+    # if len(all_schemes) > 0:
+        # log.error("Cannot generate schemes if some already exist!")
+        # raise SchemeError
     
     partnum = len(all_partitions)
     # Now generate the pattern for this many partitions
