@@ -25,25 +25,25 @@ def get_root_install_path():
     pth, notused = os.path.split(pth)
     return pth
 
-def create_debug_log():
-    """Add a full debug log file in the folder"""
-    settings.log_path = os.path.join(settings.base_path, "partition_finder.log")
-    log.info("Full log is in: '%s'", settings.log_path)
+# def create_debug_log():
+    # """Add a full debug log file in the folder"""
+    # settings.log_path = os.path.join(settings.base_path, "partition_finder.log")
+    # log.info("Full log is in: '%s'", settings.log_path)
 
-    # Append to the log file. we'll get multiple runs then
-    log_output = RotatingFileHandler(
-        settings.log_path,
-        maxBytes=1024*1024, # 1MG will do? TODO: stop generating so much shit....
-        backupCount=5,
-    )
-    log_output.setLevel(logging.DEBUG)
-    formatter = logging.Formatter(
-        '%(levelname)-8s | %(asctime)s | %(name)-10s | %(message)s',
-        datefmt="%Y-%m-%d %H:%M:%S")
-    log_output.setFormatter(formatter)
-    logging.getLogger('').addHandler(log_output)
-    # Mark a new session so it is easy to read in the log file
-    log.debug("------------------ NEW LOG SESSION BEGINS -----------------")
+    # # Append to the log file. we'll get multiple runs then
+    # log_output = RotatingFileHandler(
+        # settings.log_path,
+        # maxBytes=1024*1024, # 1MG will do? TODO: stop generating so much shit....
+        # backupCount=5,
+    # )
+    # log_output.setLevel(logging.DEBUG)
+    # formatter = logging.Formatter(
+        # '%(levelname)-8s | %(asctime)s | %(name)-10s | %(message)s',
+        # datefmt="%Y-%m-%d %H:%M:%S")
+    # log_output.setFormatter(formatter)
+    # logging.getLogger('').addHandler(log_output)
+    # # Mark a new session so it is easy to read in the log file
+    # log.debug("------------------ NEW LOG SESSION BEGINS -----------------")
 
 class Settings(object):
     """This holds the user configuration info"""
@@ -71,7 +71,7 @@ def load(pth):
     settings.base_path = pth
     _check_folder(settings.base_path)
     log.info("Using folder: '%s'", settings.base_path)
-    create_debug_log()
+    # create_debug_log()
 
     settings.config_path = os.path.join(settings.base_path, "partition_finder.cfg")
     _check_file(settings.config_path)

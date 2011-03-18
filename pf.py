@@ -1,8 +1,13 @@
-import logging
+import logging, os
+curdir, f = os.path.split(__file__)
+config_path = os.path.join(curdir, 'logging.cfg')
+from logging import config as _logconfig
+_logconfig.fileConfig(config_path)
+
 log = logging.getLogger("main")
 
 from optparse import OptionParser
-import sys, os
+import sys
 
 from partfinder import config, analysis
 
@@ -67,18 +72,18 @@ def main():
         parser.print_help()
         return 2
 
-    handler = logging.StreamHandler(sys.stdout)
-    fmt = logging.Formatter('%(levelname)-8s | %(message)s')
-    handler.setFormatter(fmt)
-    logging.getLogger('').addHandler(handler)
+    # handler = logging.StreamHandler(sys.stdout)
+    # fmt = logging.Formatter('%(levelname)-8s | %(message)s')
+    # handler.setFormatter(fmt)
+    # logging.getLogger('').addHandler(handler)
 
-    if options.verbose:
-        level = logging.DEBUG
-    else:
-        level = logging.INFO
+    # if options.verbose:
+        # level = logging.DEBUG
+    # else:
+        # level = logging.INFO
 
-    logging.getLogger().setLevel(logging.DEBUG)
-    handler.setLevel(level)
+    # logging.getLogger().setLevel(logging.DEBUG)
+    # handler.setLevel(level)
 
     # Load, using the first argument as the folder
     try:
