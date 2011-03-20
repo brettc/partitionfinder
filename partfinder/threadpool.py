@@ -27,8 +27,10 @@ def cpu_count():
             num = 0
 
     if num >= 1:
+        log.info("You appear to have %s cpus", num)
         return num
     # This will have to do
+    log.info("I cannot detect any more than one processor...")
     return 1
 
 _cpus = cpu_count()
@@ -70,6 +72,7 @@ class Pool(object):
             self.tasklock.release()
     
     def join(self):
+        # TODO: I don't think we need this bit....
         # Wait till all tasks have been taken
         while self.more_tasks:
             sleep(.1)
