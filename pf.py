@@ -89,7 +89,7 @@ def main():
     try:
         config.load(args[0])
         if options.check_only:
-            log.info("Exiting without processing as requested...")
+            log.info("Exiting without processing (because of the -c/--check-only option ...")
         else:
             # Now try processing everything....
             s = config.settings

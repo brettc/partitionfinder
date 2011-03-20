@@ -101,12 +101,16 @@ class Parser(object):
         self.config_parser = (topsection + partsection + schemesection + stringEnd)
 
     def set_alignment(self, text, loc, tokens):
-        self.settings.alignment = tokens[1]
+        value = tokens[1]
+        log.debug("Setting 'alignment' to %s", value)
+        self.settings.alignment = value
         # TODO Make sure it is readable!
         # raise ParserError(text, loc, "No '%s' defined in the configuration" % var)
 
     def set_scheme_algorithm(self, text, loc, tokens):
-        self.settings.search_algorithm = tokens[1]
+        value = tokens[1]
+        log.debug("Setting 'search_algorithm' to %s", value)
+        self.settings.search_algorithm = value
 
     def set_models(self, text, loc, tokens):
         all_mods = set(phyml_models.get_all_models())
@@ -119,12 +123,17 @@ class Parser(object):
                     raise ParserError(
                         text, loc, "'%s' is not a valid model" % m)
                 self.settings.models.append(m)
+            log.debug("Setting 'models' to given userlist containing %s", 
+                      ", ".join(self.settings.models))
         else:
             modsgroup = mods.predefined
             if modsgroup == "all":
                 self.settings.models = list(all_mods)
             else:
                 pass
+            log.debug("Setting 'models' to given predefined list called '%s'",
+                      modsgroup)
+                    
 
     def define_range(self, part):
         """Turn the 2 or 3 tokens into integers, supplying a default if needed"""
