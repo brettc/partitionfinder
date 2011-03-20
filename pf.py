@@ -101,6 +101,8 @@ def main():
             )
             if s.search_algorithm == 'all':
                 anal.analyse_all_possible(s.models)
+            elif s.search_algorithm == 'user':
+                anal.analyse_current_schemes(s.models)
             else:
                 log.error("Search algorithm %s is not yet implemented", 
                           s.search_algorithm)

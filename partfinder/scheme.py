@@ -132,6 +132,8 @@ def generate_all_schemes():
     import subset
     import submodels
 
+    log.info("About to generate all possible schemes for the partitions...")
+
     # Make sure that no schemes have been defined!
     # if len(all_schemes) > 0:
         # log.error("Cannot generate schemes if some already exist!")
@@ -140,6 +142,7 @@ def generate_all_schemes():
     partnum = len(all_partitions)
     # Now generate the pattern for this many partitions
     mods = submodels.get_submodels(partnum)
+    log.info("This will result in %s schemes being created", len(mods))
     scheme_name = 1
     scheme_list = []
     for m in mods:

@@ -188,9 +188,10 @@ class Analysis(object):
 
     def analyse_current_schemes(self, models):
         """Process everything!"""
-        for sch in scheme.all_schemes:
+        scs = [sch for sch in scheme.all_schemes]
+        for sch in scs:
             self.analyse_scheme(sch, models)
-        self.write_best_scheme()
+        self.write_best_scheme(scs)
 
     def analyse_all_possible(self, models):
         gen_schemes = scheme.generate_all_schemes()
