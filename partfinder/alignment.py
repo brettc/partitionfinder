@@ -11,7 +11,7 @@ from pyparsing import (
     LineEnd, White, Literal, Combine, Or, MatchFirst)
 
 # No longer using fasta, but we'll keep it around for the moment...
-# Should really detect which it is...
+# TODO: Should really detect which it is...
 # alignment_format = 'fasta'
 alignment_format = 'phy'
 
@@ -188,7 +188,7 @@ class SubsetAlignment(Alignment):
             log.error("No species found in %s", self)
             raise AlignmentError
 
-        self.sequence_len = len(self.species[0])
+        self.sequence_len = len(self.species.itervalues().next())
 
 
 class TestAlignment(Alignment):

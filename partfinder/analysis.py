@@ -189,15 +189,15 @@ class Analysis(object):
 
     def analyse_current_schemes(self, models):
         """Process everything!"""
-        scs = [sch for sch in scheme.all_schemes]
-        for sch in scs:
-            self.analyse_scheme(sch, models)
-        self.write_best_scheme(scs)
+        current_schemes = [scheme for scheme in scheme.all_schemes]
+        for s in current_schemes:
+            self.analyse_scheme(s, models)
+        self.write_best_scheme(current_schemes)
 
     def analyse_all_possible(self, models):
         gen_schemes = scheme.generate_all_schemes()
-        for sch in gen_schemes:
-            self.analyse_scheme(sch, models)
+        for s in gen_schemes:
+            self.analyse_scheme(s, models)
         self.write_best_scheme(gen_schemes)
 
     def write_best_scheme(self, list_of_schemes):
@@ -211,10 +211,7 @@ if __name__ == '__main__':
     logging.basicConfig(level=logging.DEBUG)
     # logging.basicConfig(level=logging.INFO)
     from alignment import TestAlignment
-    from subset import Subset
     from partition import Partition
-    from scheme import Scheme
-    import phyml_models
 
     # TODO: should probably reduce the size of this
     alignment = TestAlignment("""

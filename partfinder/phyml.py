@@ -107,8 +107,8 @@ def make_tree(alignment_path):
     output_path = make_tree_path(alignment_path)
 
     # in our case (well behaved data) we get the right topology already like
-    # this, and nearly correct branchlengths too. Even so, we might want to
-    # re-estimate branchlengths from scratch using a better model.
+    # this, and nearly correct branch lengths too. Even so, we might want to
+    # re-estimate branch lengths from scratch using a better model.
 
     # To do that, first rename the tree 
     dir_path, fname = os.path.split(output_path)
