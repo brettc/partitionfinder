@@ -20,8 +20,8 @@ def _check_folder(pth):
 def get_root_install_path():
     pth = os.path.abspath(__file__)
     # Split off the name and the directory...
-    pth, notused = os.path.split(pth)
-    pth, notused = os.path.split(pth)
+    pth, not_used = os.path.split(pth)
+    pth, not_used = os.path.split(pth)
     return pth
 
 class Settings(object):
@@ -50,9 +50,9 @@ def load(pth):
     settings.base_path = pth
     _check_folder(settings.base_path)
     log.info("Using folder: '%s'", settings.base_path)
-    # create_debug_log()
 
-    settings.config_path = os.path.join(settings.base_path, "partition_finder.cfg")
+    settings.config_path = os.path.join(
+        settings.base_path, "partition_finder.cfg")
     _check_file(settings.config_path)
 
     settings.analysis_path = os.path.join(settings.base_path, "analysis")
