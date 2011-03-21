@@ -1,3 +1,4 @@
 tags
 partition_finder.tmproj
 *.pyc
+.idea
