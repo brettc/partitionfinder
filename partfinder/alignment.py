@@ -95,13 +95,13 @@ the_parser = AlignmentParser()
 class Alignment(object):
     def __init__(self):
         self.species = {}
-        self.seqlen = 0
+        self.sequence_len = 0
 
     def __str__(self):
-        return "Alignment(%s species, %s codons)" % self.species, self.seqlen
+        return "Alignment(%s species, %s codons)" % self.species, self.sequence_len
 
     def same_as(self, other):
-        return self.seqlen == other.seqlen and self.species == other.species
+        return self.sequence_len == other.sequence_len and self.species == other.species
 
     def from_parser_output(self, defs):
         """A series of species / sequences tuples
@@ -180,10 +180,15 @@ class SubsetAlignment(Alignment):
         Alignment.__init__(self)
 
         # Pull out the columns we need
-        for species_name, old_seq in source.species.iteritems():
-            new_seq = ''.join([old_seq[i] for i in subset.columns])
-            self.species[species_name] = new_seq
-        self.seqlen = len(new_seq)
+        for species_name, old_sequence in source.species.iteritems():
+            new_sequence = ''.join([old_sequence[i] for i in subset.columns])
+            self.species[species_name] = new_sequence
+
+        if not self.species:
+            log.error("No species found in %s", self)
+            raise AlignmentError
+
+        self.sequence_len = len(self.species[0])
 
 
 class TestAlignment(Alignment):
