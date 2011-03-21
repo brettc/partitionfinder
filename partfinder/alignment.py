@@ -3,15 +3,12 @@
 import logging, shutil
 log = logging.getLogger("alignment")
 
-import tempfile
 import os
 
 from pyparsing import (
     Word, OneOrMore, alphas, nums, Suppress, Optional, Group, stringEnd,
     delimitedList, ParseException, line, lineno, col, LineStart, restOfLine,
     LineEnd, White, Literal, Combine, Or, MatchFirst)
-
-import config
 
 # No longer using fasta, but we'll keep it around for the moment...
 # Should really detect which it is...
@@ -41,13 +38,13 @@ class AlignmentParser(object):
         # Some syntax that we need, but don't bother looking at
         GREATER = Literal(">")
 
-        seqname = Suppress(LineStart() + GREATER) + restOfLine
-        seqname.setParseAction(lambda toks: "".join(toks))
-        seqcodons = OneOrMore(self.CODONS + Suppress(LineEnd()))
-        seqcodons.setParseAction(lambda toks: "".join(toks))
+        sequence_name = Suppress(LineStart() + GREATER) + restOfLine
+        sequence_name.setParseAction(lambda toks: "".join(toks))
+        sequence_codons = OneOrMore(self.CODONS + Suppress(LineEnd()))
+        sequence_codons.setParseAction(lambda toks: "".join(toks))
 
         # Any sequence is the name follow by the codons
-        seq = Group(seqname("species") + seqcodons("codons"))
+        seq = Group(sequence_name("species") + sequence_codons("codons"))
         sequences = OneOrMore(seq)
         # Main parser: one or more definitions 
         return sequences("sequences")
@@ -111,7 +108,7 @@ class Alignment(object):
         e.g def = ("dog", "GATC"), ("cat", "GATT")
         """
         species = {}
-        slen = None
+        sequence_len = None
         for spec, seq in defs: 
             # log.debug("Found Sequence for %s: %s...", spec, seq[:20])
             if spec in species:
@@ -122,19 +119,19 @@ class Alignment(object):
             # Assign it
             species[spec] = seq
 
-            if slen is None:
-                slen = len(seq)
+            if sequence_len is None:
+                sequence_len = len(seq)
             else:
-                if len(seq) != slen:
+                if len(seq) != sequence_len:
                     log.error("Sequence length of %s "
                               "differs from previous sequences", spec)
                     raise AlignmentError
         log.debug("Found %d species with sequence length %d", 
-                  len(species), slen)
+                  len(species), sequence_len)
 
         # Overwrite these
         self.species = species
-        self.seqlen = slen
+        self.sequence_len = sequence_len
 
     def read(self, pth):
         if not os.path.exists(pth):
@@ -183,9 +180,9 @@ class SubsetAlignment(Alignment):
         Alignment.__init__(self)
 
         # Pull out the columns we need
-        for sname, old_seq in source.species.iteritems():
+        for species_name, old_seq in source.species.iteritems():
             new_seq = ''.join([old_seq[i] for i in subset.columns])
-            self.species[sname] = new_seq
+            self.species[species_name] = new_seq
         self.seqlen = len(new_seq)
 
 
