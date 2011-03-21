@@ -1,12 +1,9 @@
 import logging
 log = logging.getLogger("parser")
 
-import os
-
 from pyparsing import (
-    Word, Dict, OneOrMore, alphas, nums, Suppress, Optional, Group, stringEnd,
-    delimitedList, pythonStyleComment, ParseException, line, lineno, col,
-    Keyword, ParserElement, ParseException, MatchFirst)
+    Word, OneOrMore, alphas, nums, Suppress, Optional, Group, stringEnd,
+    delimitedList, pythonStyleComment, line, lineno, col, Keyword)
 
 # debugging
 # ParserElement.verbose_stacktrace = True
