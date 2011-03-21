@@ -85,10 +85,7 @@ def dupfile(src, dst):
     try:
         if os.path.exists(dst):
             os.remove(dst)
-        if sys.platform in ("darwin", "unix"):
-            os.symlink(src, dst)
-        else:
-            shutil.copyfile(src, dst)
+        shutil.copyfile(src, dst)
     except OSError:
         log.error("Cannot link/copy file %s to %s", src, dst)
         raise PhymlError
