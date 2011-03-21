@@ -77,18 +77,18 @@ class Analysis(object):
 
     def analyse_subset(self, sub, models):
         """Analyse the subset using the models given
-
         This is the core place where everything comes together
         The results are placed into subset.result
         """
+
         # First, see if we've already got the results loaded. Then we can
         # shortcut all the other checks
         models_done = set(sub.results.keys())
-        models_reqd = set(models)
-        models_to_do = models_reqd - models_done
+        models_required = set(models)
+        models_to_do = models_required - models_done
         # Empty set means we're done
         if not models_to_do:
-            # log.debug("Using cached results %s, models %s", sub, ", ".join(list(models)))
+            log.debug("Using cached results for %s", sub)
             return
 
         log.debug("About to analyse %s using models %s", sub, ", ".join(list(models)))
