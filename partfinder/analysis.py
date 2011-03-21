@@ -189,7 +189,7 @@ class Analysis(object):
 
     def analyse_current_schemes(self, models):
         """Process everything!"""
-        current_schemes = [scheme for scheme in scheme.all_schemes]
+        current_schemes = [s for s in scheme.all_schemes]
         for s in current_schemes:
             self.analyse_scheme(s, models)
         self.write_best_scheme(current_schemes)
