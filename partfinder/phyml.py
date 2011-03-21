@@ -3,13 +3,11 @@
 import logging
 log = logging.getLogger("phyml")
 
-import config
-
-import subprocess, shlex, tempfile, os, shutil, sys
+import subprocess, shlex, os, shutil, sys
 
 from pyparsing import (
-    Word, Literal, alphas, nums, Suppress, Group, stringEnd, ParseException,
-    line, lineno, col, LineStart, SkipTo, LineEnd,
+    Word, Literal, nums, Suppress, ParseException,
+    SkipTo,
     )
 
 from phyml_models import get_model_commandline
@@ -198,7 +196,7 @@ class Parser(object):
 
         return PhymlResult(lnl=tokens.lnl, seconds=tokens.seconds)
 
-# Stateless, so safe
+# Stateless, so safe for use across threads. HMMMM, REALLY?
 the_parser = Parser()
 
 def parse(text):
@@ -206,7 +204,7 @@ def parse(text):
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.DEBUG)
-    import tempfile, shutil, os
+    import tempfile, os
     from alignment import TestAlignment
     import phyml_models 
     alignment = TestAlignment("""

@@ -120,9 +120,6 @@ def main():
 
 if __name__ == "__main__":
     # Well behaved unix programs exits with 0 on success...
-    # sys.argv = ['arg', '-v', 'example']
-    # sys.argv = ['arg', 'example']
-    # sys.argv = ['arg', '-vc', 'example']
     sys.exit(main())
 
 

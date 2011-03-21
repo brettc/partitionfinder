@@ -146,7 +146,7 @@ class Analysis(object):
 
     def parse_results(self, sub, models_to_do):
         """Read in the results and parse them"""
-        mdone = []
+        models_done = []
         for m in list(models_to_do):
             # sub.alignment_path
             a_path, out_path = phyml.make_analysis_path(self.phyml_path, sub.name, m)
@@ -160,14 +160,14 @@ class Analysis(object):
                     models_to_do.remove(m)
                     
                     # Just used for below
-                    mdone.append(m)
+                    models_done.append(m)
                 except phyml.PhymlError:
                     log.warning("Failed loading parse output from %s."
                               "Output maybe corrupted. I'll running it again.",
                               out_path)
 
-        if mdone:
-            log.debug("Loaded analysis for %s, models %s", sub, ", ".join(mdone))
+        if models_done:
+            log.debug("Loaded analysis for %s, models %s", sub, ", ".join(models_done))
 
     def run_models_concurrent(self, tasks):
         for func, args in tasks:

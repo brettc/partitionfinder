@@ -60,15 +60,15 @@ class AlignmentParser(object):
         header = Group(INTEGER("species_count") +
                        INTEGER("codon_count") + Suppress(restOfLine))
 
-        seqname = Word(alphas + nums, max=10)
+        sequence_name = Word(alphas + nums, max=10)
 
         # Take a copy and disallow line breaks in the codons
         codons = self.CODONS.copy()
         codons.setWhitespaceChars(" \t")
-        codonrepeats = OneOrMore(codons)
+        codon_repeats = OneOrMore(codons)
 
-        codonrepeats.setParseAction(lambda x: ''.join(x))
-        seq = Group(seqname("species") + codonrepeats("codons")) + Suppress(LineEnd())
+        codon_repeats.setParseAction(lambda x: ''.join(x))
+        seq = Group(sequence_name("species") + codon_repeats("codons")) + Suppress(LineEnd())
         sequences = OneOrMore(seq)
         return header("header") + sequences("sequences")
 
