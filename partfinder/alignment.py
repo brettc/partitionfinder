@@ -10,7 +10,6 @@ from pyparsing import (
     delimitedList, ParseException, line, lineno, col, LineStart, restOfLine,
     LineEnd, White, Literal, Combine, Or, MatchFirst)
 
-# No longer using fasta, but we'll keep it around for the moment...
 # TODO: Should really detect which it is...
 # alignment_format = 'fasta'
 alignment_format = 'phy'
@@ -76,7 +75,7 @@ class AlignmentParser(object):
             log.error("Error in Alignment Parsing:" + str(p))
             raise AlignmentError
 
-        # if we have a header, do some checking
+        # Not all formats have a heading, but if we have one do some checking
         if defs.header:
             if len(defs.sequences) != defs.header.species_count:
                 log.error("Bad Alignment file: species count does not match")
@@ -91,6 +90,8 @@ class AlignmentParser(object):
 
 # Stateless singleton parser
 the_parser = AlignmentParser()
+def parse(s):
+    return the_parser.parse(s)
 
 class Alignment(object):
     def __init__(self):
@@ -190,51 +191,9 @@ class SubsetAlignment(Alignment):
 
         self.sequence_len = len(self.species.itervalues().next())
 
-
 class TestAlignment(Alignment):
     """Good for testing stuff"""
     def __init__(self, text):
         Alignment.__init__(self)
         self.from_parser_output(the_parser.parse(text))
 
-def test_phylip():
-    logging.basicConfig(level=logging.DEBUG)
-    test_alignment = r"""16 13
-Aalksfj GCCGGCGGGGA-A
-	Bla	GCCGGCGGGGAAA
-	Ca	GCCGGCGGGGAAG
-	D	GCCAGCGGGGAAG
-E	GCCCGGGGGGAAG
-	F	GCCCGTGGGGAAG
-	G	GCCGGCGAGGAAG
-	H	GCCAGCGGGGAAA
-	I	GCCGGCGGGGAAG
-	J	GCC GGCGGGGAAG
-	K	GCCGGCGGGGAAT
-	L	GCCGGCGGGGAAA
-	M	GTCGGCGGGGAAA
-	N	GCCGGCGGGGAAA
-	O	GCCGGCGGGGAAA
-	P	GCC GGCGGGGAAT
-"""
-    print the_parser.parse(test_alignment)
-
-def test_fasta():
-    test_alignment = r"""
->spp1
-ATTGAGGTTCAGAATGGTAATGAA------GTGCTGG
->spp2
-CTTGAGGTACAAAATGGTAATGAG------AGCCTGG
->spp3
-CTTGAGGTACAGAATAACAGCGAG------AAGCTGG
->spp4
-ATCGAGGTGAAAAATGGTGATGCT------CGTCTGG
-    """
-    logging.basicConfig(level=logging.DEBUG)
-    a = TestAlignment('test', test_alignment)
-    print a
-    # res = a.analyse()
-    # print res.AIC
-
-if __name__ == '__main__':
-    test_phylip()
