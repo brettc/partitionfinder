@@ -5,6 +5,8 @@ log = logging.getLogger("analysis")
 
 import os, shutil
 
+from partition import all_partitions
+
 from alignment import Alignment, SubsetAlignment
 import phyml
 import threadpool
@@ -164,7 +166,7 @@ class Analysis(object):
                     models_done.append(m)
                 except phyml.PhymlError:
                     log.warning("Failed loading parse output from %s."
-                              "Output maybe corrupted. I'll running it again.",
+                              "Output maybe corrupted. I'll run it again.",
                               out_path)
 
         if models_done:
@@ -179,13 +181,17 @@ class Analysis(object):
         pool.join()
 
     def analyse_scheme(self, sch, models):
+        
         for sub in sch:
             self.analyse_subset(sub, models)
-
-        # AIC needs to number of sequences 
+ 
+        # AIC needs the number of sequences 
         number_of_seq = len(self.alignment.species)
         sch.assemble_results(number_of_seq)
         sch.write_summary(os.path.join(self.schemes_path, sch.name+'.txt'))
+
+        log.info("Scheme %s analysed. AIC=%.2f", sch.name, sch.aic)
+		
 
     def analyse_current_schemes(self, models):
         """Process everything!"""
@@ -206,6 +212,11 @@ class Analysis(object):
         sorted_schemes.sort()
         best = sorted_schemes[0][1]
         best.write_summary(os.path.join(self.output_path, 'best_scheme.txt'))
+        
+    def greedy_analysis(self, models):
+        #do stuff
+        start_scheme = [0, 1, 2]
+		
     
 if __name__ == '__main__':
     logging.basicConfig(level=logging.DEBUG)
