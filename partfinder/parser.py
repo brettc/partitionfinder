@@ -91,7 +91,8 @@ class Parser(object):
         schemealgo = Keyword("search") + EQUALS + (
             Keyword("all") | Keyword("greedy") | Keyword("user"))
         schemealgo.setParseAction(self.set_scheme_algorithm)
-        schemesection = Suppress("[schemes]") + schemealgo + schemelist 
+        schemesection = \
+                Suppress("[schemes]") + schemealgo + Optional(schemelist)
 
         # We've defined the grammar for each section. Here we just put it all
         # together
