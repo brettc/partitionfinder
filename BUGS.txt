@@ -1,0 +1,17 @@
+Bugs
+
+1. I get an error when I run PF without anything in the 'user schemes' section
+
+2. If I quit an analysis half way through and restart, things happen but it's not all good.
+   it looks to me like the 'scheme' names start from '1' again on the second time around.
+   they should start wherever the last analysis left off right?
+   
+3. Alignments should be allowed to have underscores (and other shit) in the names. I ran into trouble
+   with an alignment which had underscores and wouldn't load until I replaced them with other shit.
+
+4. When I re-run a previously completed run, it is a bit slower than I would expect, and I'm not sure why...
+   which files is it getting the info on subsets from? If its the subset files (which it should be if we're
+   planning to later delete all the PhyML output) I would have expected it to be a bit quicker.
+   If it's getting it from the PhyML output files (/phyml) then maybe it's slow because each subset 
+   involves opening up and finding info from 56 separate files.
+   I think this is confirmed because reducing the number of models speeds up things a lot.
