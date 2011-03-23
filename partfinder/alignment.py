@@ -2,6 +2,7 @@
 
     See the phyml details here:
     http://www.atgc-montpellier.fr/phyml/usersguide.php?type=command
+
 """
 import logging, shutil
 log = logging.getLogger("alignment")
@@ -24,7 +25,7 @@ class AlignmentParser(object):
     """Parses a fasta definition and returns species sequence tuples"""
     
     # I think this covers it...
-    BASES = Word(alphas + "!*-")
+    BASES = Word(alphas + "?.-")
 
     def __init__(self):
         self.sequences = {}
@@ -59,7 +60,9 @@ class AlignmentParser(object):
         header = Group(INTEGER("species_count") +
                        INTEGER("sequence_length") + Suppress(restOfLine))
 
-        sequence_name = Word(alphas + nums, max=100)
+        sequence_name = Word(
+            alphas + nums + "!#$%&\'*+-./;<=>?@[\\]^_`{|}~"
+            max=100)
 
         # Take a copy and disallow line breaks in the bases
         bases = self.BASES.copy()
