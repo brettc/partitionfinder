@@ -1,4 +1,7 @@
 """Loading, Saving, Parsing Alignment Files
+
+    See the phyml details here:
+    http://www.atgc-montpellier.fr/phyml/usersguide.php?type=command
 """
 import logging, shutil
 log = logging.getLogger("alignment")
@@ -21,7 +24,7 @@ class AlignmentParser(object):
     """Parses a fasta definition and returns species codon pairs"""
     
     # I think this covers it...
-    CODONS = Word(alphas + "!*-") 
+    BASES = Word(alphas + "!*-")
 
     def __init__(self):
         self.sequences = {}
@@ -39,11 +42,11 @@ class AlignmentParser(object):
 
         sequence_name = Suppress(LineStart() + GREATER) + restOfLine
         sequence_name.setParseAction(lambda toks: "".join(toks))
-        sequence_codons = OneOrMore(self.CODONS + Suppress(LineEnd()))
-        sequence_codons.setParseAction(lambda toks: "".join(toks))
+        sequence_bases = OneOrMore(self.BASES + Suppress(LineEnd()))
+        sequence_bases.setParseAction(lambda toks: "".join(toks))
 
-        # Any sequence is the name follow by the codons
-        seq = Group(sequence_name("species") + sequence_codons("codons"))
+        # Any sequence is the name follow by the bases
+        seq = Group(sequence_name("species") + sequence_bases("sequence"))
         sequences = OneOrMore(seq)
         # Main parser: one or more definitions 
         return sequences("sequences")
@@ -54,17 +57,17 @@ class AlignmentParser(object):
         INTEGER.setParseAction(lambda x: int(x[0]))
 
         header = Group(INTEGER("species_count") +
-                       INTEGER("codon_count") + Suppress(restOfLine))
+                       INTEGER("sequence_length") + Suppress(restOfLine))
 
-        sequence_name = Word(alphas + nums, max=10)
+        sequence_name = Word(alphas + nums, max=100)
 
-        # Take a copy and disallow line breaks in the codons
-        codons = self.CODONS.copy()
-        codons.setWhitespaceChars(" \t")
-        codon_repeats = OneOrMore(codons)
+        # Take a copy and disallow line breaks in the bases
+        bases = self.BASES.copy()
+        bases.setWhitespaceChars(" \t")
+        base_chain = OneOrMore(bases)
 
-        codon_repeats.setParseAction(lambda x: ''.join(x))
-        seq = Group(sequence_name("species") + codon_repeats("codons")) + Suppress(LineEnd())
+        base_chain.setParseAction(lambda x: ''.join(x))
+        seq = Group(sequence_name("species") + base_chain("sequence")) + Suppress(LineEnd())
         sequences = OneOrMore(seq)
         return header("header") + sequences("sequences")
 
@@ -81,12 +84,12 @@ class AlignmentParser(object):
                 log.error("Bad Alignment file: species count does not match")
                 raise AlignmentError
 
-            if len(defs.sequences[0][1]) != defs.header.codon_count:
+            if len(defs.sequences[0][1]) != defs.header.sequence_length:
                 log.error("Bad Alignment file: codon count does not match")
                 raise AlignmentError
 
         # Don't make a dictionary yet, as we want to check it for repeats
-        return [(x.species, x.codons) for x in defs.sequences]
+        return [(x.species, x.sequence) for x in defs.sequences]
 
 # Stateless singleton parser
 the_parser = AlignmentParser()
@@ -164,9 +167,9 @@ class Alignment(object):
         log.debug("Writing phylip file '%s'", pth)
 
         species_count = len(self.species)
-        codon_count = len(iter(self.species.itervalues()).next())
+        sequence_len = len(iter(self.species.itervalues()).next())
 
-        fd.write("%d %d\n" % (species_count, codon_count))
+        fd.write("%d %d\n" % (species_count, sequence_len))
         for species, sequence in self.species.iteritems():
             # Species is max 10 long, clip it and fill with spaces
             shortened = species[:9].ljust(10, ' ')

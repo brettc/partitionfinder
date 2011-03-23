@@ -21,16 +21,16 @@ E	GCCCGGGGGGAAG
 """
     print alignment.parse(test_alignment)
 
-def test_fasta():
-    test_alignment = r"""
->spp1
-ATTGAGGTTCAGAATGGTAATGAA------GTGCTGG
->spp2
-CTTGAGGTACAAAATGGTAATGAG------AGCCTGG
->spp3
-CTTGAGGTACAGAATAACAGCGAG------AAGCTGG
->spp4
-ATCGAGGTGAAAAATGGTGATGCT------CGTCTGG
-    """
-    a = alignment.parse(test_alignment)
-    print a
+# def test_fasta():
+    # test_alignment = r"""
+# >spp1
+# ATTGAGGTTCAGAATGGTAATGAA------GTGCTGG
+# >spp2
+# CTTGAGGTACAAAATGGTAATGAG------AGCCTGG
+# >spp3
+# CTTGAGGTACAGAATAACAGCGAG------AAGCTGG
+# >spp4
+# ATCGAGGTGAAAAATGGTGATGCT------CGTCTGG
+    # """
+    # a = alignment.parse(test_alignment)
+    # print a
