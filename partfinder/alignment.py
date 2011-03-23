@@ -85,7 +85,7 @@ class AlignmentParser(object):
                 " number of sequences in file, please check")
                 raise AlignmentError
 
-            if len(defs.sequences[0][1]) != defs.header.codon_count:
+            if len(defs.sequences[0][1]) != defs.header.sequence_length:
                 log.error("Bad Alignment file: sequence length count in header does not match"
                 " sequence length in file, please check")
                 raise AlignmentError
