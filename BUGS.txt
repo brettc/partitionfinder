@@ -13,11 +13,91 @@ Bugs
    names. I ran into trouble with an alignment which had underscores and
    wouldn't load until I replaced them with other shit.
 
-4. When I re-run a previously completed run, it is a bit slower than I would
-   expect, and I'm not sure why...  which files is it getting the info on
-   subsets from? If its the subset files (which it should be if we're planning
-   to later delete all the PhyML output) I would have expected it to be a bit
-   quicker.  If it's getting it from the PhyML output files (/phyml) then
-   maybe it's slow because each subset involves opening up and finding info
-   from 56 separate files.  I think this is confirmed because reducing the
-   number of models speeds up things a lot.
+3.1 The phylip parser is kind of horrible. I get all sorts of errors all over the place, Brett and I
+   will have to go through this. In general, we should follow the PhyML guidelines for formatting,
+   (pasted below) which will let us catch format errors ourselves before we ask phyml to do any analysis
+
+4. When I re-run a previously completed run, it is a bit slower than I would expect, and I'm not sure why...
+   which files is it getting the info on subsets from? If its the subset files (which it should be if we're
+   planning to later delete all the PhyML output) I would have expected it to be a bit quicker.
+   If it's getting it from the PhyML output files (/phyml) then maybe it's slow because each subset 
+   involves opening up and finding info from 56 separate files.
+   I think this is confirmed because reducing the number of models speeds up things a lot.
+   
+   This stuff seems to be here in analysis.py, presumably it would be not-too-hard to recode to load
+   the subset result from the /subset folder, then append to that subset file with new models that 
+   are in models_to_do
+       def parse_results(self, sub, models_to_do):
+        """Read in the results and parse them"""
+        models_done = []
+        for m in list(models_to_do):
+            # sub.alignment_path
+            a_path, out_path = phyml.make_analysis_path(self.phyml_path, sub.name, m)
+            if os.path.exists(out_path):
+                sub_output = open(out_path, 'rb').read()
+                # Annotate with the parameters of the model
+                try:
+                    result = phyml.parse(sub_output)
+                    sub.add_model_result(m, result)
+                    # Remove the current model from remaining ones
+                    models_to_do.remove(m)
+                    
+                    # Just used for below
+                    models_done.append(m)
+                except phyml.PhymlError:
+                    log.warning("Failed loading parse output from %s."
+                              "Output maybe corrupted. I'll run it again.",
+                              out_path)
+
+
+PHYML formatting for phylip files:
+
+Sequences -i (or --input) seq_file_name
+
+seq_file_name is the sequence filename with its path from the current directory.
+
+The input sequence file is a standard PHYLIP file of aligned DNA or amino-acids sequences. It should
+look like this in interleaved format :
+
+5 60 
+Tax1        CCATCTCACGGTCGGTACGATACACCTGCTTTTGGCAG 
+Tax2       CCATCTCACGGTCAGTAAGATACACCTGCTTTTGGCGG 
+Tax3        CCATCTCCCGCTCAGTAAGATACCCCTGCTGTTGGCGG 
+Tax4      TCATCTCATGGTCAATAAGATACTCCTGCTTTTGGCGG 
+Tax5        CCATCTCACGGTCGGTAAGATACACCTGCTTTTGGCGG
+
+GAAATGGTCAATATTACAAGGT GAAATGGTCAACATTAAAAGAT GAAATCGTCAATATTAAAAGGT GAAATGGTCAATCTTAAAAGGT
+GAAATGGTCAATATTAAAAGGT
+
+The same data set in sequential format:
+
+5 60 Tax1        CCATCTCACGGTCGGTACGATACACCTGCTTTTGGCAGGAAATGGTCAATATTACAAGGT Tax2       
+CCATCTCACGGTCAGTAAGATACACCTGCTTTTGGCGGGAAATGGTCAACATTAAAAGAT Tax3       
+CCATCTCCCGCTCAGTAAGATACCCCTGCTGTTGGCGGGAAATCGTCAATATTAAAAGGT Tax4       
+TCATCTCATGGTCAATAAGATACTCCTGCTTTTGGCGGGAAATGGTCAATCTTAAAAGGT Tax5       
+CCATCTCACGGTCGGTAAGATACACCTGCTTTTGGCGGGAAATGGTCAATATTAAAAGGT
+
+On the first line is the number of taxa, a space, then the number of sites in the alignment.
+
+The maximum number of characters in species name MUST not exceed 100. Blanks and the symbols “(),:”
+are not allowed within sequence names because the Newick tree format makes special use of these
+symbols. However, blanks (one or more) MUST appear at the end of each species name.
+
+In a sequence, three special characters '.', '-', and '?' may be used: a dot '.' means the same
+character as in the first sequence, a dash '-' means an alignment gap and a question mark '?' means
+an undetermined nucleotide. Sites at which one or more sequences involve '-' are NOT excluded from
+the analysis. Therefore, gaps are treated as unknown character (like '?') on the grounds that ''we
+don't know what would be there if something were there'' (J. Felsenstein, PHYLIP documentation).
+Finally, standard ambiguity characters for nucleotides are accepted (Table 1).
+
+Table 1 - Nucleotide character coding Character 	Nucleotide A 	Adenosine G 	Guanine C
+	Cytosine T 	Thymine U 	Uracil M 	A or C R 	A or G W 	A or T S 	C or G Y 	C
+or T K 	G or T B 	C or G or T D 	A or G or T H 	A or C or T V 	A or C or G N or X or
+? 	unknown
+
+Table 2 - Amino-Acid character coding Character 	Amino-Acid A 	Alanine R 	Arginine N or B
+	Asparagine D 	Aspartic acid C 	Cysteine Q or Z 	Glutamine E 	Glutamic acid G
+	Glycine H 	Histidine I 	Isoleucine L 	Leucine K 	Lysine M 	Methionine F
+	Phenylalanine P 	Proline S 	Serine T 	Threonine W 	Tryptophan Y 	Tyrosine V
+	Valine X or ? 	unknown 
+>>>>>>> rob
