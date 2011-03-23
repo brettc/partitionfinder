@@ -88,9 +88,10 @@ class Analysis(object):
         models_done = set(sub.results.keys())
         models_required = set(models)
         models_to_do = models_required - models_done
+
         # Empty set means we're done
         if not models_to_do:
-            log.debug("Using cached results for %s", sub)
+            log.debug("Using results that are already loaded %s", sub)
             return
 
         log.debug("About to analyse %s using models %s", sub, ", ".join(list(models)))
@@ -181,7 +182,6 @@ class Analysis(object):
         pool.join()
 
     def analyse_scheme(self, sch, models):
-        
         for sub in sch:
             self.analyse_subset(sub, models)
  
