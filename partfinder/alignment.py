@@ -19,7 +19,7 @@ class AlignmentError(Exception):
     pass
 
 class AlignmentParser(object):
-    """Parses a fasta definition and returns species codon pairs"""
+    """Parses a fasta definition and returns species sequence tuples"""
     
     # I think this covers it...
     CODONS = Word(alphas + "!*-") 
@@ -79,11 +79,13 @@ class AlignmentParser(object):
         # if we have a header, do some checking
         if defs.header:
             if len(defs.sequences) != defs.header.species_count:
-                log.error("Bad Alignment file: species count does not match")
+                log.error("Bad Alignment file: species count in header does not match" 
+                " number of sequences in file, please check")
                 raise AlignmentError
 
             if len(defs.sequences[0][1]) != defs.header.codon_count:
-                log.error("Bad Alignment file: codon count does not match")
+                log.error("Bad Alignment file: sequence length count in header does not match"
+                " sequence length in file, please check")
                 raise AlignmentError
 
         # Don't make a dictionary yet, as we want to check it for repeats
