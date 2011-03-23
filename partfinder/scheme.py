@@ -73,7 +73,7 @@ class Scheme(object):
         nsubs = len(self.subsets)
         sum_k = sum([s.best_params for s in self])
         self.lnl = sum([s.best_lnl for s in self])
-        self.aic = 2 * ((sum_k + (nsubs-1) + (nseq-3)) - self.lnl)
+        self.aic = 2 * ((sum_k + (nsubs-1) + (2*nseq-3)) - self.lnl)
 
     _header_template = "%-15s: %s\n"
     _subset_template = "%-20s | %-20s | %-40s\n"
