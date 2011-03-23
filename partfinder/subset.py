@@ -104,15 +104,15 @@ class Subset(object):
 
     def write_binary_summary(self, path):
         """Write out the results we've collected to a binary file"""
-        f = open(path, 'rb')
+        f = open(path, 'wb')
         pickle.dump(self.results, f, -1)
 
     def read_binary_summary(self, path):
         if not os.path.exists(path):
             return False
 
-        f = open(path, 'wb')
-        self.results = pickle.load(path)
+        f = open(path, 'rb')
+        self.results = pickle.load(f)
 
 
 if __name__ == '__main__':

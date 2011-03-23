@@ -85,8 +85,8 @@ class Analysis(object):
 
         sub_bin_path = os.path.join(self.subsets_path, sub.name + '.bin')
         # We might have already saved a bunch of results, try there first
-        if not obj.results:
-            sub.read_summary_binary(sub_bin_path)
+        if not sub.results:
+            sub.read_binary_summary(sub_bin_path)
 
         # First, see if we've already got the results loaded. Then we can
         # shortcut all the other checks
