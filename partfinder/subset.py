@@ -2,6 +2,7 @@ import logging
 log = logging.getLogger("subset")
 import os
 import weakref
+import cPickle as pickle
 
 import alignment
 import phyml_models
@@ -100,6 +101,19 @@ class Subset(object):
         f.write(Subset._template % ("Model", "lNL", "AIC"))
         for aic, r in model_results:
             f.write(Subset._template % (r.model, r.lnl, r.aic))
+
+    def write_binary_summary(self, path):
+        """Write out the results we've collected to a binary file"""
+        f = open(path, 'rb')
+        pickle.dump(self.results, f, -1)
+
+    def read_binary_summary(self, path):
+        if not os.path.exists(path):
+            return False
+
+        f = open(path, 'wb')
+        self.results = pickle.load(path)
+
 
 if __name__ == '__main__':
     import logging

@@ -83,6 +83,11 @@ class Analysis(object):
         The results are placed into subset.result
         """
 
+        sub_bin_path = os.path.join(self.subsets_path, sub.name + '.bin')
+        # We might have already saved a bunch of results, try there first
+        if not obj.results:
+            sub.read_summary_binary(sub_bin_path)
+
         # First, see if we've already got the results loaded. Then we can
         # shortcut all the other checks
         models_done = set(sub.results.keys())
@@ -147,6 +152,8 @@ class Analysis(object):
         # If we made it to here, we should write out the new summary
         sub_summary_path = os.path.join(self.subsets_path, sub.name + '.txt')
         sub.write_summary(sub_summary_path)
+        # We also need to update this
+        sub.write_binary_summary(sub_bin_path)
 
     def parse_results(self, sub, models_to_do):
         """Read in the results and parse them"""
