@@ -56,6 +56,9 @@ class Subset(object):
             obj.results = {}
             obj.best_aic = None
             obj.best_model = None
+            obj.best_params = None
+            obj.best_lnl = None
+            obj.alignment_path = None
             log.debug("Created %s", obj)
         # else:
             # log.debug("Reused %s", obj)
@@ -102,17 +105,23 @@ class Subset(object):
         for aic, r in model_results:
             f.write(Subset._template % (r.model, r.lnl, r.aic))
 
+    
+    # These are the fields that get stored for quick loading
+    _store = "alignment_path best_lnl best_aic best_model best_params results".split()
+
     def write_binary_summary(self, path):
         """Write out the results we've collected to a binary file"""
         f = open(path, 'wb')
-        pickle.dump(self.results, f, -1)
+        store = dict([(x, getattr(self, x)) for x in Subset._store])
+        pickle.dump(store, f, -1)
 
     def read_binary_summary(self, path):
         if not os.path.exists(path):
             return False
 
+        log.debug("Reading binary cached results for %s", self)
         f = open(path, 'rb')
-        self.results = pickle.load(f)
+        self.__dict__.update(pickle.load(f))
 
 
 if __name__ == '__main__':
