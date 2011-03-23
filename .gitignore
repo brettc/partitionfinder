@@ -3,3 +3,4 @@ partition_finder.tmproj
 *.pyc
 .idea
 partfinder.log
+example/analysis
