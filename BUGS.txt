@@ -47,7 +47,8 @@ Bugs to Fix
     - I think this is now fixed.
 
 
-# Done
+Bugs already Fixed
+------------------
 
 - If I quit an analysis half way through and restart, things happen but it's 
   not all good.  it looks to me like the 'scheme' names start from '1' again 
