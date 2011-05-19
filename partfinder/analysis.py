@@ -212,13 +212,30 @@ class Analysis(object):
         for s in gen_schemes:
             self.analyse_scheme(s, models)
         self.write_best_scheme(gen_schemes)
+        self.write_all_schemes(gen_schemes)
 
     def write_best_scheme(self, list_of_schemes):
         # Which is the best?
-        sorted_schemes = [(s.aic, s) for s in list_of_schemes]
-        sorted_schemes.sort()
-        best = sorted_schemes[0][1]
-        best.write_summary(os.path.join(self.output_path, 'best_scheme.txt'))
+        sorted_schemes_aic = [(s.aic, s) for s in list_of_schemes]
+        sorted_schemes_aic.sort()
+        sorted_schemes_aicc = [(s.aicc, s) for s in list_of_schemes]
+        sorted_schemes_aicc.sort()
+        sorted_schemes_bic = [(s.bic, s) for s in list_of_schemes]
+        sorted_schemes_bic.sort()
+        best_aic  = sorted_schemes_aic[0][1]
+        best_aicc = sorted_schemes_aicc[0][1]
+        best_bic  = sorted_schemes_bic[0][1]
+        best_schemes_file = os.path.join(self.output_path, 'best_schemes.txt')
+        best_aic.write_summary(best_schemes_file, 'wb', "Best scheme according to AIC\n")
+        best_aicc.write_summary(best_schemes_file, 'ab', "\n\n\nBest scheme according to AICc\n")
+        best_bic.write_summary(best_schemes_file, 'ab', "\n\n\nBest scheme according to BIC\n")
+
+    def write_all_schemes(self, list_of_schemes):
+        all_schemes_file = os.path.join(self.output_path, 'all_schemes.txt')
+        f = open(all_schemes_file, 'wb')
+        f.write("Name,lnL,K,N,Subsets,AIC,AICc,BIC\n")
+        for s in list_of_schemes:
+            f.write("%s,%.3f,%d,%d,%d,%.3f,%.3f,%.3f\n" %(s.name,s.lnl,s.sum_k,s.nsites,s.nsubs,s.aic,s.aicc,s.bic))
         
     def greedy_analysis(self, models):
         #do stuff
