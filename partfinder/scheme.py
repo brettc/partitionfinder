@@ -2,6 +2,7 @@ import logging
 log = logging.getLogger("scheme")
 
 from partition import all_partitions
+from math import log as logarithm
 
 class SchemeError(Exception):
     pass
@@ -70,29 +71,55 @@ class Scheme(object):
         # the k's of the subsets in that scheme, PLUS (2n-3), where N is the number of
         # sequences in the dataset (2n-3 is the number of branchlengths), PLUS the number
         # of subsets in the scheme minus 1.
-        nsubs = len(self.subsets)
-        sum_k = sum([s.best_params for s in self])
+        self.nsubs = len(self.subsets) #number of subsets
+        sum_subset_k = sum([s.best_params for s in self]) #sum of parameters in subsets
+        self.sum_k = sum_subset_k + (self.nsubs-1) + ((2*nseq)-3) #number of parameters in a scheme
         self.lnl = sum([s.best_lnl for s in self])
-        self.aic = 2 * ((sum_k + (nsubs-1) + (2*nseq-3)) - self.lnl)
+        self.nsites = sum([len(s.columnset) for s in self])
+
+        K = float(self.sum_k)
+        n = float(self.nsites)
+        lnL = float(self.lnl)		
+   
+        self.aic  = (-2.0*lnL) + (2.0*K)
+        self.bic  = (-2.0*lnL) + (K * logarithm(n))
+        self.aicc = self.aic + (((2.0*K)*(K+1.0))/(n-K-1.0))
+
 
     _header_template = "%-15s: %s\n"
-    _subset_template = "%-20s | %-20s | %-40s\n"
-    def write_summary(self, path):
-        f = open(path, 'wb')
+    _subset_template = "%-6s | %-10s | %-30s | %-30s | %-40s\n"
+    def write_summary(self, path, write_type = 'wb', extra_line=None):
+        f = open(path, write_type)
+        if extra_line:
+		    f.write(extra_line)
         f.write(Scheme._header_template % ("Scheme Name", self.name))
         f.write(Scheme._header_template % ("Scheme lnL", self.lnl))
+        f.write(Scheme._header_template % ("Scheme par", self.sum_k))
         f.write(Scheme._header_template % ("Scheme AIC", self.aic))
+        f.write(Scheme._header_template % ("Scheme AICc", self.aicc))
+        f.write(Scheme._header_template % ("Scheme BIC", self.bic))
+        f.write(Scheme._header_template % ("Num sites", self.nsites))
+        f.write(Scheme._header_template % ("Num subsets", self.nsubs))
         f.write("\n")
         f.write(Scheme._subset_template % (
-            "Subset Partitions", "Best Model", "Alignment"))
+            "Subset", "Best Model", "Subset Partitions", "Subset Sites",  "Alignment"))
+        number = 1
         for sub in self:
             desc = []
+            names= []
             for part in sub:
                 desc.extend(part.description)
+                names.append(part.name)
             parts = ' '.join(["%s-%s\\%s" % tuple(d) for d in desc])
+            parts = parts.split() #sort them so they look nice
+            parts.sort()
+            parts = ' '.join(parts)
+            names.sort()
+            names = ', '.join(names)
+			
             f.write(Scheme._subset_template % (
-                parts, sub.best_model, sub.alignment_path))
-
+                number, sub.best_model, names, parts, sub.alignment_path))
+            number = number + 1
 
 class AllSchemes(object):
     """All the schemes added, and also a list of all unique subsets"""
@@ -160,7 +187,10 @@ def generate_all_schemes():
 
         scheme_list.append(
             Scheme(str(scheme_name), *tuple(created_subsets)))
+        log.info("Created scheme %d of %d" %(scheme_name, len(mods)))
+
         scheme_name += 1
+		
 
     return scheme_list
 
