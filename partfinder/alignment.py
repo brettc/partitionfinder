@@ -61,7 +61,7 @@ class AlignmentParser(object):
                        INTEGER("sequence_length") + Suppress(restOfLine))
 
         sequence_name = Word(
-            alphas + nums + "!#$%&\'*+-./;<=>?@[\\]^_`{|}~"
+            alphas + nums + "!#$%&\'*+-./;<=>?@[\\]^_`{|}~", 
             max=100)
 
         # Take a copy and disallow line breaks in the bases
@@ -176,8 +176,8 @@ class Alignment(object):
 
         fd.write("%d %d\n" % (species_count, sequence_len))
         for species, sequence in self.species.iteritems():
-            # Species is max 10 long, clip it and fill with spaces
-            shortened = species[:9].ljust(10, ' ')
+            # we use a version of phylip which can have longer species names, up to 100
+            shortened = "%s    " %(species[:99])
             fd.write(shortened)
             fd.write(sequence)
             fd.write("\n")
