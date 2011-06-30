@@ -28,11 +28,13 @@ class Analysis(object):
     def __init__(self, 
                  alignment_path, 
                  output_path, 
+                 branchlengths,
                  force_restart,
                  threads=1):
 
         log.info("Beginning Analysis")
         self.threads = threads
+        self.branchlengths = branchlengths
         if force_restart:
             if os.path.exists(output_path):
                 log.warning("Deleting all previous workings in '%s'", output_path)
@@ -133,7 +135,7 @@ class Analysis(object):
         for m in models_to_do:
             a_path, out_path = phyml.make_analysis_path(self.phyml_path, sub.name, m)
             tasks.append((phyml.analyse, 
-                          (m, sub_path, a_path, self.tree_path)))
+                          (m, sub_path, a_path, self.tree_path, self.branchlengths)))
 
         if self.threads == 1:
             self.run_models_concurrent(tasks)
@@ -194,7 +196,7 @@ class Analysis(object):
  
         # AIC needs the number of sequences 
         number_of_seq = len(self.alignment.species)
-        sch.assemble_results(number_of_seq)
+        sch.assemble_results(number_of_seq, self.branchlengths)
         sch.write_summary(os.path.join(self.schemes_path, sch.name+'.txt'))
 
         log.info("Scheme %s analysed. AIC=%.2f", sch.name, sch.aic)
@@ -212,7 +214,6 @@ class Analysis(object):
         for s in gen_schemes:
             self.analyse_scheme(s, models)
         self.write_best_scheme(gen_schemes)
-        self.write_all_schemes(gen_schemes)
 
     def write_best_scheme(self, list_of_schemes):
         # Which is the best?
@@ -229,6 +230,7 @@ class Analysis(object):
         best_aic.write_summary(best_schemes_file, 'wb', "Best scheme according to AIC\n")
         best_aicc.write_summary(best_schemes_file, 'ab', "\n\n\nBest scheme according to AICc\n")
         best_bic.write_summary(best_schemes_file, 'ab', "\n\n\nBest scheme according to BIC\n")
+        self.write_all_schemes(list_of_schemes) #this also writes a file which has info on all analysed schemes, useful for extra analysis if that's what you're interested in...
 
     def write_all_schemes(self, list_of_schemes):
         all_schemes_file = os.path.join(self.output_path, 'all_schemes.txt')

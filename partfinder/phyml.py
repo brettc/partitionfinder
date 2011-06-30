@@ -129,14 +129,23 @@ def make_tree(alignment_path):
     # Now return the path of the final tree alignment
     return output_path
 
-def analyse(model, alignment_path, analysis_path, tree_path):
+def analyse(model, alignment_path, analysis_path, tree_path, branchlengths):
     """Do the analysis -- this will overwrite stuff!"""
 
     # Move it to a new name to stop phyml stomping on different model analyses
     dupfile(alignment_path, analysis_path)
     model_params = get_model_commandline(model)
 
-    command = "-i %s -u %s %s" % (analysis_path, tree_path, model_params)
+    if branchlengths == 'linked':
+        bl = ' -b 0 '
+    elif branchlengths == 'unlinked':
+        bl = ''
+    else:
+        # WTF?
+        log.error("Unknown option for branchlengths: %s", branchlengths)
+        raise PhymlError
+
+    command = "-i %s -u %s %s %s" % (analysis_path, tree_path, model_params, bl)
     run_phyml(command)
 
     # Now get rid of this -- we have the original elsewhere

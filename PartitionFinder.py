@@ -61,7 +61,7 @@ def main():
         type="int", dest="processes", default=1, metavar="N",
         help="Number of concurrent processes to use."
         " Use -1 to match the number of cpus on the machine."
-        " The default is to use 1."
+        " The default is to use -1."
     )
     
     options, args = parser.parse_args()
@@ -96,6 +96,7 @@ def main():
             anal = analysis.Analysis(
                 s.alignment_path,
                 s.analysis_path,
+                s.branchlengths,
                 options.force_restart,
                 threads=options.processes,
             )

@@ -64,16 +64,22 @@ class Scheme(object):
         ss = ', '.join([str(s) for s in self.subsets])
         return "Scheme(%s, %s)" % (self.name, ss)
 
-    def assemble_results(self, nseq):
-        # ROB SAYS:
-        # To calculate the AIC for a scheme, we do this: AIC=2(k-lnL) but now, lnL is the
-        # sum of the  lnL's of all the subsets in that scheme, and k is the sum of all
-        # the k's of the subsets in that scheme, PLUS (2n-3), where N is the number of
-        # sequences in the dataset (2n-3 is the number of branchlengths), PLUS the number
-        # of subsets in the scheme minus 1.
+    def assemble_results(self, nseq, branchlengths):
+		#calculate AIC, BIC, AICc for each scheme.
+		#how you do this depends on whether brlens are linked or not.
+
         self.nsubs = len(self.subsets) #number of subsets
         sum_subset_k = sum([s.best_params for s in self]) #sum of parameters in subsets
-        self.sum_k = sum_subset_k + (self.nsubs-1) + ((2*nseq)-3) #number of parameters in a scheme
+        
+        if branchlengths == 'linked': #linked brlens - only one extra parameter per subset
+            self.sum_k = sum_subset_k + (self.nsubs-1) + ((2*nseq)-3) #number of parameters in a scheme
+        elif branchlengths == 'unlinked': #unlinked brlens - every subset has its own set of brlens
+            self.sum_k = sum_subset_k + (self.nsubs*((2*nseq)-3)) #number of parameters in a scheme
+        else:
+            # WTF?
+            log.error("Unknown option for branchlengths: %s", branchlengths)
+            raise AnalysisError
+        
         self.lnl = sum([s.best_lnl for s in self])
         self.nsites = sum([len(s.columnset) for s in self])
 

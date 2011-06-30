@@ -1,6 +1,8 @@
 import logging
 log = logging.getLogger("phyml")
 
+import config
+
 # TODO need some error checking!
 
 # number of free parameters in substitution model, listed as "model+base_frequencies"
@@ -64,7 +66,7 @@ def get_model_commandline(modelstring):
     '''
 
     # This is always the same
-    commandline = ["-o lr -b 0"]
+    commandline = ["-o lr "]
 
     elements = modelstring.split("+")
     model_name = elements[0]

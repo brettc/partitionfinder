@@ -1,0 +1,11 @@
+Before initial release
+----------------------
+
+- Delete data and restart as default (with warning message)
+- Don't save phyml by default, there is way too many of them
+- Use all CPU's default (rather than 1)
+- Maybe have mrbayes spec in the config file (for model defs)
+- optional charset at beginning of partition def. Done? 
+- Order scheme output in partition codon order (in scheme.py.write_summary)
+- Linking or unlinked branch lengths (change parser and model_commandline)
+

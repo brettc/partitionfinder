@@ -55,13 +55,17 @@ class Parser(object):
         alignmentdef = Keyword('alignment') + EQUALS + FILENAME + SEMIOPT
         alignmentdef.setParseAction(self.set_alignment)
 
+        branchdef = Keyword("branch_lengths") + EQUALS \
+                + (Keyword("linked") | Keyword("unlinked")) + SEMIOPT
+        branchdef.setParseAction(self.set_branchlengths)
+
         MODELNAME = Word(alphas + nums + '+')
         modellist = delimitedList(MODELNAME)
         modeldef = Keyword("models") + EQUALS + Group(
-            (Keyword("all") | Keyword("MrBayes"))("predefined") | 
+            (Keyword("all") | Keyword("mrbayes"))("predefined") | 
             Group(modellist)("userlist")) + SEMIOPT
         modeldef.setParseAction(self.set_models)
-        topsection = alignmentdef + modeldef
+        topsection = alignmentdef + branchdef + modeldef
 
         # Partition Parsing
         column = Word(nums)
@@ -69,7 +73,7 @@ class Parser(object):
         partdef = column("start") + DASH + column("end") + Optional(BACKSLASH + column("step"))
         partdef.setParseAction(self.define_range)
         partdeflist = Group(OneOrMore(Group(partdef)))
-        partition = partname("name") + EQUALS + partdeflist("parts") + SEMIOPT
+        partition = Optional("charset") + partname("name") + EQUALS + partdeflist("parts") + SEMIOPT
         partition.setParseAction(self.define_partition)
         partlist = OneOrMore(Group(partition))
         partsection = Suppress("[partitions]") + partlist
@@ -104,6 +108,11 @@ class Parser(object):
         self.settings.alignment = value
         # TODO Make sure it is readable!
         # raise ParserError(text, loc, "No '%s' defined in the configuration" % var)
+        
+    def set_branchlengths(self, text, loc, tokens):
+        value = tokens[1]
+        log.debug("Setting 'branchlengths' to %s", value)
+        self.settings.branchlengths = value
 
     def set_scheme_algorithm(self, text, loc, tokens):
         value = tokens[1]
@@ -191,6 +200,8 @@ if __name__ == '__main__':
     # config.initialise_temp()
     test_config = r"""
 alignment = test.fas 
+
+
 
 # models = JC 
 #
