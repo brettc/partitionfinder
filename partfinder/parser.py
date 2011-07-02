@@ -70,7 +70,10 @@ class Parser(object):
         # Partition Parsing
         column = Word(nums)
         partname = Word(alphas + '_-' + nums)
-        partdef = column("start") + DASH + column("end") + Optional(BACKSLASH + column("step"))
+        partdef = column("start") +\
+                Optional(DASH + column("end")) +\
+                Optional(BACKSLASH + column("step"))
+
         partdef.setParseAction(self.define_range)
         partdeflist = Group(OneOrMore(Group(partdef)))
         partition = Optional("charset") + partname("name") + EQUALS + partdeflist("parts") + SEMIOPT
@@ -142,9 +145,14 @@ class Parser(object):
                     
 
     def define_range(self, part):
-        """Turn the 2 or 3 tokens into integers, supplying a default if needed"""
+        """Turn the 1, 2 or 3 tokens into integers, supplying a default if needed"""
         fromc = int(part.start)
-        toc = int(part.end)
+
+        if part.end:
+            toc = int(part.end)
+        else:
+            toc = fromc
+
         if part.step:
             stepc = int(part.step)
         else:
