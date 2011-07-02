@@ -135,7 +135,7 @@ class Partition(object):
                 step = 1
             else:
                 start, stop, step = p
-            if start >= stop:
+            if start > stop:
                 log.error("Partition '%s' has beginning after end (%s > %s)",
                           name, start, stop)
                 raise PartitionError
@@ -176,6 +176,8 @@ if __name__ == '__main__':
     logging.basicConfig(level=logging.DEBUG)
     p1 = Partition('one', (1, 10))
     p2 = Partition('two', (11, 20))
+    p3 = Partition('three', (21, 21))
+    print p3.columnset
 
     print all_partitions[0]
     # ps = PartitionSet(p1, p2)
