@@ -137,15 +137,17 @@ def analyse(model, alignment_path, analysis_path, tree_path, branchlengths):
     model_params = get_model_commandline(model)
 
     if branchlengths == 'linked':
-        bl = ' -b 0 '
+        #constrain all branchlengths to be equal
+        bl = ' --constrained_lens '
     elif branchlengths == 'unlinked':
+        #let branchlenghts vary among subsets
         bl = ''
     else:
         # WTF?
         log.error("Unknown option for branchlengths: %s", branchlengths)
         raise PhymlError
 
-    command = "-i %s -u %s %s %s" % (analysis_path, tree_path, model_params, bl)
+    command = "-b 0 -i %s -u %s %s %s" % (analysis_path, tree_path, model_params, bl)
     run_phyml(command)
 
     # Now get rid of this -- we have the original elsewhere

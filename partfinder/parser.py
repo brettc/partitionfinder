@@ -55,7 +55,7 @@ class Parser(object):
         alignmentdef = Keyword('alignment') + EQUALS + FILENAME + SEMIOPT
         alignmentdef.setParseAction(self.set_alignment)
 
-        branchdef = Keyword("branch_lengths") + EQUALS \
+        branchdef = Keyword("branchlengths") + EQUALS \
                 + (Keyword("linked") | Keyword("unlinked")) + SEMIOPT
         branchdef.setParseAction(self.set_branchlengths)
 
@@ -98,8 +98,7 @@ class Parser(object):
         schemesection = \
                 Suppress("[schemes]") + schemealgo + Optional(schemelist)
 
-        # We've defined the grammar for each section. Here we just put it all
-        # together
+        # We've defined the grammar for each section. Here we just put it all together
         self.config_parser = (topsection + partsection + schemesection + stringEnd)
 
     def set_alignment(self, text, loc, tokens):
@@ -187,10 +186,12 @@ class Parser(object):
                                      scheme_def.name)
 
     def parse_file(self, fname):
+        #this just reads in the config file into 's'
         s = open(fname, 'r').read()
         self.parse_configuration(s)
 
     def parse_configuration(self, s):
+        #parse the config settings
         self.result = self.config_parser.ignore(pythonStyleComment).parseString(s)
 
 if __name__ == '__main__':
@@ -199,14 +200,29 @@ if __name__ == '__main__':
     # import config
     # config.initialise_temp()
     test_config = r"""
-alignment = test.fas 
+# PartitionFinder configuration file
+# Anything after a hash (#) is a comment, and is ignored. Feel free to add/remove these lines.
+# email rob {dot} lanfear {at} gmail {dot} com for help
 
+######## ALIGNMENT FILE ###########
+#the name of your Phylip alignment, in the same file as this file
+alignment = test.phy ;
 
+######## BRANCHLENGTHS ###########
+# 'linked' or 'unlinked'
+branchlengths = linked 
 
-# models = JC 
-#
+######## MODELS OF EVOLUTION ###########
+G# 'all' (all 56 usual models) or a list of models e.g. 'HKY, HKY+G, GTR, GTR+G'
+# MRBAYES MODELS
+# JC, F81, K80, HKY, SYM, GTR, JC+I, F81+I, K80+I, HKY+I, SYM+I, GTR+I, JC+G, F81+G, K80+G, HKY+G, SYM+G, GTR+G, JC+I+G, F81+I+G, K80+I+G, HKY+I+G, SYM+I+G, GTR+I+G
+# RAXML MODELS
+# GTR+G, GTR+I+G
 models = all
 
+########   PARTITIONS   ###########
+# Define partitions as follows 'name = start-stop\gap_size'
+# e.g. 'part_1 = 1-15\3' is the same as 'part_1 = 1 4 7 10 13' 
 [partitions]
 Gene1_pos1 = 1-789\3
 Gene1_pos2 = 2-789\3
@@ -218,16 +234,19 @@ Gene3_pos1 = 1450-2208\3
 Gene3_pos2 = 1451-2208\3
 Gene3_pos3 = 1452-2208\3
 
+########     SCHEMES      #########
+# 'all' (compares all possible schemes) or 'user' (searches schemes listed below) 
 [schemes]
-search = all
+search = user
 
-allsame         = (Gene1_pos1, Gene1_pos2, Gene1_pos3, Gene2_pos1, Gene2_pos2,
-Gene2_pos3, Gene3_pos1, Gene3_pos2, Gene3_pos3)
+#user schemes listed below - only used if 'search = user'
+allsame         = (Gene1_pos1, Gene1_pos2, Gene1_pos3, Gene2_pos1, Gene2_pos2, Gene2_pos3, Gene3_pos1, Gene3_pos2, Gene3_pos3)
 by_gene         = (Gene1_pos1, Gene1_pos2, Gene1_pos3) (Gene2_pos1, Gene2_pos2, Gene2_pos3) (Gene3_pos1, Gene3_pos2, Gene3_pos3)
 1_2_3           = (Gene1_pos1, Gene2_pos1, Gene3_pos1) (Gene1_pos2, Gene2_pos2, Gene3_pos2) (Gene1_pos3, Gene2_pos3, Gene3_pos3)
 1_2_3_by_gene   = (Gene1_pos1) (Gene1_pos2) (Gene1_pos3) (Gene2_pos1) (Gene2_pos2) (Gene2_pos3) (Gene3_pos1) (Gene3_pos2) (Gene3_pos3)
 12_3            = (Gene1_pos1, Gene1_pos2, Gene2_pos1, Gene2_pos2, Gene3_pos1, Gene3_pos2) (Gene1_pos3, Gene2_pos3, Gene3_pos3)
 12_3_by_gene    = (Gene1_pos1, Gene1_pos2) (Gene1_pos3) (Gene2_pos1, Gene2_pos2) (Gene2_pos3) (Gene3_pos1, Gene3_pos2) (Gene3_pos3)
+
 """
 
     class Conf(object):

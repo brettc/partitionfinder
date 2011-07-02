@@ -67,7 +67,6 @@ class Scheme(object):
     def assemble_results(self, nseq, branchlengths):
 		#calculate AIC, BIC, AICc for each scheme.
 		#how you do this depends on whether brlens are linked or not.
-
         self.nsubs = len(self.subsets) #number of subsets
         sum_subset_k = sum([s.best_params for s in self]) #sum of parameters in subsets
         
@@ -75,6 +74,7 @@ class Scheme(object):
             self.sum_k = sum_subset_k + (self.nsubs-1) + ((2*nseq)-3) #number of parameters in a scheme
         elif branchlengths == 'unlinked': #unlinked brlens - every subset has its own set of brlens
             self.sum_k = sum_subset_k + (self.nsubs*((2*nseq)-3)) #number of parameters in a scheme
+
         else:
             # WTF?
             log.error("Unknown option for branchlengths: %s", branchlengths)
