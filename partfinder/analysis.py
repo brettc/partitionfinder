@@ -83,6 +83,11 @@ class Analysis(object):
                                                     'filtered_source.phy')
         self.filtered_alignment.write(self.filtered_alignment_path)
 
+        # Now we've written this alignment, we need to lock everything in
+        # place, no more adding partitions, or changing them from now on.
+        all_partitions.check_against_alignment(self.alignment)
+        all_partitions.finalise()
+
         # Now check for the tree
         tree_path = phyml.make_tree_path(self.filtered_alignment_path)
         if not os.path.exists(tree_path):

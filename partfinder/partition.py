@@ -63,25 +63,24 @@ class AllPartitions(object):
         self.columnset |= p.columnset
 
     def finalise(self):
-        """Internal check -- just for gaps now
-        
-        This is called when the first scheme is created
-        """
-        # It is sorted -- so the last one is the biggest
-        self.colmin = self.columns[0]
-        self.colmax = self.columns[-1]
-        self.fullset = set(range(self.colmin, self.colmax+1))
+        """Ensure that no more partitions can be added"""
+        self.finalised = True
+
+    def check_against_alignment(self, alignment):
+        """Check the partition definitions against the alignment"""
+
+        # TODO: pbly should check the converse too -- stuff defined that is
+        # missing??
+        self.fullset = set(range(0, alignment.sequence_len))
         leftout = self.fullset - self.columnset
         if leftout:
             # This does not raise an error, just a warning
             log.warn(
-                "Columns in all partitions range from %s to %s, "
-                "but these columns are missing: %s", 
-                self.colmin+1, self.colmax+1,
+                "Columns defined in partitions range from %s to %s, "
+                "but these columns in the alignment are missing: %s", 
+                self.columns[0]+1, self.columns[-1],
                 columnset_to_string(leftout))
-
-        self.finalised = True
-
+        
     # We can treat this like a bit like a dictionary
     def __iter__(self):
         return iter(self.partitions)
