@@ -1,6 +1,5 @@
-Before initial release (in order of priority)
----------------------------------------------
-- build initial tree and branchlengths NOT from the source alignment, but from the un-partitioned alignment. These can be different e.g. if I exclude some sites from all of my partitions. This is really important.
+TODO: In order of priority
+--------------------
 - flag a warning if ANYTHING in the .cfg file has changed. Do this by putting a copy of the .cfg file in the 'analysis' folder, loading it and comparing it to the current one
 - quit without running if 'branch_lengths' has changed. There will be results, but they won't be what people thought.
 - Get better .cfg parsing, so that we get useful error messages
@@ -9,11 +8,11 @@ Before initial release (in order of priority)
 - Use all CPU's default (rather than 1)
 - Maybe have mrbayes spec in the config file (for model defs)
 - add a more efficient Bell-number counter when counting schemes
-- maybe? avoid generating all schemes at start, generate and analyse on the fly instead. That big recursion takes up a lot of time when it gets really really deep. (probably forget this one for now though).
-
+- Maybe? avoid generating all schemes at start, generate and analyse on the fly instead. That big recursion takes up a lot of time when it gets really really deep. (probably forget this one for now though).
 
 Done
-____
+----
+- build initial tree and branchlengths NOT from the source alignment, but from the un-partitioned alignment. These can be different e.g. if I exclude some sites from all of my partitions. This is really important.
 - Ordered scheme output in partitions in codon order (in scheme.py.write_summary)
 - implemented Greedy search algorithm. Right now it works on whatever metric you specify in model_selection
 - tidied up output of all_schemes.txt, best_schemes.txt, and the subset output files too
