@@ -68,7 +68,7 @@ class Scheme(object):
 		#calculate AIC, BIC, AICc for each scheme.
 		#how you do this depends on whether brlens are linked or not.
         self.nsubs = len(self.subsets) #number of subsets
-        sum_subset_k = sum([s.best_params for s in self]) #sum of parameters in subsets
+        sum_subset_k = sum([s.best_params for s in self]) #sum of number of parameters in the best model of each subset
         
         if branchlengths == 'linked': #linked brlens - only one extra parameter per subset
             self.sum_k = sum_subset_k + (self.nsubs-1) + ((2*nseq)-3) #number of parameters in a scheme
@@ -93,38 +93,38 @@ class Scheme(object):
 
 
     _header_template = "%-15s: %s\n"
-    _subset_template = "%-6s | %-10s | %-30s | %-30s | %-40s\n"
+    _subset_template = "%-6s | %-10s | %-50s | %-40s\n"
     def write_summary(self, path, write_type = 'wb', extra_line=None):
         f = open(path, write_type)
         if extra_line:
 		    f.write(extra_line)
         f.write(Scheme._header_template % ("Scheme Name", self.name))
         f.write(Scheme._header_template % ("Scheme lnL", self.lnl))
-        f.write(Scheme._header_template % ("Scheme par", self.sum_k))
         f.write(Scheme._header_template % ("Scheme AIC", self.aic))
         f.write(Scheme._header_template % ("Scheme AICc", self.aicc))
         f.write(Scheme._header_template % ("Scheme BIC", self.bic))
+        f.write(Scheme._header_template % ("Num params", self.sum_k))
         f.write(Scheme._header_template % ("Num sites", self.nsites))
         f.write(Scheme._header_template % ("Num subsets", self.nsubs))
         f.write("\n")
         f.write(Scheme._subset_template % (
-            "Subset", "Best Model", "Subset Partitions", "Subset Sites",  "Alignment"))
+            "Subset", "Best Model", "Subset Partitions",  "Alignment"))
         number = 1
-        for sub in self:
+        
+        sorted_subsets = [sub for sub in self]
+        sorted_subsets.sort(key=lambda sub: min(sub.columns), reverse=False)
+                
+        for sub in sorted_subsets:
             desc = []
             names= []
             for part in sub:
                 desc.extend(part.description)
                 names.append(part.name)
-            parts = ' '.join(["%s-%s\\%s" % tuple(d) for d in desc])
-            parts = parts.split() #sort them so they look nice
-            parts.sort()
-            parts = ' '.join(parts)
             names.sort()
             names = ', '.join(names)
 			
             f.write(Scheme._subset_template % (
-                number, sub.best_model, names, parts, sub.alignment_path))
+                number, sub.best_model, names, sub.alignment_path))
             number = number + 1
 
 class AllSchemes(object):
@@ -160,28 +160,60 @@ class AllSchemes(object):
 # Container for all schemes that are created
 all_schemes = AllSchemes()
 
+
+def create_scheme(scheme_name, scheme_description):
+    """Generate a single scheme given a list of numbers e.g. [0,1,2,3,4,5,6,7]"""
+    import subset
+    import submodels
+
+    log.info("Generating scheme: %s" % scheme_name)
+    
+    partnum = len(all_partitions) #total number of partitions defined by user
+
+    #check that the correct number of items are in the list
+    if len(scheme_description)!=partnum:
+        log.error("There's a problem with the description of scheme %s" % scheme_name)
+        raise SchemeError
+
+    # Now generate the pattern
+    subs = {}
+    # We use the numbers returned to group the different subsets
+    for sub_index, grouping in enumerate(scheme_description):
+        insub = subs.setdefault(grouping, [])
+        insub.append(sub_index)
+    # We now have what we need to create a subset. Each entry will have a
+    # set of values which are the index for the partition
+    created_subsets = []
+    for sub_indexes in subs.values():
+        sub = subset.Subset(*tuple([all_partitions[i] for i in sub_indexes]))
+        created_subsets.append(sub)
+
+    new_scheme = Scheme(str(scheme_name), *tuple(created_subsets))
+		
+    return new_scheme
+
 def generate_all_schemes():
     """Convert the abstract schema given by the algorithm into subsets"""
     import subset
     import submodels
 
-    log.info("About to generate all possible schemes for the partitions...")
+    log.info("Generating all possible schemes for the partitions...")
 
     # Make sure that no schemes have been defined!
     # if len(all_schemes) > 0:
         # log.error("Cannot generate schemes if some already exist!")
         # raise SchemeError
     
-    partnum = len(all_partitions)
+    partnum = len(all_partitions) #total number of partitions defined by user
     # Now generate the pattern for this many partitions
-    mods = submodels.get_submodels(partnum)
-    log.info("This will result in %s schemes being created", len(mods))
+    all_schemes = submodels.get_submodels(partnum)
+    log.info("This will result in %s schemes being created", len(all_schemes))
     scheme_name = 1
     scheme_list = []
-    for m in mods:
+    for scheme in all_schemes:
         subs = {}
         # We use the numbers returned to group the different subsets
-        for sub_index, grouping in enumerate(m):
+        for sub_index, grouping in enumerate(scheme):
             insub = subs.setdefault(grouping, [])
             insub.append(sub_index)
         # We now have what we need to create a subset. Each entry will have a
@@ -193,11 +225,10 @@ def generate_all_schemes():
 
         scheme_list.append(
             Scheme(str(scheme_name), *tuple(created_subsets)))
-        log.info("Created scheme %d of %d" %(scheme_name, len(mods)))
+        log.info("Created scheme %d of %d" %(scheme_name, len(all_schemes)))
 
         scheme_name += 1
 		
-
     return scheme_list
 
 if __name__ == '__main__':

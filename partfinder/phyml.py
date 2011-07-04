@@ -91,40 +91,30 @@ def dupfile(src, dst):
         raise PhymlError
 
 
-# This should generate a bootstrap tree 
 def make_tree(alignment_path):
-    # We can get a rough (but probably correct!) topology using BioNJ, this is like
-    # Neighbour joining but a little bit better. Turns out we can do this already
-    # with PhyML like this:
-    log.debug("Making a tree for %s", alignment_path)
+    '''Make a BioNJ tree to start the analysis'''
+    log.info("Making BioNJ tree for %s", alignment_path)
 
     # First get the BioNJ topology like this:
     command = "-i %s -o n -b 0" % (alignment_path)
     run_phyml(command)
     output_path = make_tree_path(alignment_path)
 
-    # in our case (well behaved data) we get the right topology already like
-    # this, and nearly correct branch lengths too. Even so, we might want to
-    # re-estimate branch lengths from scratch using a better model.
-
-    # To do that, first rename the tree 
+    # Now we re-estimate branchlengths using a GTR+I+G model on the (unpartitioned) dataset
+    log.info("Estatimating initial branch lengths on BioNJ tree")
     dir_path, fname = os.path.split(output_path)
     tree_path = os.path.join(dir_path, 'bionj_tree.phy')
     log.debug("Moving %s to %s", output_path, tree_path)
-    os.rename(output_path, tree_path) 
+    os.rename(output_path, tree_path)
 
-    # now, we run PhyML asking it to re-optimise the branch lengths according to
-    # some model, but not to mess with the topology.
-    #
-    # using "-o lr" will optimise the model parameters and brlens together. This
-    # is important since the two interact, i.e. good brlens require good model
-    # parameters.
     command = "-i %s -u %s -m GTR -c 4 -a e -v e -o lr -b 0" % (
         alignment_path, tree_path)
     run_phyml(command)
 
     # Ditch the old tree
     os.remove(tree_path)
+
+    log.info("Initial tree and branchlength estimation finished")
 
     # Now return the path of the final tree alignment
     return output_path

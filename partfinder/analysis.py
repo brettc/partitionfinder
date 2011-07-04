@@ -11,6 +11,7 @@ from alignment import Alignment, SubsetAlignment
 import phyml
 import threadpool
 import scheme
+import algorithm
 
 class AnalysisError(Exception):
     pass
@@ -29,12 +30,14 @@ class Analysis(object):
                  alignment_path, 
                  output_path, 
                  branchlengths,
+                 model_selection,
                  force_restart,
                  threads=1):
 
         log.info("Beginning Analysis")
         self.threads = threads
         self.branchlengths = branchlengths
+        self.model_selection = model_selection
         if force_restart:
             if os.path.exists(output_path):
                 log.warning("Deleting all previous workings in '%s'", output_path)
@@ -64,15 +67,13 @@ class Analysis(object):
 
         else:
             self.alignment.write(self.alignment_path)
-        log.info("I'm working from a copy of the tree that is here: %s",
-                 self.alignment_path)
 
         # Now check for the tree
         tree_path = phyml.make_tree_path(self.alignment_path)
         if not os.path.exists(tree_path):
             tree_path = phyml.make_tree(self.alignment_path)
         self.tree_path = tree_path
-        log.info("The tree we're using is here: %s", self.tree_path) 
+        log.info("BioNJ tree with GTR+I+G brlens is stored here: %s", self.tree_path) 
 
     def make_output_dir(self, name):
         new_path = os.path.join(self.output_path, name)
@@ -100,6 +101,9 @@ class Analysis(object):
         if not models_to_do:
             log.debug("Using results that are already loaded %s", sub)
             return
+
+        #keep people informed about what's going on
+        log.info("Analysing subset %s" %(sub.name))
 
         log.debug("About to analyse %s using models %s", sub, ", ".join(list(models)))
 
@@ -151,6 +155,9 @@ class Analysis(object):
                       ", ".join(list(models_to_do)))
             raise AnalysisError
 
+        # Now we have analysed all models for this subset, we do model selection
+        sub.model_selection(self.model_selection)        
+        
         # If we made it to here, we should write out the new summary
         sub_summary_path = os.path.join(self.subsets_path, sub.name + '.txt')
         sub.write_summary(sub_summary_path)
@@ -199,19 +206,91 @@ class Analysis(object):
         sch.assemble_results(number_of_seq, self.branchlengths)
         sch.write_summary(os.path.join(self.schemes_path, sch.name+'.txt'))
 
-        log.info("Scheme %s analysed. AIC=%.2f", sch.name, sch.aic)
 		
 
     def analyse_current_schemes(self, models):
         """Process everything!"""
         current_schemes = [s for s in scheme.all_schemes]
+        cur_s = 1
+        tot_s = len(current_schemes)
         for s in current_schemes:
+            log.info("Analysing user scheme %d of %d, %s" %(cur_s, tot_s, s.name))
+            cur_s = cur_s + 1
             self.analyse_scheme(s, models)
         self.write_best_scheme(current_schemes)
 
+    def analyse_greedy(self, models, method):
+        '''A greedy algorithm for heuristic partitioning searches'''
+        log.info("Performing greedy analysis")
+
+        #start with the most partitioned scheme
+        start_description = range(len(all_partitions))
+        start_scheme = scheme.create_scheme(1, start_description)
+        log.info("Analysing starting scheme (scheme %s)" % start_scheme.name)
+        self.analyse_scheme(start_scheme, models)
+        
+        def get_score(my_scheme):
+            if method=="aic":
+                score=my_scheme.aic
+            if method=="aicc":
+                score=my_scheme.aicc
+            if method=="bic":
+                score=my_scheme.bic
+            return score
+
+        best_scheme = start_scheme
+        best_score  = get_score(start_scheme)
+                         
+        round = 1
+        cur_s = 2
+
+        #now we try out all lumpings of the current scheme, to see if we can find a better one
+        #and if we do, we just keep going
+        while True:
+            log.info("Greedy algorithm round %d" % round)
+
+            #get a list of all possible lumpings of the best_scheme
+            lumpings = algorithm.lumpings(start_description)
+            best_lumping_score = None
+            for lumped_description in lumpings:
+                lumped_scheme = scheme.create_scheme(cur_s, lumped_description)
+                cur_s = cur_s + 1
+                log.info("Analysing scheme: %s (one of %d in this step of the greedy algorithm)" %(lumped_scheme.name, len(lumpings)))
+                self.analyse_scheme(lumped_scheme, models)
+                new_score = get_score(lumped_scheme)
+
+                if best_lumping_score==None or new_score<best_lumping_score:
+                    best_lumping_score  = new_score
+                    best_lumping_scheme = lumped_scheme
+                    best_lumping_desc   = lumped_description
+                                                
+            if best_lumping_score<best_score:
+                best_scheme = best_lumping_scheme
+                best_score  = best_lumping_score
+                start_description = best_lumping_desc
+                round = round+1
+            else:
+                break
+
+        log.info("Greedy algorithm finished after %d rounds" % round)
+        log.info("Highest scoring scheme is scheme %s, with %s score of %.3f" %(best_scheme.name, method, best_score))
+
+        best_schemes_file = os.path.join(self.output_path, 'best_scheme.txt')
+        best_scheme.write_summary(best_schemes_file, 'wb', "Best scheme according to Greedy algorithm, analysed with %s\n" % method)
+        log.info("Information on best scheme is here: %s" %(best_schemes_file))
+
+        current_schemes = [s for s in scheme.all_schemes]
+        current_schemes.sort(key=lambda s: int(s.name), reverse=False)
+
+        self.write_all_schemes(current_schemes) #this also writes a file which has info on all analysed schemes, useful for extra analysis if that's what you're interested in...
+
     def analyse_all_possible(self, models):
         gen_schemes = scheme.generate_all_schemes()
+        cur_s = 1
+        tot_s = len(gen_schemes)
         for s in gen_schemes:
+            log.info("Analysing scheme %d of %d" %(cur_s, tot_s))
+            cur_s = cur_s + 1
             self.analyse_scheme(s, models)
         self.write_best_scheme(gen_schemes)
 
@@ -230,18 +309,16 @@ class Analysis(object):
         best_aic.write_summary(best_schemes_file, 'wb', "Best scheme according to AIC\n")
         best_aicc.write_summary(best_schemes_file, 'ab', "\n\n\nBest scheme according to AICc\n")
         best_bic.write_summary(best_schemes_file, 'ab', "\n\n\nBest scheme according to BIC\n")
+        log.info("Information on best scheme is here: %s" %(best_schemes_file))
         self.write_all_schemes(list_of_schemes) #this also writes a file which has info on all analysed schemes, useful for extra analysis if that's what you're interested in...
 
     def write_all_schemes(self, list_of_schemes):
         all_schemes_file = os.path.join(self.output_path, 'all_schemes.txt')
         f = open(all_schemes_file, 'wb')
-        f.write("Name,lnL,K,N,Subsets,AIC,AICc,BIC\n")
+        f.write("Name\tlnL\t#params\t#sites\t#subsets\tAIC\tAICc\tBIC\n")
         for s in list_of_schemes:
-            f.write("%s,%.3f,%d,%d,%d,%.3f,%.3f,%.3f\n" %(s.name,s.lnl,s.sum_k,s.nsites,s.nsubs,s.aic,s.aicc,s.bic))
-        
-    def greedy_analysis(self, models):
-        #do stuff
-        start_scheme = [0, 1, 2]
+            f.write("%s\t%.3f\t%d\t%d\t%d\t%.3f\t%.3f\t%.3f\n" %(s.name,s.lnl,s.sum_k,s.nsites,s.nsubs,s.aic,s.aicc,s.bic))
+        log.info("Information on all schemes analysed is here: %s" %(all_schemes_file))
 		
     
 if __name__ == '__main__':

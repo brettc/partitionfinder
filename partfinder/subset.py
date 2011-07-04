@@ -7,6 +7,9 @@ import cPickle as pickle
 import alignment
 import phyml_models
 
+from math import log as logarithm
+
+
 class SubsetError(Exception):
     pass
 
@@ -17,7 +20,6 @@ class Subset(object):
     # TODO: changes this to AllSubsets?
     _cache = weakref.WeakValueDictionary()
 
-    # CLEVER BIT:
     # Return the SAME subset if the partitions are identical
     # This is basically a pythonized factory
     # See here: http://codesnipers.com/?q=python-flyweights
@@ -44,8 +46,7 @@ class Subset(object):
 
             obj.partitions = cacheid
             
-            # Append all of the columns in the partition -- I think these are
-            # useful...
+            # a list of columns in the subset
             obj.columns = []
             obj.columnset = set()
             for p in parts:
@@ -54,7 +55,7 @@ class Subset(object):
             obj.columns.sort()
 
             obj.results = {}
-            obj.best_aic = None
+            obj.best_info_score = None #e.g. AIC, BIC, AICc
             obj.best_model = None
             obj.best_params = None
             obj.best_lnl = None
@@ -82,32 +83,57 @@ class Subset(object):
     def add_model_result(self, model, result):
         result.model = model
         result.params = phyml_models.get_num_params(model)
-        result.aic = 2 * (result.params - result.lnl)
+
+        K = float(result.params)
+        n = float(len(self.columnset))
+        lnL = float(result.lnl)		   
+        result.aic  = (-2.0*lnL) + (2.0*K)
+        result.bic  = (-2.0*lnL) + (K * logarithm(n))
+        result.aicc = result.aic + (((2.0*K)*(K+1.0))/(n-K-1.0))
+
         if model in self.results:
             log.error("Can't add model result %s, it already exists in %s",
                     model, self)
         self.results[model] = result
 
-        if self.best_aic is None or result.aic < self.best_aic:
-            self.best_lnl = result.lnl
-            self.best_aic = result.aic
-            self.best_model = result.model
-            self.best_params = result.params
+    def model_selection(self, method):
+        #model selection is done after we've added all the models
+        self.best_info_score = None #reset this before model selection
 
-    _template = "%-15s | %-15s | %-15s\n"
+        for model in self.results:
+            result=self.results[model]
+            if method=="AIC" or method=="aic":
+                info_score = result.aic
+            elif method=="AICc" or method=="AICC" or method=="aicc":
+                info_score = result.aicc
+            elif method=="BIC" or method=="bic":
+                info_score = result.bic
+            else:
+                log.error("Model selection option %s not recognised, please check", method)
+                raise SubsetError
+		
+            if self.best_info_score is None or info_score < self.best_info_score:
+                self.best_lnl = result.lnl
+                self.best_info_score = info_score
+                self.best_model = result.model
+                self.best_params = result.params
+
+    _template = "%-15s | %-15s | %-15s | %-15s | %-15s\n"
     def write_summary(self, path):
         # Sort everything
-        model_results = [(r.aic, r) for r in self.results.values()]
+        model_results = [(r.bic, r) for r in self.results.values()]
         model_results.sort()
         f = open(path, 'w')
-        f.write("Results for %s\n\n" % self)
-        f.write(Subset._template % ("Model", "lNL", "AIC"))
-        for aic, r in model_results:
-            f.write(Subset._template % (r.model, r.lnl, r.aic))
+        f.write("Model selection results for subset: %s\n" % self.name)
+        f.write("Subset alignment stored here: %s\n" % self.alignment_path)
+        f.write("Models are organised according to their BIC scores\n\n")
+        f.write(Subset._template % ("Model", "lNL", "AIC", "AICc", "BIC"))
+        for bic, r in model_results:
+            f.write(Subset._template % (r.model, r.lnl, r.aic, r.aicc, r.bic))
 
     
     # These are the fields that get stored for quick loading
-    _store = "alignment_path best_lnl best_aic best_model best_params results".split()
+    _store = "alignment_path best_lnl best_info_score best_model best_params results".split()
 
     def write_binary_summary(self, path):
         """Write out the results we've collected to a binary file"""

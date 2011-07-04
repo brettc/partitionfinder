@@ -97,6 +97,7 @@ def main():
                 s.alignment_path,
                 s.analysis_path,
                 s.branchlengths,
+                s.model_selection,
                 options.force_restart,
                 threads=options.processes,
             )
@@ -104,6 +105,8 @@ def main():
                 anal.analyse_all_possible(s.models)
             elif s.search_algorithm == 'user':
                 anal.analyse_current_schemes(s.models)
+            elif s.search_algorithm == 'greedy':
+                anal.analyse_greedy(s.models, s.model_selection)
             else:
                 log.error("Search algorithm %s is not yet implemented", 
                           s.search_algorithm)

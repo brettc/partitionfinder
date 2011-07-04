@@ -65,7 +65,14 @@ class Parser(object):
             (Keyword("all") | Keyword("mrbayes"))("predefined") | 
             Group(modellist)("userlist")) + SEMIOPT
         modeldef.setParseAction(self.set_models)
-        topsection = alignmentdef + branchdef + modeldef
+
+        modseldef = Keyword("model_selection") + EQUALS \
+                + (Keyword("AIC") | Keyword("AICc") | Keyword("BIC") \
+                |  Keyword("aic") | Keyword("aicc") | Keyword("bic") \
+                |  Keyword("AICC")) + SEMIOPT
+        modseldef.setParseAction(self.set_modelselection)
+
+        topsection = alignmentdef + branchdef + modeldef + modseldef
 
         # Partition Parsing
         column = Word(nums)
@@ -96,7 +103,7 @@ class Parser(object):
         schemelist = OneOrMore(Group(schemedef))
 
         schemealgo = Keyword("search") + EQUALS + (
-            Keyword("all") | Keyword("greedy") | Keyword("user"))
+            Keyword("all") | Keyword("user") | Keyword("greedy")  )
         schemealgo.setParseAction(self.set_scheme_algorithm)
         schemesection = \
                 Suppress("[schemes]") + schemealgo + Optional(schemelist)
@@ -116,9 +123,15 @@ class Parser(object):
         log.debug("Setting 'branchlengths' to %s", value)
         self.settings.branchlengths = value
 
+    def set_modelselection(self, text, loc, tokens):
+        value = tokens[1]
+        value = value.lower() #conver to all lowercase
+        log.debug("Setting 'model_selection' to %s", value)
+        self.settings.model_selection = value
+
     def set_scheme_algorithm(self, text, loc, tokens):
         value = tokens[1]
-        log.debug("Setting 'search_algorithm' to %s", value)
+        log.debug("Setting 'search' to %s", value)
         self.settings.search_algorithm = value
 
     def set_models(self, text, loc, tokens):
@@ -188,6 +201,7 @@ class Parser(object):
             # Clear out the subsets as we need to reuse it
             subs = tuple(self.subsets)
             self.subsets = []
+            
             self.schemes.append(scheme.Scheme(scheme_def.name, *subs))
         except (scheme.SchemeError, subset.SubsetError):
             raise ParserError(text, loc, "Error in '%s' can be found" %

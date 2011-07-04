@@ -22,7 +22,7 @@ class AlignmentError(Exception):
     pass
 
 class AlignmentParser(object):
-    """Parses a fasta definition and returns species sequence tuples"""
+    """Parses an alignment and returns species sequence tuples"""
     
     # I think this covers it...
     BASES = Word(alphas + "?.-")
@@ -183,10 +183,16 @@ class Alignment(object):
             fd.write("\n")
 
 class SubsetAlignment(Alignment):
-    """Created an alignment based on some others and a subset definition"""
+    """Create an alignment based on some others and a subset definition"""
     def __init__(self, source, subset):
         """create an alignment for this subset"""
         Alignment.__init__(self)
+
+        #let's do a basic check to make sure that the specified sites aren't > alignment length
+        site_max = max(subset.columns)
+        if site_max>source.sequence_len:
+            log.error("Site %d is specified in [partitions], but the alignment only has %d sites. Please check." %(site_max, source.sequence_len)) 
+            raise AlignmentError
 
         # Pull out the columns we need
         for species_name, old_sequence in source.species.iteritems():
