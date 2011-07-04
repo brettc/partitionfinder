@@ -12,6 +12,7 @@ import phyml
 import threadpool
 import scheme
 import algorithm
+import subset
 
 class AnalysisError(Exception):
     pass
@@ -50,9 +51,13 @@ class Analysis(object):
         self.make_output_dir('schemes')
         self.make_output_dir('phyml')
 
-        # Now make the alignment and tree
+        self.make_alignment(alignment_path)
+        self.make_tree()
+
+    def make_alignment(self, source_alignment_path):
+        # Make the alignment 
         self.alignment = Alignment()
-        self.alignment.read(alignment_path)
+        self.alignment.read(source_alignment_path)
 
         # We start by copying the alignment
         self.alignment_path = os.path.join(self.output_path, 'source.phy')
@@ -68,10 +73,20 @@ class Analysis(object):
         else:
             self.alignment.write(self.alignment_path)
 
+    def make_tree(self):
+        # Begin by making a filtered alignment, containing ONLY those columns
+        # that are defined in the subsets
+        subset_with_everything = subset.Subset(*list(all_partitions))
+        self.filtered_alignment = SubsetAlignment(self.alignment, 
+                                                  subset_with_everything)
+        self.filtered_alignment_path = os.path.join(self.output_path,
+                                                    'filtered_source.phy')
+        self.filtered_alignment.write(self.filtered_alignment_path)
+
         # Now check for the tree
-        tree_path = phyml.make_tree_path(self.alignment_path)
+        tree_path = phyml.make_tree_path(self.filtered_alignment_path)
         if not os.path.exists(tree_path):
-            tree_path = phyml.make_tree(self.alignment_path)
+            tree_path = phyml.make_tree(self.filtered_alignment_path)
         self.tree_path = tree_path
         log.info("BioNJ tree with GTR+I+G brlens is stored here: %s", self.tree_path) 
 
