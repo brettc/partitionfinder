@@ -134,7 +134,7 @@ class Parser(object):
         value = tokens[1]
         log.debug("Setting 'search' to %s", value)
         self.settings.search_algorithm = value
-        if value == 'user':
+        if value != 'user':
             self.ignore_schemes = True
 
     def set_models(self, text, loc, tokens):
@@ -205,7 +205,7 @@ class Parser(object):
             subs = tuple(self.subsets)
             self.subsets = []
             
-            if not self.ignore_schemes:
+            if self.ignore_schemes == False:
                 self.schemes.append(scheme.Scheme(scheme_def.name, *subs))
 
         except (scheme.SchemeError, subset.SubsetError):

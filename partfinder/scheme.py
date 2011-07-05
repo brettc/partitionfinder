@@ -168,8 +168,6 @@ def create_scheme(scheme_name, scheme_description):
     """Generate a single scheme given a list of numbers e.g. [0,1,2,3,4,5,6,7]"""
     import subset
     import submodels
-
-    log.info("Generating scheme: %s" % scheme_name)
     
     partnum = len(all_partitions) #total number of partitions defined by user
 
@@ -230,7 +228,7 @@ def generate_all_schemes():
 
         scheme_list.append(
             Scheme(str(scheme_name), *tuple(created_subsets)))
-        log.info("Created scheme %d of %d" %(scheme_name, len(all_schemes)))
+        #log.info("Created scheme %d of %d" %(scheme_name, len(all_schemes)))
 
         scheme_name += 1
 		

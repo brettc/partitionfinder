@@ -13,6 +13,7 @@ import threadpool
 import scheme
 import algorithm
 import subset
+import submodels
 
 class AnalysisError(Exception):
     pass
@@ -244,11 +245,17 @@ class Analysis(object):
         log.info("Performing greedy analysis")
 
         partnum = len(all_partitions)
-        total_scheme_num = submodels.count_greedy_schemes()
+        total_scheme_num = submodels.count_greedy_schemes(partnum)
         log.info("This will result in a maximum of %s schemes being created", total_scheme_num)
+        if total_scheme_num>1000000:
+            log.warning("%d is a lot of schemes, this might take a long time to analyse", total_scheme_num)
+            log.warning("If it's taking too long, consider just analysing user defined schemes instead (see Manual)")
 
-        total_subset_num = submodels.count_greedy_parts()
-        log.info("PartitionFinder will have to analyse up to %d subsets of sites to complete this analysis" %(total_subset_num))
+        total_subset_num = submodels.count_greedy_parts(partnum)
+        log.info("PartitionFinder will have to analyse a maximum of %d subsets of sites to complete this analysis" %(total_subset_num))
+
+        #clear any schemes that are currently loaded
+        scheme.all_schemes.clear_schemes()        
                 
         #start with the most partitioned scheme
         start_description = range(len(all_partitions))
@@ -318,9 +325,15 @@ class Analysis(object):
         partnum = len(all_partitions)
         total_scheme_num = submodels.count_submodels(partnum)
         log.info("This will result in %s schemes being created", total_scheme_num)
+        if total_scheme_num>1000000:
+            log.warning("%d is a lot of schemes, this might take a long time to analyse", total_scheme_num)
+            log.warning("If it's taking too long, consider using the greedy algorithm or user schemes instead (see Manual)")
 
         total_subset_num = (2**partnum) - 1
         log.info("PartitionFinder will have to analyse %d subsets of sites to complete this analysis" %(total_subset_num))
+
+        #clear any schemes that are currently loaded
+        scheme.all_schemes.clear_schemes()
 
         gen_schemes = scheme.generate_all_schemes()
         cur_s = 1
