@@ -131,6 +131,9 @@ class AllSchemes(object):
     """All the schemes added, and also a list of all unique subsets"""
     def __init__(self):
         """A collection of schemes"""
+        self.clear_schemes()
+
+    def clear_schemes(self):
         self.schemes_by_name = {}
         self.schemes_by_subsets = {}
 
@@ -205,9 +208,11 @@ def generate_all_schemes():
         # raise SchemeError
     
     partnum = len(all_partitions) #total number of partitions defined by user
+
     # Now generate the pattern for this many partitions
+    total_scheme_num = submodels.count_submodels(partnum)
+    log.info("This will result in %s schemes being created", total_scheme_num)
     all_schemes = submodels.get_submodels(partnum)
-    log.info("This will result in %s schemes being created", len(all_schemes))
     scheme_name = 1
     scheme_list = []
     for scheme in all_schemes:

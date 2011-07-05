@@ -243,6 +243,13 @@ class Analysis(object):
         '''A greedy algorithm for heuristic partitioning searches'''
         log.info("Performing greedy analysis")
 
+        partnum = len(all_partitions)
+        total_scheme_num = submodels.count_greedy_schemes()
+        log.info("This will result in a maximum of %s schemes being created", total_scheme_num)
+
+        total_subset_num = submodels.count_greedy_parts()
+        log.info("PartitionFinder will have to analyse up to %d subsets of sites to complete this analysis" %(total_subset_num))
+                
         #start with the most partitioned scheme
         start_description = range(len(all_partitions))
         start_scheme = scheme.create_scheme(1, start_description)
@@ -272,10 +279,12 @@ class Analysis(object):
             #get a list of all possible lumpings of the best_scheme
             lumpings = algorithm.lumpings(start_description)
             best_lumping_score = None
+            counter = 1
             for lumped_description in lumpings:
                 lumped_scheme = scheme.create_scheme(cur_s, lumped_description)
                 cur_s = cur_s + 1
-                log.info("Analysing scheme: %s (one of %d in this step of the greedy algorithm)" %(lumped_scheme.name, len(lumpings)))
+                log.info("Analysing scheme: %s (%d of %d in this step of the greedy algorithm)" %(lumped_scheme.name, counter, len(lumpings)))
+                counter = counter+1
                 self.analyse_scheme(lumped_scheme, models)
                 new_score = get_score(lumped_scheme)
 
@@ -295,8 +304,8 @@ class Analysis(object):
         log.info("Greedy algorithm finished after %d rounds" % round)
         log.info("Highest scoring scheme is scheme %s, with %s score of %.3f" %(best_scheme.name, method, best_score))
 
-        best_schemes_file = os.path.join(self.output_path, 'best_scheme.txt')
-        best_scheme.write_summary(best_schemes_file, 'wb', "Best scheme according to Greedy algorithm, analysed with %s\n" % method)
+        best_schemes_file = os.path.join(self.output_path, 'best_schemes.txt')
+        best_scheme.write_summary(best_schemes_file, 'wb', "Best scheme according to Greedy algorithm, analysed with %s\n\n" % method)
         log.info("Information on best scheme is here: %s" %(best_schemes_file))
 
         current_schemes = [s for s in scheme.all_schemes]
@@ -305,6 +314,14 @@ class Analysis(object):
         self.write_all_schemes(current_schemes) #this also writes a file which has info on all analysed schemes, useful for extra analysis if that's what you're interested in...
 
     def analyse_all_possible(self, models):
+
+        partnum = len(all_partitions)
+        total_scheme_num = submodels.count_submodels(partnum)
+        log.info("This will result in %s schemes being created", total_scheme_num)
+
+        total_subset_num = (2**partnum) - 1
+        log.info("PartitionFinder will have to analyse %d subsets of sites to complete this analysis" %(total_subset_num))
+
         gen_schemes = scheme.generate_all_schemes()
         cur_s = 1
         tot_s = len(gen_schemes)
