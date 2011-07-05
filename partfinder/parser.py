@@ -37,6 +37,7 @@ class Parser(object):
         self.schemes = []
         self.subsets = []
         self.init_grammar()
+        self.ignore_schemes = False
 
     def init_grammar(self):
         """Set up the parsing classes
@@ -133,6 +134,8 @@ class Parser(object):
         value = tokens[1]
         log.debug("Setting 'search' to %s", value)
         self.settings.search_algorithm = value
+        if value == 'user':
+            self.ignore_schemes = True
 
     def set_models(self, text, loc, tokens):
         all_mods = set(phyml_models.get_all_models())
@@ -202,7 +205,9 @@ class Parser(object):
             subs = tuple(self.subsets)
             self.subsets = []
             
-            self.schemes.append(scheme.Scheme(scheme_def.name, *subs))
+            if not self.ignore_schemes:
+                self.schemes.append(scheme.Scheme(scheme_def.name, *subs))
+
         except (scheme.SchemeError, subset.SubsetError):
             raise ParserError(text, loc, "Error in '%s' can be found" %
                                      scheme_def.name)
