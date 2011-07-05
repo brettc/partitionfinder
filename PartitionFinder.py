@@ -28,18 +28,18 @@ def main():
     partitioning scheme, and the best model for each partiiton
 
     Usage Examples: 
-        >python pf.py example
+        >python %prog example
         Analyse what is in the 'example' sub-folder in the current folder.
 
-        >python pf.py -v example
+        >python %prog -v example
         Analyse what is in the 'example' sub-folder in the current folder, but
         show all the debug output
 
-        >python pf.py -c ~/data/frogs
+        >python %prog -c ~/data/frogs
         Check the configuration files in the folder data/frogs in the current
         user's home folder.
 
-        >python pf.py --force-restart ~/data/frogs
+        >python %prog --force-restart ~/data/frogs
         Deletes any data produced by the previous runs (which is in
         ~/data/frogs/output) and starts afresh
     """
@@ -58,7 +58,7 @@ def main():
         help="delete all previous output and start afresh (!)")
     parser.add_option(
         "-p", "--processes", 
-        type="int", dest="processes", default=1, metavar="N",
+        type="int", dest="processes", default=-1, metavar="N",
         help="Number of concurrent processes to use."
         " Use -1 to match the number of cpus on the machine."
         " The default is to use -1."
