@@ -9,8 +9,8 @@ import phyml_models
 
 from math import log as logarithm
 
-
-class SubsetError(Exception):
+from util import PartitionFinderError
+class SubsetError(PartitionFinderError):
     pass
 
 class Subset(object):

@@ -8,6 +8,9 @@ import threading
 from time import sleep
 import sys, os
 
+# Catch these exceptions
+from phyml import PhymlError
+
 # Taken from the multiprocessing library
 def cpu_count():
     if sys.platform == 'win32':
@@ -91,5 +94,11 @@ class Thread(threading.Thread):
             # If there's nothing to do, return
             if cmd is None:
                 break
-            result = cmd(*args)
+            try:
+                cmd(*args)
+            except PhymlError:
+                # Catch the ones we know about, the error should already have
+                # been reported. Stop operation though.
+                break
+
 

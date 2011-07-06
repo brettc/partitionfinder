@@ -16,7 +16,8 @@ _binary_name = 'phyml'
 if sys.platform == 'win32':
     _binary_name += ".exe"
 
-class PhymlError(Exception):
+from util import PartitionFinderError
+class PhymlError(PartitionFinderError):
     pass
 
 def find_program():
@@ -73,8 +74,8 @@ def run_phyml(command):
     stdout, stderr = p.communicate()
 
     if p.returncode != 0:
-        log.error("program failed to execute successfully: output follows")
-        log.error(stderr)
+        log.error("Phyml did not execute successfully")
+        # log.error(stderr)
         raise PhymlError
 
 def dupfile(src, dst):

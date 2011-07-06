@@ -1,7 +1,8 @@
 import logging
 log = logging.getLogger("partition")
 
-class PartitionError(Exception):
+from util import PartitionFinderError
+class PartitionFinderError(PartitionFinderError):
     pass
 
 def columnset_to_string(colset):

@@ -4,7 +4,8 @@ log = logging.getLogger("config")
 import os
 import parser
 
-class ConfigurationError(Exception):
+from util import PartitionFinderError
+class ConfigurationError(PartitionFinderError):
     pass
 
 def _check_file(pth):

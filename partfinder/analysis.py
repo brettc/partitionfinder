@@ -15,7 +15,8 @@ import algorithm
 import subset
 import submodels
 
-class AnalysisError(Exception):
+from util import PartitionFinderError
+class AnalysisError(PartitionFinderError):
     pass
 
 def make_dir(pth):

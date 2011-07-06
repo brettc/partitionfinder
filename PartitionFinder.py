@@ -10,6 +10,7 @@ from optparse import OptionParser
 import sys
 
 from partfinder import config, analysis
+from partfinder.util import PartitionFinderError
 
 def main():
     usage = """usage: python %prog [options] <foldername>
@@ -61,8 +62,11 @@ def main():
         type="int", dest="processes", default=-1, metavar="N",
         help="Number of concurrent processes to use."
         " Use -1 to match the number of cpus on the machine."
-        " The default is to use -1."
-    )
+        " The default is to use -1.")
+    parser.add_option(
+        "--show-python-exceptions",
+        action="store_true", dest="show_python_exceptions",
+        help="If errors occur, print the python exceptions")
     
     options, args = parser.parse_args()
 
@@ -119,6 +123,15 @@ def main():
     except config.ConfigurationError:
         log.error("Configuration Failure: Please correct problems and rerun")
         # Any exceptions and we fail
+        
+    except PartitionFinderError:
+        log.error("Failed to run. See previous errors.")
+        if options.show_python_exceptions:
+            raise
+
+    except KeyboardInterrupt:
+        log.error("User interrupted the Program")
+
     return 1
 
 
