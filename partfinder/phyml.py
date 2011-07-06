@@ -21,9 +21,6 @@ class PhymlError(Exception):
 
 def find_program():
     """Locate the binary ..."""
-    # TODO: This is a bit crap.
-    # We should really just try and run it. Can we just run it to see what
-    # version it is?
     pth = os.path.abspath(__file__)
 
     # Split off the name and the directory...
