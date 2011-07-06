@@ -4,7 +4,8 @@ log = logging.getLogger("scheme")
 from partition import all_partitions
 from math import log as logarithm
 
-class SchemeError(Exception):
+from util import PartitionFinderError
+class SchemeError(PartitionFinderError):
     pass
 
 class Scheme(object):

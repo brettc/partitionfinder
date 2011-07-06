@@ -4,7 +4,7 @@
     http://www.atgc-montpellier.fr/phyml/usersguide.php?type=command
 
 """
-import logging, shutil
+import logging
 log = logging.getLogger("alignment")
 
 import os
@@ -18,7 +18,8 @@ from pyparsing import (
 # alignment_format = 'fasta'
 alignment_format = 'phy'
 
-class AlignmentError(Exception):
+from util import PartitionFinderError
+class AlignmentError(PartitionFinderError):
     pass
 
 class AlignmentParser(object):

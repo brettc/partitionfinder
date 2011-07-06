@@ -10,7 +10,8 @@ from pyparsing import (
 
 import partition, scheme, subset, phyml_models
 
-class ParserError(Exception):
+from util import PartitionFinderError
+class ParserError(PartitionFinderError):
     """Used for our own parsing problems"""
     def __init__(self, text, loc, msg):
         self.line = line(loc, text)
