@@ -325,6 +325,7 @@ class Analysis(object):
 
         partnum = len(all_partitions)
         total_scheme_num = submodels.count_submodels(partnum)
+        log.info("Analysing all possible schemes for %d starting partitions", partnum)
         log.info("This will result in %s schemes being created", total_scheme_num)
         if total_scheme_num>1000000:
             log.warning("%d is a lot of schemes, this might take a long time to analyse", total_scheme_num)
@@ -360,7 +361,7 @@ class Analysis(object):
         best_aic.write_summary(best_schemes_file, 'wb', "Best scheme according to AIC\n")
         best_aicc.write_summary(best_schemes_file, 'ab', "\n\n\nBest scheme according to AICc\n")
         best_bic.write_summary(best_schemes_file, 'ab', "\n\n\nBest scheme according to BIC\n")
-        log.info("Information on best scheme is here: %s" %(best_schemes_file))
+        log.info("Information on best schemes is here: %s" %(best_schemes_file))
         self.write_all_schemes(list_of_schemes) #this also writes a file which has info on all analysed schemes, useful for extra analysis if that's what you're interested in...
 
     def write_all_schemes(self, list_of_schemes):

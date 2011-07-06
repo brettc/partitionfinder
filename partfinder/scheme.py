@@ -209,8 +209,6 @@ def generate_all_schemes():
     partnum = len(all_partitions) #total number of partitions defined by user
 
     # Now generate the pattern for this many partitions
-    total_scheme_num = submodels.count_submodels(partnum)
-    log.info("This will result in %s schemes being created", total_scheme_num)
     all_schemes = submodels.get_submodels(partnum)
     scheme_name = 1
     scheme_list = []

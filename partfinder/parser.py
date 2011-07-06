@@ -39,6 +39,13 @@ class Parser(object):
         self.subsets = []
         self.init_grammar()
         self.ignore_schemes = False
+        # provide useful error messages when parsing settings with limited options 
+        self.options = {
+            'branchlengths': ['linked', 'unlinked'],
+            'model_selection': ['AIC', 'AICc', 'BIC'],
+            'search': ['all', 'user', 'greedy']
+            }
+            
 
     def init_grammar(self):
         """Set up the parsing classes
@@ -57,8 +64,8 @@ class Parser(object):
         alignmentdef = Keyword('alignment') + EQUALS + FILENAME + SEMIOPT
         alignmentdef.setParseAction(self.set_alignment)
 
-        branchdef = Keyword("branchlengths") + EQUALS \
-                + (Keyword("linked") | Keyword("unlinked")) + SEMIOPT
+        BRANCHNAME = Word(alphas + nums)
+        branchdef = Keyword("branchlengths") + EQUALS + BRANCHNAME + SEMIOPT
         branchdef.setParseAction(self.set_branchlengths)
 
         MODELNAME = Word(alphas + nums + '+')
@@ -68,10 +75,8 @@ class Parser(object):
             Group(modellist)("userlist")) + SEMIOPT
         modeldef.setParseAction(self.set_models)
 
-        modseldef = Keyword("model_selection") + EQUALS \
-                + (Keyword("AIC") | Keyword("AICc") | Keyword("BIC") \
-                |  Keyword("aic") | Keyword("aicc") | Keyword("bic") \
-                |  Keyword("AICC")) + SEMIOPT
+        MODSELNAME = Word(alphas + nums)
+        modseldef = Keyword("model_selection") + EQUALS + MODSELNAME + SEMIOPT
         modseldef.setParseAction(self.set_modelselection)
 
         topsection = alignmentdef + branchdef + modeldef + modseldef
@@ -104,8 +109,8 @@ class Parser(object):
 
         schemelist = OneOrMore(Group(schemedef))
 
-        schemealgo = Keyword("search") + EQUALS + (
-            Keyword("all") | Keyword("user") | Keyword("greedy")  )
+        SCHEMESET = Word(alphas + nums)
+        schemealgo = Keyword("search") + EQUALS + SCHEMESET + SEMIOPT
         schemealgo.setParseAction(self.set_scheme_algorithm)
         schemesection = \
                 Suppress("[schemes]") + schemealgo + Optional(schemelist)
@@ -113,28 +118,48 @@ class Parser(object):
         # We've defined the grammar for each section. Here we just put it all together
         self.config_parser = (topsection + partsection + schemesection + stringEnd)
 
+    def parser_fail(self, value, option):
+        #what we tell users if we can't recognise their input.
+        log.error("'%s' is not a valid option for '%s'" %(value, option))
+        log.info("The only valid options for '%s' are: %s" %(option, "'%s'" %("', '".join(self.options[option]))))
+        log.info("Please fix the '%s' setting in the .cfg file and try again", option)
+        raise ParserError
+        
     def set_alignment(self, text, loc, tokens):
         value = tokens[1]
-        log.debug("Setting 'alignment' to %s", value)
+        log.info("Setting 'alignment' to '%s'", value)
         self.settings.alignment = value
         # TODO Make sure it is readable!
         # raise ParserError(text, loc, "No '%s' defined in the configuration" % var)
         
     def set_branchlengths(self, text, loc, tokens):
         value = tokens[1]
-        log.debug("Setting 'branchlengths' to %s", value)
-        self.settings.branchlengths = value
+        if self.options['branchlengths'].count(value):
+            log.info("Setting 'branchlengths' to '%s'", value)
+            self.settings.branchlengths = value
+        else:
+            self.parser_fail(value, 'branchlengths')
 
     def set_modelselection(self, text, loc, tokens):
         value = tokens[1]
-        value = value.lower() #conver to all lowercase
-        log.debug("Setting 'model_selection' to %s", value)
-        self.settings.model_selection = value
+        #force lower case for comparisons
+        value_l = value.lower()
+        settings_l = []
+        [settings_l.append(thing.lower()) for thing in self.options['model_selection']]
+        if settings_l.count(value_l):
+            log.info("Setting 'model_selection' to '%s'", value)
+            self.settings.model_selection = value
+        else:
+            self.parser_fail(value, 'model_selection')
 
     def set_scheme_algorithm(self, text, loc, tokens):
         value = tokens[1]
-        log.debug("Setting 'search' to %s", value)
-        self.settings.search_algorithm = value
+        if self.options['search'].count(value):
+            log.info("Setting 'search' to '%s'", value)
+            self.settings.search_algorithm = value
+        else:
+            self.parser_fail(value, 'search')
+        #ignore user-defined schemes unless they specify 'user'
         if value != 'user':
             self.ignore_schemes = True
 
@@ -149,7 +174,7 @@ class Parser(object):
                     raise ParserError(
                         text, loc, "'%s' is not a valid model" % m)
                 self.settings.models.append(m)
-            log.debug("Setting 'models' to given userlist containing %s", 
+            log.info("Setting 'models' to a userlist containing: %s", 
                       ", ".join(self.settings.models))
         else:
             modsgroup = mods.predefined
@@ -157,7 +182,7 @@ class Parser(object):
                 self.settings.models = list(all_mods)
             else:
                 pass
-            log.debug("Setting 'models' to given predefined list called '%s'",
+            log.info("Setting 'models' to '%s'",
                       modsgroup)
                     
 
