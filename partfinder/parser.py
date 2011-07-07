@@ -52,7 +52,7 @@ class Parser(object):
         Any changes to the grammar of the config file be done here.
         """
         # Some syntax that we need, but don't bother looking at
-        SEMIOPT = Optional(Suppress(";"))
+        SEMIOPT = (Suppress(";"))
         EQUALS = Suppress("=")
         OPENB = Suppress("(")
         CLOSEB = Suppress(")")
