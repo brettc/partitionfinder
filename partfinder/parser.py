@@ -71,7 +71,7 @@ class Parser(object):
         MODELNAME = Word(alphas + nums + '+')
         modellist = delimitedList(MODELNAME)
         modeldef = Keyword("models") + EQUALS + Group(
-            (Keyword("all") | Keyword("mrbayes"))("predefined") | 
+            (Keyword("all") | Keyword("mrbayes") | Keyword("raxml"))("predefined") | 
             Group(modellist)("userlist")) + SEMIOPT
         modeldef.setParseAction(self.set_models)
 
@@ -178,8 +178,13 @@ class Parser(object):
                       ", ".join(self.settings.models))
         else:
             modsgroup = mods.predefined
-            if modsgroup == "all":
+            if modsgroup.lower() == "all":
                 self.settings.models = list(all_mods)
+            elif modsgroup.lower() == "mrbayes":
+                mrbayes_mods = set(phyml_models.get_mrbayes_models())
+                self.settings.models = list(mrbayes_mods)
+            elif modsgroup.lower() == "raxml":
+                self.settings.models = phyml_models.get_raxml_models()
             else:
                 pass
             log.info("Setting 'models' to '%s'",

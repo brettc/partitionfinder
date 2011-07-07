@@ -65,13 +65,16 @@ class AlignmentParser(object):
             alphas + nums + "!#$%&\'*+-./;<=>?@[\\]^_`{|}~", 
             max=100)
 
+        # MacClade puts some stuff like this at the end "[12345]"
+        ENDOPT = Suppress(Optional(Word("[" + nums + "]")))
+
         # Take a copy and disallow line breaks in the bases
         bases = self.BASES.copy()
         bases.setWhitespaceChars(" \t")
         base_chain = OneOrMore(bases)
-
         base_chain.setParseAction(lambda x: ''.join(x))
         seq = Group(sequence_name("species") + base_chain("sequence")) + Suppress(LineEnd())
+
         sequences = OneOrMore(seq)
         return header("header") + sequences("sequences")
 
@@ -148,7 +151,7 @@ class Alignment(object):
             log.error("Cannot find sequence file '%s'", pth)
             raise AlignmentError
 
-        log.debug("Reading alignment file '%s'", pth)
+        log.info("Reading alignment file '%s'", pth)
         text = open(pth, 'r').read()
         self.from_parser_output(the_parser.parse(text))
 

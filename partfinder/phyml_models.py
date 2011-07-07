@@ -48,6 +48,28 @@ def get_all_models():
     return model_list
 
 @memoize
+def get_mrbayes_models():
+    '''
+    Return a list of all models implemented in MrBayes. Thanks to Ainsley Seago for this.
+    '''
+    mrbayes_base_models = ["JC", "F81", "K80", "HKY", "SYM", "GTR"]
+    model_list = []
+    for model in mrbayes_base_models:
+        model_list.append(model)
+        model_list.append("%s+I"   %(model))
+        model_list.append("%s+G"   %(model))
+        model_list.append("%s+I+G" %(model))
+    return model_list
+
+@memoize
+def get_raxml_models():
+    '''
+    Return a list of all models implemented in RaxML. Thanks to Ainsley Seago for this.
+    '''
+    model_list = ["GTR+G", "GTR+I+G"]
+    return model_list
+
+@memoize
 def get_num_params(modelstring):
     '''
     Input a model string like HKY+I+G, and get the number of parameters
