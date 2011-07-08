@@ -252,7 +252,7 @@ class Analysis(object):
                 
         #start with the most partitioned scheme
         start_description = range(len(self.cfg.partitions))
-        start_scheme = scheme.create_scheme(1, start_description)
+        start_scheme = scheme.create_scheme(self.cfg, 1, start_description)
         log.info("Analysing starting scheme (scheme %s)" % start_scheme.name)
         self.analyse_scheme(start_scheme, models)
         
@@ -329,7 +329,7 @@ class Analysis(object):
         #clear any schemes that are currently loaded
         self.cfg.schemes.clear_schemes()
 
-        gen_schemes = scheme.generate_all_schemes()
+        gen_schemes = scheme.generate_all_schemes(self.cfg)
         cur_s = 1
         tot_s = len(gen_schemes)
         for s in gen_schemes:

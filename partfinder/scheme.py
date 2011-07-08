@@ -220,7 +220,7 @@ def generate_all_schemes(cfg):
             created_subsets.append(sub)
 
         scheme_list.append(
-            Scheme(str(scheme_name), *tuple(created_subsets)))
+            Scheme(cfg, str(scheme_name), *tuple(created_subsets)))
         #log.info("Created scheme %d of %d" %(scheme_name, len(all_schemes)))
 
         scheme_name += 1
