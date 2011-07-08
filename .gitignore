@@ -4,3 +4,4 @@ partition_finder.tmproj
 .idea
 partfinder.log
 example/analysis
+tests/testing.log
