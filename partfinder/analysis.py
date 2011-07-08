@@ -236,7 +236,7 @@ class Analysis(object):
         '''A greedy algorithm for heuristic partitioning searches'''
         log.info("Performing greedy analysis")
 
-        partnum = len(all_partitions)
+        partnum = len(self.cfg.partitions)
         total_scheme_num = submodels.count_greedy_schemes(partnum)
         log.info("This will result in a maximum of %s schemes being created", total_scheme_num)
         if total_scheme_num>1000000:
@@ -247,10 +247,11 @@ class Analysis(object):
         log.info("PartitionFinder will have to analyse a maximum of %d subsets of sites to complete this analysis" %(total_subset_num))
 
         #clear any schemes that are currently loaded
-        scheme.all_schemes.clear_schemes()        
+        # TODO Not sure we need this...
+        self.cfg.schemes.clear_schemes()        
                 
         #start with the most partitioned scheme
-        start_description = range(len(all_partitions))
+        start_description = range(len(self.cfg.partitions))
         start_scheme = scheme.create_scheme(1, start_description)
         log.info("Analysing starting scheme (scheme %s)" % start_scheme.name)
         self.analyse_scheme(start_scheme, models)
@@ -307,14 +308,14 @@ class Analysis(object):
         best_scheme.write_summary(best_schemes_file, 'wb', "Best scheme according to Greedy algorithm, analysed with %s\n\n" % method)
         log.info("Information on best scheme is here: %s" %(best_schemes_file))
 
-        current_schemes = [s for s in scheme.all_schemes]
+        current_schemes = [s for s in self.cfg.schemes]
         current_schemes.sort(key=lambda s: int(s.name), reverse=False)
 
         self.write_all_schemes(current_schemes) #this also writes a file which has info on all analysed schemes, useful for extra analysis if that's what you're interested in...
 
     def analyse_all_possible(self, models):
 
-        partnum = len(all_partitions)
+        partnum = len(self.cfg.partitions)
         total_scheme_num = submodels.count_submodels(partnum)
         log.info("Analysing all possible schemes for %d starting partitions", partnum)
         log.info("This will result in %s schemes being created", total_scheme_num)
@@ -326,7 +327,7 @@ class Analysis(object):
         log.info("PartitionFinder will have to analyse %d subsets of sites to complete this analysis" %(total_subset_num))
 
         #clear any schemes that are currently loaded
-        scheme.all_schemes.clear_schemes()
+        self.cfg.schemes.clear_schemes()
 
         gen_schemes = scheme.generate_all_schemes()
         cur_s = 1

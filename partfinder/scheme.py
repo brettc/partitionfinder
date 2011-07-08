@@ -216,7 +216,7 @@ def generate_all_schemes(cfg):
         # set of values which are the index for the partition
         created_subsets = []
         for sub_indexes in subs.values():
-            sub = subset.Subset(*tuple([all_partitions[i] for i in sub_indexes]))
+            sub = subset.Subset(*tuple([cfg.partitions[i] for i in sub_indexes]))
             created_subsets.append(sub)
 
         scheme_list.append(
