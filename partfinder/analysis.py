@@ -28,6 +28,7 @@ def make_dir(pth):
 class Analysis(object):
     """Performs the analysis and collects the results"""
     def __init__(self, cfg, force_restart, threads=1):
+        cfg.validate()
 
         log.info("Beginning Analysis")
         self.threads = threads

@@ -22,6 +22,9 @@ class Configuration(object):
         self.partitions = partition.PartitionSet()
         self.schemes = scheme.SchemeSet()
 
+        self.base_path = '.'
+        self.alignment = None
+
         # Set the defaults into the class. These can be reset by calling
         # set_option(...)
         for o, v in self.options.items():
@@ -36,7 +39,6 @@ class Configuration(object):
     def set_alignment_file(self, align):
         log.info("Setting 'alignment' to '%s'", align)
         self.alignment = align
-        self.alignment_path = os.path.join(self.base_path, align)
 
     def set_option(self, option, value):
         if option not in self.options:
@@ -56,26 +58,11 @@ class Configuration(object):
 
     def validate(self):
         """Should be called before processing"""
+        # Just path validation for now.
+        # TODO: test the alignment against the ranges in the partitions
         util.check_folder_exists(self.base_path)
+        self.alignment_path = os.path.join(self.base_path, self.alignment)
         util.check_file_exists(self.alignment_path)
-        # settings.alignment_path = os.path.join(settings.base_path,
-                                            # settings.alignment)
-        # _check_file(settings.alignment_path)
-
-    # def __getattr__(self, name):
-        # if name not in self.__dict__:
-            # log.error("The setting '%s' is not defined. "
-                      # "Did you initialise the configuration?", 
-                      # name)
-            # raise ConfigurationError
-
-        # return self.__dict__[name]
-
-# def report_settings():
-    # log.debug("Settings are as follows:")
-    # for x in settings.__dict__:
-        # if not x.startswith('__'):
-            # log.debug("%s: %s", x, getattr(settings, x))
 
 if __name__ == '__main__':
     import logging
