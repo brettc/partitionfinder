@@ -9,7 +9,8 @@ from pyparsing import (
 # debugging
 # ParserElement.verbose_stacktrace = True
 
-import partition, scheme, subset, phyml_models
+import partition, scheme, subset, phyml_models, config
+from util import PartitionFinderError
 
 # Only used internally
 class ParserError(Exception):
@@ -63,16 +64,12 @@ class Parser(object):
         alignmentdef = Keyword('alignment') + EQUALS + FILENAME + SEMICOLON
         alignmentdef.setParseAction(self.set_alignment)
 
+        def simple_option(name):
+            opt = Keyword(name) + EQUALS + Word(alphas+nums) + SEMICOLON
+            opt.setParseAction(self.set_simple_option)
+            return opt
 
-        # better error messages. See here
-        # http://pyparsing.wikispaces.com/message/view/home/10301740
-        # This appears to work
-        failure = NoMatch()
-        failure.setName('string or numeric field')
-        BRANCHNAME = failure | Keyword('linked') | Keyword('unlinked')
-
-        branchdef = Keyword("branchlengths") + EQUALS + BRANCHNAME + SEMICOLON
-        branchdef.setParseAction(self.set_branchlengths)
+        branchdef = simple_option('branchlengths')
 
         MODELNAME = Word(alphas + nums + '+')
         modellist = delimitedList(MODELNAME)
@@ -81,10 +78,8 @@ class Parser(object):
             Group(modellist)("userlist")) + SEMICOLON
         modeldef.setParseAction(self.set_models)
 
-        MODSELNAME = Word(alphas + nums)
-        modseldef = Keyword("model_selection") + EQUALS + MODSELNAME + SEMICOLON
-        modseldef.setParseAction(self.set_modelselection)
-
+    
+        modseldef = simple_option("model_selection")
         topsection = alignmentdef + branchdef + modeldef + modseldef
 
         # Partition Parsing
@@ -117,59 +112,27 @@ class Parser(object):
 
         schemelist = OneOrMore(Group(schemedef))
 
-        SCHEMESET = Word(alphas + nums)
-        schemealgo = Keyword("search") + EQUALS + SCHEMESET + SEMICOLON
-        schemealgo.setParseAction(self.set_scheme_algorithm)
+        schemealgo = simple_option("search")
         schemesection = \
                 Suppress("[schemes]") + schemealgo + Optional(schemelist)
 
         # We've defined the grammar for each section. Here we just put it all together
         self.config_parser = (topsection + partsection + schemesection + stringEnd)
-
-    def parser_fail(self, value, option):
-        #what we tell users if we can't recognise their input.
-        log.error("'%s' is not a valid option for '%s'" % (value, option))
-        log.info("The only valid options for '%s' are: %s" % (option, "'%s'" %("', '".join(self.options[option]))))
-        log.info("Please fix the '%s' setting in the .cfg file and try again", option)
-        raise ParserError
         
     def set_alignment(self, text, loc, tokens):
         value = tokens[1]
         self.cfg.set_alignment_file(value)
         # TODO Make sure it is readable!
         # raise ParserError(text, loc, "No '%s' defined in the configuration" % var)
+        #
+
+    def set_simple_option(self, text, loc, tokens):
+        try:
+            self.cfg.set_option(tokens[0], tokens[1])
+        except config.ConfigurationError:
+            raise ParserError(text, loc, "Invalid option, see previous error")
+
         
-    def set_branchlengths(self, text, loc, tokens):
-        value = tokens[1]
-        if self.options['branchlengths'].count(value):
-            log.info("Setting 'branchlengths' to '%s'", value)
-            self.cfg.branchlengths = value
-        else:
-            self.parser_fail(value, 'branchlengths')
-
-    def set_modelselection(self, text, loc, tokens):
-        value = tokens[1]
-        #force lower case for comparisons
-        value_l = value.lower()
-        settings_l = []
-        [settings_l.append(thing.lower()) for thing in self.options['model_selection']]
-        if settings_l.count(value_l):
-            log.info("Setting 'model_selection' to '%s'", value)
-            self.cfg.model_selection = value
-        else:
-            self.parser_fail(value, 'model_selection')
-
-    def set_scheme_algorithm(self, text, loc, tokens):
-        value = tokens[1]
-        if self.options['search'].count(value):
-            log.info("Setting 'search' to '%s'", value)
-            self.cfg.search_algorithm = value
-        else:
-            self.parser_fail(value, 'search')
-        #ignore user-defined schemes unless they specify 'user'
-        if value != 'user':
-            self.ignore_schemes = True
-
     def set_models(self, text, loc, tokens):
         all_mods = set(phyml_models.get_all_models())
         mods = tokens[1]
@@ -230,7 +193,8 @@ class Parser(object):
         try:
             # Get the partitions from the names
             parts = [self.cfg.partitions[nm] for nm in subset_def[0]]
-            # create a subset
+
+            # Keep a running list of these till we define the schema below
             self.subsets.append(subset.Subset(*tuple(parts)))
         except subset.SubsetError:
             raise ParserError(text, loc, "Error creating subset...")
@@ -242,7 +206,7 @@ class Parser(object):
             self.subsets = []
             
             if self.ignore_schemes == False:
-                self.schemes.append(scheme.Scheme(self.cfg, scheme_def.name, *subs))
+                scheme.Scheme(self.cfg, scheme_def.name, *subs)
 
         except (scheme.SchemeError, subset.SubsetError):
             raise ParserError(text, loc, "Error in '%s' can be found" %
@@ -255,7 +219,12 @@ class Parser(object):
 
     def parse_configuration(self, s):
         #parse the config cfg
-        self.result = self.config_parser.ignore(pythonStyleComment).parseString(s)
+        try:
+            self.result = self.config_parser.ignore(pythonStyleComment).parseString(s)
+        except ParserError, p:
+            log.error(p.format_message())
+            raise PartitionFinderError
+
 
 if __name__ == '__main__':
     logging.basicConfig()

@@ -132,11 +132,11 @@ def main():
                 threads=options.processes,
             )
 
-            if cfg.search_algorithm == 'all':
+            if cfg.search == 'all':
                 anal.analyse_all_possible(cfg.models)
-            elif cfg.search_algorithm == 'user':
+            elif cfg.search == 'user':
                 anal.analyse_current_schemes(cfg.models)
-            elif cfg.search_algorithm == 'greedy':
+            elif cfg.search == 'greedy':
                 anal.analyse_greedy(cfg.models, cfg.model_selection)
             else:
                 log.error("Search algorithm %s is not yet implemented", 
