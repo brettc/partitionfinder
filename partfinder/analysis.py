@@ -5,8 +5,6 @@ log = logging.getLogger("analysis")
 
 import os, shutil
 
-from partition import all_partitions
-
 from alignment import Alignment, SubsetAlignment
 import phyml
 import threadpool
@@ -29,31 +27,24 @@ def make_dir(pth):
 
 class Analysis(object):
     """Performs the analysis and collects the results"""
-    def __init__(self, 
-                 alignment_path, 
-                 output_path, 
-                 branchlengths,
-                 model_selection,
-                 force_restart,
-                 threads=1):
+    def __init__(self, cfg, force_restart, threads=1):
 
         log.info("Beginning Analysis")
         self.threads = threads
-        self.branchlengths = branchlengths
-        self.model_selection = model_selection
+        self.cfg = cfg
         if force_restart:
-            if os.path.exists(output_path):
-                log.warning("Deleting all previous workings in '%s'", output_path)
-                shutil.rmtree(output_path)
+            if os.path.exists(self.cfg.output_path):
+                log.warning("Deleting all previous workings in '%s'", 
+                            self.cfg.output_path)
+                shutil.rmtree(self.cfg.output_path)
 
         # Make some folders for the analysis
-        self.output_path = output_path
-        make_dir(self.output_path)
+        make_dir(self.cfg.output_path)
         self.make_output_dir('subsets')
         self.make_output_dir('schemes')
         self.make_output_dir('phyml')
 
-        self.make_alignment(alignment_path)
+        self.make_alignment(cfg.alignment_path)
         self.make_tree()
 
     def make_alignment(self, source_alignment_path):
@@ -62,7 +53,7 @@ class Analysis(object):
         self.alignment.read(source_alignment_path)
 
         # We start by copying the alignment
-        self.alignment_path = os.path.join(self.output_path, 'source.phy')
+        self.alignment_path = os.path.join(self.cfg.output_path, 'source.phy')
         if os.path.exists(self.alignment_path):
             # Make sure it is the same
             old_align = Alignment()
@@ -78,17 +69,17 @@ class Analysis(object):
     def make_tree(self):
         # Begin by making a filtered alignment, containing ONLY those columns
         # that are defined in the subsets
-        subset_with_everything = subset.Subset(*list(all_partitions))
+        subset_with_everything = subset.Subset(*list(self.cfg.partitions))
         self.filtered_alignment = SubsetAlignment(self.alignment, 
                                                   subset_with_everything)
-        self.filtered_alignment_path = os.path.join(self.output_path,
+        self.filtered_alignment_path = os.path.join(self.cfg.output_path,
                                                     'filtered_source.phy')
         self.filtered_alignment.write(self.filtered_alignment_path)
 
         # Now we've written this alignment, we need to lock everything in
         # place, no more adding partitions, or changing them from now on.
-        all_partitions.check_against_alignment(self.alignment)
-        all_partitions.finalise()
+        self.cfg.partitions.check_against_alignment(self.alignment)
+        self.cfg.partitions.finalise()
 
         # Now check for the tree
         tree_path = phyml.make_tree_path(self.filtered_alignment_path)
@@ -98,7 +89,7 @@ class Analysis(object):
         log.info("BioNJ tree with GTR+I+G brlens is stored here: %s", self.tree_path) 
 
     def make_output_dir(self, name):
-        new_path = os.path.join(self.output_path, name)
+        new_path = os.path.join(self.cfg.output_path, name)
         make_dir(new_path)
         setattr(self, name+"_path", new_path)
 
@@ -161,7 +152,7 @@ class Analysis(object):
         for m in models_to_do:
             a_path, out_path = phyml.make_analysis_path(self.phyml_path, sub.name, m)
             tasks.append((phyml.analyse, 
-                          (m, sub_path, a_path, self.tree_path, self.branchlengths)))
+                          (m, sub_path, a_path, self.tree_path, self.cfg.branchlengths)))
 
         if self.threads == 1:
             self.run_models_concurrent(tasks)
@@ -178,7 +169,7 @@ class Analysis(object):
             raise AnalysisError
 
         # Now we have analysed all models for this subset, we do model selection
-        sub.model_selection(self.model_selection)        
+        sub.model_selection(self.cfg.model_selection)        
         
         # If we made it to here, we should write out the new summary
         sub_summary_path = os.path.join(self.subsets_path, sub.name + '.txt')
@@ -225,14 +216,14 @@ class Analysis(object):
  
         # AIC needs the number of sequences 
         number_of_seq = len(self.alignment.species)
-        sch.assemble_results(number_of_seq, self.branchlengths)
+        sch.assemble_results(number_of_seq, self.cfg.branchlengths)
         sch.write_summary(os.path.join(self.schemes_path, sch.name+'.txt'))
 
 		
 
     def analyse_current_schemes(self, models):
         """Process everything!"""
-        current_schemes = [s for s in scheme.all_schemes]
+        current_schemes = [s for s in self.cfg.schemes]
         cur_s = 1
         tot_s = len(current_schemes)
         for s in current_schemes:
@@ -357,7 +348,7 @@ class Analysis(object):
         best_aic  = sorted_schemes_aic[0][1]
         best_aicc = sorted_schemes_aicc[0][1]
         best_bic  = sorted_schemes_bic[0][1]
-        best_schemes_file = os.path.join(self.output_path, 'best_schemes.txt')
+        best_schemes_file = os.path.join(self.cfg.output_path, 'best_schemes.txt')
         best_aic.write_summary(best_schemes_file, 'wb', "Best scheme according to AIC\n")
         best_aicc.write_summary(best_schemes_file, 'ab', "\n\n\nBest scheme according to AICc\n")
         best_bic.write_summary(best_schemes_file, 'ab', "\n\n\nBest scheme according to BIC\n")
@@ -365,7 +356,7 @@ class Analysis(object):
         self.write_all_schemes(list_of_schemes) #this also writes a file which has info on all analysed schemes, useful for extra analysis if that's what you're interested in...
 
     def write_all_schemes(self, list_of_schemes):
-        all_schemes_file = os.path.join(self.output_path, 'all_schemes.txt')
+        all_schemes_file = os.path.join(self.cfg.output_path, 'all_schemes.txt')
         f = open(all_schemes_file, 'wb')
         f.write("Name\tlnL\t#params\t#sites\t#subsets\tAIC\tAICc\tBIC\n")
         for s in list_of_schemes:

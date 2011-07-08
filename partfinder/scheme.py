@@ -1,7 +1,6 @@
 import logging
 log = logging.getLogger("scheme")
 
-from partition import all_partitions
 from math import log as logarithm
 
 from util import PartitionFinderError
@@ -9,9 +8,8 @@ class SchemeError(PartitionFinderError):
     pass
 
 class Scheme(object):
-    def __init__(self, name, *subsets):
+    def __init__(self, cfg, name, *subsets):
         """A set of subsets of partitions"""
-        global all_schemes
         self.name = name
         self.subsets = set()
 
@@ -41,7 +39,7 @@ class Scheme(object):
 
         # Hm. It seems this is the only way to get just one item out of a set
         # as pop would remove one...
-        pset = iter(partitions).next().partition_set
+        pset = cfg.partitions
 
         # Do a set-difference to see what is missing...
         missing = pset.partitions - partitions
@@ -51,11 +49,11 @@ class Scheme(object):
             raise SchemeError
 
         # This locks down whether new partitions can be created.
-        if not all_partitions.finalised:
-            all_partitions.finalise()
+        if not cfg.partitions.finalised:
+            cfg.partitions.finalise()
         
         # Now add to all_schemes -- more possibility of errors, see below
-        all_schemes.add_scheme(self)
+        cfg.schemes.add_scheme(self)
         log.debug("Created %s", self)
 
     def __iter__(self):
@@ -128,7 +126,7 @@ class Scheme(object):
                 number, sub.best_model, names, sub.alignment_path))
             number = number + 1
 
-class AllSchemes(object):
+class SchemeSet(object):
     """All the schemes added, and also a list of all unique subsets"""
     def __init__(self):
         """A collection of schemes"""
@@ -161,16 +159,12 @@ class AllSchemes(object):
     def __iter__(self):
         return iter(self.schemes_by_name.itervalues())
 
-# Container for all schemes that are created
-all_schemes = AllSchemes()
-
-
-def create_scheme(scheme_name, scheme_description):
+def create_scheme(cfg, scheme_name, scheme_description):
     """Generate a single scheme given a list of numbers e.g. [0,1,2,3,4,5,6,7]"""
     import subset
     import submodels
     
-    partnum = len(all_partitions) #total number of partitions defined by user
+    partnum = len(cfg.partitions) #total number of partitions defined by user
 
     #check that the correct number of items are in the list
     if len(scheme_description)!=partnum:
@@ -187,14 +181,14 @@ def create_scheme(scheme_name, scheme_description):
     # set of values which are the index for the partition
     created_subsets = []
     for sub_indexes in subs.values():
-        sub = subset.Subset(*tuple([all_partitions[i] for i in sub_indexes]))
+        sub = subset.Subset(*tuple([cfg.partitions[i] for i in sub_indexes]))
         created_subsets.append(sub)
 
-    new_scheme = Scheme(str(scheme_name), *tuple(created_subsets))
+    new_scheme = Scheme(cfg, str(scheme_name), *tuple(created_subsets))
 		
     return new_scheme
 
-def generate_all_schemes():
+def generate_all_schemes(cfg):
     """Convert the abstract schema given by the algorithm into subsets"""
     import subset
     import submodels
@@ -206,7 +200,7 @@ def generate_all_schemes():
         # log.error("Cannot generate schemes if some already exist!")
         # raise SchemeError
     
-    partnum = len(all_partitions) #total number of partitions defined by user
+    partnum = len(cfg.partitions) #total number of partitions defined by user
 
     # Now generate the pattern for this many partitions
     all_schemes = submodels.get_submodels(partnum)

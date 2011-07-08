@@ -21,8 +21,8 @@ def load_configuration(base_path):
     # pth = os.path.abspath(pth)
 
     util.check_folder_exists(base_path)
-    log.info("Using folder: '%s'", base_path)
-    cfg = config.Configuration(base_path)
+    cfg = config.Configuration()
+    cfg.set_base_path(base_path)
 
     config_path = os.path.join(base_path, "partition_finder.cfg")
     util.check_file_exists(config_path)
@@ -126,21 +126,18 @@ def main():
             log.info("Exiting without processing (because of the -c/--check-only option ...")
         else:
             # Now try processing everything....
-            s = cfg
             anal = analysis.Analysis(
-                s.alignment_path,
-                s.analysis_path,
-                s.branchlengths,
-                s.model_selection,
-                options.force_restart,
+                cfg, 
+                options.force_restart, 
                 threads=options.processes,
             )
-            if s.search_algorithm == 'all':
-                anal.analyse_all_possible(s.models)
-            elif s.search_algorithm == 'user':
-                anal.analyse_current_schemes(s.models)
-            elif s.search_algorithm == 'greedy':
-                anal.analyse_greedy(s.models, s.model_selection)
+
+            if cfg.search_algorithm == 'all':
+                anal.analyse_all_possible(cfg.models)
+            elif cfg.search_algorithm == 'user':
+                anal.analyse_current_schemes(cfg.models)
+            elif cfg.search_algorithm == 'greedy':
+                anal.analyse_greedy(cfg.models, cfg.model_selection)
             else:
                 log.error("Search algorithm %s is not yet implemented", 
                           s.search_algorithm)

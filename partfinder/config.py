@@ -2,24 +2,31 @@ import logging
 log = logging.getLogger("config")
 
 import os
-import parser
 
+import scheme, subset, partition
 import util
 class ConfigurationError(util.PartitionFinderError):
     pass
 
 class Configuration(object):
     """This holds the user configuration info"""
-    def __init__(self, base_path):
+    def __init__(self):
+        self.partitions = partition.PartitionSet()
+        self.schemes = scheme.SchemeSet()
+        
+    def set_base_path(self, base_path):
+        log.info("Using folder: '%s'", base_path)
         self.base_path = base_path
-        self.analysis_path = os.path.join(base_path, "analysis")
+        self.output_path = os.path.join(base_path, "analysis")
 
-    def set_alignment(self, align):
+    def set_alignment_file(self, align):
+        log.info("Setting 'alignment' to '%s'", align)
         self.alignment = align
         self.alignment_path = os.path.join(self.base_path, align)
 
     def validate(self):
         """Should be called before processing"""
+        util.check_folder_exists(self.base_path)
         util.check_file_exists(self.alignment_path)
         # settings.alignment_path = os.path.join(settings.base_path,
                                             # settings.alignment)
