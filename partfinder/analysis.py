@@ -281,7 +281,7 @@ class Analysis(object):
             best_lumping_score = None
             counter = 1
             for lumped_description in lumpings:
-                lumped_scheme = scheme.create_scheme(cur_s, lumped_description)
+                lumped_scheme = scheme.create_scheme(self.cfg, cur_s, lumped_description)
                 cur_s = cur_s + 1
                 log.info("Analysing scheme: %s (%d of %d in this step of the greedy algorithm)" %(lumped_scheme.name, counter, len(lumpings)))
                 counter = counter+1
