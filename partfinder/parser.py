@@ -128,7 +128,7 @@ class Parser(object):
     def set_alignment(self, text, loc, tokens):
         value = tokens[1]
         log.info("Setting 'alignment' to '%s'", value)
-        self.settings.alignment = value
+        self.settings.set_alignment(value)
         # TODO Make sure it is readable!
         # raise ParserError(text, loc, "No '%s' defined in the configuration" % var)
         
