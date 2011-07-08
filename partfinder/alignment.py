@@ -26,7 +26,7 @@ class AlignmentParser(object):
     """Parses an alignment and returns species sequence tuples"""
     
     # I think this covers it...
-    BASES = Word(alphas + "?.-")+ENDOPT
+    BASES = Word(alphas + "?.-")
 
     def __init__(self):
         self.sequences = {}
