@@ -26,7 +26,7 @@ class AlignmentParser(object):
     """Parses an alignment and returns species sequence tuples"""
     
     # I think this covers it...
-    BASES = Word(alphas + "?.-")
+    BASES = Word(alphas + "?.-")+ENDOPT
 
     def __init__(self):
         self.sequences = {}
@@ -65,8 +65,6 @@ class AlignmentParser(object):
             alphas + nums + "!#$%&\'*+-./;<=>?@[\\]^_`{|}~", 
             max=100)
 
-        # MacClade puts some stuff like this at the end "[12345]"
-        ENDOPT = Suppress(Optional(Word("[" + nums + "]")))
 
         # Take a copy and disallow line breaks in the bases
         bases = self.BASES.copy()
