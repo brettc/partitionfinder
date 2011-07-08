@@ -65,8 +65,6 @@ class AlignmentParser(object):
             alphas + nums + "!#$%&\'*+-./;<=>?@[\\]^_`{|}~", 
             max=100)
 
-        # MacClade puts some stuff like this at the end "[12345]"
-        ENDOPT = Suppress(Optional(Word("[" + nums + "]")))
 
         # Take a copy and disallow line breaks in the bases
         bases = self.BASES.copy()
