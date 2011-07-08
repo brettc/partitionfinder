@@ -304,7 +304,7 @@ class Analysis(object):
         log.info("Greedy algorithm finished after %d rounds" % round)
         log.info("Highest scoring scheme is scheme %s, with %s score of %.3f" %(best_scheme.name, method, best_score))
 
-        best_schemes_file = os.path.join(self.output_path, 'best_schemes.txt')
+        best_schemes_file = os.path.join(self.cfg.output_path, 'best_schemes.txt')
         best_scheme.write_summary(best_schemes_file, 'wb', "Best scheme according to Greedy algorithm, analysed with %s\n\n" % method)
         log.info("Information on best scheme is here: %s" %(best_schemes_file))
 
