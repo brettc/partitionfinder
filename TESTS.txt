@@ -1,0 +1,8 @@
+Tests
+-----
+
+Run example with branchlengths linked and unlinked. Check output in "PhyML" to confirm that they are sensible
+
+Run example with some simple partitioning commands. Check that the output alignment partitions are correct.
+
+Calculate the likelihoods of schemes from PhyML output by hand. Check they match the all_schemes output.

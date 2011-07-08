@@ -3,7 +3,8 @@ log = logging.getLogger("parser")
 
 from pyparsing import (
     Word, OneOrMore, alphas, nums, Suppress, Optional, Group, stringEnd,
-    delimitedList, pythonStyleComment, line, lineno, col, Keyword)
+    delimitedList, pythonStyleComment, line, lineno, col, Keyword, Or,
+    NoMatch)
 
 # debugging
 # ParserElement.verbose_stacktrace = True
@@ -11,7 +12,7 @@ from pyparsing import (
 import partition, scheme, subset, phyml_models
 
 # Only used internally
-class ParserError(PartitionFinderError):
+class ParserError(Exception):
     """Used for our own parsing problems"""
     def __init__(self, text, loc, msg):
         self.line = line(loc, text)
@@ -51,7 +52,7 @@ class Parser(object):
         Any changes to the grammar of the config file be done here.
         """
         # Some syntax that we need, but don't bother looking at
-        SEMIOPT = Optional(Suppress(";"))
+        SEMICOLON = (Suppress(";"))
         EQUALS = Suppress("=")
         OPENB = Suppress("(")
         CLOSEB = Suppress(")")
@@ -60,22 +61,29 @@ class Parser(object):
 
         # Top Section
         FILENAME = Word(alphas + nums + '-_.')
-        alignmentdef = Keyword('alignment') + EQUALS + FILENAME + SEMIOPT
+        alignmentdef = Keyword('alignment') + EQUALS + FILENAME + SEMICOLON
         alignmentdef.setParseAction(self.set_alignment)
 
-        BRANCHNAME = Word(alphas + nums)
-        branchdef = Keyword("branchlengths") + EQUALS + BRANCHNAME + SEMIOPT
+
+        # better error messages. See here
+        # http://pyparsing.wikispaces.com/message/view/home/10301740
+        # This appears to work
+        failure = NoMatch()
+        failure.setName('string or numeric field')
+        BRANCHNAME = failure | Keyword('linked') | Keyword('unlinked')
+
+        branchdef = Keyword("branchlengths") + EQUALS + BRANCHNAME + SEMICOLON
         branchdef.setParseAction(self.set_branchlengths)
 
         MODELNAME = Word(alphas + nums + '+')
         modellist = delimitedList(MODELNAME)
         modeldef = Keyword("models") + EQUALS + Group(
-            (Keyword("all") | Keyword("mrbayes"))("predefined") | 
-            Group(modellist)("userlist")) + SEMIOPT
+            (Keyword("all") | Keyword("mrbayes") | Keyword("raxml"))("predefined") | 
+            Group(modellist)("userlist")) + SEMICOLON
         modeldef.setParseAction(self.set_models)
 
-        MODSELNAME = Or(map(Keyword(['linked', 'unlinked'])
-        modseldef = Keyword("model_selection") + EQUALS + MODSELNAME + SEMIOPT
+        MODSELNAME = Word(alphas + nums)
+        modseldef = Keyword("model_selection") + EQUALS + MODSELNAME + SEMICOLON
         modseldef.setParseAction(self.set_modelselection)
 
         topsection = alignmentdef + branchdef + modeldef + modseldef
@@ -89,7 +97,8 @@ class Parser(object):
 
         partdef.setParseAction(self.define_range)
         partdeflist = Group(OneOrMore(Group(partdef)))
-        partition = Optional("charset") + partname("name") + EQUALS + partdeflist("parts") + SEMIOPT
+        partition = Optional("charset") + partname("name") + \
+                            EQUALS + partdeflist("parts") + SEMICOLON
         partition.setParseAction(self.define_partition)
         partlist = OneOrMore(Group(partition))
         partsection = Suppress("[partitions]") + partlist
@@ -103,13 +112,14 @@ class Parser(object):
         subset.setParseAction(self.define_subset)
 
         scheme = Group(OneOrMore(subset))
-        schemedef = schemename("name") + EQUALS + scheme("scheme") + SEMIOPT
+        schemedef = schemename("name") + \
+                            EQUALS + scheme("scheme") + SEMICOLON
         schemedef.setParseAction(self.define_schema)
 
         schemelist = OneOrMore(Group(schemedef))
 
         SCHEMESET = Word(alphas + nums)
-        schemealgo = Keyword("search") + EQUALS + SCHEMESET + SEMIOPT
+        schemealgo = Keyword("search") + EQUALS + SCHEMESET + SEMICOLON
         schemealgo.setParseAction(self.set_scheme_algorithm)
         schemesection = \
                 Suppress("[schemes]") + schemealgo + Optional(schemelist)
@@ -119,8 +129,8 @@ class Parser(object):
 
     def parser_fail(self, value, option):
         #what we tell users if we can't recognise their input.
-        log.error("'%s' is not a valid option for '%s'" %(value, option))
-        log.info("The only valid options for '%s' are: %s" %(option, "'%s'" %("', '".join(self.options[option]))))
+        log.error("'%s' is not a valid option for '%s'" % (value, option))
+        log.info("The only valid options for '%s' are: %s" % (option, "'%s'" %("', '".join(self.options[option]))))
         log.info("Please fix the '%s' setting in the .cfg file and try again", option)
         raise ParserError
         
@@ -177,12 +187,16 @@ class Parser(object):
                       ", ".join(self.settings.models))
         else:
             modsgroup = mods.predefined
-            if modsgroup == "all":
+            if modsgroup.lower() == "all":
                 self.settings.models = list(all_mods)
+            elif modsgroup.lower() == "mrbayes":
+                mrbayes_mods = set(phyml_models.get_mrbayes_models())
+                self.settings.models = list(mrbayes_mods)
+            elif modsgroup.lower() == "raxml":
+                self.settings.models = phyml_models.get_raxml_models()
             else:
                 pass
-            log.info("Setting 'models' to '%s'",
-                      modsgroup)
+            log.info("Setting 'models' to '%s'", modsgroup)
                     
 
     def define_range(self, part):
