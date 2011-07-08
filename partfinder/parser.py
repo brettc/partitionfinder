@@ -10,7 +10,7 @@ from pyparsing import (
 
 import partition, scheme, subset, phyml_models
 
-from util import PartitionFinderError
+# Only used internally
 class ParserError(PartitionFinderError):
     """Used for our own parsing problems"""
     def __init__(self, text, loc, msg):
@@ -45,7 +45,6 @@ class Parser(object):
             'model_selection': ['AIC', 'AICc', 'BIC'],
             'search': ['all', 'user', 'greedy']
             }
-            
 
     def init_grammar(self):
         """Set up the parsing classes
@@ -75,7 +74,7 @@ class Parser(object):
             Group(modellist)("userlist")) + SEMIOPT
         modeldef.setParseAction(self.set_models)
 
-        MODSELNAME = Word(alphas + nums)
+        MODSELNAME = Or(map(Keyword(['linked', 'unlinked'])
         modseldef = Keyword("model_selection") + EQUALS + MODSELNAME + SEMIOPT
         modseldef.setParseAction(self.set_modelselection)
 
@@ -308,7 +307,7 @@ by_gene         = (Gene1_pos1, Gene1_pos2, Gene1_pos3) (Gene2_pos1, Gene2_pos2, 
     p = Parser(c)
     try:
         p.parse_configuration(test_config)
-    except ParserError, p:
+    except InternalParserError, p:
         log.error(p.format_message())
     
     print c.__dict__
