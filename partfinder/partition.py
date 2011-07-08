@@ -2,7 +2,7 @@ import logging
 log = logging.getLogger("partition")
 
 from util import PartitionFinderError
-class PartitionFinderError(PartitionFinderError):
+class PartitionError(PartitionFinderError):
     pass
 
 def columnset_to_string(colset):
@@ -11,7 +11,7 @@ def columnset_to_string(colset):
     # Add one, cos we converted to zero base...
     return ', '.join([str(x+1) for x in s])
 
-class AllPartitions(object):
+class PartitionSet(object):
     """The set of all partitions loaded from a configuration file"""
     def __init__(self):
         """A set of Partitions"""
@@ -27,7 +27,7 @@ class AllPartitions(object):
         self.finalised = False
 
     def __str__(self):
-        return "AllPartitions(%s)" % ", ".join([str(p) for p in self.partitions])
+        return "PartitionSet(%s)" % ", ".join([str(p) for p in self.partitions])
 
     def add_partition(self, p):
         """Check for overlap (= intersection)"""
@@ -40,7 +40,7 @@ class AllPartitions(object):
             raise PartitionError
 
         overlap = []
-        for otherp in all_partitions:
+        for otherp in self.partitions:
             if p.columnset & otherp.columnset:
                 overlap.append(str(otherp))
         if overlap:
@@ -100,16 +100,12 @@ class AllPartitions(object):
     def names(self):
         return self.parts_by_name.keys()
 
-all_partitions = AllPartitions()
-
 class Partition(object):
     """A set of columns from an alignment"""
-    def __init__(self, name=None, *partlist):
+    def __init__(self, cfg, name=None, *partlist):
         """A named partition
 
         """
-        # if name is None:
-            # name = str(all_partitions.sequence)
         self.name = name
         description = []
 
@@ -159,7 +155,7 @@ class Partition(object):
         self.columns = columns
         self.columnset = columnset
 
-        all_partitions.add_partition(self)
+        cfg.partitions.add_partition(self)
         log.debug("Created %s", self)
 
     def __repr__(self):
@@ -179,7 +175,6 @@ if __name__ == '__main__':
     p3 = Partition('three', (21, 21))
     print p3.columnset
 
-    print all_partitions[0]
     # ps = PartitionSet(p1, p2)
 
     # print ps

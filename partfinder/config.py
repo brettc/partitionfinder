@@ -2,86 +2,53 @@ import logging
 log = logging.getLogger("config")
 
 import os
-import parser
 
-from util import PartitionFinderError
-class ConfigurationError(PartitionFinderError):
+import scheme, subset, partition
+import util
+class ConfigurationError(util.PartitionFinderError):
     pass
 
-def _check_file(pth):
-    if not os.path.exists(pth) or not os.path.isfile(pth):
-        log.error("No such file: '%s'", pth)
-        raise ConfigurationError
-
-def _check_folder(pth):
-    if not os.path.exists(pth) or not os.path.isdir(pth):
-        log.error("No such folder: '%s'", pth)
-        raise ConfigurationError
-
-def get_root_install_path():
-    pth = os.path.abspath(__file__)
-    # Split off the name and the directory...
-    pth, not_used = os.path.split(pth)
-    pth, not_used = os.path.split(pth)
-    return pth
-
-class Settings(object):
+class Configuration(object):
     """This holds the user configuration info"""
     def __init__(self):
-        pass
+        self.partitions = partition.PartitionSet()
+        self.schemes = scheme.SchemeSet()
+        
+    def set_base_path(self, base_path):
+        log.info("Using folder: '%s'", base_path)
+        self.base_path = base_path
+        self.output_path = os.path.join(base_path, "analysis")
 
-    def __getattr__(self, name):
-        if name not in self.__dict__:
-            log.error("The setting '%s' is not defined. "
-                      "Did you initialise the configuration?", 
-                      name)
-            raise ConfigurationError
+    def set_alignment_file(self, align):
+        log.info("Setting 'alignment' to '%s'", align)
+        self.alignment = align
+        self.alignment_path = os.path.join(self.base_path, align)
 
-        return self.__dict__[name]
+    def validate(self):
+        """Should be called before processing"""
+        util.check_folder_exists(self.base_path)
+        util.check_file_exists(self.alignment_path)
+        # settings.alignment_path = os.path.join(settings.base_path,
+                                            # settings.alignment)
+        # _check_file(settings.alignment_path)
 
-settings = Settings()
+    # def __getattr__(self, name):
+        # if name not in self.__dict__:
+            # log.error("The setting '%s' is not defined. "
+                      # "Did you initialise the configuration?", 
+                      # name)
+            # raise ConfigurationError
 
-def load(pth):
-    # Allow for user and environment variables
-    pth = os.path.expanduser(pth)
-    pth = os.path.expandvars(pth)
-    pth = os.path.normpath(pth)
-    # pth = os.path.abspath(pth)
+        # return self.__dict__[name]
 
-    settings.base_path = pth
-    _check_folder(settings.base_path)
-    log.info("Using folder: '%s'", settings.base_path)
-
-    settings.config_path = os.path.join(
-        settings.base_path, "partition_finder.cfg")
-    _check_file(settings.config_path)
-
-    settings.analysis_path = os.path.join(settings.base_path, "analysis")
-
-    log.info("Loading configuration at '%s'", settings.config_path)
-    try:
-        p = parser.Parser(settings)
-        p.parse_file(settings.config_path)
-    except parser.ParserError, p:
-        # Catch any parsing errors, print something out, then raise a
-        # configuration error, as this is the general error we expect from
-        # this part of the process
-        log.error(p.format_message())
-        raise ConfigurationError
-
-    settings.alignment_path = os.path.join(settings.base_path,
-                                        settings.alignment)
-    _check_file(settings.alignment_path)
-    report_settings()
-
-def report_settings():
-    log.debug("Settings are as follows:")
-    for x in settings.__dict__:
-        if not x.startswith('__'):
-            log.debug("%s: %s", x, getattr(settings, x))
+# def report_settings():
+    # log.debug("Settings are as follows:")
+    # for x in settings.__dict__:
+        # if not x.startswith('__'):
+            # log.debug("%s: %s", x, getattr(settings, x))
 
 if __name__ == '__main__':
     import logging
     logging.basicConfig(level=logging.DEBUG)
-    report_settings()
+    # report_settings()
     

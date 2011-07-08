@@ -30,12 +30,11 @@ class Parser(object):
     """
 
     # These will get set in the configuration passed in
-    def __init__(self, settings):
+    def __init__(self, cfg):
         # For adding variables
-        self.settings = settings
+        self.cfg = cfg
 
         # Use these to keep track of stuff that is going on in parser
-        self.partitions = []
         self.schemes = []
         self.subsets = []
         self.init_grammar()
@@ -136,8 +135,7 @@ class Parser(object):
         
     def set_alignment(self, text, loc, tokens):
         value = tokens[1]
-        log.info("Setting 'alignment' to '%s'", value)
-        self.settings.alignment = value
+        self.cfg.set_alignment_file(value)
         # TODO Make sure it is readable!
         # raise ParserError(text, loc, "No '%s' defined in the configuration" % var)
         
@@ -145,7 +143,7 @@ class Parser(object):
         value = tokens[1]
         if self.options['branchlengths'].count(value):
             log.info("Setting 'branchlengths' to '%s'", value)
-            self.settings.branchlengths = value
+            self.cfg.branchlengths = value
         else:
             self.parser_fail(value, 'branchlengths')
 
@@ -157,7 +155,7 @@ class Parser(object):
         [settings_l.append(thing.lower()) for thing in self.options['model_selection']]
         if settings_l.count(value_l):
             log.info("Setting 'model_selection' to '%s'", value)
-            self.settings.model_selection = value
+            self.cfg.model_selection = value
         else:
             self.parser_fail(value, 'model_selection')
 
@@ -165,7 +163,7 @@ class Parser(object):
         value = tokens[1]
         if self.options['search'].count(value):
             log.info("Setting 'search' to '%s'", value)
-            self.settings.search_algorithm = value
+            self.cfg.search_algorithm = value
         else:
             self.parser_fail(value, 'search')
         #ignore user-defined schemes unless they specify 'user'
@@ -176,24 +174,24 @@ class Parser(object):
         all_mods = set(phyml_models.get_all_models())
         mods = tokens[1]
         if mods.userlist:
-            self.settings.models = []
+            self.cfg.models = []
             # It is a list of models
             for m in mods.userlist:
                 if m not in all_mods:
                     raise ParserError(
                         text, loc, "'%s' is not a valid model" % m)
-                self.settings.models.append(m)
+                self.cfg.models.append(m)
             log.info("Setting 'models' to a userlist containing: %s", 
-                      ", ".join(self.settings.models))
+                      ", ".join(self.cfg.models))
         else:
             modsgroup = mods.predefined
             if modsgroup.lower() == "all":
-                self.settings.models = list(all_mods)
+                self.cfg.models = list(all_mods)
             elif modsgroup.lower() == "mrbayes":
                 mrbayes_mods = set(phyml_models.get_mrbayes_models())
-                self.settings.models = list(mrbayes_mods)
+                self.cfg.models = list(mrbayes_mods)
             elif modsgroup.lower() == "raxml":
-                self.settings.models = phyml_models.get_raxml_models()
+                self.cfg.models = phyml_models.get_raxml_models()
             else:
                 pass
             log.info("Setting 'models' to '%s'", modsgroup)
@@ -218,21 +216,20 @@ class Parser(object):
         """We have everything we need here to make a partition"""
         try:
             # Creation adds it to set
-            p = partition.Partition(part_def.name, *tuple(part_def.parts))
-            self.partitions.append(p)
+            p = partition.Partition(self.cfg, part_def.name, *tuple(part_def.parts))
         except partition.PartitionError:
             raise ParserError(text, loc, "Error in '%s' can be found" % part_def.name)
 
 
     def check_part_exists(self, text, loc, partref):
-        if partref.name not in partition.all_partitions:
+        if partref.name not in self.cfg.partitions:
             raise ParserError(text, loc, "Partition %s not defined" %
                                      partref.name)
 
     def define_subset(self, text, loc, subset_def):
         try:
             # Get the partitions from the names
-            parts = [partition.all_partitions[nm] for nm in subset_def[0]]
+            parts = [self.cfg.partitions[nm] for nm in subset_def[0]]
             # create a subset
             self.subsets.append(subset.Subset(*tuple(parts)))
         except subset.SubsetError:
@@ -245,7 +242,7 @@ class Parser(object):
             self.subsets = []
             
             if self.ignore_schemes == False:
-                self.schemes.append(scheme.Scheme(scheme_def.name, *subs))
+                self.schemes.append(scheme.Scheme(self.cfg, scheme_def.name, *subs))
 
         except (scheme.SchemeError, subset.SubsetError):
             raise ParserError(text, loc, "Error in '%s' can be found" %
@@ -257,7 +254,7 @@ class Parser(object):
         self.parse_configuration(s)
 
     def parse_configuration(self, s):
-        #parse the config settings
+        #parse the config cfg
         self.result = self.config_parser.ignore(pythonStyleComment).parseString(s)
 
 if __name__ == '__main__':

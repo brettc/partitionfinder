@@ -157,12 +157,11 @@ if __name__ == '__main__':
     import config
     from partition import Partition
 
-    tmp = tempfile.mkdtemp()
-    config.initialise(tmp, True)
+    c = config.Configuration()
 
-    pa = Partition('a', (1, 10, 3))
-    pb = Partition('b', (2, 10, 3))
-    pc = Partition('c', (3, 10, 3))
+    pa = Partition(c, 'a', (1, 10, 3))
+    pb = Partition(c, 'b', (2, 10, 3))
+    pc = Partition(c, 'c', (3, 10, 3))
 
     s1 = Subset(pa, pb)
     s2 = Subset(pa, pb)
