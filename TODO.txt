@@ -1,7 +1,6 @@
 Before initial release (in order of priority)
 ---------------------------------------------
 
-- I'm doing something wrong with how the max number of schemes for the greedy algo is calculated. Either that or the greedy algo is doing something wrong. Need to check.
 - flag a warning if ANYTHING in the .cfg file has changed. Do this by putting a copy of the .cfg file in the 'analysis' folder, loading it and comparing it to the current one
 - some sequence programs have mac linebreaks. We can't deal with them right now.
 - some sequence programs add a number in square brackets after each sequence "[19823]". Need to deal with that.
@@ -11,6 +10,7 @@ Before initial release (in order of priority)
 
 Done
 ____
+- fixed all scheme and subset number calculators
 - mrbayes and raxml now options for model spec in the config file
 - Get better .cfg parsing, so that we get useful error messages
 - semicolons now needed, fixes some bugs in .cfg input
