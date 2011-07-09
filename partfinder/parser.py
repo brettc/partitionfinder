@@ -4,7 +4,7 @@ log = logging.getLogger("parser")
 from pyparsing import (
     Word, OneOrMore, alphas, nums, Suppress, Optional, Group, stringEnd,
     delimitedList, pythonStyleComment, line, lineno, col, Keyword, Or,
-    NoMatch)
+    NoMatch, CaselessKeyword)
 
 # debugging
 # ParserElement.verbose_stacktrace = True
@@ -74,7 +74,9 @@ class Parser(object):
         MODELNAME = Word(alphas + nums + '+')
         modellist = delimitedList(MODELNAME)
         modeldef = Keyword("models") + EQUALS + Group(
-            (Keyword("all") | Keyword("mrbayes") | Keyword("raxml"))("predefined") | 
+            (
+            CaselessKeyword("all") | CaselessKeyword("mrbayes") | CaselessKeyword("raxml")
+            )("predefined") | 
             Group(modellist)("userlist")) + SEMICOLON
         modeldef.setParseAction(self.set_models)
 

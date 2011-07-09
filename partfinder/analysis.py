@@ -297,8 +297,11 @@ class Analysis(object):
             if best_lumping_score<best_score:
                 best_scheme = best_lumping_scheme
                 best_score  = best_lumping_score
-                start_description = best_lumping_desc
+                start_description = best_lumping_desc				
+                if len(set(best_lumping_desc))==1: #then it's the scheme with everything equal, so quit
+				    break
                 round = round+1
+
             else:
                 break
 

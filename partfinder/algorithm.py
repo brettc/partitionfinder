@@ -46,7 +46,6 @@ def lumpings(scheme):
 	"""
 	#get the numbers involved in the scheme
 	nums = set(scheme)
-
 	subs = []
 	lumpings = []
 	for sub in k_subsets(nums, 2):

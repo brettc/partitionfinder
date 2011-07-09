@@ -14,7 +14,7 @@ class Configuration(object):
     # List of valid options. The first one is the default
     options = {
         'branchlengths': ['linked', 'unlinked'],
-        'model_selection': ['AIC', 'AICc', 'BIC'],
+        'model_selection': ['aic', 'aicc', 'bic'],
         'search': ['all', 'user', 'greedy']
         }
 
@@ -47,7 +47,13 @@ class Configuration(object):
             raise ConfigurationError
 
         valid = self.options[option]
-        if value not in valid:
+        
+        
+        #force lowercase for comparisons
+        value = value.lower()
+        valid_lower = []
+        [valid_lower.append(thing.lower()) for thing in valid]        
+        if value not in valid_lower:
             log.error("'%s' is not a valid option for '%s'" % (value, option))
             log.info("The only valid options for '%s' are: %s" % 
                      (option, "'%s'" %("', '".join(self.options[option]))))
