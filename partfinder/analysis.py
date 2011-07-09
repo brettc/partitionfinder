@@ -244,7 +244,7 @@ class Analysis(object):
             log.warning("%d is a lot of schemes, this might take a long time to analyse", total_scheme_num)
             log.warning("If it's taking too long, consider just analysing user defined schemes instead (see Manual)")
 
-        total_subset_num = submodels.count_greedy_parts(partnum)
+        total_subset_num = submodels.count_greedy_subsets(partnum)
         log.info("PartitionFinder will have to analyse a maximum of %d subsets of sites to complete this analysis" %(total_subset_num))
 
         #clear any schemes that are currently loaded
@@ -320,14 +320,14 @@ class Analysis(object):
     def analyse_all_possible(self, models):
 
         partnum = len(self.cfg.partitions)
-        total_scheme_num = submodels.count_submodels(partnum)
+        total_scheme_num = submodels.count_all_schemes(partnum)
         log.info("Analysing all possible schemes for %d starting partitions", partnum)
         log.info("This will result in %s schemes being created", total_scheme_num)
         if total_scheme_num>1000000:
             log.warning("%d is a lot of schemes, this might take a long time to analyse", total_scheme_num)
             log.warning("If it's taking too long, consider using the greedy algorithm or user schemes instead (see Manual)")
 
-        total_subset_num = (2**partnum) - 1
+        total_subset_num = submodles.count_all_subsets(partnum)
         log.info("PartitionFinder will have to analyse %d subsets of sites to complete this analysis" %(total_subset_num))
 
         #clear any schemes that are currently loaded
