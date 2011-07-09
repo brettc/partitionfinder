@@ -1,5 +1,14 @@
 import logging
 log = logging.getLogger("submodels")
+import algorithm
+from math import factorial
+
+def Binomial(n,k):
+	if n > k:
+		b = factorial(n) / (factorial(k)*factorial(n-k))
+		return b
+	else:
+		return 0
 
 def submodel_generator(result, pat, current, maxn, countonly=False):
     if pat:
@@ -23,16 +32,19 @@ def a_choose_b(n,k):
     return reduce(lambda a,b: a*(n-b)/(b+1),xrange(k),1)
 
 def count_greedy_schemes(N):
-    count = 1
-    for i in range(N-1):
-        j = i + 1
-        count = count+a_choose_b(j,2)
+    '''oeis.org reveals that for N>2, this is Binomial(N+1,3)+Binomial(N+1,0)'''
+    if N==1:
+        count = 1
+    elif N==2:
+        count = 2
+    else:
+        count = Binomial(N+1,3)+Binomial(N+1,0)
     return count
 
 def count_greedy_parts(N):
-    count = N
-    count = count + a_choose_b(N,2)
-    count = count + sum(range(N-1))
+    count = N #for the starting scheme
+    count = count + a_choose_b(N,2) #the second round gives us n choose 2
+    count = count + sum(range(N-1)) #the rest of the rounds just give us as many as the starting parts in each round
     return count
 
 
@@ -103,3 +115,9 @@ if __name__ == "__main__":
     result = get_submodels(5)
     for a in result:
         print a
+    
+    print "A table of number of partitions versus number of schemes and number of subsets for greedy analyses"
+    print "Parts\tSchemes\tSubsets\n"
+ 
+    for i in range(2,1001):
+        print i, count_greedy_schemes(i), count_greedy_parts(i)
