@@ -11,28 +11,6 @@ import sys
 
 from partfinder import config, analysis, util, parser
 
-def load_configuration(base_path):
-    """We get the parser to construct the configuration"""
-
-    # Allow for user and environment variables
-    base_path = os.path.expanduser(base_path)
-    base_path = os.path.expandvars(base_path)
-    base_path = os.path.normpath(base_path)
-    # pth = os.path.abspath(pth)
-
-    util.check_folder_exists(base_path)
-    cfg = config.Configuration()
-    cfg.set_base_path(base_path)
-
-    config_path = os.path.join(base_path, "partition_finder.cfg")
-    util.check_file_exists(config_path)
-
-    log.info("Loading configuration at '%s'", config_path)
-    # try:
-    p = parser.Parser(cfg)
-    p.parse_file(config_path)
-
-    return cfg
 
 def main():
     usage = """usage: python %prog [options] <foldername>
@@ -100,7 +78,7 @@ def main():
 
     # Load, using the first argument as the folder
     try:
-        cfg = load_configuration(args[0])
+        cfg = config.Configuration(args[0])
         
         #check for old analyses to see if we can use the old datas
         # config.check_for_old_config(cfg)

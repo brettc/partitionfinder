@@ -3,8 +3,8 @@ log = logging.getLogger("config")
 
 import os, fnmatch
 import cPickle as pickle
-import scheme, subset, partition
-import util
+import scheme, subset, partition, parser, util 
+
 class ConfigurationError(util.PartitionFinderError):
     pass
 
@@ -30,6 +30,30 @@ class Configuration(object):
         for o, v in self.options.items():
             # Could call self.set_option here -- but it might confuse users
             setattr(self, o, v[0])
+
+    def load_base_path(self, base_path):
+        """Load using a base path folder"""
+
+        # Allow for user and environment variables
+        base_path = os.path.expanduser(base_path)
+        base_path = os.path.expandvars(base_path)
+        base_path = os.path.normpath(base_path)
+        # pth = os.path.abspath(pth)
+
+        util.check_folder_exists(base_path)
+        self.set_base_path(base_path)
+
+        config_path = os.path.join(base_path, "partition_finder.cfg")
+        util.check_file_exists(config_path)
+
+        self.load(config_path)
+
+    def load(self, config_path):
+        """We get the parser to construct the configuration"""
+        log.info("Loading configuration at '%s'", config_path)
+        self.config_path = config_path
+        p = parser.Parser(self)
+        p.parse_file(config_path)
             
     def set_base_path(self, base_path):
         log.info("Using folder: '%s'", base_path)

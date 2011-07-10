@@ -1,16 +1,15 @@
 from basetest import *
 import os, shutil
 
-from PartitionFinder import load_configuration
-from partfinder import analysis
+from partfinder import analysis, config
 
 class TestTheLot(PartitionFinderTestCase):
-
 
     def load_cfg_and_run(self, name):
         try:
             pth = os.path.join(self.test_path, "test_searches", name)
-            cfg = load_configuration(pth)
+            cfg = config.Configuration()
+            cfg.load_base_path(pth)
             anal = analysis.Analysis(cfg, True)
             anal.do_analysis()
         finally:
