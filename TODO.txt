@@ -1,15 +1,15 @@
 Before initial release (in order of priority)
 ---------------------------------------------
 
-- flag a warning if ANYTHING in the .cfg file has changed. Do this by putting a copy of the .cfg file in the 'analysis' folder, loading it and comparing it to the current one
 - some sequence programs have mac linebreaks. We can't deal with them right now.
 - some sequence programs add a number in square brackets after each sequence "[19823]". Need to deal with that.
-- quit without running if 'branch_lengths' has changed. There will be results, but they won't be what people thought.
 - Don't save phyml by default, there is way too many of them, but keep a commandline option to do so
 
 
 Done
 ____
+- quit without running if 'branch_lengths' has changed. There will be results, but they won't be what people thought.
+- flag a warning if ANYTHING in the .cfg file has changed. Do this by putting a copy of the .cfg file in the 'analysis' folder, loading it and comparing it to the current one
 - fixed all scheme and subset number calculators
 - mrbayes and raxml now options for model spec in the config file
 - Get better .cfg parsing, so that we get useful error messages
