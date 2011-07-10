@@ -122,6 +122,11 @@ def main():
     # Load, using the first argument as the folder
     try:
         cfg = load_configuration(args[0])
+        
+        #check for old analyses to see if we can use the old datas
+        config.check_for_old_config(cfg)
+
+        
         if options.check_only:
             log.info("Exiting without processing (because of the -c/--check-only option ...")
         else:
@@ -145,7 +150,7 @@ def main():
 
             # cfg.process()
         # Successful exit
-        log.info("Success: processing complete.")
+        log.info("Processing complete.")
         return 0
 
     # except cfg.ConfigurationError:
