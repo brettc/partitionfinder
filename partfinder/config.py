@@ -46,13 +46,9 @@ class Configuration(object):
                       option)
             raise ConfigurationError
 
-        valid = self.options[option]
-     
-        #force lowercase for comparisons
-        value = value.lower()
-        valid_lower = []
-        [valid_lower.append(thing.lower()) for thing in valid]        
-        if value not in valid_lower:
+        # Compare lower case
+        valid = [x.lower() for x in self.options[option]]
+        if value.lower() not in valid:
             log.error("'%s' is not a valid option for '%s'" % (value, option))
             log.info("The only valid options for '%s' are: %s" % 
                      (option, "'%s'" %("', '".join(self.options[option]))))

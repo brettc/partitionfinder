@@ -59,7 +59,7 @@ class Analysis(object):
         elif self.cfg.search == 'user':
             self.analyse_current_schemes(self.cfg.models)
         elif self.cfg.search == 'greedy':
-            anal.analyse_greedy(self.cfg.models, self.cfg.model_selection)
+            self.analyse_greedy(self.cfg.models, self.cfg.model_selection)
         else:
             log.error("Search algorithm '%s' is not yet implemented", 
                         self.cf.search)
