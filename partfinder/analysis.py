@@ -47,6 +47,10 @@ class Analysis(object):
 
         self.make_alignment(cfg.alignment_path)
         self.make_tree()
+        self.subsets_analysed = 0 #a counter for user info
+        self.total_subset_num = None
+        self.schemes_analysed = 0 #a counter for user info
+        self.total_scheme_num = None
 
     def make_alignment(self, source_alignment_path):
         # Make the alignment 
@@ -117,7 +121,12 @@ class Analysis(object):
             return
 
         #keep people informed about what's going on
-        log.info("Analysing subset %s" %(sub.name))
+        #if we don't know the total subset number, we can usually get it like this
+        if self.total_subset_num == None:
+            self.total_subset_num = len(sub._cache)
+        self.subsets_analysed = self.subsets_analysed + 1
+        percent_done = float(self.subsets_analysed)*100.0/float(self.total_subset_num)
+        log.info("Analysing subset %d/%d: %.2f%s done" %(self.subsets_analysed,self.total_subset_num, percent_done, r"%"))
 
         log.debug("About to analyse %s using models %s", sub, ", ".join(list(models)))
 
@@ -212,6 +221,8 @@ class Analysis(object):
         pool.join()
 
     def analyse_scheme(self, sch, models):
+        self.schemes_analysed = self.schemes_analysed + 1        
+        log.info("Analysing scheme %d/%d" %(self.schemes_analysed, self.total_scheme_num))
         for sub in sch:
             self.analyse_subset(sub, models)
  
@@ -220,16 +231,11 @@ class Analysis(object):
         sch.assemble_results(number_of_seq, self.cfg.branchlengths)
         sch.write_summary(os.path.join(self.schemes_path, sch.name+'.txt'))
 
-		
-
     def analyse_current_schemes(self, models):
         """Process everything!"""
         current_schemes = [s for s in self.cfg.schemes]
-        cur_s = 1
-        tot_s = len(current_schemes)
+        self.total_scheme_num = len(current_schemes)
         for s in current_schemes:
-            log.info("Analysing user scheme %d of %d, %s" %(cur_s, tot_s, s.name))
-            cur_s = cur_s + 1
             self.analyse_scheme(s, models)
         self.write_best_scheme(current_schemes)
 
@@ -238,14 +244,14 @@ class Analysis(object):
         log.info("Performing greedy analysis")
 
         partnum = len(self.cfg.partitions)
-        total_scheme_num = submodels.count_greedy_schemes(partnum)
-        log.info("This will result in a maximum of %s schemes being created", total_scheme_num)
-        if total_scheme_num>1000000:
-            log.warning("%d is a lot of schemes, this might take a long time to analyse", total_scheme_num)
+        self.total_scheme_num = submodels.count_greedy_schemes(partnum)
+        log.info("This will result in a maximum of %s schemes being created", self.total_scheme_num)
+        self.total_subset_num = submodels.count_greedy_subsets(partnum)
+        if self.total_subset_num>1000000:
+            log.warning("%d is a lot of subsets, this might take a long time to analyse", self.total_subset_num)
             log.warning("If it's taking too long, consider just analysing user defined schemes instead (see Manual)")
 
-        total_subset_num = submodels.count_greedy_subsets(partnum)
-        log.info("PartitionFinder will have to analyse a maximum of %d subsets of sites to complete this analysis" %(total_subset_num))
+        log.info("PartitionFinder will have to analyse a maximum of %d subsets of sites to complete this analysis" %(self.total_subset_num))
 
         #clear any schemes that are currently loaded
         # TODO Not sure we need this...
@@ -275,17 +281,19 @@ class Analysis(object):
         #now we try out all lumpings of the current scheme, to see if we can find a better one
         #and if we do, we just keep going
         while True:
-            log.info("Greedy algorithm round %d" % round)
+            log.info("***Greedy algorithm step %d***" % round)
 
             #get a list of all possible lumpings of the best_scheme
             lumpings = algorithm.lumpings(start_description)
+
+            #we reset the counters as we go, for better user information
+            self.total_scheme_num = len(lumpings)
+            self.schemes_analysed = 0
+
             best_lumping_score = None
-            counter = 1
             for lumped_description in lumpings:
                 lumped_scheme = scheme.create_scheme(self.cfg, cur_s, lumped_description)
                 cur_s = cur_s + 1
-                log.info("Analysing scheme: %s (%d of %d in this step of the greedy algorithm)" %(lumped_scheme.name, counter, len(lumpings)))
-                counter = counter+1
                 self.analyse_scheme(lumped_scheme, models)
                 new_score = get_score(lumped_scheme)
 
@@ -320,25 +328,22 @@ class Analysis(object):
     def analyse_all_possible(self, models):
 
         partnum = len(self.cfg.partitions)
-        total_scheme_num = submodels.count_all_schemes(partnum)
+        self.total_scheme_num = submodels.count_all_schemes(partnum)
         log.info("Analysing all possible schemes for %d starting partitions", partnum)
-        log.info("This will result in %s schemes being created", total_scheme_num)
-        if total_scheme_num>1000000:
-            log.warning("%d is a lot of schemes, this might take a long time to analyse", total_scheme_num)
-            log.warning("If it's taking too long, consider using the greedy algorithm or user schemes instead (see Manual)")
+        log.info("This will result in %s schemes being created", self.total_scheme_num)
+        self.total_subset_num = submodels.count_all_subsets(partnum)
 
-        total_subset_num = submodles.count_all_subsets(partnum)
-        log.info("PartitionFinder will have to analyse %d subsets of sites to complete this analysis" %(total_subset_num))
+        if self.total_subset_num>1000000:
+            log.warning("%d is a lot of subsets, this might take a long time to analyse", self.total_subset_num)
+            log.warning("If it's taking too long, consider just analysing user defined schemes instead (see Manual)")
+
+        log.info("PartitionFinder will have to analyse %d subsets to complete this analysis" %(self.total_subset_num))
 
         #clear any schemes that are currently loaded
         self.cfg.schemes.clear_schemes()
 
         gen_schemes = scheme.generate_all_schemes(self.cfg)
-        cur_s = 1
-        tot_s = len(gen_schemes)
         for s in gen_schemes:
-            log.info("Analysing scheme %d of %d" %(cur_s, tot_s))
-            cur_s = cur_s + 1
             self.analyse_scheme(s, models)
         self.write_best_scheme(gen_schemes)
 
