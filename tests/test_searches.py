@@ -1,22 +1,33 @@
 from basetest import *
 import os, shutil
 
+from PartitionFinder import load_configuration
+from partfinder import analysis
+
 class TestTheLot(PartitionFinderTestCase):
+
+
+    def load_cfg_and_run(self, name):
+        try:
+            pth = os.path.join(self.test_path, "test_searches", name)
+            cfg = load_configuration(pth)
+            anal = analysis.Analysis(cfg, True)
+            anal.do_analysis()
+        finally:
+            # Always do this
+            shutil.rmtree(cfg.output_path)
 
     def test_search_all(self):
         '''Run a full analysis with search=all'''
-        os.system("python PartitionFinder.py tests/test_searches/all")
-        shutil.rmtree("tests/test_searches/all/analysis")
+        self.load_cfg_and_run("all")
 
     def test_search_greedy(self):
         '''Run a full analysis with search=greedy'''
-        os.system("python PartitionFinder.py tests/test_searches/greedy")
-        shutil.rmtree("tests/test_searches/greedy/analysis")
+        self.load_cfg_and_run("greedy")
 
     def test_search_user(self):
         '''Run a full analysis with search=user'''
-        os.system("python PartitionFinder.py tests/test_searches/user")
-        shutil.rmtree("tests/test_searches/user/analysis")
+        self.load_cfg_and_run("user")
 
 if __name__ == '__main__':
     unittest.main()
