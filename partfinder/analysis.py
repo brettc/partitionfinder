@@ -47,6 +47,7 @@ class Analysis(object):
 
         self.make_alignment(cfg.alignment_path)
         self.make_tree()
+        self.subsets_analysed_set = set() #a counter for user info
         self.subsets_analysed = 0 #a counter for user info
         self.total_subset_num = None
         self.schemes_analysed = 0 #a counter for user info
@@ -103,6 +104,16 @@ class Analysis(object):
         This is the core place where everything comes together
         The results are placed into subset.result
         """
+        #keep people informed about what's going on
+        #if we don't know the total subset number, we can usually get it like this
+        if self.total_subset_num == None:
+            self.total_subset_num = len(sub._cache)
+        old_num_analysed = self.subsets_analysed
+        self.subsets_analysed_set.add(sub.name)
+        self.subsets_analysed = len(self.subsets_analysed_set)
+        if self.subsets_analysed>old_num_analysed: #we've just analysed a subset we haven't seen yet
+            percent_done = float(self.subsets_analysed)*100.0/float(self.total_subset_num)
+            log.info("Analysing subset %d/%d: %.2f%s done" %(self.subsets_analysed,self.total_subset_num, percent_done, r"%"))
 
         sub_bin_path = os.path.join(self.subsets_path, sub.name + '.bin')
         # We might have already saved a bunch of results, try there first
@@ -120,13 +131,6 @@ class Analysis(object):
             log.debug("Using results that are already loaded %s", sub)
             return
 
-        #keep people informed about what's going on
-        #if we don't know the total subset number, we can usually get it like this
-        if self.total_subset_num == None:
-            self.total_subset_num = len(sub._cache)
-        self.subsets_analysed = self.subsets_analysed + 1
-        percent_done = float(self.subsets_analysed)*100.0/float(self.total_subset_num)
-        log.info("Analysing subset %d/%d: %.2f%s done" %(self.subsets_analysed,self.total_subset_num, percent_done, r"%"))
 
         log.debug("About to analyse %s using models %s", sub, ", ".join(list(models)))
 
@@ -247,11 +251,10 @@ class Analysis(object):
         self.total_scheme_num = submodels.count_greedy_schemes(partnum)
         log.info("This will result in a maximum of %s schemes being created", self.total_scheme_num)
         self.total_subset_num = submodels.count_greedy_subsets(partnum)
+        log.info("PartitionFinder will have to analyse a maximum of %d subsets of sites to complete this analysis" %(self.total_subset_num))
         if self.total_subset_num>1000000:
             log.warning("%d is a lot of subsets, this might take a long time to analyse", self.total_subset_num)
-            log.warning("If it's taking too long, consider just analysing user defined schemes instead (see Manual)")
-
-        log.info("PartitionFinder will have to analyse a maximum of %d subsets of sites to complete this analysis" %(self.total_subset_num))
+            log.warning("Perhaps consider using a different search scheme instead (see Manual)")
 
         #clear any schemes that are currently loaded
         # TODO Not sure we need this...
@@ -332,12 +335,10 @@ class Analysis(object):
         log.info("Analysing all possible schemes for %d starting partitions", partnum)
         log.info("This will result in %s schemes being created", self.total_scheme_num)
         self.total_subset_num = submodels.count_all_subsets(partnum)
-
+        log.info("PartitionFinder will have to analyse %d subsets to complete this analysis" %(self.total_subset_num))
         if self.total_subset_num>1000000:
             log.warning("%d is a lot of subsets, this might take a long time to analyse", self.total_subset_num)
-            log.warning("If it's taking too long, consider just analysing user defined schemes instead (see Manual)")
-
-        log.info("PartitionFinder will have to analyse %d subsets to complete this analysis" %(self.total_subset_num))
+            log.warning("Perhaps consider using a different search scheme instead (see Manual)")
 
         #clear any schemes that are currently loaded
         self.cfg.schemes.clear_schemes()
