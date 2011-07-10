@@ -33,14 +33,6 @@ def load_configuration(base_path):
     p.parse_file(config_path)
 
     return cfg
-    # except parser.ParserError, p:
-        # Catch any parsing errors, print something out, then raise a
-        # configuration error, as this is the general error we expect from
-        # this part of the process
-        # log.error(p.format_message())
-        # raise ConfigurationError
-
-    # report_settings()
 
 def main():
     usage = """usage: python %prog [options] <foldername>
@@ -106,26 +98,12 @@ def main():
         parser.print_help()
         return 2
 
-    # handler = logging.StreamHandler(sys.stdout)
-    # fmt = logging.Formatter('%(levelname)-8s | %(message)s')
-    # handler.setFormatter(fmt)
-    # logging.getLogger('').addHandler(handler)
-
-    # if options.verbose:
-        # level = logging.DEBUG
-    # else:
-        # level = logging.INFO
-
-    # logging.getLogger().setLevel(logging.DEBUG)
-    # handler.setLevel(level)
-
     # Load, using the first argument as the folder
     try:
         cfg = load_configuration(args[0])
         
         #check for old analyses to see if we can use the old datas
-        config.check_for_old_config(cfg)
-
+        # config.check_for_old_config(cfg)
         
         if options.check_only:
             log.info("Exiting without processing (because of the -c/--check-only option ...")
@@ -136,27 +114,12 @@ def main():
                 options.force_restart, 
                 threads=options.processes,
             )
+            anal.do_analysis()
 
-            if cfg.search == 'all':
-                anal.analyse_all_possible(cfg.models)
-            elif cfg.search == 'user':
-                anal.analyse_current_schemes(cfg.models)
-            elif cfg.search == 'greedy':
-                anal.analyse_greedy(cfg.models, cfg.model_selection)
-            else:
-                log.error("Search algorithm %s is not yet implemented", 
-                          s.search_algorithm)
-                raise NotImplemented
-
-            # cfg.process()
         # Successful exit
         log.info("Processing complete.")
         return 0
 
-    # except cfg.ConfigurationError:
-        # log.error("Configuration Failure: Please correct problems and rerun")
-        # # Any exceptions and we fail
-        
     except util.PartitionFinderError:
         log.error("Failed to run. See previous errors.")
         if options.show_python_exceptions:

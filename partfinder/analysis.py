@@ -53,6 +53,18 @@ class Analysis(object):
         self.schemes_analysed = 0 #a counter for user info
         self.total_scheme_num = None
 
+    def do_analysis(self):
+        if self.cfg.search == 'all':
+            self.analyse_all_possible(self.cfg.models)
+        elif self.cfg.search == 'user':
+            self.analyse_current_schemes(self.cfg.models)
+        elif self.cfg.search == 'greedy':
+            anal.analyse_greedy(self.cfg.models, self.cfg.model_selection)
+        else:
+            log.error("Search algorithm '%s' is not yet implemented", 
+                        self.cf.search)
+            raise AnalysisError
+
     def make_alignment(self, source_alignment_path):
         # Make the alignment 
         self.alignment = Alignment()
