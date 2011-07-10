@@ -1,4 +1,5 @@
-# Partition Finder
+# PartitionFinder
+_________________
 
 PartitionFinder is a Python program for simultaneously choosing partitioning
 schemes and models of molecular evolution for DNA sequence data. It is useful
@@ -13,10 +14,9 @@ All of the code was written with Windows in mind too, so if you are interested
 in porting it to Windows, it shouldn't be too much work.
 
 # Manual
-
 is in the /docs folder. 
 
-# quick start (also see manual)
+# Quick Start
 
 1.	Open Terminal and cd to the directory with PartitionFinder in it
 2.	Run PartitionFinder by typing at the command prompt:
