@@ -4,7 +4,7 @@ log = logging.getLogger("parser")
 from pyparsing import (
     Word, OneOrMore, alphas, nums, Suppress, Optional, Group, stringEnd,
     delimitedList, pythonStyleComment, line, lineno, col, Keyword, Or,
-    NoMatch, CaselessKeyword)
+    NoMatch, CaselessKeyword, ParseException)
 
 # debugging
 # ParserElement.verbose_stacktrace = True
@@ -132,7 +132,7 @@ class Parser(object):
         try:
             self.cfg.set_option(tokens[0], tokens[1])
         except config.ConfigurationError:
-            raise ParserError(text, loc, "Invalid option, see previous error")
+            raise ParserError(text, loc, "Invalid option in .cfg file")
 
         
     def set_models(self, text, loc, tokens):
@@ -185,7 +185,6 @@ class Parser(object):
         except partition.PartitionError:
             raise ParserError(text, loc, "Error in '%s' can be found" % part_def.name)
 
-
     def check_part_exists(self, text, loc, partref):
         if partref.name not in self.cfg.partitions:
             raise ParserError(text, loc, "Partition %s not defined" %
@@ -225,6 +224,26 @@ class Parser(object):
             self.result = self.config_parser.ignore(pythonStyleComment).parseString(s)
         except ParserError, p:
             log.error(p.format_message())
+            raise PartitionFinderError
+        except ParseException, p:
+            log.error("There was a problem loading your .cfg file, please check and try again")
+            log.error(p)
+
+            #let's see if there was something missing fro the input file
+            expectations = ["models", "search", "[schemes]", "[partitions]", "model_selection", "branchlengths", "alignment"]
+            missing = None
+            for e in expectations:
+                if p.msg.count(e):
+                    missing = e
+
+            if missing:
+                log.info("It looks like the '%s' option might be missing or in the wrong place" %(missing))
+                log.info("Or perhaps something is wrong in the lines just before the '%s' option" %(missing))
+                log.info("Please double check the .cfg file and try again")                
+            else:
+                log.info("The line causing the problem is this: '%s'" %(p.line))
+                log.info("Please check that line, and make sure it appears in the right place in the .cfg file.")
+                log.info("If it looks OK, try double-checking the semi-colons on other lines in the .cfg file")
             raise PartitionFinderError
 
 

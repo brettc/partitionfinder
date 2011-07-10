@@ -47,8 +47,7 @@ class Configuration(object):
             raise ConfigurationError
 
         valid = self.options[option]
-        
-        
+     
         #force lowercase for comparisons
         value = value.lower()
         valid_lower = []

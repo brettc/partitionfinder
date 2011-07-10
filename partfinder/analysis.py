@@ -236,12 +236,16 @@ class Analysis(object):
         sch.write_summary(os.path.join(self.schemes_path, sch.name+'.txt'))
 
     def analyse_current_schemes(self, models):
-        """Process everything!"""
+        """Process everything when search=user"""
         current_schemes = [s for s in self.cfg.schemes]
         self.total_scheme_num = len(current_schemes)
-        for s in current_schemes:
-            self.analyse_scheme(s, models)
-        self.write_best_scheme(current_schemes)
+        if self.total_scheme_num>0:
+            for s in current_schemes:
+                 self.analyse_scheme(s, models)
+            self.write_best_scheme(current_schemes)
+        else:
+            log.error("Search set to 'user', but no user schemes detected in .cfg file. Please check.")
+            raise PartitionFinderError
 
     def analyse_greedy(self, models, method):
         '''A greedy algorithm for heuristic partitioning searches'''
