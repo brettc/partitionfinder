@@ -285,10 +285,13 @@ class Analysis(object):
         def get_score(my_scheme):
             if method=="aic":
                 score=my_scheme.aic
-            if method=="aicc":
+            elif method=="aicc":
                 score=my_scheme.aicc
-            if method=="bic":
+            elif method=="bic":
                 score=my_scheme.bic
+            else:
+                log.error("Unrecognised model_selection variable '%s', please check" %(score))
+                raise AnalysisError
             return score
 
         best_scheme = start_scheme
