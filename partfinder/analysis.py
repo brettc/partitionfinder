@@ -39,6 +39,9 @@ class Analysis(object):
                             self.cfg.output_path)
                 shutil.rmtree(self.cfg.output_path)
 
+        #check for old analyses to see if we can use the old data
+        self.cfg.check_for_old_config()
+
         # Make some folders for the analysis
         make_dir(self.cfg.output_path)
         self.make_output_dir('subsets')
