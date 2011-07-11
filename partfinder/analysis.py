@@ -283,6 +283,7 @@ class Analysis(object):
         self.analyse_scheme(start_scheme, models)
         
         def get_score(my_scheme):
+            print cfg.model_selection
             if method=="aic":
                 score=my_scheme.aic
             elif method=="aicc":

@@ -78,8 +78,9 @@ def main():
 
     # Load, using the first argument as the folder
     try:
-        cfg = config.Configuration(args[0])
-        
+        cfg = config.Configuration()
+        cfg.load_base_path(args[0])
+
         #check for old analyses to see if we can use the old datas
         # config.check_for_old_config(cfg)
         
