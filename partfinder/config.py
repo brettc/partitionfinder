@@ -65,6 +65,10 @@ class Configuration(object):
         self.alignment = align
 
     def set_option(self, option, value):
+    
+        #make everything lowercase, this makes life easier for us    
+        value = value.lower()
+
         if option not in self.options:
             log.error("'%s' is not a valid option to set in the configuration",
                       option)
@@ -72,7 +76,7 @@ class Configuration(object):
 
         # Compare lower case
         valid = [x.lower() for x in self.options[option]]
-        if value.lower() not in valid:
+        if value not in valid:
             log.error("'%s' is not a valid option for '%s'" % (value, option))
             log.info("The only valid options for '%s' are: %s" % 
                      (option, "'%s'" %("', '".join(self.options[option]))))
