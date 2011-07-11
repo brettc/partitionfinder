@@ -47,6 +47,7 @@ class Analysis(object):
         self.make_output_dir('subsets')
         self.make_output_dir('schemes')
         self.make_output_dir('phyml')
+        self.make_output_dir('start_tree')
 
         self.make_alignment(cfg.alignment_path)
         self.make_tree()
@@ -74,7 +75,7 @@ class Analysis(object):
         self.alignment.read(source_alignment_path)
 
         # We start by copying the alignment
-        self.alignment_path = os.path.join(self.cfg.output_path, 'source.phy')
+        self.alignment_path = os.path.join(self.cfg.output_path, 'start_tree', 'source.phy')
         if os.path.exists(self.alignment_path):
             # Make sure it is the same
             old_align = Alignment()
@@ -94,6 +95,7 @@ class Analysis(object):
         self.filtered_alignment = SubsetAlignment(self.alignment, 
                                                   subset_with_everything)
         self.filtered_alignment_path = os.path.join(self.cfg.output_path,
+                                                    'start_tree',
                                                     'filtered_source.phy')
         self.filtered_alignment.write(self.filtered_alignment_path)
 
