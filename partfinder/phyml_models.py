@@ -87,7 +87,7 @@ def get_model_commandline(modelstring):
     Input a model string, and get the PhyML command line
     '''
 
-    # This is always the same
+    # This is always the same - optimise brlens and model, not tree
     commandline = ["-o lr "]
 
     elements = modelstring.split("+")

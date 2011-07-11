@@ -283,7 +283,7 @@ class Analysis(object):
         self.analyse_scheme(start_scheme, models)
         
         def get_score(my_scheme):
-            print cfg.model_selection
+            #TODO: this is bad. Should use self.cfg.model_selection, or write a new method for scheme.py
             if method=="aic":
                 score=my_scheme.aic
             elif method=="aicc":
