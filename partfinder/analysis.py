@@ -142,12 +142,16 @@ class Analysis(object):
         models_done = set(sub.results.keys())
         models_required = set(models)
         models_to_do = models_required - models_done
+        
+        print models, models_done
+
 
         # Empty set means we're done
         if not models_to_do:
             log.debug("Using results that are already loaded %s", sub)
+            if models_done!=set(models): #redo model selection if we have different models
+            	sub.model_selection(self.cfg.model_selection, self.cfg.models)        
             return
-
 
         log.debug("About to analyse %s using models %s", sub, ", ".join(list(models)))
 
@@ -176,6 +180,8 @@ class Analysis(object):
         # Try and read in some previous analyses
         self.parse_results(sub, models_to_do)
         if not models_to_do:
+            if models_done!=set(models): #redo model selection if we have different models
+            	sub.model_selection(self.cfg.model_selection, self.cfg.models)        
             return
 
         # What is left, we actually have to analyse...
@@ -200,7 +206,8 @@ class Analysis(object):
             raise AnalysisError
 
         # Now we have analysed all models for this subset, we do model selection
-        sub.model_selection(self.cfg.model_selection)        
+        # but ONLY on the models specified in the cfg file.
+        sub.model_selection(self.cfg.model_selection, self.cfg.models)        
         
         # If we made it to here, we should write out the new summary
         sub_summary_path = os.path.join(self.subsets_path, sub.name + '.txt')

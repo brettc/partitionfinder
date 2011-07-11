@@ -149,7 +149,7 @@ class Alignment(object):
             log.error("Cannot find sequence file '%s'", pth)
             raise AlignmentError
 
-        log.info("Reading alignment file '%s'", pth)
+        log.debug("Reading alignment file '%s'", pth)
         text = open(pth, 'r').read()
         self.from_parser_output(the_parser.parse(text))
 

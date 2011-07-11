@@ -96,11 +96,11 @@ class Subset(object):
                     model, self)
         self.results[model] = result
 
-    def model_selection(self, method):
+    def model_selection(self, method, models):
         #model selection is done after we've added all the models
         self.best_info_score = None #reset this before model selection
 
-        for model in self.results:
+        for model in models:
             result=self.results[model]
             if method=="AIC" or method=="aic":
                 info_score = result.aic

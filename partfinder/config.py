@@ -97,7 +97,7 @@ class Configuration(object):
         """Check whether the analysis dictated by cfg has been run before, and if the config has changed
         in any way that would make re-running it invalid"""
         #the important stuff in our analysis, that can't change if we want to re-use old subsets
-        cfg_list = [self.alignment, self.branchlengths, self.partitions.partitions, self.models]
+        cfg_list = [self.alignment, self.branchlengths, self.partitions.partitions]
     
         #we need to know if there's anything in the subsets folder
         subset_path = "%s/subsets/" %(self.output_path)
@@ -141,8 +141,6 @@ class Configuration(object):
                     fail.append("alignment")
                 if not old_cfg[1]==cfg_list[1]:
                     fail.append("branchlengths")
-                if not old_cfg[3]==cfg_list[3]:
-                    fail.append("models")
                 
                 old_parts = set([str(part) for part in old_cfg[2]])
                 new_parts = set([str(part) for part in cfg_list[2]])
