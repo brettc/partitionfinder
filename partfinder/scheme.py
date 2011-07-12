@@ -92,7 +92,7 @@ class Scheme(object):
 
 
     _header_template = "%-15s: %s\n"
-    _subset_template = "%-6s | %-10s | %-50s | %-40s\n"
+    _subset_template = "%-6s | %-10s | %-30s | %-30s | %-40s\n"
     def write_summary(self, path, write_type = 'wb', extra_line=None):
         f = open(path, write_type)
         if extra_line:
@@ -107,23 +107,37 @@ class Scheme(object):
         f.write(Scheme._header_template % ("Num subsets", self.nsubs))
         f.write("\n")
         f.write(Scheme._subset_template % (
-            "Subset", "Best Model", "Subset Partitions",  "Alignment"))
+            "Subset", "Best Model", "Subset Partitions", "Subset Sites",  "Alignment"))
         number = 1
         
         sorted_subsets = [sub for sub in self]
         sorted_subsets.sort(key=lambda sub: min(sub.columns), reverse=False)
                 
         for sub in sorted_subsets:
-            desc = []
+            desc = {}
             names= []
             for part in sub:
-                desc.extend(part.description)
+                desc[part.description[0][0]] = part.description[0] #dict keyed by first site in part
                 names.append(part.name)
+
+            #pretty print the sites in the scheme
+            desc_starts = desc.keys()
+            desc_starts.sort()            
+            parts = []
+            for key in desc_starts:
+                part = desc[key]
+                if part[2]==1:
+                    text = "%s-%s" %(part[0], part[1])
+                else:
+                    text = "%s-%s\\%s" % tuple(part)
+                parts.append(text)
+            parts = ', '.join(parts)
+            	
             names.sort()
             names = ', '.join(names)
 			
             f.write(Scheme._subset_template % (
-                number, sub.best_model, names, sub.alignment_path))
+                number, sub.best_model, names, parts, sub.alignment_path))
             number = number + 1
 
 class SchemeSet(object):

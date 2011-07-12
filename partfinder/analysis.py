@@ -399,6 +399,7 @@ class Analysis(object):
         all_schemes_file = os.path.join(self.cfg.output_path, 'all_schemes.txt')
         f = open(all_schemes_file, 'wb')
         f.write("Name\tlnL\t#params\t#sites\t#subsets\tAIC\tAICc\tBIC\n")
+        list_of_schemes.sort()
         for s in list_of_schemes:
             f.write("%s\t%.3f\t%d\t%d\t%d\t%.3f\t%.3f\t%.3f\n" %(s.name,s.lnl,s.sum_k,s.nsites,s.nsubs,s.aic,s.aicc,s.bic))
         log.info("Information on all schemes analysed is here: %s" %(all_schemes_file))
