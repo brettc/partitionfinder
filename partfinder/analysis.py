@@ -143,9 +143,6 @@ class Analysis(object):
         models_required = set(models)
         models_to_do = models_required - models_done
         
-        print models, models_done
-
-
         # Empty set means we're done
         if not models_to_do:
             log.debug("Using results that are already loaded %s", sub)
