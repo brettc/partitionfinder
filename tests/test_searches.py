@@ -28,5 +28,13 @@ class TestTheLot(PartitionFinderTestCase):
         '''Run a full analysis with search=user'''
         self.load_cfg_and_run("user")
 
+    def test_search_maclinebreaks(self):
+        '''Load and run with mac linebreaks in input'''
+        self.load_cfg_and_run("maclinebreaks")
+
+    def test_search_maclinebreaks(self):
+        '''Load and run with windows linebreaks in input'''
+        self.load_cfg_and_run("maclinebreaks")
+
 if __name__ == '__main__':
     unittest.main()

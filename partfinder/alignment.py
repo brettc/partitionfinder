@@ -150,7 +150,7 @@ class Alignment(object):
             raise AlignmentError
 
         log.debug("Reading alignment file '%s'", pth)
-        text = open(pth, 'r').read()
+        text = open(pth, 'rU').read()
         self.from_parser_output(the_parser.parse(text))
 
     def write(self, pth):
