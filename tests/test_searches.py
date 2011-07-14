@@ -10,10 +10,11 @@ class TestTheLot(PartitionFinderTestCase):
             pth = os.path.join(self.test_path, "test_searches", name)
             cfg = config.Configuration()
             cfg.load_base_path(pth)
-            anal = analysis.Analysis(cfg, True)
+            anal = analysis.Analysis(cfg, True, False)
             anal.do_analysis()
         finally:
             # Always do this
+            print cfg.output_path
             shutil.rmtree(cfg.output_path)
 
     def test_search_all(self):

@@ -44,12 +44,13 @@ def make_dir(pth):
 
 class Analysis(object):
     """Performs the analysis and collects the results"""
-    def __init__(self, cfg, force_restart, threads=1):
+    def __init__(self, cfg, force_restart, save_phyml, threads=1):
         cfg.validate()
 
         log.info("Beginning Analysis")
         self.threads = threads
         self.cfg = cfg
+        self.save_phyml = save_phyml
         if force_restart:
             if os.path.exists(self.cfg.output_path):
                 log.warning("Deleting all previous workings in '%s'", 
@@ -246,6 +247,12 @@ class Analysis(object):
                     
                     # Just used for below
                     models_done.append(m)
+                    if self.save_phyml:
+                        pass
+                    else:
+                        os.remove(out_path)
+                        os.remove(''.join([out_path.split("stats.txt")[0], 'tree.txt']))
+
                 except phyml.PhymlError:
                     log.warning("Failed loading parse output from %s."
                               "Output maybe corrupted. I'll run it again.",

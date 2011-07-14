@@ -84,6 +84,10 @@ def main():
         "--show-python-exceptions",
         action="store_true", dest="show_python_exceptions",
         help="If errors occur, print the python exceptions")
+    parser.add_option(
+        "--save-phyml",
+        action="store_true", dest="save_phyml",
+        help="save all of the phyml output. This can take a lot of space(!)")
     
     options, args = parser.parse_args()
 
@@ -104,11 +108,12 @@ def main():
             # Now try processing everything....
             anal = analysis.Analysis(
                 cfg, 
-                options.force_restart, 
+                options.force_restart,
+                options.save_phyml,
                 threads=options.processes,
             )
             anal.do_analysis()
-
+            
         # Successful exit
         log.info("Processing complete.")
         return 0
