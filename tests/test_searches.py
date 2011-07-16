@@ -35,7 +35,11 @@ class TestTheLot(PartitionFinderTestCase):
 
     def test_search_maclinebreaks(self):
         '''Load and run with windows linebreaks in input'''
-        self.load_cfg_and_run("maclinebreaks")
+        self.load_cfg_and_run("windowslinebreaks")
+
+    def test_search_interleaved(self):
+        '''try an interleaved phylip alignment'''
+        self.load_cfg_and_run("aln_interleaved")
 
 if __name__ == '__main__':
     unittest.main()
