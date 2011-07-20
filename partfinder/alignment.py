@@ -29,7 +29,7 @@ import os
 from pyparsing import (
     Word, OneOrMore, alphas, nums, Suppress, Optional, Group, stringEnd,
     delimitedList, ParseException, line, lineno, col, LineStart, restOfLine,
-    LineEnd, White, Literal, Combine, Or, MatchFirst)
+    LineEnd, White, Literal, Combine, Or, MatchFirst, ZeroOrMore)
 
 from util import PartitionFinderError
 class AlignmentError(PartitionFinderError):
@@ -42,8 +42,10 @@ class AlignmentParser(object):
     BASES = Word(alphas + "?.-")
 
     def __init__(self):
-        self.sequences = {}
-        self.seqlen = None
+        self.sequence_length = None
+        self.species_count = None
+        self.sequences = []
+        self.current_sequence = 0
 
         self.root_parser = self.phylip_parser() + stringEnd
 
@@ -52,23 +54,50 @@ class AlignmentParser(object):
         INTEGER = Word(nums) 
         INTEGER.setParseAction(lambda x: int(x[0]))
 
-        header = Group(INTEGER("species_count") +
-                       INTEGER("sequence_length") + Suppress(restOfLine))
+        header = INTEGER("species_count") + INTEGER("sequence_length") +\
+                Suppress(restOfLine)
+        header.setParseAction(self.set_header)
 
         sequence_name = Word(
             alphas + nums + "!#$%&\'*+-./;<=>?@[\\]^_`{|}~", 
             max=100)
 
-
         # Take a copy and disallow line breaks in the bases
         bases = self.BASES.copy()
         bases.setWhitespaceChars(" \t")
-        base_chain = OneOrMore(bases)
-        base_chain.setParseAction(lambda x: ''.join(x))
-        seq = Group(sequence_name("species") + base_chain("sequence")) + Suppress(LineEnd())
+        seq_start = sequence_name("species") + bases("sequence") + Suppress(LineEnd())
+        seq_start.setParseAction(self.set_seq_start)
+        seq_start_block = OneOrMore(seq_start)
+        seq_start_block.setParseAction(self.set_start_block)
 
-        sequences = OneOrMore(seq)
-        return header("header") + sequences("sequences")
+        seq_continue = bases("sequence") + Suppress(LineEnd())
+        seq_continue.setParseAction(self.set_seq_continue)
+
+        seq_continue_block = Suppress(LineEnd()) + OneOrMore(seq_continue)
+        seq_continue_block.setParseAction(self.set_continue_block)
+
+        return header + seq_start_block + ZeroOrMore(seq_continue_block)
+
+    def set_header(self, text, loc, tokens):
+        self.sequence_length = tokens.sequence_length
+        self.species_count = tokens.species_count
+
+    def set_seq_start(self, text, loc, tokens):
+        self.sequences.append([tokens.species, tokens.sequence])
+        self.current_sequence += 1
+
+    def set_start_block(self, tokens):
+        # End of block
+        # Reset the counter
+        self.current_sequence = 0
+
+    def set_seq_continue(self, text, loc, tokens):
+        append_to = self.sequences[self.current_sequence]
+        append_to[1] += tokens.sequence
+        self.current_sequence += 1
+
+    def set_continue_block(self, tokens):
+        self.current_sequence = 0
 
     def parse(self, s):
         try:
@@ -77,25 +106,34 @@ class AlignmentParser(object):
             log.error("Error in Alignment Parsing:" + str(p))
             raise AlignmentError
 
-        # Not all formats have a heading, but if we have one do some checking
-        if defs.header:
-            if len(defs.sequences) != defs.header.species_count:
-                log.error("Bad Alignment file: species count in header does not match" 
-                " number of sequences in file, please check")
-                raise AlignmentError
+        # Check that all the sequences are equal length
+        slen = None
+        for nm, seq in self.sequences:
+            if slen is None:
+                # Use the first as the test case
+                slen = len(seq)
+            else:
+                if len(seq) != slen:
+                    log.error("Bad alignment file: Not all species have the same sequences length")
+                    raise AlignmentError
 
-            if len(defs.sequences[0][1]) != defs.header.sequence_length:
+        # Not all formats have a heading, but if we have one do some checking
+        if self.sequence_length is not None:
+            if self.sequence_length != slen:
                 log.error("Bad Alignment file: sequence length count in header does not match"
                 " sequence length in file, please check")
                 raise AlignmentError
 
-        # Don't make a dictionary yet, as we want to check it for repeats
-        return [(x.species, x.sequence) for x in defs.sequences]
+        if self.species_count is not None:
+            if len(self.sequences) != self.species_count:
+                log.error("Bad Alignment file: species count in header does not match" 
+                " number of sequences in file, please check")
+                raise AlignmentError
 
-# Stateless singleton parser
-the_parser = AlignmentParser()
+        return self.sequences
+
 def parse(s):
-    return the_parser.parse(s)
+    return AlignmentParser().parse(s)
 
 class Alignment(object):
     def __init__(self):
@@ -145,7 +183,7 @@ class Alignment(object):
 
         log.debug("Reading alignment file '%s'", pth)
         text = open(pth, 'rU').read()
-        self.from_parser_output(the_parser.parse(text))
+        self.from_parser_output(parse(text))
 
     def write(self, pth):
         self.write_phylip(pth)
