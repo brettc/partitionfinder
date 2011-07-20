@@ -18,6 +18,7 @@ logging.getLogger("").addHandler(
     logging.FileHandler(
         os.path.join(_test_path, 'testing.log'),
         mode='w', encoding=None, delay=False))
+logging.getLogger("").setLevel(logging.INFO)
 
 # Use a base class for all our tests. We can stick useful stuff in it at the
 # class level...
