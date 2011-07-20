@@ -7,7 +7,7 @@ class TestTheLot(PartitionFinderTestCase):
 
     def load_cfg_and_run(self, name):
         try:
-            pth = os.path.join(self.test_path, "test_searches", name)
+            pth = os.path.join(TEST_PATH, "test_searches", name)
             cfg = config.Configuration()
             cfg.load_base_path(pth)
             anal = analysis.Analysis(cfg, True, False)
