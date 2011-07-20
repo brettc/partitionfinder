@@ -31,10 +31,6 @@ from pyparsing import (
     delimitedList, ParseException, line, lineno, col, LineStart, restOfLine,
     LineEnd, White, Literal, Combine, Or, MatchFirst)
 
-# TODO: Should really detect which it is...
-# alignment_format = 'fasta'
-alignment_format = 'phy'
-
 from util import PartitionFinderError
 class AlignmentError(PartitionFinderError):
     pass
@@ -49,26 +45,7 @@ class AlignmentParser(object):
         self.sequences = {}
         self.seqlen = None
 
-        # TODO: We should be able to read both of these...!
-        if alignment_format == 'phy':
-            self.root_parser = self.phylip_parser() + stringEnd
-        elif alignment_format == 'fasta':
-            self.root_parser = self.fasta_parser() + stringEnd
-
-    def fasta_parser(self):
-        # Some syntax that we need, but don't bother looking at
-        GREATER = Literal(">")
-
-        sequence_name = Suppress(LineStart() + GREATER) + restOfLine
-        sequence_name.setParseAction(lambda toks: "".join(toks))
-        sequence_bases = OneOrMore(self.BASES + Suppress(LineEnd()))
-        sequence_bases.setParseAction(lambda toks: "".join(toks))
-
-        # Any sequence is the name follow by the bases
-        seq = Group(sequence_name("species") + sequence_bases("sequence"))
-        sequences = OneOrMore(seq)
-        # Main parser: one or more definitions 
-        return sequences("sequences")
+        self.root_parser = self.phylip_parser() + stringEnd
 
     def phylip_parser(self):
 
@@ -171,20 +148,7 @@ class Alignment(object):
         self.from_parser_output(the_parser.parse(text))
 
     def write(self, pth):
-        if alignment_format == 'phy':
-            self.write_phylip(pth)
-        elif alignment_format is 'fasta':
-            self.write_fasta(pth)
-        else:
-            log.error("Undefined Alignment Format")
-            raise AlignmentError
-
-    def write_fasta(self, pth):
-        fd = open(pth, 'w')
-        log.debug("Writing fasta file '%s'", pth)
-        for species, sequence in self.species.iteritems():
-            fd.write(">%s\n" % species)
-            fd.write("%s\n" % sequence)
+        self.write_phylip(pth)
 
     def write_phylip(self, pth):
         fd = open(pth, 'w')
