@@ -14,7 +14,6 @@ class TestTheLot(PartitionFinderTestCase):
             anal.do_analysis()
         finally:
             # Always do this
-            print cfg.output_path
             shutil.rmtree(cfg.output_path)
 
     def test_search_all(self):
@@ -33,7 +32,7 @@ class TestTheLot(PartitionFinderTestCase):
         '''Load and run with mac linebreaks in input'''
         self.load_cfg_and_run("maclinebreaks")
 
-    def test_search_maclinebreaks(self):
+    def test_search_windowslinebreaks(self):
         '''Load and run with windows linebreaks in input'''
         self.load_cfg_and_run("windowslinebreaks")
 
