@@ -11,15 +11,20 @@ class TestConfigFile(PartitionFinderTestCase):
 
         self.assertEqual(c.alignment, 'test.phy')
         self.assertEqual(len(c.models), 56)
-        # self.assertEqual(c.branchlengths, 'linked')
-        # self.assertEqual(c.model_selection, 'bic')
 
-    def test_config_file_loading(self):
-        """Load all config files in 'cfg' folder"""
-        for i in range(1, 10):
-            config_file = os.path.join(self.cfg_path, 'test%d.cfg' % i)
-            c = config.Configuration()
-            c.load(config_file)
+    def load_test(self, i):
+        config_file = os.path.join(TestConfigFile.cfg_path, 'test%d.cfg' % i)
+        c = config.Configuration()
+        c.load(config_file)
+
+# Dymanically add all separate files as tests
+# Now we can just add 
+# See here: http://stackoverflow.com/questions/1193909/pythons-unittest-and-dynamic-creation-of-test-cases
+for i in range(1, 10):
+    def ch(i):
+        return lambda self: self.load_test(i)
+    nm = "test_config_loading_%s" % i
+    setattr(TestConfigFile, nm, ch(i))
 
 if __name__ == '__main__':
     unittest.main()
