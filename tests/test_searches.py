@@ -40,5 +40,7 @@ class TestTheLot(PartitionFinderTestCase):
         '''try an interleaved phylip alignment'''
         self.load_cfg_and_run("aln_interleaved")
 
+
+
 if __name__ == '__main__':
     unittest.main()
