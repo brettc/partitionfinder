@@ -72,6 +72,7 @@ class PartitionSet(object):
         # Make sure we can look up by name
         self.parts_by_name[p.name] = p
         self.parts_by_number[self.sequence] = p
+        p.sequence = self.sequence
         self.sequence += 1
         self.partitions.add(p)
 

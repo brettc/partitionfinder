@@ -91,8 +91,19 @@ class Subset(object):
 
     @property
     def name(self):
-        s = sorted([p.name for p in self.partitions])
-        return '-'.join(s)
+        # Cache this
+        if hasattr(self, '_name'):
+            nm = self._name
+        else:
+            s = sorted([p.name for p in self.partitions])
+            nm = '-'.join(s)
+            # Don't go crazy
+            if len(nm) > 50:
+                s = sorted([str(p.sequence) for p in self.partitions])
+            nm = '-'.join(s)
+            self._name = nm
+
+        return nm
 
     def __iter__(self):
         return iter(self.partitions)
