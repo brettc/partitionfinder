@@ -72,6 +72,9 @@ def run_phyml(command):
     if _phyml_binary is None:
         _phyml_binary = find_program()
 
+    #turn off any memory checking in PhyML - thanks Jess T. for pointing out this problem
+    command = "%s --no_memory_check" %(command)
+
     # Add in the command file
     log.debug("Running 'phyml %s'", command)
     command = "%s %s" % (_phyml_binary, command)
@@ -89,7 +92,9 @@ def run_phyml(command):
 
     if p.returncode != 0:
         log.error("Phyml did not execute successfully")
-        # log.error(stderr)
+        log.error("Phyml output follows, in case it's helpful for finding the problem")
+        log.error(stdout)
+        log.error(stderr)
         raise PhymlError
 
 def dupfile(src, dst):
@@ -105,13 +110,12 @@ def dupfile(src, dst):
         log.error("Cannot link/copy file %s to %s", src, dst)
         raise PhymlError
 
-
 def make_tree(alignment_path):
     '''Make a BioNJ tree to start the analysis'''
     log.info("Making BioNJ tree for %s", alignment_path)
 
     # First get the BioNJ topology like this:
-    command = "-i %s -o n -b 0" % (alignment_path)
+    command = "-i '%s' -o n -b 0" % (alignment_path)
     run_phyml(command)
     output_path = make_tree_path(alignment_path)
 
@@ -122,7 +126,7 @@ def make_tree(alignment_path):
     log.debug("Moving %s to %s", output_path, tree_path)
     os.rename(output_path, tree_path)
 
-    command = "-i %s -u %s -m GTR -c 4 -a e -v e -o lr -b 0" % (
+    command = "-i '%s' -u '%s' -m GTR -c 4 -a e -v e -o lr -b 0" % (
         alignment_path, tree_path)
     run_phyml(command)
 
@@ -152,7 +156,7 @@ def analyse(model, alignment_path, analysis_path, tree_path, branchlengths):
         log.error("Unknown option for branchlengths: %s", branchlengths)
         raise PhymlError
 
-    command = "-b 0 -i %s -u %s %s %s" % (analysis_path, tree_path, model_params, bl)
+    command = "-b 0 -i '%s' -u '%s' %s %s" % (analysis_path, tree_path, model_params, bl)
     run_phyml(command)
 
     # Now get rid of this -- we have the original elsewhere

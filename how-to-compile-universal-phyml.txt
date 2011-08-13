@@ -1,0 +1,26 @@
+Instructions for making a mac universal binary for PhyML
+
+Here are the architectures that work:
+-arch x86_64 
+-arch ppc 
+-arch i386
+
+For each architecture, edit the following line in configure.ac
+
+CFLAGS="-O3 -m32 -fomit-frame-pointer -funroll-loops -Wall ${ARCH_flag}"
+
+by replacing "${ARCH_flag}" with e.g. "-arch x_86_64", e.g.:
+
+CFLAGS="-O3 -m32 -fomit-frame-pointer -funroll-loops -Wall -arch x_86_64"
+
+Then go into the /src folder, and rename the phyml binary appropriately (e.g. Phyml_x86_64)
+
+Do this for all three architectures.
+
+Compile into a universal binary using lipo, as follows:
+
+lipo [file1] [file2] [file3] -create -output phyml
+
+where file1 is the path to one of the binaries. 
+
+This makes a universal binary that should work on all three architectures.

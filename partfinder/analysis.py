@@ -301,7 +301,7 @@ class Analysis(object):
         log.info("This will result in a maximum of %s schemes being created", self.total_scheme_num)
         self.total_subset_num = submodels.count_greedy_subsets(partnum)
         log.info("PartitionFinder will have to analyse a maximum of %d subsets of sites to complete this analysis" %(self.total_subset_num))
-        if self.total_subset_num>1000000:
+        if self.total_subset_num>10000:
             log.warning("%d is a lot of subsets, this might take a long time to analyse", self.total_subset_num)
             log.warning("Perhaps consider using a different search scheme instead (see Manual)")
 
@@ -389,7 +389,7 @@ class Analysis(object):
         log.info("This will result in %s schemes being created", self.total_scheme_num)
         self.total_subset_num = submodels.count_all_subsets(partnum)
         log.info("PartitionFinder will have to analyse %d subsets to complete this analysis" %(self.total_subset_num))
-        if self.total_subset_num>1000000:
+        if self.total_subset_num>10000:
             log.warning("%d is a lot of subsets, this might take a long time to analyse", self.total_subset_num)
             log.warning("Perhaps consider using a different search scheme instead (see Manual)")
 
