@@ -120,7 +120,7 @@ def make_tree(alignment_path):
     output_path = make_tree_path(alignment_path)
 
     # Now we re-estimate branchlengths using a GTR+I+G model on the (unpartitioned) dataset
-    log.info("Estatimating initial branch lengths on BioNJ tree")
+    log.info("Estimating initial branch lengths on BioNJ tree")
     dir_path, fname = os.path.split(output_path)
     tree_path = os.path.join(dir_path, 'bionj_tree.phy')
     log.debug("Moving %s to %s", output_path, tree_path)
