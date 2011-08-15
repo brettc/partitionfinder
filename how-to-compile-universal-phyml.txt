@@ -7,13 +7,11 @@ Here are the architectures that work:
 
 For each architecture, edit the following line in configure.ac
 
-CFLAGS="-O3 -m32 -fomit-frame-pointer -funroll-loops -Wall ${ARCH_flag}"
+ARCH_flag="-arch x86_64 -mmacosx-version-min=10.4"
 
-by replacing "${ARCH_flag}" with e.g. "-arch x_86_64", e.g.:
+by replacing "x86_64" with each of the three architectures in turn
 
-CFLAGS="-O3 -m32 -fomit-frame-pointer -funroll-loops -Wall -arch x_86_64"
-
-Then go into the /src folder, and rename the phyml binary appropriately (e.g. Phyml_x86_64)
+After each one, run ./confphy, and then go into /src and rename the phyml binary appropriately (e.g. Phyml_x86_64)
 
 Do this for all three architectures.
 
