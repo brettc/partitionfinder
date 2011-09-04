@@ -157,6 +157,35 @@ class Scheme(object):
                 number, sub.best_model, names, parts, sub.alignment_path))
             number = number + 1
 
+		#print out partition definitions in RaxML-like format, might be usefult to some people
+        f.write("\n\nRaxML-style partition definitions\n")
+        number = 1
+        for sub in sorted_subsets:
+            desc = {}
+            names= []
+            for part in sub:
+                desc[part.description[0][0]] = part.description[0] #dict keyed by first site in part
+                names.append(part.name)
+
+            #pretty print the sites in the scheme
+            desc_starts = desc.keys()
+            desc_starts.sort()            
+            parts = []
+            for key in desc_starts:
+                part = desc[key]
+                if part[2]==1:
+                    text = "%s-%s" %(part[0], part[1])
+                else:
+                    text = "%s-%s\\%s" % tuple(part)
+                parts.append(text)
+            parts = ', '.join(parts)
+            line = "DNA, p%s = %s\n" %(number, parts)
+			
+            f.write(line)
+            number = number + 1
+		
+        f.close()
+
 class SchemeSet(object):
     """All the schemes added, and also a list of all unique subsets"""
     def __init__(self):
