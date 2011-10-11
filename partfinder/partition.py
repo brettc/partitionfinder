@@ -97,7 +97,7 @@ class PartitionSet(object):
             log.warn(
                 "Columns defined in partitions range from %s to %s, "
                 "but these columns in the alignment are missing: %s", 
-                self.columns[0]+1, self.columns[-1],
+                self.columns[0]+1, self.columns[-1]+1,
                 columnset_to_string(leftout))
         
     # We can treat this like a bit like a dictionary
