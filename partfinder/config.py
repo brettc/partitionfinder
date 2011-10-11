@@ -105,7 +105,6 @@ class Configuration(object):
     def validate(self):
         """Should be called before processing"""
         # Just path validation for now.
-        # TODO: test the alignment against the ranges in the partitions
         util.check_folder_exists(self.base_path)
         self.alignment_path = os.path.join(self.base_path, self.alignment)
         util.check_file_exists(self.alignment_path)
@@ -162,7 +161,7 @@ class Configuration(object):
                 old_parts = set([str(part) for part in old_cfg[2]])
                 new_parts = set([str(part) for part in cfg_list[2]])
                 if len(old_parts.difference(new_parts))>0:
-                    fail.append("[partitions]")
+                    fail.append("[data_blocks]")
                 
                 if len(fail)>0:
                     log.error("There are subsets stored, but PartitionFinder has detected that these were run using a different .cfg setup")

@@ -212,7 +212,7 @@ class SubsetAlignment(Alignment):
         #let's do a basic check to make sure that the specified sites aren't > alignment length
         site_max = max(subset.columns)
         if site_max>source.sequence_len:
-            log.error("Site %d is specified in [partitions], but the alignment only has %d sites. Please check." %(site_max, source.sequence_len)) 
+            log.error("Site %d is specified in [data_blocks], but the alignment only has %d sites. Please check." %(site_max, source.sequence_len)) 
             raise AlignmentError
 
         # Pull out the columns we need

@@ -1,14 +1,13 @@
 Before initial release (in order of priority)
 ---------------------------------------------
 
-- some sequence programs have mac linebreaks. We can't deal with them right now.
-- some sequence programs add a number in square brackets after each sequence "[19823]". Need to deal with that.
-- Don't save phyml by default, there is way too many of them, but keep a commandline option to do so
+- the numbers of columns are wrong when we warn that there are missing columns. Need to add 1 to the final number.
 
 
 Done
 ____
-- quit without running if 'branch_lengths' has changed. There will be results, but they won't be what people thought.
+- we don't save phyml output by default now, but we have the option to
+- we have universal line break support now
 - flag a warning if ANYTHING in the .cfg file has changed. Do this by putting a copy of the .cfg file in the 'analysis' folder, loading it and comparing it to the current one
 - fixed all scheme and subset number calculators
 - mrbayes and raxml now options for model spec in the config file

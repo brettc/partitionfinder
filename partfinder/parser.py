@@ -114,7 +114,7 @@ class Parser(object):
                             EQUALS + partdeflist("parts") + SEMICOLON
         partition.setParseAction(self.define_partition)
         partlist = OneOrMore(Group(partition))
-        partsection = Suppress("[partitions]") + partlist
+        partsection = Suppress("[data_blocks]") + partlist
 
         # Scheme Parsing
         schemename = Word(alphas + '_-' + nums)
@@ -247,7 +247,7 @@ class Parser(object):
             log.error(p)
 
             #let's see if there was something missing fro the input file
-            expectations = ["models", "search", "[schemes]", "[partitions]", "model_selection", "branchlengths", "alignment"]
+            expectations = ["models", "search", "[schemes]", "[data_blocks]", "model_selection", "branchlengths", "alignment"]
             missing = None
             for e in expectations:
                 if p.msg.count(e):
@@ -293,7 +293,7 @@ models = all
 ########   PARTITIONS   ###########
 # Define partitions as follows 'name = start-stop\gap_size'
 # e.g. 'part_1 = 1-15\3' is the same as 'part_1 = 1 4 7 10 13' 
-[partitions]
+[data_blocks]
 Gene1_pos1 = 1-789\3
 Gene1_pos2 = 2-789\3
 Gene1_pos3 = 3-789\3
