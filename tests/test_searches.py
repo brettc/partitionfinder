@@ -5,12 +5,12 @@ from partfinder import analysis, config
 
 class TestTheLot(PartitionFinderTestCase):
 
-    def load_cfg_and_run(self, name):
+    def load_cfg_and_run(self, name, user_tree=None):
         try:
             pth = os.path.join(TEST_PATH, "test_searches", name)
             cfg = config.Configuration()
             cfg.load_base_path(pth)
-            anal = analysis.Analysis(cfg, True, False)
+            anal = analysis.Analysis(cfg, True, False, user_tree)
             anal.do_analysis()
         finally:
             # Always do this

@@ -29,6 +29,7 @@ import scheme
 import algorithm
 import subset
 import submodels
+import util
 
 from util import PartitionFinderError
 class AnalysisError(PartitionFinderError):
@@ -44,7 +45,8 @@ def make_dir(pth):
 
 class Analysis(object):
     """Performs the analysis and collects the results"""
-    def __init__(self, cfg, force_restart, save_phyml, threads=1):
+    def __init__(self, cfg, force_restart, save_phyml, threads=1,
+                 user_tree=None):
         cfg.validate()
 
         log.info("Beginning Analysis")
@@ -68,7 +70,8 @@ class Analysis(object):
         self.make_output_dir('start_tree')
 
         self.make_alignment(cfg.alignment_path)
-        self.make_tree()
+
+        self.make_tree(user_tree)
         self.subsets_analysed_set = set() #a counter for user info
         self.subsets_analysed = 0 #a counter for user info
         self.total_subset_num = None
@@ -106,7 +109,7 @@ class Analysis(object):
         else:
             self.alignment.write(self.alignment_path)
 
-    def make_tree(self):
+    def make_tree(self, user_tree):
         # Begin by making a filtered alignment, containing ONLY those columns
         # that are defined in the subsets
         subset_with_everything = subset.Subset(*list(self.cfg.partitions))
@@ -122,10 +125,27 @@ class Analysis(object):
         self.cfg.partitions.check_against_alignment(self.alignment)
         self.cfg.partitions.finalise()
 
+        # We start by copying the alignment
+        self.alignment_path = os.path.join(self.cfg.output_path, 'start_tree', 'source.phy')
+
         # Now check for the tree
         tree_path = phyml.make_tree_path(self.filtered_alignment_path)
         if not os.path.exists(tree_path):
-            tree_path = phyml.make_tree(self.filtered_alignment_path)
+            # If we have a user tree, then use that, otherwise, create a topology
+            if user_tree != None and user_tree != "":
+                # Copy it into the start tree folder
+                user_path = os.path.join(self.cfg.base_path, user_tree)
+                log.info("Using user supplied topology at %s", user_path)
+                util.check_file_exists(user_path)
+                topology_path = os.path.join(self.cfg.output_path,
+                                             'start_tree', 'user_topology.phy')
+                phyml.dupfile(user_path, topology_path)
+            else:
+                topology_path = phyml.make_topology(self.filtered_alignment_path)
+
+            # Now estimate branches
+            tree_path = phyml.make_branch_lengths(self.filtered_alignment_path, topology_path)
+
         self.tree_path = tree_path
         log.info("BioNJ tree with GTR+I+G brlens is stored here: %s", self.tree_path) 
 
