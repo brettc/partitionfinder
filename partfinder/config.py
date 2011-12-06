@@ -64,10 +64,21 @@ class Configuration(object):
         config_path = os.path.join(base_path, "partition_finder.cfg")
         util.check_file_exists(config_path)
 
+        self.init_logger(base_path)
         self.load(config_path)
+
+    def init_logger(self, pth):
+        handler = logging.FileHandler(os.path.join(pth, "log.txt"), 'a')
+        formatter = logging.Formatter(
+            "%(levelname)-8s | %(asctime)s | %(name)-10s | %(message)s")
+        handler.setFormatter(formatter)
+        handler.setLevel(logging.DEBUG)
+        logging.getLogger("").addHandler(handler)
+        logging.getLogger("analysis").addHandler(handler)
 
     def load(self, config_path):
         """We get the parser to construct the configuration"""
+        log.info("-------------------------------- BEGINNING NEW RUN ------------------------------------")
         log.info("Loading configuration at '%s'", config_path)
         self.config_path = config_path
         p = parser.Parser(self)

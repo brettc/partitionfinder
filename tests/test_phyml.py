@@ -2,7 +2,7 @@ from basetest import *
 
 from partfinder import alignment
 
-class TestTheLot(PartitionFinderTestCase):
+class TestPhyml(PartitionFinderTestCase):
 
     def test_simple(self):
         test = """
