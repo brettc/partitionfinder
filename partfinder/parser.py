@@ -86,6 +86,9 @@ class Parser(object):
             opt.setParseAction(self.set_simple_option)
             return opt
 
+        treedef = simple_option('user_tree_topology')
+        treedef = Keyword('user_tree_topology') + EQUALS + alphas+numsFILENAME + SEMICOLON
+
         branchdef = simple_option('branchlengths')
 
         MODELNAME = Word(alphas + nums + '+')
@@ -99,7 +102,7 @@ class Parser(object):
 
     
         modseldef = simple_option("model_selection")
-        topsection = alignmentdef + branchdef + modeldef + modseldef
+        topsection = alignmentdef + Optional(treedef) + branchdef + modeldef + modseldef
 
         # Partition Parsing
         column = Word(nums)
@@ -144,6 +147,10 @@ class Parser(object):
         # TODO Make sure it is readable!
         # raise ParserError(text, loc, "No '%s' defined in the configuration" % var)
         #
+
+    def set_user_tree(self, text, loc, tokens):
+        # Not checking with this ... 
+        self.cfg.user_tree = tokens[1]
 
     def set_simple_option(self, text, loc, tokens):
         try:
