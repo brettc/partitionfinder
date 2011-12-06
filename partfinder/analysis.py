@@ -205,7 +205,7 @@ class Analysis(object):
             # It had better be the same!
             if not old_align.same_as(sub_alignment):
                 log.error("It looks like you have changed one or more of the"
-                        "data_blocks in the configuration file, 
+                        "data_blocks in the configuration file, "
                         "so the new subset alignments"
                         " don't match the ones stored for this analysis."
                         "You'll need to run the program with --force-restart")
