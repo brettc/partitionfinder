@@ -41,6 +41,7 @@ class Configuration(object):
 
         self.base_path = '.'
         self.alignment = None
+        self.user_tree = None
 
         # Set the defaults into the class. These can be reset by calling
         # set_option(...)
@@ -108,12 +109,27 @@ class Configuration(object):
         util.check_folder_exists(self.base_path)
         self.alignment_path = os.path.join(self.base_path, self.alignment)
         util.check_file_exists(self.alignment_path)
+        if self.user_tree is None:
+            self.user_tree_topology_path = None
+        else:
+            self.user_tree_topology_path = os.path.join(self.base_path,
+                                                        self.user_tree)
+            util.check_file_exists(self.user_tree_topology_path)
 
     def check_for_old_config(self):
         """Check whether the analysis dictated by cfg has been run before, and if the config has changed
         in any way that would make re-running it invalid"""
         #the important stuff in our analysis, that can't change if we want to re-use old subsets
-        cfg_list = [self.alignment, self.branchlengths, self.partitions.partitions]
+        if self.user_tree is None:
+            topology = "" 
+        else:
+            topology = open(self.user_tree_topology_path).read()
+
+        log.info(self.user_tree_topology_path)
+        cfg_list = [self.alignment, 
+                    self.branchlengths,
+                    self.partitions.partitions,
+                    topology]
     
         #we need to know if there's anything in the subsets folder
         subset_path = "%s/subsets/" %(self.output_path)
@@ -162,6 +178,9 @@ class Configuration(object):
                 new_parts = set([str(part) for part in cfg_list[2]])
                 if len(old_parts.difference(new_parts))>0:
                     fail.append("[data_blocks]")
+
+                if not old_cfg[3]==cfg_list[3]:
+                    fail.append("user_tree_topology")
                 
                 if len(fail)>0:
                     log.error("There are subsets stored, but PartitionFinder has detected that these were run using a different .cfg setup")

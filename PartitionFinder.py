@@ -88,10 +88,6 @@ def main():
         "--save-phyml",
         action="store_true", dest="save_phyml",
         help="save all of the phyml output. This can take a lot of space(!)")
-    parser.add_option(
-        "--user-tree",
-        type="string", dest="user_tree",
-        help="provide a user tree topology in phyml format--branch lengths will be re-estimated")
     
     options, args = parser.parse_args()
 
@@ -115,7 +111,6 @@ def main():
                 options.force_restart,
                 options.save_phyml,
                 options.processes,
-                options.user_tree,
             )
             anal.do_analysis()
             
