@@ -19,7 +19,12 @@ import logging
 log = logging.getLogger("submodels")
 import algorithm
 
-def submodel_generator(result, pat, current, maxn, countonly=False):
+def submodel_generator(result, pat, current, maxn):
+    ''' result is a list to append to
+        pat is the current pattern (starts as empty list)
+        current is the current number of the pattern
+        maxn is the number of items in the pattern
+    '''
     if pat:
         curmax = max(pat)
     else: 
@@ -29,12 +34,25 @@ def submodel_generator(result, pat, current, maxn, countonly=False):
             newpat = pat[:]
             newpat.append(i)
             if current == maxn:
-                if not countonly:
-                    result.append(newpat)
-                else:
-                    result[0] += 1
+                result.append(newpat)
             else:
-                submodel_generator(result, newpat, current+1, maxn, countonly)
+                submodel_generator(result, newpat, current+1, maxn)
+
+def submodel_iterator(pat, current, maxn):
+    '''same as generator but yields instead'''
+    if pat:
+        curmax = max(pat)
+    else: 
+        curmax = 0
+    for i in range(current):
+        if i-1 <= curmax:
+            newpat = pat[:]
+            newpat.append(i)
+            if current == maxn:
+                yield newpat
+            else:
+                for b in submodel_iterator(newpat, current+1, maxn):
+                    yield b
 
 
 def a_choose_b(n,k):
@@ -123,8 +141,15 @@ if __name__ == "__main__":
     for a in result:
         print a
     
-    print "A table of number of partitions versus number of schemes and number of subsets for greedy analyses"
-    print "Parts\tGreedySchemes\tGreedySubsets\tAllSchemes\tAllSubsets"
+    print "Iterator test"
+    b = submodel_iterator([], 1, 11)
+    for model in b: print b
+        
+    
+
+    
+#    print "A table of number of partitions versus number of schemes and number of subsets for greedy analyses"
+#    print "Parts\tGreedySchemes\tGreedySubsets\tAllSchemes\tAllSubsets"
  
-    for i in range(1,201):
-        print "%d, %g, %g, %g, %g" %(i, count_greedy_schemes(i), count_greedy_subsets(i), count_all_schemes(i), count_all_subsets(i))
+#    for i in range(1,201):
+#        print "%d, %g, %g, %g, %g" %(i, count_greedy_schemes(i), count_greedy_subsets(i), count_all_schemes(i), count_all_subsets(i))

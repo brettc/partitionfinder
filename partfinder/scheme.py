@@ -249,6 +249,28 @@ def create_scheme(cfg, scheme_name, scheme_description):
 		
     return new_scheme
 
+def model_to_scheme(model, scheme_name, cfg):
+	"""Turn a model definition e.g. [0, 1, 2, 3, 4] into a scheme"""
+	import subset
+	
+	subs = {}
+	# We use the numbers returned to group the different subsets
+	for sub_index, grouping in enumerate(model):
+		insub = subs.setdefault(grouping, [])
+		insub.append(sub_index)
+	# We now have what we need to create a subset. Each entry will have a
+	# set of values which are the index for the partition
+	created_subsets = []
+	for sub_indexes in subs.values():
+		sub = subset.Subset(*tuple([cfg.partitions[i] for i in sub_indexes]))
+		created_subsets.append(sub)
+
+	scheme = (Scheme(cfg, str(scheme_name), *tuple(created_subsets)))
+	#log.info("Created scheme %d of %d" %(scheme_name, len(all_schemes)))	
+	return scheme
+
+
+
 def generate_all_schemes(cfg):
     """Convert the abstract schema given by the algorithm into subsets"""
     import subset

@@ -404,24 +404,31 @@ class Analysis(object):
         self.write_all_schemes(current_schemes) #this also writes a file which has info on all analysed schemes, useful for extra analysis if that's what you're interested in...
 
     def analyse_all_possible(self, models):
-
-        partnum = len(self.cfg.partitions)
-        self.total_scheme_num = submodels.count_all_schemes(partnum)
-        log.info("Analysing all possible schemes for %d starting partitions", partnum)
-        log.info("This will result in %s schemes being created", self.total_scheme_num)
-        self.total_subset_num = submodels.count_all_subsets(partnum)
-        log.info("PartitionFinder will have to analyse %d subsets to complete this analysis" %(self.total_subset_num))
-        if self.total_subset_num>10000:
-            log.warning("%d is a lot of subsets, this might take a long time to analyse", self.total_subset_num)
-            log.warning("Perhaps consider using a different search scheme instead (see Manual)")
+		
+		partnum = len(self.cfg.partitions)
+		self.total_scheme_num = submodels.count_all_schemes(partnum)
+		log.info("Analysing all possible schemes for %d starting partitions", partnum)
+		log.info("This will result in %s schemes being created", self.total_scheme_num)
+		self.total_subset_num = submodels.count_all_subsets(partnum)
+		log.info("PartitionFinder will have to analyse %d subsets to complete this analysis" %(self.total_subset_num))
+		if self.total_subset_num>10000:
+			log.warning("%d is a lot of subsets, this might take a long time to analyse", self.total_subset_num)
+			log.warning("Perhaps consider using a different search scheme instead (see Manual)")
 
         #clear any schemes that are currently loaded
-        self.cfg.schemes.clear_schemes()
+		self.cfg.schemes.clear_schemes()
 
-        gen_schemes = scheme.generate_all_schemes(self.cfg)
-        for s in gen_schemes:
-            self.analyse_scheme(s, models)
-        self.write_best_scheme(gen_schemes)
+		#iterate over submodels, which we can turn into schemes afterwards in the loop
+		model_iterator = submodels.submodel_iterator([], 1, partnum)
+
+		scheme_name = 1
+		list_of_schemes = []
+		for m in model_iterator:
+			s = scheme.model_to_scheme(m, scheme_name, self.cfg)
+			scheme_name = scheme_name+1
+			self.analyse_scheme(s, models)
+			list_of_schemes.append(s)
+		self.write_best_scheme(list_of_schemes)
 
     def write_best_scheme(self, list_of_schemes):
         # Which is the best?
