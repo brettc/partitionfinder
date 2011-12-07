@@ -93,8 +93,8 @@ def run_phyml(command):
     if p.returncode != 0:
         log.error("Phyml did not execute successfully")
         log.error("Phyml output follows, in case it's helpful for finding the problem")
-        log.error(stdout)
-        log.error(stderr)
+        log.error("%s", stdout)
+        log.error("%s", stderr)
         raise PhymlError
 
 def dupfile(src, dst):

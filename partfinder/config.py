@@ -123,9 +123,11 @@ class Configuration(object):
         if self.user_tree is None:
             self.user_tree_topology_path = None
         else:
+            log.info("Loading user tree topology from file")
             self.user_tree_topology_path = os.path.join(self.base_path,
                                                         self.user_tree)
             util.check_file_exists(self.user_tree_topology_path)
+            
 
     def check_for_old_config(self):
         """Check whether the analysis dictated by cfg has been run before, and if the config has changed
