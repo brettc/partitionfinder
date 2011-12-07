@@ -136,7 +136,6 @@ class Configuration(object):
         else:
             topology = open(self.user_tree_topology_path).read()
 
-        log.info(self.user_tree_topology_path)
         cfg_list = [self.alignment, 
                     self.branchlengths,
                     self.partitions.partitions,
