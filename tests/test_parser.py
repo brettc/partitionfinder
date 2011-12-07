@@ -4,14 +4,6 @@ import os
 
 class TestConfigFile(PartitionFinderTestCase):
 
-    def test_config_creation(self):
-        """Test loading a configuration file and checking values"""
-        c = config.Configuration()
-        c.load(os.path.join(CFG_PATH, 'test1.cfg'))
-
-        self.assertEqual(c.alignment, 'test.phy')
-        self.assertEqual(len(c.models), 56)
-
     def load_test(self, f):
         config_file = os.path.join(CFG_PATH, f)
         c = config.Configuration()

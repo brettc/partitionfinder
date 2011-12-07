@@ -9,6 +9,7 @@ ROOT_PATH, here = os.path.split(TEST_PATH)
 sys.path.append(ROOT_PATH)
 CFG_PATH = os.path.join(TEST_PATH, 'cfg')
 PHYML_PATH = os.path.join(TEST_PATH, 'phyml')
+ANALYSIS_PATH = os.path.join(TEST_PATH, 'analysis')
 del here
 
 # Setup the logging. We don't want anything going to the output. Just send it

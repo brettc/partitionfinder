@@ -45,8 +45,7 @@ def make_dir(pth):
 
 class Analysis(object):
     """Performs the analysis and collects the results"""
-    def __init__(self, cfg, force_restart, save_phyml, threads=1,
-                 user_tree=None):
+    def __init__(self, cfg, force_restart, save_phyml, threads=1):
         cfg.validate()
 
         log.info("Beginning Analysis")
@@ -71,7 +70,7 @@ class Analysis(object):
 
         self.make_alignment(cfg.alignment_path)
 
-        self.make_tree(user_tree)
+        self.make_tree(cfg.user_tree_topology_path)
         self.subsets_analysed_set = set() #a counter for user info
         self.subsets_analysed = 0 #a counter for user info
         self.total_subset_num = None
@@ -109,7 +108,7 @@ class Analysis(object):
         else:
             self.alignment.write(self.alignment_path)
 
-    def make_tree(self, user_tree):
+    def make_tree(self, user_path):
         # Begin by making a filtered alignment, containing ONLY those columns
         # that are defined in the subsets
         subset_with_everything = subset.Subset(*list(self.cfg.partitions))
@@ -132,11 +131,9 @@ class Analysis(object):
         tree_path = phyml.make_tree_path(self.filtered_alignment_path)
         if not os.path.exists(tree_path):
             # If we have a user tree, then use that, otherwise, create a topology
-            if user_tree != None and user_tree != "":
+            if user_path != None and user_path != "":
                 # Copy it into the start tree folder
-                user_path = os.path.join(self.cfg.base_path, user_tree)
                 log.info("Using user supplied topology at %s", user_path)
-                util.check_file_exists(user_path)
                 topology_path = os.path.join(self.cfg.output_path,
                                              'start_tree', 'user_topology.phy')
                 phyml.dupfile(user_path, topology_path)
