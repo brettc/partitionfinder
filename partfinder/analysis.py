@@ -144,7 +144,7 @@ class Analysis(object):
             tree_path = phyml.make_branch_lengths(self.filtered_alignment_path, topology_path)
 
         self.tree_path = tree_path
-        log.info("BioNJ tree with GTR+I+G brlens is stored here: %s", self.tree_path) 
+        log.info("Starting tree with branch lengths is here: %s", self.tree_path) 
 
     def make_output_dir(self, name):
         new_path = os.path.join(self.cfg.output_path, name)

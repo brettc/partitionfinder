@@ -122,7 +122,7 @@ def make_topology(alignment_path):
 
 def make_branch_lengths(alignment_path, topology_path):
     # Now we re-estimate branchlengths using a GTR+I+G model on the (unpartitioned) dataset
-    log.info("Estimating initial branch lengths on tree")
+    log.info("Estimating GTR+I+G branch lengths on tree")
     dir_path, fname = os.path.split(topology_path)
     tree_path = os.path.join(dir_path, 'topology_tree.phy')
     log.debug("Copying %s to %s", topology_path, tree_path)
@@ -133,7 +133,7 @@ def make_branch_lengths(alignment_path, topology_path):
     run_phyml(command)
 
     output_path = make_tree_path(alignment_path)
-    log.info("Initial tree and branchlength estimation finished")
+    log.info("Branchlength estimation finished")
 
     # Now return the path of the final tree alignment
     return output_path
