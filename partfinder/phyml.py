@@ -18,7 +18,7 @@
 """Run phyml and parse the output"""
 
 import logging
-log = logging.getLogger("phyml")
+log = logging.getLogger("analysis")
 
 import subprocess, shlex, os, shutil, sys
 

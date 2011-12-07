@@ -140,7 +140,7 @@ class Analysis(object):
             else:
                 topology_path = phyml.make_topology(self.filtered_alignment_path)
 
-            # Now estimate branches
+            # Now estimate branch lengths
             tree_path = phyml.make_branch_lengths(self.filtered_alignment_path, topology_path)
 
         self.tree_path = tree_path
