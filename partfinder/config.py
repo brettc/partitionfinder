@@ -144,7 +144,7 @@ class Configuration(object):
                     topology]
     
         #we need to know if there's anything in the subsets folder
-        subset_path = "%s/subsets/" %(self.output_path)
+        subset_path = os.path.join(self.output_path, 'subsets')
         has_subsets = False
         if os.path.exists(subset_path):
             for file in os.listdir(subset_path):
@@ -153,8 +153,8 @@ class Configuration(object):
                     break
     
         #we also need to know if there's an old conifg file saved
-        cfg_dir = "%s/cfg" %(self.output_path) 
-        old_cfg_path = "%s/oldcfg.bin" %(cfg_dir)
+        cfg_dir = os.path.join(self.output_path, 'cfg')
+        old_cfg_path = os.path.join(cfg_dir, 'oldcfg.bin')
         if os.path.exists(old_cfg_path):
             has_config = True
         else:
@@ -201,10 +201,4 @@ class Configuration(object):
                     log.info("To run this analysis without deleting the previous analysis, please place your alignment and .cfg in a new folder and try again")
                     raise ConfigurationError
 
-
-
-if __name__ == '__main__':
-    import logging
-    logging.basicConfig(level=logging.DEBUG)
-    # report_settings()
     
