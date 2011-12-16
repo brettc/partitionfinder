@@ -105,6 +105,12 @@ def main():
         if options.check_only:
             log.info("Exiting without processing (because of the -c/--check-only option ...")
         else:
+
+            # For now, we just turn on debugging for the analysis section
+            # For finer grain, see the logging.cfg file
+            if options.verbose:
+                logging.getLogger('analysis').setLevel(logging.DEBUG)
+
             # Now try processing everything....
             anal = analysis.Analysis(
                 cfg, 
