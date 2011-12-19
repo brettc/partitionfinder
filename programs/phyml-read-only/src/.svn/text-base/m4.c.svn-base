@@ -170,7 +170,6 @@ int M4_main(int argc, char **argv)
 		  M4_Compute_Proba_Hidden_States_On_Edges(tree);
 		  /* */
 
-
 		  Get_Best_Root_Position(tree);
 
 		  /* Print the tree estimated using the current random (or BioNJ) starting tree */
@@ -187,7 +186,7 @@ int M4_main(int argc, char **argv)
 		      best_lnL = tree->c_lnL;
 		      Br_Len_Involving_Invar(tree);
 		      if(most_likely_tree) Free(most_likely_tree);
-		      most_likely_tree = Write_Tree(tree);
+		      most_likely_tree = Write_Tree(tree,NO);
 		      most_likely_size = Get_Tree_Size(tree);
 		    }
 
@@ -283,7 +282,9 @@ int M4_main(int argc, char **argv)
   return 0;
 }
 
-/*********************************************************/
+//////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////
+
 
 /* Allocate memory */
 m4 *M4_Make_Light()
@@ -295,7 +296,9 @@ m4 *M4_Make_Light()
   return m4mod;
 }
 
-/*********************************************************/
+//////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////
+
 
 void M4_Set_M4mod_Default(m4 *m4mod)
 {
@@ -305,7 +308,9 @@ void M4_Set_M4mod_Default(m4 *m4mod)
   m4mod->n_o           = 4;
 }
 
-/*********************************************************/
+//////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////
+
 /* Allocate memory */
 void M4_Make_Complete(int n_h, int n_o, m4 *m4mod)
 {
@@ -326,7 +331,9 @@ void M4_Make_Complete(int n_h, int n_o, m4 *m4mod)
   m4mod->h_fq_unscaled = (phydbl *)mCalloc(n_h,sizeof(phydbl));
 }
 
-/*********************************************************/
+//////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////
+
 
 /* Free memory */
 void M4_Free_M4_Model(m4 *m4mod)
@@ -350,11 +357,13 @@ void M4_Free_M4_Model(m4 *m4mod)
   Free(m4mod);
 }
 
-/*********************************************************/
+//////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////
+
 
 void M4_Init_Model(m4 *m4mod, calign *data, model *mod)
 {
-  int i;
+  int i,j,ct;
   phydbl fq;
 
   if(mod->io->datatype == NT)      m4mod->n_o = 4;
@@ -368,12 +377,23 @@ void M4_Init_Model(m4 *m4mod, calign *data, model *mod)
 
   mod->ns = m4mod->n_o * m4mod->n_h;
 
-  For(i,m4mod->n_o) m4mod->o_fq[i] = mod->pi[i]; /*! At that stage, the mod->pi vector as been initialized
+
+  For(i,m4mod->n_o) m4mod->o_fq[i] = mod->pi->v[i]; /*! At that stage, the mod->pi vector as been initialized
 						     under a standard non covarion type of model. Use these
 						     frequencies as they have been set according to the 
 						     nucleotide substitution model chosen (e.g., 1/4 for JC69). !*/
   For(i,(int)(m4mod->n_h)) m4mod->multipl[i] = 1.;
-  For(i,(int)(m4mod->n_o*(m4mod->n_o-1)/2)) m4mod->o_rr[i] = 1.;
+
+  ct = 0;
+  For(i,m4mod->n_o-1)
+    {
+      for(j=i+1;j<m4mod->n_o;j++)
+	{
+	  m4mod->o_rr[ct] = MAX(mod->qmat->v[i*m4mod->n_o+j],1.E-5); 	  
+	  ct++;
+	}
+    }
+  
   For(i,(int)(m4mod->n_h*(m4mod->n_h-1)/2)) m4mod->h_rr[i] = 1.;
   fq = (phydbl)(1./m4mod->n_h);
 
@@ -381,16 +401,18 @@ void M4_Init_Model(m4 *m4mod, calign *data, model *mod)
   if(mod->s_opt->opt_cov_alpha) m4mod->alpha = 1.0;
   For(i,m4mod->n_h) m4mod->h_fq[i] = fq;
   For(i,m4mod->n_h) m4mod->h_fq_unscaled[i] = 1.0;
-  For(i,m4mod->n_h) m4mod->multipl[i] = i;
-  For(i,m4mod->n_h) m4mod->multipl_unscaled[i] = i;
+  For(i,m4mod->n_h) m4mod->multipl[i] = (phydbl)i;
+  For(i,m4mod->n_h) m4mod->multipl_unscaled[i] = (phydbl)i;
 
-  mod->update_eigen = 1;
+  mod->update_eigen = YES;
   M4_Update_Qmat(m4mod,mod);
 }
 
-/*********************************************************/
+//////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////
 
-/* Fill the (big) rate matrix of the M4 model */ 
+
+/* Fill in the (big) rate matrix of the M4 model */ 
 void M4_Update_Qmat(m4 *m4mod, model *mod)
 {
   int i,j;
@@ -472,22 +494,23 @@ void M4_Update_Qmat(m4 *m4mod, model *mod)
 
 
   /* Set up the stationary frequency vector */
-  For(i,n_s) mod->pi[i] = m4mod->o_fq[i%n_o] * m4mod->h_fq[i/n_o];
+  For(i,n_s) mod->pi->v[i] = m4mod->o_fq[i%n_o] * m4mod->h_fq[i/n_o];
 
 
   if(mod->whichmodel != CUSTOM &&
-     mod->whichmodel != GTR)
+     mod->whichmodel != GTR    &&
+     mod->io->datatype == NT)    
     {
       phydbl kappa1,kappa2;
 
-      if((mod->whichmodel != F84) && (mod->whichmodel != TN93)) mod->lambda = 1.; 
+      if((mod->whichmodel != F84) && (mod->whichmodel != TN93)) mod->lambda->v = 1.; 
       else if(mod->whichmodel == F84)
 	{
-	  mod->lambda = Get_Lambda_F84(mod->pi,&mod->kappa);
+	  mod->lambda->v = Get_Lambda_F84(mod->pi->v,&(mod->kappa->v));
 	}
 
-      kappa2 = mod->kappa*2./(1.+mod->lambda);
-      kappa1 = kappa2 * mod->lambda;
+      kappa2 = mod->kappa->v*2./(1.+mod->lambda->v);
+      kappa1 = kappa2 * mod->lambda->v;
 
       /* A <-> C */ m4mod->o_rr[0] = 1.0;
       /* A <-> G */ m4mod->o_rr[1] = kappa2;
@@ -496,18 +519,16 @@ void M4_Update_Qmat(m4 *m4mod, model *mod)
       /* C <-> T */ m4mod->o_rr[4] = kappa1;
     }
 
-
-  /* Fill the matrices of nucleotide substitution rates here */
+  /* Fill in the matrices of nucleotide or amino-acid substitution rates here */
   Update_Qmat_Generic(m4mod->o_rr, m4mod->o_fq, m4mod->n_o, m4mod->o_mats[0]);
 
-  /* Print_Square_Matrix_Generic(4,m4mod->o_mats[0]); */
-
+  /* Print_Square_Matrix_Generic(n_o,m4mod->o_mats[0]); */
 
   /* Multiply each of these matrix by a relative substitution rate */
   for(i=1;i<m4mod->n_h;i++) For(j,n_o*n_o) m4mod->o_mats[i][j] = m4mod->o_mats[0][j]*m4mod->multipl[i];
   For(j,n_o*n_o) m4mod->o_mats[0][j] *= m4mod->multipl[0];
 
-  For(i,n_s*n_s) mod->qmat[i] = .0;
+  For(i,n_s*n_s) mod->qmat->v[i] = .0;
 
   /* Diagonal blocks (i.e, nucleotide substitutions), symmetric */
   For(i,n_s)
@@ -516,8 +537,8 @@ void M4_Update_Qmat(m4 *m4mod, model *mod)
 	{
 	  if((int)(j/n_o) == (int)(i/n_o))
 	    {
-	      mod->qmat[i*n_s+j] = m4mod->o_mats[(int)(i/n_o)][(i%n_o)*n_o+j%n_o];
-	      mod->qmat[j*n_s+i] = mod->qmat[i*n_s+j] * m4mod->o_fq[i%n_o] / m4mod->o_fq[j%n_o];
+	      mod->qmat->v[i*n_s+j] = m4mod->o_mats[(int)(i/n_o)][(i%n_o)*n_o+j%n_o];
+	      mod->qmat->v[j*n_s+i] = mod->qmat->v[i*n_s+j] * m4mod->o_fq[i%n_o] / m4mod->o_fq[j%n_o];
 	    }
 	}
     }
@@ -527,12 +548,12 @@ void M4_Update_Qmat(m4 *m4mod, model *mod)
   For(i,n_s)
     {
       sum = .0;
-      For(j,n_s) sum += mod->qmat[i*n_s+j];
+      For(j,n_s) sum += mod->qmat->v[i*n_s+j];
       mr += sum * m4mod->o_fq[i%n_o] * m4mod->h_fq[(int)(i/n_o)]; 
     }
   
   /* Scale the diagonal blocks */
-  For(i,n_s*n_s) mod->qmat[i] /= mr;
+  For(i,n_s*n_s) mod->qmat->v[i] /= mr;
   
   /* We are done with the diagonal blocks. Let's fill the non-diagonal ones now. */
 
@@ -553,8 +574,8 @@ void M4_Update_Qmat(m4 *m4mod, model *mod)
 	    {
 	      if(i%n_o == j%n_o)
 		{
-		  mod->qmat[i*n_s+j] = m4mod->h_mat[(int)(i/n_o)*n_h+(int)(j/n_o)];
-		  mod->qmat[j*n_s+i] = mod->qmat[i*n_s+j] * m4mod->h_fq[(int)(i/n_o)] / m4mod->h_fq[(int)(j/n_o)]; 
+		  mod->qmat->v[i*n_s+j] = m4mod->h_mat[(int)(i/n_o)*n_h+(int)(j/n_o)];
+		  mod->qmat->v[j*n_s+i] = mod->qmat->v[i*n_s+j] * m4mod->h_fq[(int)(i/n_o)] / m4mod->h_fq[(int)(j/n_o)]; 
 		}
 	    }
 	}
@@ -577,12 +598,12 @@ void M4_Update_Qmat(m4 *m4mod, model *mod)
 	      scale += 
 		m4mod->h_fq[(int)(j/n_o)] *
 		m4mod->o_fq[i%n_o] *
-		mod->qmat[i*n_s+j];
+		mod->qmat->v[i*n_s+j];
 	    }
 	}
     }
   
-  For(i,n_s*n_s) mod->qmat[i] /= scale;
+  For(i,n_s*n_s) mod->qmat->v[i] /= scale;
 
 
   /* Diagonal cells */
@@ -592,15 +613,17 @@ void M4_Update_Qmat(m4 *m4mod, model *mod)
       For(j,n_s)
 	{
 	  if(j != i)
-	    sum += mod->qmat[i*n_s+j];
+	    sum += mod->qmat->v[i*n_s+j];
 	}
-      mod->qmat[i*n_s+i] = -sum;
+      mod->qmat->v[i*n_s+i] = -sum;
     }
 
-  For(i,n_s*n_s) mod->eigen->q[i] = mod->qmat[i];
+  For(i,n_s*n_s) mod->eigen->q[i] = mod->qmat->v[i];
 }
 
-/*********************************************************/
+//////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////
+
 
 void M4_Init_P_Lk_Tips_Double(t_tree *tree)
 {
@@ -619,30 +642,32 @@ void M4_Init_P_Lk_Tips_Double(t_tree *tree)
 	    {
 	      For(k,tree->mod->m4mod->n_o)
 		{
-		  tree->noeud[i]->b[0]->p_lk_rght[curr_site*dim1 + 0*dim2 + j*dim3+k] = 
-		    tree->noeud[i]->b[0]->p_lk_rght[curr_site*dim1 + 0*dim2 + 0*dim3+k];
+		  tree->t_nodes[i]->b[0]->p_lk_rght[curr_site*dim1 + 0*dim2 + j*dim3+k] = 
+		    tree->t_nodes[i]->b[0]->p_lk_rght[curr_site*dim1 + 0*dim2 + 0*dim3+k];
 		  
 		  printf("\n() i=%d plk=%f",
 			 curr_site*dim1 + 0*dim2 + j*dim3+k,
-			 tree->noeud[i]->b[0]->p_lk_rght[curr_site*dim1 + 0*dim2 + j*dim3+k]);
+			 tree->t_nodes[i]->b[0]->p_lk_rght[curr_site*dim1 + 0*dim2 + j*dim3+k]);
 
-		  /* tree->noeud[i]->b[0]->p_lk_rght[curr_site][0][j*tree->mod->m4mod->n_o+k] =  */
-		  /* tree->noeud[i]->b[0]->p_lk_rght[curr_site][0][k]; */
+		  /* tree->t_nodes[i]->b[0]->p_lk_rght[curr_site][0][j*tree->mod->m4mod->n_o+k] =  */
+		  /* tree->t_nodes[i]->b[0]->p_lk_rght[curr_site][0][k]; */
 		}
 
 
 	      For(k,tree->mod->m4mod->n_o)
 		for(l=1;l<tree->mod->n_catg;l++)
-		  tree->noeud[i]->b[0]->p_lk_rght[curr_site*dim1 + l*dim2 + j*dim3+k] = 
-		  tree->noeud[i]->b[0]->p_lk_rght[curr_site*dim1 + 0*dim2 + j*dim3+k];
-		  /* tree->noeud[i]->b[0]->p_lk_rght[curr_site][l][j*tree->mod->m4mod->n_o+k] =  */
-		  /* tree->noeud[i]->b[0]->p_lk_rght[curr_site][0][j*tree->mod->m4mod->n_o+k]; */
+		  tree->t_nodes[i]->b[0]->p_lk_rght[curr_site*dim1 + l*dim2 + j*dim3+k] = 
+		  tree->t_nodes[i]->b[0]->p_lk_rght[curr_site*dim1 + 0*dim2 + j*dim3+k];
+		  /* tree->t_nodes[i]->b[0]->p_lk_rght[curr_site][l][j*tree->mod->m4mod->n_o+k] =  */
+		  /* tree->t_nodes[i]->b[0]->p_lk_rght[curr_site][0][j*tree->mod->m4mod->n_o+k]; */
 	    }
 	}
     }
 }
 
-/*********************************************************/
+//////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////
+
 
 void M4_Init_P_Lk_Tips_Int(t_tree *tree)
 {
@@ -659,17 +684,19 @@ void M4_Init_P_Lk_Tips_Int(t_tree *tree)
 	    {
 	      For(k,tree->mod->m4mod->n_o)
 		{
-		  tree->noeud[i]->b[0]->p_lk_tip_r[curr_site*dim2 + j*dim3+k] = 
-		    tree->noeud[i]->b[0]->p_lk_tip_r[curr_site*dim2 + 0*dim3+k];
-		  /* tree->noeud[i]->b[0]->p_lk_tip_r[curr_site][j*tree->mod->m4mod->n_o+k] =  */
-		  /* tree->noeud[i]->b[0]->p_lk_tip_r[curr_site][k]; */
+		  tree->t_nodes[i]->b[0]->p_lk_tip_r[curr_site*dim2 + j*dim3+k] = 
+		    tree->t_nodes[i]->b[0]->p_lk_tip_r[curr_site*dim2 + 0*dim3+k];
+		  /* tree->t_nodes[i]->b[0]->p_lk_tip_r[curr_site][j*tree->mod->m4mod->n_o+k] =  */
+		  /* tree->t_nodes[i]->b[0]->p_lk_tip_r[curr_site][k]; */
 		}
 	    }
 	}
     }
 }
 
-/*********************************************************/
+//////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////
+
 
 phydbl ****M4_Integral_Term_On_One_Edge(t_edge *b, t_tree *tree)
 {
@@ -705,8 +732,8 @@ phydbl ****M4_Integral_Term_On_One_Edge(t_edge *b, t_tree *tree)
     {
       For(g,tree->mod->n_catg)
 	{
-	  PMat(((phydbl)(i+0.5)/step)*b->l*tree->mod->gamma_rr[g],tree->mod,g*ns*ns,P1);
-	  PMat(((phydbl)(step-i-0.5)/step)*b->l*tree->mod->gamma_rr[g],tree->mod,g*ns*ns,P2);
+	  PMat(((phydbl)(i+0.5)/step)*b->l*tree->mod->gamma_rr->v[g],tree->mod,g*ns*ns,P1);
+	  PMat(((phydbl)(step-i-0.5)/step)*b->l*tree->mod->gamma_rr->v[g],tree->mod,g*ns*ns,P2);
 
 	  For(j,ns)
 	    {
@@ -730,7 +757,9 @@ phydbl ****M4_Integral_Term_On_One_Edge(t_edge *b, t_tree *tree)
   return integral;
 }
 
-/*********************************************************/
+//////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////
+
 
 void M4_Post_Prob_H_Class_Edge_Site(t_edge *b, phydbl ****integral, phydbl *postprob, t_tree *tree)
 {
@@ -768,7 +797,7 @@ void M4_Post_Prob_H_Class_Edge_Site(t_edge *b, phydbl ****integral, phydbl *post
 			  postprob[i] +=
 
 			    (1./site_lk) *
-			    tree->mod->gamma_r_proba[g] *
+			    tree->mod->gamma_r_proba->v[g] *
 			    tree->mod->m4mod->h_fq[i] *
 			    tree->mod->m4mod->o_fq[j] *
 			    b->p_lk_left[tree->curr_site*dim1 + g*dim2 + k] *
@@ -811,7 +840,7 @@ void M4_Post_Prob_H_Class_Edge_Site(t_edge *b, phydbl ****integral, phydbl *post
 			  postprob[i] +=
 
 			    (1./site_lk) *
-			    tree->mod->gamma_r_proba[g] *
+			    tree->mod->gamma_r_proba->v[g] *
 			    tree->mod->m4mod->h_fq[i] *
 			    tree->mod->m4mod->o_fq[j] *
 			    b->p_lk_left[tree->curr_site*dim1 + g*dim2 + k] *
@@ -858,7 +887,9 @@ void M4_Post_Prob_H_Class_Edge_Site(t_edge *b, phydbl ****integral, phydbl *post
   return;
 }
 
-/*********************************************************/
+//////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////
+
 
 phydbl ***M4_Compute_Proba_Hidden_States_On_Edges(t_tree *tree)
 {
@@ -898,7 +929,9 @@ phydbl ***M4_Compute_Proba_Hidden_States_On_Edges(t_tree *tree)
   return post_probs;
 }
 
-/*********************************************************/
+//////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////
+
 
 /* Estimate the (posterior) mean relative rate of substitution on each branch
    at each site. The posterior mean rates averaged over sites is also estimated
@@ -1001,7 +1034,7 @@ void M4_Compute_Posterior_Mean_Rates(phydbl ***post_probs, t_tree *tree)
 
   /* Print the tree */
   PhyML_Fprintf(tree->io->fp_out_tree,"Constrained tree with corrected branch lengths = ");
-  s = Write_Tree(tree);
+  s = Write_Tree(tree,NO);
   PhyML_Fprintf(tree->io->fp_out_tree,"%s\n",s);
   Free(s);
   tree->ps_tree = DR_Make_Tdraw_Struct(tree);
@@ -1075,7 +1108,7 @@ void M4_Compute_Posterior_Mean_Rates(phydbl ***post_probs, t_tree *tree)
 	}
 
       PhyML_Fprintf(tree->io->fp_out_tree,"tree %d = ",patt+1);
-      s = Write_Tree(tree);
+      s = Write_Tree(tree,NO);
       PhyML_Fprintf(tree->io->fp_out_tree,"%s\n",s);
       Free(s);
       DR_Print_Tree_Postscript(tree->ps_page_number++,YES,tree->io->fp_out_ps,tree);
@@ -1107,7 +1140,7 @@ void M4_Compute_Posterior_Mean_Rates(phydbl ***post_probs, t_tree *tree)
       tree->t_edges[br]->l = mean_br_len[br];
     }
   PhyML_Fprintf(tree->io->fp_out_tree,"Mean branch lengths=");
-  s = Write_Tree(tree);
+  s = Write_Tree(tree,NO);
   PhyML_Fprintf(tree->io->fp_out_tree,"%s\n",s);
   Free(s);
 /*   DR_Print_Tree_Postscript(tree->ps_page_number++,tree->io->fp_out_ps,tree); */
@@ -1129,7 +1162,9 @@ void M4_Compute_Posterior_Mean_Rates(phydbl ***post_probs, t_tree *tree)
   Free(mean_br_len);
 }
 
-/*********************************************************/
+//////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////
+
 
 /* Classifiy each branch, at each site, among one of the rate classes */
 phydbl **M4_Site_Branch_Classification(phydbl ***post_probs, t_tree *tree)
@@ -1180,7 +1215,9 @@ phydbl **M4_Site_Branch_Classification(phydbl ***post_probs, t_tree *tree)
   return best_probs;
 }
 
-/*********************************************************/
+//////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////
+
 
 void M4_Site_Branch_Classification_Experiment(t_tree *tree)
 {
@@ -1345,7 +1382,9 @@ void M4_Site_Branch_Classification_Experiment(t_tree *tree)
 
 }
 
-/*********************************************************/
+//////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////
+
 
   /* Scale branch lengths such that they express expected number
      of nucleotide or amino-acid substitutions */
@@ -1373,7 +1412,9 @@ void M4_Scale_Br_Len(t_tree *tree)
   For(i,2*tree->n_otu-3) tree->t_edges[i]->l /= scale_fact;
 }
 
-/*********************************************************/
+//////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////
+
 
 void M4_Free_Integral_Term_On_One_Edge(phydbl ****integral, t_tree *tree)
 {
@@ -1394,7 +1435,9 @@ void M4_Free_Integral_Term_On_One_Edge(phydbl ****integral, t_tree *tree)
   Free(integral);
 }
 
-/*********************************************************/
+//////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////
+
 
 void M4_Detect_Site_Switches_Experiment(t_tree *tree)
 {
@@ -1529,7 +1572,9 @@ void M4_Detect_Site_Switches_Experiment(t_tree *tree)
   Free(cov_bl);
 }
 
-/*********************************************************/
+//////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////
+
 
 void M4_Posterior_Prediction_Experiment(t_tree *tree)
 {
@@ -1677,7 +1722,9 @@ void M4_Posterior_Prediction_Experiment(t_tree *tree)
   fclose(fp_cov);
 }
 
-/*********************************************************/
+//////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////
+
 
 m4 *M4_Copy_M4_Model(model *ori_mod, m4 *ori_m4mod)
 {
@@ -1726,4 +1773,6 @@ m4 *M4_Copy_M4_Model(model *ori_mod, m4 *ori_m4mod)
   return cpy_m4mod;
 }
 
-/*********************************************************/
+//////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////
+

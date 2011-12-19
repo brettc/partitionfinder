@@ -1,6 +1,9 @@
 /* config.h.  Generated from config.h.in by configure.  */
 /* config.h.in.  Generated from configure.ac by autoheader.  */
 
+/* Debug tag on */
+#define DEBUG 1
+
 /* Define to 1 if you don't have `vprintf' but do have `_doprnt.' */
 /* #undef HAVE_DOPRNT */
 
@@ -66,26 +69,50 @@
 /* Define to 1 if you have the `vprintf' function. */
 #define HAVE_VPRINTF 1
 
+/* m4 tag on */
+/* #undef M4 */
+
+/* MPI tag on */
+/* #undef MPI */
+
 /* Name of package */
 #define PACKAGE "phyml"
 
 /* Define to the address where bug reports for this package should be sent. */
-#define PACKAGE_BUGREPORT "guindon@stat.auckland.ac.nz"
+#define PACKAGE_BUGREPORT "s.guindon@auckland.ac.nz"
 
 /* Define to the full name of this package. */
 #define PACKAGE_NAME "PhyML"
 
 /* Define to the full name and version of this package. */
-#define PACKAGE_STRING "PhyML 20110815"
+#define PACKAGE_STRING "PhyML 20111219"
 
 /* Define to the one symbol short name of this package. */
 #define PACKAGE_TARNAME "phyml"
 
 /* Define to the version of this package. */
-#define PACKAGE_VERSION "20110815"
+#define PACKAGE_VERSION "20111219"
+
+/* PART tag on */
+/* #undef PART */
+
+/* PHYCONT tag on */
+/* #undef PHYCONT */
+
+/* PHYML tag on */
+#define PHYML 1
+
+/* PHYTIME tag on */
+/* #undef PHYTIME */
 
 /* Define to 1 if the C compiler supports function prototypes. */
 #define PROTOTYPES 1
+
+/* RF tag on */
+/* #undef RF */
+
+/* RWRAP tag on */
+/* #undef RWRAP */
 
 /* Define to 1 if the `setvbuf' function takes the buffering type as its
    second argument and the buffer pointer as the third, as on System V before
@@ -95,8 +122,14 @@
 /* Define to 1 if you have the ANSI C header files. */
 #define STDC_HEADERS 1
 
+/* TIPORDER tag on */
+/* #undef TIPORDER */
+
+/* Unix tag on */
+#define UNIX 1
+
 /* Version number of package */
-#define VERSION "20110815"
+#define VERSION "20111219"
 
 /* Define like PROTOTYPES; this can be used by system headers. */
 #define __PROTOTYPES 1

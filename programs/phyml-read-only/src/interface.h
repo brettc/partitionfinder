@@ -10,6 +10,8 @@ the GNU public licence. See http://www.opensource.org for details.
 
 */
 
+#include <config.h>
+
 #ifndef INTERFACE_H
 #define INTERFACE_H
 

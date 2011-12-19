@@ -1,14 +1,14 @@
 10
 
 dir
-671
+744
 http://phyml.googlecode.com/svn/trunk/doc
 http://phyml.googlecode.com/svn
 
 
 
-2011-06-20T08:19:09.864062Z
-667
+2011-10-06T08:49:08.838030Z
+701
 stephane.guindon
 
 
@@ -26,16 +26,16 @@ stephane.guindon
 
 2b562f48-3654-0410-b056-8947d4ae5377
 
-phyml_manual.tex
+phyml-manual.tex
 file
 
 
 
 
-2011-07-01T12:07:03.000000Z
-fbafc72351a05931de21ba9b1755d0ed
-2011-06-20T08:19:09.864062Z
-667
+2011-12-18T21:51:59.000000Z
+5cc9811482e5ae0f77403f4dab2edc41
+2011-10-06T08:49:08.838030Z
+701
 stephane.guindon
 
 
@@ -58,5 +58,5 @@ stephane.guindon
 
 
 
-77319
+81728
 

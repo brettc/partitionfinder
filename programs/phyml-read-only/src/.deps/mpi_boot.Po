@@ -1,3 +1,1 @@
-mpi_boot.o mpi_boot.o: mpi_boot.c mpi_boot.h
-
-mpi_boot.h:
+# dummy

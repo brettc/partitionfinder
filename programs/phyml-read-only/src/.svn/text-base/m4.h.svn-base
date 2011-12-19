@@ -10,6 +10,8 @@ the GNU public licence. See http://www.opensource.org for details.
 
 */
 
+#include <config.h>
+
 #ifndef M4_H
 #define M4_H
 

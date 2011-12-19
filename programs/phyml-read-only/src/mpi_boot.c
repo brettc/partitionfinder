@@ -44,7 +44,7 @@ void Bootstrap_MPI(t_tree *tree)
   
   Free_Bip(tree);
   Alloc_Bip(tree);
-  Get_Bip(tree->noeud[0],tree->noeud[0]->v[0],tree);
+  Get_Bip(tree->t_nodes[0],tree->t_nodes[0]->v[0],tree);
 
   n_site = 0;
   For(j,tree->data->crunch_len) For(k,tree->data->wght[j])
@@ -155,11 +155,34 @@ fflush(stderr);
 				     requires to leave the value of io unchanged during the boostrap. */
       Init_Model(boot_data,boot_mod,tree->io);
 
+      if(tree->io->mod->use_m4mod) M4_Init_Model(boot_mod->m4mod,boot_data,boot_mod);
+
       if(tree->io->in_tree == 2)
         {
-          rewind(tree->io->fp_in_tree);
-          boot_tree = Read_Tree_File(tree->io);
-        }
+	  switch(tree->io->tree_file_format)
+	    {
+	    case PHYLIP: 
+	      {
+		rewind(tree->io->fp_in_tree);
+		boot_tree = Read_Tree_File_Phylip(tree->io->fp_in_tree);
+		break;
+	      }
+	    case NEXUS:
+	      {
+		PhyML_Printf("\n. Unfortunately, PhyML cannot read NEXUS files and perform a bootstrap analysis."); 
+		PhyML_Printf("\n. Please use the PHYLIP format.."); 
+		PhyML_Printf("\n. Err in file %s at line %d\n",__FILE__,__LINE__);
+		Warn_And_Exit("");
+		break;
+	      }
+	    default:
+	      {
+		PhyML_Printf("\n. Err in file %s at line %d\n",__FILE__,__LINE__);
+		Warn_And_Exit("");
+		break;
+	      }
+	    }
+	}
       else
         {
           boot_mat = ML_Dist(boot_data,boot_mod);
@@ -219,17 +242,17 @@ fflush(stderr);
 
       Match_Tip_Numbers(tree,boot_tree);
 
-      Get_Bip(boot_tree->noeud[0],
-              boot_tree->noeud[0]->v[0],
+      Get_Bip(boot_tree->t_nodes[0],
+              boot_tree->t_nodes[0]->v[0],
               boot_tree);
 
-      Compare_Bip(tree,boot_tree);
+      Compare_Bip(tree,boot_tree,NO);
       
       Br_Len_Involving_Invar(boot_tree);
 
       if(tree->io->print_boot_trees)
         {
-          s = Write_Tree(boot_tree);
+          s = Write_Tree(boot_tree,NO);
           t=(char *)mCalloc(T_MAX_LINE,sizeof(char));
           Print_Fp_Out_Lines_MPI(boot_tree, tree->io, replicate+1, t);
           
@@ -277,8 +300,8 @@ fflush(stderr);
             Free(bootStr);
           }
           else {
-             MPI_Ssend (s, T_MAX_LINE, MPI_CHAR, 0, BootTreeTag, MPI_COMM_WORLD);
-             MPI_Ssend (t, T_MAX_LINE, MPI_CHAR, 0, BootStatTag, MPI_COMM_WORLD);
+	    MPI_Ssend (s, T_MAX_LINE, MPI_CHAR, 0, BootTreeTag, MPI_COMM_WORLD);
+	    MPI_Ssend (t, T_MAX_LINE, MPI_CHAR, 0, BootStatTag, MPI_COMM_WORLD);
 #ifdef MPI_DEBUG
 fprintf (stderr, "\ntask %d, sending bootstraps done\n", Global_myRank);
 fflush(stderr);

@@ -37,8 +37,8 @@ int Pars(t_tree *tree)
 
   n_patterns = tree->n_pattern;
 
-  Post_Order_Pars(tree->noeud[0],tree->noeud[0]->v[0],tree);
-  if(tree->both_sides) Pre_Order_Pars(tree->noeud[0],tree->noeud[0]->v[0],tree);
+  Post_Order_Pars(tree->t_nodes[0],tree->t_nodes[0]->v[0],tree);
+  if(tree->both_sides) Pre_Order_Pars(tree->t_nodes[0],tree->t_nodes[0]->v[0],tree);
   
   tree->c_pars = 0;
   For(site,n_patterns)
@@ -104,7 +104,7 @@ void Get_All_Partial_Pars(t_tree *tree, t_edge *b_fcus, t_node *a, t_node *d)
 
 void Site_Pars(t_tree *tree)
 {
-  tree->site_pars[tree->curr_site] = Pars_Core(tree->noeud[0]->b[0],tree);
+  tree->site_pars[tree->curr_site] = Pars_Core(tree->t_nodes[0]->b[0],tree);
 }
 
 /*********************************************************/
@@ -125,7 +125,7 @@ void Init_P_Pars_Tips(t_tree *tree)
     {
       For(i,tree->n_otu)
 	{
-	  if(tree->noeud[i]->b[0]->rght->tax != 1)
+	  if(tree->t_nodes[i]->b[0]->rght->tax != 1)
 	    {
 	      PhyML_Printf("\n. Err in file %s at line %d\n",__FILE__,__LINE__);
 	      Warn_And_Exit("\n");	    
@@ -136,16 +136,16 @@ void Init_P_Pars_Tips(t_tree *tree)
 	      Init_Tips_At_One_Site_Nucleotides_Int(tree->data->c_seq[i]->state[curr_site],
 						    0,
 						    state_v);	      
-	      For(j,tree->mod->ns) tree->noeud[i]->b[0]->p_pars_r[curr_site*dim1+j] = MAX_PARS;
-	      For(j,tree->mod->ns) if(state_v[j] > 0.5) tree->noeud[i]->b[0]->p_pars_r[curr_site*dim1+j] =  0;
+	      For(j,tree->mod->ns) tree->t_nodes[i]->b[0]->p_pars_r[curr_site*dim1+j] = MAX_PARS;
+	      For(j,tree->mod->ns) if(state_v[j] > 0.5) tree->t_nodes[i]->b[0]->p_pars_r[curr_site*dim1+j] =  0;
 	    }
 	  else if(tree->io->datatype == AA)
 	    {
 	      Init_Tips_At_One_Site_AA_Int(tree->data->c_seq[i]->state[curr_site],
 					   0,
 					   state_v);
-	      For(j,tree->mod->ns) tree->noeud[i]->b[0]->p_pars_r[curr_site*dim1+j] = MAX_PARS;
-	      For(j,tree->mod->ns) if(state_v[j] > 0.5) tree->noeud[i]->b[0]->p_pars_r[curr_site*dim1+j] =  0;
+	      For(j,tree->mod->ns) tree->t_nodes[i]->b[0]->p_pars_r[curr_site*dim1+j] = MAX_PARS;
+	      For(j,tree->mod->ns) if(state_v[j] > 0.5) tree->t_nodes[i]->b[0]->p_pars_r[curr_site*dim1+j] =  0;
 	    }
 	  else if(tree->io->datatype == GENERIC)
 	    {
@@ -154,8 +154,8 @@ void Init_P_Pars_Tips(t_tree *tree)
 						tree->mod->state_len,
 						0,
 						state_v);
-	      For(j,tree->mod->ns) tree->noeud[i]->b[0]->p_pars_r[curr_site*dim1+j] = MAX_PARS;
-	      For(j,tree->mod->ns) if(state_v[j] > 0.5) tree->noeud[i]->b[0]->p_pars_r[curr_site*dim1+j] =  0;
+	      For(j,tree->mod->ns) tree->t_nodes[i]->b[0]->p_pars_r[curr_site*dim1+j] = MAX_PARS;
+	      For(j,tree->mod->ns) if(state_v[j] > 0.5) tree->t_nodes[i]->b[0]->p_pars_r[curr_site*dim1+j] =  0;
 	    }
 	}
     }
@@ -177,7 +177,7 @@ void Init_Ui_Tips(t_tree *tree)
 	{
 	  if(tree->io->datatype == NT)
 	    {
-	      if(tree->noeud[i]->b[0]->rght->tax != 1)
+	      if(tree->t_nodes[i]->b[0]->rght->tax != 1)
 		{
 		  PhyML_Printf("\n. Err in file %s at line %d\n",__FILE__,__LINE__);
 		  Warn_And_Exit("\n");	    
@@ -186,16 +186,16 @@ void Init_Ui_Tips(t_tree *tree)
 	      Init_Tips_At_One_Site_Nucleotides_Int(tree->data->c_seq[i]->state[curr_site],
 						    0,
 						    state_v);	      
-	      tree->noeud[i]->b[0]->ui_r[curr_site] = 0;
-	      For(j,tree->mod->ns) tree->noeud[i]->b[0]->ui_r[curr_site] += (unsigned int)(state_v[j] * POW(2,j));
+	      tree->t_nodes[i]->b[0]->ui_r[curr_site] = 0;
+	      For(j,tree->mod->ns) tree->t_nodes[i]->b[0]->ui_r[curr_site] += (unsigned int)(state_v[j] * POW(2,j));
 	    }
 	  else if(tree->io->datatype == AA)
 	    {
 	      Init_Tips_At_One_Site_AA_Int(tree->data->c_seq[i]->state[curr_site],
 					   0,
 					   state_v);
-	      tree->noeud[i]->b[0]->ui_r[curr_site] = 0;
-	      For(j,tree->mod->ns) tree->noeud[i]->b[0]->ui_r[curr_site] += (unsigned int)(state_v[j] * POW(2,j));
+	      tree->t_nodes[i]->b[0]->ui_r[curr_site] = 0;
+	      For(j,tree->mod->ns) tree->t_nodes[i]->b[0]->ui_r[curr_site] += (unsigned int)(state_v[j] * POW(2,j));
 	    }
 	  else if(tree->io->datatype == GENERIC)
 	    {
@@ -204,8 +204,8 @@ void Init_Ui_Tips(t_tree *tree)
 						tree->mod->state_len,
 						0,
 						state_v);
-	      tree->noeud[i]->b[0]->ui_r[curr_site] = 0;
-	      For(j,tree->mod->ns) tree->noeud[i]->b[0]->ui_r[curr_site] += (unsigned int)(state_v[j] * POW(2,j));
+	      tree->t_nodes[i]->b[0]->ui_r[curr_site] = 0;
+	      For(j,tree->mod->ns) tree->t_nodes[i]->b[0]->ui_r[curr_site] += (unsigned int)(state_v[j] * POW(2,j));
 	    }
 	}
     }

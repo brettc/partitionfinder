@@ -1,3 +1,5 @@
+#include <config.h>
+
 #ifndef EIGEN_H
 #define EIGEN_H
 

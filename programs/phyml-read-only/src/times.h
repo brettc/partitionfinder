@@ -10,6 +10,8 @@ the GNU public licence. See http://www.opensource.org for details.
 
 */
 
+#include <config.h>
+
 #ifndef TIMES_H
 #define TIMES_H
 
@@ -77,6 +79,13 @@ void TIMES_Allocate_Vectors_Time_Slice_Combin(t_tree *tree);
 void TIMES_Allocate_Vectors_Time_Slice_Combin_Post(t_node *a, t_node *d, t_tree *tree);
 void TIMES_Update_Curr_Slice(t_tree *tree);
 void TIMES_Lk_Uniform_Post(t_node *a, t_node *d, t_tree *tree);
+void TIMES_Set_Root_Given_Tip_Dates(t_tree *tree);
+void Get_Survival_Duration(t_tree *tree);
+void Get_Survival_Duration_Post(t_node *a, t_node *d, t_tree *tree);
+phydbl TIMES_Lk_Yule_Root_Marginal(t_tree *tree);
+phydbl TIMES_Lk_Yule_Joint(t_tree *tree);
+void TIMES_Update_Node_Ordering(t_tree *tree);
+phydbl TIMES_Lk_Yule_Order(t_tree *tree);
 
 
 #endif

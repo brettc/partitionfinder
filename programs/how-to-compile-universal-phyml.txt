@@ -1,3 +1,15 @@
+Here's how to download the latest PhyML version
+
+You can download it by entering the following command in a
+terminal window:
+svn checkout http://phyml.googlecode.com/svn/trunk/ phyml-read-only
+and then enter the following commands:
+cd ./phyml-read-only/
+./confphy
+cd ./src/
+
+
+
 Instructions for making a mac universal binary for PhyML
 
 Here are the architectures that work:

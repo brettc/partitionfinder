@@ -10,6 +10,8 @@ the GNU public licence.  See http://www.opensource.org for details.
 
 */
 
+#include <config.h>
+
 #ifndef LK_H
 #define LK_H
 
@@ -73,6 +75,15 @@ phydbl Wrap_Part_Lk(t_edge *b, t_tree *tree, supert_tree *stree);
 phydbl Wrap_Geo_Lk(t_edge *b, t_tree *tree, supert_tree *stree);
 phydbl Wrap_Diff_Lk_Norm_At_Given_Edge(t_edge *b, t_tree *tree, supert_tree *stree);
 phydbl Wrap_Lk_Rates(t_edge *b, t_tree *tree, supert_tree *stree);
+phydbl Wrap_Lk_Linreg(t_edge *b, t_tree *tree, supert_tree *stree);
+void Sample_Ancestral_Seq(int mutmap, int fromprior, t_tree *tree);
+void Map_Mutations(t_node *a, t_node *d, int sa, int sd, t_edge *b, int site, int rate_cat, int *muttype, phydbl *muttime, int *n_mut, t_tree *tree);
+void Sample_Ancestral_Seq_Pre(t_node *a, t_node *d, t_edge *b, 
+			      int site, int rate_cat, 
+			      int *muttype, phydbl *muttime, int *n_mut, 
+			      int mutmap, int fromprior, t_tree *tree);
+phydbl Wrap_Lk_Times(t_edge *b, t_tree *tree, supert_tree *stree);
+phydbl Lk_LastFirst(t_tree *tree);
 
 #endif
 

@@ -1,5 +1,5 @@
-bionj.o bionj.o: bionj.c bionj.h utilities.h /usr/include/stdio.h \
-  /usr/include/_types.h /usr/include/sys/_types.h \
+bionj.o bionj.o: bionj.c bionj.h ../config.h utilities.h \
+  /usr/include/stdio.h /usr/include/_types.h /usr/include/sys/_types.h \
   /usr/include/sys/cdefs.h /usr/include/machine/_types.h \
   /usr/include/i386/_types.h \
   /usr/lib/gcc/i686-apple-darwin10/4.2.1/include/stdarg.h \
@@ -17,7 +17,8 @@ bionj.o bionj.o: bionj.c bionj.h utilities.h /usr/include/stdio.h \
   /usr/include/i386/_types.h /usr/include/math.h \
   /usr/include/architecture/i386/math.h /usr/include/ctype.h \
   /usr/include/runetype.h /usr/include/string.h /usr/include/time.h \
-  /usr/include/_structs.h \
+  /usr/include/_structs.h /usr/include/machine/_limits.h \
+  /usr/include/i386/_limits.h \
   /usr/lib/gcc/i686-apple-darwin10/4.2.1/include/limits.h \
   /usr/lib/gcc/i686-apple-darwin10/4.2.1/include/syslimits.h \
   /usr/include/limits.h /usr/include/machine/limits.h \
@@ -29,9 +30,11 @@ bionj.o bionj.o: bionj.c bionj.h utilities.h /usr/include/stdio.h \
   cl.h /usr/include/unistd.h /usr/include/sys/unistd.h \
   /usr/include/sys/select.h /usr/include/sys/_select.h \
   /usr/include/getopt.h interface.h simu.h pars.h alrt.h m4.h draw.h \
-  rates.h mcmc.h /usr/include/signal.h ../config.h
+  rates.h mcmc.h /usr/include/signal.h
 
 bionj.h:
+
+../config.h:
 
 utilities.h:
 
@@ -107,6 +110,10 @@ utilities.h:
 
 /usr/include/_structs.h:
 
+/usr/include/machine/_limits.h:
+
+/usr/include/i386/_limits.h:
+
 /usr/lib/gcc/i686-apple-darwin10/4.2.1/include/limits.h:
 
 /usr/lib/gcc/i686-apple-darwin10/4.2.1/include/syslimits.h:
@@ -178,5 +185,3 @@ rates.h:
 mcmc.h:
 
 /usr/include/signal.h:
-
-../config.h:

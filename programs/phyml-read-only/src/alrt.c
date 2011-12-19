@@ -20,7 +20,9 @@ Authors : Jean-Francois Dufayard & Stephane Guindon.
 
 #include "alrt.h"
 
-/*********************************************************/
+//////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////
+
 
 /*
 * Check every testable branch of the tree,
@@ -142,6 +144,7 @@ int Check_NNI_Five_Branches(t_tree *tree)
       if(better_found)
 	{
 	  Make_Target_Swap(tree,tree->t_edges[best_edge],best_config);
+
 	  tree->update_alias_subpatt = YES;
 	  Lk(tree);
 	  tree->update_alias_subpatt = NO;
@@ -154,13 +157,17 @@ int Check_NNI_Five_Branches(t_tree *tree)
 	    }
 
 	  if((tree->mod->s_opt->print) && (!tree->io->quiet)) Print_Lk(tree,"[Topology           ]");
+
+	  if(FABS(tree->c_lnL - init_lnL) < tree->mod->s_opt->min_diff_lk_move) return 0;	  
 	  return 1;
 	}
     }
   return 0;
 }
 
-/*********************************************************/
+//////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////
+
 
 /* Compute aLRT supports */
 void aLRT(t_tree *tree)
@@ -192,7 +199,9 @@ void aLRT(t_tree *tree)
   tree->lock_topo = 1;
 }
 
-/*********************************************************/
+//////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////
+
 /*
 * Launch one branch testing,
 * analyse the result
@@ -230,12 +239,12 @@ int Compute_Likelihood_Ratio_Test(t_edge *tested_edge, t_tree *tree)
 	}
       else
 	{
-	  //aLRT statistic is valid, compute the wished support
-	  if (tree->io->ratio_test == 2)
+	  //aLRT statistic is valid, compute the branch support
+	  if (tree->io->ratio_test == ALRTCHI2)
 	    {
 	      tested_edge->ratio_test = Statistics_To_Probabilities(tested_edge->alrt_statistic);	  
 	    }
-	  else if(tree->io->ratio_test == 3)
+	  else if(tree->io->ratio_test == MINALRTCHI2SH)
 	    {
 	      phydbl sh_support;
 	      phydbl param_support;
@@ -247,15 +256,15 @@ int Compute_Likelihood_Ratio_Test(t_edge *tested_edge, t_tree *tree)
 	      else                           tested_edge->ratio_test = param_support;
 	    }
 	  
-	  else if(tree->io->ratio_test == 1) 
+	  else if(tree->io->ratio_test == ALRTSTAT) 
 	    {
 	      tested_edge->ratio_test=tested_edge->alrt_statistic;
 	    } 
-	  else if(tree->io->ratio_test == 4) 
+	  else if(tree->io->ratio_test == SH) 
 	    {
 	      tested_edge->ratio_test = Statistics_To_SH(tree);
 	    }
-	  else if(tree->io->ratio_test == 5)
+	  else if(tree->io->ratio_test == ABAYES)
 	    {
 	      phydbl Kp0,Kp1,Kp2,logK;
 	      
@@ -290,7 +299,9 @@ int Compute_Likelihood_Ratio_Test(t_edge *tested_edge, t_tree *tree)
   return result;
 }
 
-/*********************************************************/
+//////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////
+
 /*
 * Test the 3 NNI positions for one branch.
 * param tree : the tree to check
@@ -449,7 +460,6 @@ int NNI_Neigh_BL(t_edge *b_fcus, t_tree *tree)
 
   //Do first possible swap
   Swap(v2,b_fcus->left,b_fcus->rght,v3,tree);
-
 
   tree->update_alias_subpatt = YES;
   tree->both_sides = 1;
@@ -730,7 +740,9 @@ int NNI_Neigh_BL(t_edge *b_fcus, t_tree *tree)
   return result;
 }
 
-/*********************************************************/
+//////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////
+
 /*
 * Make one target swap, optimizing five branches.
 * param tree : the tree to check
@@ -796,10 +808,12 @@ void Make_Target_Swap(t_tree *tree, t_edge *b_fcus, int swaptodo)
   if(swaptodo==1)
     {
       Swap(v2,b_fcus->left,b_fcus->rght,v3,tree);
+      if(!Check_Topo_Constraints(tree,tree->io->cstr_tree)) Swap(v3,b_fcus->left,b_fcus->rght,v2,tree);
     }
   else
     {
       Swap(v2,b_fcus->left,b_fcus->rght,v4,tree);
+      if(!Check_Topo_Constraints(tree,tree->io->cstr_tree)) Swap(v4,b_fcus->left,b_fcus->rght,v2,tree);
     }
 
   tree->update_alias_subpatt = YES;
@@ -865,7 +879,6 @@ void Make_Target_Swap(t_tree *tree, t_edge *b_fcus, int swaptodo)
 
       Update_P_Lk(tree,b_fcus,b_fcus->rght);
 
-
       if(lk_temp < lktodo - tree->mod->s_opt->min_diff_lk_local)
 	{
 	  PhyML_Printf("\n. Edge %3d lk_temp = %f lktodo = %f\n",b_fcus->num,lk_temp,lktodo);
@@ -886,7 +899,7 @@ void Make_Target_Swap(t_tree *tree, t_edge *b_fcus, int swaptodo)
 /* 	 v1->num,v2->num,v3->num,v4->num);       */
 
 
-  if(tree->c_lnL < lk_init)
+  if(tree->c_lnL < lk_init - tree->mod->s_opt->min_diff_lk_global)
     {
       PhyML_Printf("\n. [%3d] v1=%d v2=%d v3=%d v4=%d",
 	     b_fcus->num,v1->num,v2->num,v3->num,v4->num);
@@ -894,10 +907,11 @@ void Make_Target_Swap(t_tree *tree, t_edge *b_fcus, int swaptodo)
       PhyML_Printf("\n. Err in file %s at line %d\n\n",__FILE__,__LINE__);
       Warn_And_Exit("");
     }
-
 }
 
-/*********************************************************/
+//////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////
+
 /**
 * Convert an aLRT statistic to a none parametric support
 * param in: the statistic
@@ -1068,7 +1082,9 @@ phydbl Statistics_To_Probabilities(phydbl in)
   return rough_value;
 }
 
-/*********************************************************/
+//////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////
+
 /**
 * deprecated
 * Compute a RELL support, using the latest tested branch
@@ -1113,7 +1129,9 @@ phydbl Statistics_to_RELL(t_tree *tree)
 
   return res;
 }
-/*********************************************************/
+//////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////
+
 /**
 * deprecated
 * Compute a SH-like support, using the latest tested branch
@@ -1251,7 +1269,9 @@ phydbl Statistics_To_SH(t_tree *tree)
   return res;
 }
 
-/*********************************************************/
+//////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////
+
 /**
 * deprecated
 * Compute one side likelihood
@@ -1272,9 +1292,21 @@ phydbl Update_Lk_At_Given_Edge_Excluding(t_edge *b_fcus, t_tree *tree, t_node *e
 }
 
 
-/*********************************************************/
-/*********************************************************/
-/*********************************************************/
-/*********************************************************/
-/*********************************************************/
-/*********************************************************/
+//////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////
+
+//////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////
+
+//////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////
+
+//////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////
+
+//////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////
+
+//////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////
+

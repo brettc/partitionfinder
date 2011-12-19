@@ -1,13 +1,13 @@
 K 25
 svn:wc:ra_dav:version-url
 V 23
-/svn/!svn/ver/671/trunk
+/svn/!svn/ver/744/trunk
 END
 configure.ac
 K 25
 svn:wc:ra_dav:version-url
 V 36
-/svn/!svn/ver/621/trunk/configure.ac
+/svn/!svn/ver/702/trunk/configure.ac
 END
 version
 K 25
@@ -78,8 +78,8 @@ END
 confrf
 K 25
 svn:wc:ra_dav:version-url
-V 28
-/svn/!svn/ver/2/trunk/confrf
+V 30
+/svn/!svn/ver/680/trunk/confrf
 END
 phyml_package.pl
 K 25

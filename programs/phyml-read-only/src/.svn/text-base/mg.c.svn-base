@@ -1,7 +1,7 @@
 /*
 
-PHYML :  a program that  computes maximum likelihood  phyLOGenies from
-DNA or AA homoLOGous sequences 
+PHYML :  a program that  computes maximum likelihood  phylogenies from
+DNA or AA homologous sequences 
 
 Copyright (C) Stephane Guindon. Oct 2003 onward
 
@@ -10,6 +10,7 @@ the GNU public licence.  See http://www.opensource.org for details.
 
 */
 
+#include <config.h>
 
 #include "mg.h"
 #include "free.h"
@@ -22,7 +23,9 @@ the GNU public licence.  See http://www.opensource.org for details.
 #include "pars.h"
 #include "interface.h"
 
-/*********************************************************/
+//////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////
+
 
 int PART_main(int argc, char **argv)
 {
@@ -93,8 +96,8 @@ int PART_main(int argc, char **argv)
 	  treelist->tree[part] = Make_Tree_From_Scratch(st->tree->n_otu,NULL);
 	  Copy_Tree_Topology_With_Labels(st->tree,treelist->tree[part]);
  	  treelist->tree[part]->num_curr_branch_available = 0;
-	  Connect_Edges_To_Nodes_Recur(treelist->tree[part]->noeud[0],
-				       treelist->tree[part]->noeud[0]->v[0],
+	  Connect_Edges_To_Nodes_Recur(treelist->tree[part]->t_nodes[0],
+				       treelist->tree[part]->t_nodes[0]->v[0],
 				       treelist->tree[part]);
 	  PART_Prune_St_Topo(treelist->tree[part],cdata[part],st);
 
@@ -164,15 +167,15 @@ int PART_main(int argc, char **argv)
       int n_iter=0;
       do
 	{
-	  PART_Optimize_Br_Len_Serie(st->tree->noeud[0],
-				   st->tree->noeud[0]->v[0],
-				   st->tree->noeud[0]->b[0],
+	  PART_Optimize_Br_Len_Serie(st->tree->t_nodes[0],
+				   st->tree->t_nodes[0]->v[0],
+				   st->tree->t_nodes[0]->b[0],
 				   st);
 
 	  st->tree->both_sides = 1;
 	  PART_Lk(st);
 	  PhyML_Printf("\n. %f",st->tree->c_lnL);
-/* 	  For(part,st->n_part) PhyML_Printf("\n. %s",Write_Tree(st->treelist->tree[part])); */
+/* 	  For(part,st->n_part) PhyML_Printf("\n. %s",Write_Tree(st->treelist->tree[part],NO)); */
 	  n_iter++;
 	}while(n_iter < 5);
 /*       Exit("\n"); */
@@ -219,14 +222,14 @@ int PART_main(int argc, char **argv)
       PhyML_Printf("\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n\n");
 
       For(i,2*st->tree->n_otu-3) st->tree->t_edges[i]->l = 0.1;
-      s_tree = Write_Tree(st->tree);
+      s_tree = Write_Tree(st->tree,NO);
       PhyML_Fprintf(fp_phyml_tree,"Supertree\n");
       PhyML_Fprintf(fp_phyml_tree,"%s\n",s_tree);
       Free(s_tree);
       For(part,st->n_part)
 	{
 	  PhyML_Fprintf(fp_phyml_tree,"Gene tree number %d\n",part+1);
-	  s_tree = Write_Tree(st->treelist->tree[part]);
+	  s_tree = Write_Tree(st->treelist->tree[part],NO);
 	  PhyML_Fprintf(fp_phyml_tree,"%s\n",s_tree);
 	  Free(s_tree);
 	}
@@ -271,7 +274,9 @@ int PART_main(int argc, char **argv)
   return 0;
 }
 
-/*********************************************************/
+//////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////
+
 
 void PART_Print_Nodes(t_node *a, t_node *d, supert_tree *st)
 {
@@ -302,7 +307,9 @@ void PART_Print_Nodes(t_node *a, t_node *d, supert_tree *st)
     }
 }
 
-/*********************************************************/
+//////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////
+
 
 supert_tree *PART_Make_Supert_tree_Light(option *input)
 {
@@ -314,7 +321,9 @@ supert_tree *PART_Make_Supert_tree_Light(option *input)
   return st;
 }
 
-/*********************************************************/
+//////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////
+
 
 void PART_Make_Supert_tree_Full(supert_tree *st, option *io, calign **data)
 {
@@ -398,7 +407,9 @@ void PART_Make_Supert_tree_Full(supert_tree *st, option *io, calign **data)
   For(i,io->n_part) st->match_st_node_in_gt[i] = (t_node **)mCalloc(2*st->tree->n_otu-2,sizeof(t_node *));
 }
 
-/*********************************************************/
+//////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////
+
 
 void PART_Prune_St_Topo(t_tree *tree, calign *data, supert_tree *st)
 {
@@ -415,7 +426,7 @@ void PART_Prune_St_Topo(t_tree *tree, calign *data, supert_tree *st)
     {
       For(j,data->n_otu)
 	{
-	  if(!strcmp(data->c_seq[j]->name,st->tree->noeud[i]->name))
+	  if(!strcmp(data->c_seq[j]->name,st->tree->t_nodes[i]->name))
 	    break;
 	}
 
@@ -424,14 +435,14 @@ void PART_Prune_St_Topo(t_tree *tree, calign *data, supert_tree *st)
 	{
 	  For(j,tree->n_otu)
 	    {
-	      if(!strcmp(tree->noeud[j]->name,st->tree->noeud[i]->name))
+	      if(!strcmp(tree->t_nodes[j]->name,st->tree->t_nodes[i]->name))
 		{
-		  Prune_Subtree(tree->noeud[j]->v[0],
-				tree->noeud[j],
+		  Prune_Subtree(tree->t_nodes[j]->v[0],
+				tree->t_nodes[j],
 				NULL,&(residual_edges[n_pruned_nodes]),
 				tree);
 
-		  pruned_nodes[n_pruned_nodes] = tree->noeud[j];
+		  pruned_nodes[n_pruned_nodes] = tree->t_nodes[j];
 		  n_pruned_nodes++;
 		  not_found = 0;
 		  break;
@@ -441,7 +452,7 @@ void PART_Prune_St_Topo(t_tree *tree, calign *data, supert_tree *st)
 
 	  if(not_found)	    
 	    {
-	      PhyML_Printf("\n. Taxon '%s'",st->tree->noeud[i]->name);
+	      PhyML_Printf("\n. Taxon '%s'",st->tree->t_nodes[i]->name);
 	      PhyML_Printf("\n. Err in file %s at line %d\n\n",__FILE__,__LINE__);
 	      Warn_And_Exit("");
 	    }
@@ -459,18 +470,18 @@ void PART_Prune_St_Topo(t_tree *tree, calign *data, supert_tree *st)
     {
       For(j,n_pruned_nodes)
 	{
-	  if(!strcmp(pruned_nodes[j]->name,st->tree->noeud[i]->name))
+	  if(!strcmp(pruned_nodes[j]->name,st->tree->t_nodes[i]->name))
 	    break;
 	}
       if(j == n_pruned_nodes) /* That t_node still belongs to the tree */
 	{
-	  Reassign_Node_Nums(tree->noeud[i],tree->noeud[i]->v[0], 
+	  Reassign_Node_Nums(tree->t_nodes[i],tree->t_nodes[i]->v[0], 
 			     &curr_ext_node, &curr_int_node,tree);
 	  break;
 	}
     }
   
-  Reassign_Edge_Nums(tree->noeud[0],tree->noeud[0]->v[0],&curr_br,tree);
+  Reassign_Edge_Nums(tree->t_nodes[0],tree->t_nodes[0]->v[0],&curr_br,tree);
 
   tree->t_dir = (short int *)mCalloc((2*tree->n_otu-2)*(2*tree->n_otu-2),sizeof(short int));
 
@@ -487,7 +498,9 @@ void PART_Prune_St_Topo(t_tree *tree, calign *data, supert_tree *st)
 
 }
 
-/*********************************************************/
+//////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////
+
 
 void PART_Match_St_Nodes_In_Gt(t_tree *gt, supert_tree *st)
 {
@@ -500,9 +513,9 @@ void PART_Match_St_Nodes_In_Gt(t_tree *gt, supert_tree *st)
     {
       For(j,gt->n_otu)
 	{
-	  if(!strcmp(st->tree->noeud[i]->name,gt->noeud[j]->name))
+	  if(!strcmp(st->tree->t_nodes[i]->name,gt->t_nodes[j]->name))
 	    {
-	      st->match_st_node_in_gt[gt->dp][st->tree->noeud[i]->num] = gt->noeud[j];
+	      st->match_st_node_in_gt[gt->dp][st->tree->t_nodes[i]->num] = gt->t_nodes[j];
 	      break;
 	    }
 	}
@@ -529,12 +542,12 @@ void PART_Match_St_Nodes_In_Gt(t_tree *gt, supert_tree *st)
   /* Map internal nodes */
   For(i,st->tree->n_otu)
     {
-      if(st->match_st_node_in_gt[gt->dp][st->tree->noeud[i]->num])
+      if(st->match_st_node_in_gt[gt->dp][st->tree->t_nodes[i]->num])
 	{
-	  PART_Match_St_Nodes_In_Gt_Recurr(st->match_st_node_in_gt[gt->dp][st->tree->noeud[i]->num],
-					 st->match_st_node_in_gt[gt->dp][st->tree->noeud[i]->num]->v[0],
-					 st->tree->noeud[i],
-					 st->tree->noeud[i]->v[0],
+	  PART_Match_St_Nodes_In_Gt_Recurr(st->match_st_node_in_gt[gt->dp][st->tree->t_nodes[i]->num],
+					 st->match_st_node_in_gt[gt->dp][st->tree->t_nodes[i]->num]->v[0],
+					 st->tree->t_nodes[i],
+					 st->tree->t_nodes[i]->v[0],
 					 gt,
 					 st);
 	  break;
@@ -547,7 +560,7 @@ void PART_Match_St_Nodes_In_Gt(t_tree *gt, supert_tree *st)
   /* Checking that the results are correct */
   n_matches = 0;
   For(i,2*st->tree->n_otu-2) 
-    if(st->match_st_node_in_gt[gt->dp][st->tree->noeud[i]->num])
+    if(st->match_st_node_in_gt[gt->dp][st->tree->t_nodes[i]->num])
 	n_matches++;
 
   if(n_matches != 2*gt->n_otu-2)
@@ -558,35 +571,35 @@ void PART_Match_St_Nodes_In_Gt(t_tree *gt, supert_tree *st)
       For(j,2*gt->n_otu-2)
 	{
 	  For(i,2*st->tree->n_otu-2) 
-	    if(st->match_st_node_in_gt[gt->dp][i] == gt->noeud[j])
+	    if(st->match_st_node_in_gt[gt->dp][i] == gt->t_nodes[j])
 	      break;
 
  	  if(i == 2*st->tree->n_otu-2)
 	    {
 	      PhyML_Printf("\n. Gt %3d t_node %3d (%3d %3d %3d) (%s %s %s) (%f %f %f) does not match\n",
 		     gt->dp,
-		     gt->noeud[j]->num,
-		     gt->noeud[j]->v[0] ? gt->noeud[j]->v[0]->num : -1,
-		     gt->noeud[j]->v[1] ? gt->noeud[j]->v[1]->num : -1,
-		     gt->noeud[j]->v[2] ? gt->noeud[j]->v[2]->num : -1,
-		     gt->noeud[j]->v[0]->tax ? gt->noeud[j]->v[0]->name : NULL,
-		     gt->noeud[j]->v[1]->tax ? gt->noeud[j]->v[1]->name : NULL,
-		     gt->noeud[j]->v[2]->tax ? gt->noeud[j]->v[2]->name : NULL,
-		     gt->noeud[j]->v[0] ? gt->noeud[j]->b[0]->l : -1.,
-		     gt->noeud[j]->v[1] ? gt->noeud[j]->b[1]->l : -1.,
-		     gt->noeud[j]->v[2] ? gt->noeud[j]->b[2]->l : -1.);
+		     gt->t_nodes[j]->num,
+		     gt->t_nodes[j]->v[0] ? gt->t_nodes[j]->v[0]->num : -1,
+		     gt->t_nodes[j]->v[1] ? gt->t_nodes[j]->v[1]->num : -1,
+		     gt->t_nodes[j]->v[2] ? gt->t_nodes[j]->v[2]->num : -1,
+		     gt->t_nodes[j]->v[0]->tax ? gt->t_nodes[j]->v[0]->name : NULL,
+		     gt->t_nodes[j]->v[1]->tax ? gt->t_nodes[j]->v[1]->name : NULL,
+		     gt->t_nodes[j]->v[2]->tax ? gt->t_nodes[j]->v[2]->name : NULL,
+		     gt->t_nodes[j]->v[0] ? gt->t_nodes[j]->b[0]->l : -1.,
+		     gt->t_nodes[j]->v[1] ? gt->t_nodes[j]->b[1]->l : -1.,
+		     gt->t_nodes[j]->v[2] ? gt->t_nodes[j]->b[2]->l : -1.);
 	    }
 	}
 
       PhyML_Printf("oooooooo\n");
-      Print_Node(st->tree->noeud[0],
-		 st->tree->noeud[0]->v[0],
+      Print_Node(st->tree->t_nodes[0],
+		 st->tree->t_nodes[0]->v[0],
 		 st->tree);
       PhyML_Printf(">>>>>>>\n");
       For(i,st->n_part)
 	{
-	  Print_Node(st->treelist->tree[i]->noeud[0],
-		     st->treelist->tree[i]->noeud[0]->v[0],
+	  Print_Node(st->treelist->tree[i]->t_nodes[0],
+		     st->treelist->tree[i]->t_nodes[0]->v[0],
 		     st->treelist->tree[i]);
 	  PhyML_Printf("<<<<<<<\n");
 	}
@@ -596,7 +609,9 @@ void PART_Match_St_Nodes_In_Gt(t_tree *gt, supert_tree *st)
 #endif
 }
 
-/*********************************************************/
+//////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////
+
 
 void PART_Match_St_Nodes_In_Gt_Recurr(t_node *a_gt, t_node *d_gt, t_node *a_st, t_node *d_st, t_tree *gt, supert_tree *st)
 {
@@ -609,6 +624,7 @@ void PART_Match_St_Nodes_In_Gt_Recurr(t_node *a_gt, t_node *d_gt, t_node *a_st, 
     {
       score_d_st = (int *)mCalloc(3,sizeof(int));
       
+      /* Might be wrong. Check function Match_Nodes_In_Small_Tree */
       For(i,3)
 	{
 	  For(j,3)
@@ -664,7 +680,9 @@ void PART_Match_St_Nodes_In_Gt_Recurr(t_node *a_gt, t_node *d_gt, t_node *a_st, 
     }
 }
 
-/*********************************************************/
+//////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////
+
 
 void PART_Match_St_Edges_In_Gt(t_tree *gt, supert_tree *st)
 {
@@ -681,15 +699,17 @@ void PART_Match_St_Edges_In_Gt(t_tree *gt, supert_tree *st)
       {
 	PART_Match_St_Edges_In_Gt_Recurr(st->match_st_node_in_gt[gt->dp][i],
 				       st->match_st_node_in_gt[gt->dp][i]->v[0],
-				       st->tree->noeud[i],
-				       st->tree->noeud[i]->v[0],
+				       st->tree->t_nodes[i],
+				       st->tree->t_nodes[i]->v[0],
 				       gt,st);
 	break;
       }
 
 }
 
-/*********************************************************/
+//////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////
+
 
 void PART_Match_St_Edges_In_Gt_Recurr(t_node *a_gt, t_node *d_gt, t_node *a_st, t_node *d_st, t_tree *gt, supert_tree *st)
 {
@@ -748,14 +768,16 @@ void PART_Match_St_Edges_In_Gt_Recurr(t_node *a_gt, t_node *d_gt, t_node *a_st, 
     }
 }
 
-/*********************************************************/
+//////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////
+
 
 void PART_Simu(supert_tree *st)
 {
   int i,j,step,n_without_swap,it_lim_without_swap;
   t_edge **sorted_b,*st_b,**tested_b;
   int n_neg,n_tested,each;
-  phydbl lambda,old_LOGlk;
+  phydbl lambda,old_loglk;
 
   sorted_b = (t_edge **)mCalloc(st->tree->n_otu-3,sizeof(t_edge *));
   tested_b = (t_edge **)mCalloc(st->tree->n_otu-3,sizeof(t_edge *));
@@ -768,7 +790,7 @@ void PART_Simu(supert_tree *st)
   lambda              = .75;
   n_tested            = 0;
   n_without_swap      = 0;
-  old_LOGlk           = UNLIKELY; 
+  old_loglk           = UNLIKELY; 
   it_lim_without_swap = 2;
   st_b                = NULL; 
   do
@@ -783,7 +805,7 @@ void PART_Simu(supert_tree *st)
       /* Compute the likelihood of the supertreee */
       st->tree->c_lnL  = PART_Lk(st);
       st->tree->c_pars = PART_Pars(st);
-/*       For(i,st->n_part) PhyML_Printf("\n. %s",Write_Tree(st->treelist->tree[i])); */
+/*       For(i,st->n_part) PhyML_Printf("\n. %s",Write_Tree(st->treelist->tree[i],NO)); */
 /*       PhyML_Printf("\n"); */
 
       time(&(st->tree->t_current));
@@ -792,14 +814,14 @@ void PART_Simu(supert_tree *st)
 	     st->tree->c_lnL,n_tested);
 /*       For(i,st->n_part) PhyML_Printf("\n[gt %3d lnL=%15.5f]",i,st->treelist->tree[i]->c_lnL); */
       
-      if((FABS(old_LOGlk-st->tree->c_lnL) < st->tree->mod->s_opt->min_diff_lk_global) || 
+      if((FABS(old_loglk-st->tree->c_lnL) < st->tree->mod->s_opt->min_diff_lk_global) || 
 	 (n_without_swap > it_lim_without_swap)) break;
 
-      if(st->tree->c_lnL < old_LOGlk)
+      if(st->tree->c_lnL < old_loglk)
 	{
-	  PhyML_Printf("\n. Moving backward (topoLOGy + branch lengths) \n");
+	  PhyML_Printf("\n. Moving backward (topology + branch lengths) \n");
 	  
-	  if(!PART_Mov_Backward_Topo_Bl(st,old_LOGlk,tested_b,n_tested))
+	  if(!PART_Mov_Backward_Topo_Bl(st,old_loglk,tested_b,n_tested))
 	    Warn_And_Exit("\n. Err: mov_back failed\n");
 
 	  if(!st->tree->n_swap) n_neg = 0;
@@ -819,7 +841,7 @@ void PART_Simu(supert_tree *st)
 	      st->tree->c_pars = PART_Pars(st);
 	    }
 	  
-	  old_LOGlk = st->tree->c_lnL;
+	  old_loglk = st->tree->c_lnL;
 	  
 
 	  For(i,2*st->tree->n_otu-3) Init_NNI(st->tree->t_edges[i]->nni);
@@ -887,7 +909,9 @@ void PART_Simu(supert_tree *st)
 }
 
 
-/*********************************************************/
+//////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////
+
 
 int PART_Mov_Backward_Topo_Bl(supert_tree *st, phydbl lk_old, t_edge **tested_b, int n_tested)
 {
@@ -996,7 +1020,9 @@ int PART_Mov_Backward_Topo_Bl(supert_tree *st, phydbl lk_old, t_edge **tested_b,
   Free(l_init);
 }
 
-/*********************************************************/
+//////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////
+
 
 void PART_Check_Extra_Taxa(supert_tree *st)
 {
@@ -1011,7 +1037,7 @@ void PART_Check_Extra_Taxa(supert_tree *st)
       For(j,st->n_part)
 	{
 	  For(k,st->treelist->tree[j]->n_otu) 
-	    if(!strcmp(st->treelist->tree[j]->noeud[k]->name,st->tree->noeud[i]->name)) break;
+	    if(!strcmp(st->treelist->tree[j]->t_nodes[k]->name,st->tree->t_nodes[i]->name)) break;
 	  if(k != st->treelist->tree[j]->n_otu) { st_taxa[i] = 1; break; }
 	}
     }
@@ -1026,7 +1052,9 @@ void PART_Check_Extra_Taxa(supert_tree *st)
   Free(st_taxa);
 }
 
-/*********************************************************/
+//////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////
+
 
 int PART_Get_Species_Found_In_St(supert_tree *st, calign *data)
 {
@@ -1036,7 +1064,7 @@ int PART_Get_Species_Found_In_St(supert_tree *st, calign *data)
     {
       For(j,st->tree->n_otu)
 	{
-	  if(!strcmp(data->c_seq[i]->name,st->tree->noeud[j]->name))
+	  if(!strcmp(data->c_seq[i]->name,st->tree->t_nodes[j]->name))
 	    {
 	      break;
 	    }
@@ -1047,7 +1075,9 @@ int PART_Get_Species_Found_In_St(supert_tree *st, calign *data)
 
 }
 
-/*********************************************************/
+//////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////
+
 
 void PART_Map_St_Nodes_In_Gt(t_tree *gt, supert_tree *st)
 {
@@ -1066,24 +1096,26 @@ void PART_Map_St_Nodes_In_Gt(t_tree *gt, supert_tree *st)
 
   
   /* Root */
-  PART_Map_St_Nodes_In_Gt_One_Edge(st->tree->noeud[0]->v[0],
-				 st->tree->noeud[0],
-				 st->tree->noeud[0]->b[0],
+  PART_Map_St_Nodes_In_Gt_One_Edge(st->tree->t_nodes[0]->v[0],
+				 st->tree->t_nodes[0],
+				 st->tree->t_nodes[0]->b[0],
 				 gt,st);
 
   /* Internal nodes */
-  PART_Map_St_Nodes_In_Gt_Post(st->tree->noeud[0],st->tree->noeud[0]->v[0],gt,st);
-  PART_Map_St_Nodes_In_Gt_Pre (st->tree->noeud[0],st->tree->noeud[0]->v[0],gt,st);
+  PART_Map_St_Nodes_In_Gt_Post(st->tree->t_nodes[0],st->tree->t_nodes[0]->v[0],gt,st);
+  PART_Map_St_Nodes_In_Gt_Pre (st->tree->t_nodes[0],st->tree->t_nodes[0]->v[0],gt,st);
   
   /* Root */
-  PART_Map_St_Nodes_In_Gt_One_Edge(st->tree->noeud[0],
-				 st->tree->noeud[0]->v[0],
-				 st->tree->noeud[0]->b[0],
+  PART_Map_St_Nodes_In_Gt_One_Edge(st->tree->t_nodes[0],
+				 st->tree->t_nodes[0]->v[0],
+				 st->tree->t_nodes[0]->b[0],
 				 gt,st);
   
 }
 
-/*********************************************************/
+//////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////
+
 
 void PART_Map_St_Nodes_In_Gt_Post(t_node *a_st, t_node *d_st, t_tree *gt, supert_tree *st)
 {
@@ -1106,7 +1138,9 @@ void PART_Map_St_Nodes_In_Gt_Post(t_node *a_st, t_node *d_st, t_tree *gt, supert
     }
 }
 
-/*********************************************************/
+//////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////
+
 
 void PART_Map_St_Nodes_In_Gt_Pre(t_node *a_st, t_node *d_st, t_tree *gt, supert_tree *st)
 {
@@ -1126,7 +1160,9 @@ void PART_Map_St_Nodes_In_Gt_Pre(t_node *a_st, t_node *d_st, t_tree *gt, supert_
     }
 }
 
-/*********************************************************/
+//////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////
+
 
 void PART_Map_St_Nodes_In_Gt_One_Edge(t_node *a_st, t_node *d_st, t_edge *b_st, t_tree *gt, supert_tree *st)
 {
@@ -1200,13 +1236,13 @@ void PART_Map_St_Nodes_In_Gt_One_Edge(t_node *a_st, t_node *d_st, t_edge *b_st, 
 
 	      if(list_of_nodes_v1[1] || list_of_nodes_v2[1])
 		{
-		  Print_Node(st->tree->noeud[0],
-			     st->tree->noeud[0]->v[0],
+		  Print_Node(st->tree->t_nodes[0],
+			     st->tree->t_nodes[0]->v[0],
 			     st->tree);
 		  
 		  PhyML_Printf("\n\n--------------------------\n\n");
-		  Print_Node(gt->noeud[0],
-			     gt->noeud[0]->v[0],
+		  Print_Node(gt->t_nodes[0],
+			     gt->t_nodes[0]->v[0],
 			     gt);
 
 		  PhyML_Printf("\n\n--------------------------\n\n");
@@ -1219,7 +1255,9 @@ void PART_Map_St_Nodes_In_Gt_One_Edge(t_node *a_st, t_node *d_st, t_edge *b_st, 
     }
 }
 
-/*********************************************************/
+//////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////
+
 
 void PART_Map_St_Edges_In_Gt(t_tree *gt, supert_tree *st)
 {
@@ -1289,7 +1327,9 @@ void PART_Map_St_Edges_In_Gt(t_tree *gt, supert_tree *st)
     }
 }
 
-/*********************************************************/
+//////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////
+
 
 void PART_Map_Gt_Edges_In_St(t_tree *gt, supert_tree *st)
 {
@@ -1313,7 +1353,9 @@ void PART_Map_Gt_Edges_In_St(t_tree *gt, supert_tree *st)
     }
 }
 
-/*********************************************************/
+//////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////
+
 
 int PART_Pars(supert_tree *st)
 {
@@ -1330,7 +1372,9 @@ int PART_Pars(supert_tree *st)
   return st->tree->c_pars;
 }
 
-/*********************************************************/
+//////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////
+
 
 int PART_Spr(phydbl init_lnL, supert_tree *st)
 {
@@ -1340,7 +1384,7 @@ int PART_Spr(phydbl init_lnL, supert_tree *st)
   int move,best_move;
   t_node *gt_a, *gt_d;
 
-  st->tree->n_root     = st->tree->noeud[0];
+  st->tree->n_root     = st->tree->t_nodes[0];
   st->tree->both_sides = 1;
   pruned               = NULL;
   target               = NULL;
@@ -1427,7 +1471,9 @@ int PART_Spr(phydbl init_lnL, supert_tree *st)
   return 1;
 }
 
-/*********************************************************/
+//////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////
+
 
 void PART_Speed_Spr(supert_tree *st)
 {
@@ -1482,9 +1528,9 @@ void PART_Speed_Spr(supert_tree *st)
       /* Optimise branch lengths */
       For(gt,st->n_part)
 	{
-	  Optimize_Br_Len_Serie(st->treelist->tree[gt]->noeud[0],
-				st->treelist->tree[gt]->noeud[0]->v[0],
-				st->treelist->tree[gt]->noeud[0]->b[0],
+	  Optimize_Br_Len_Serie(st->treelist->tree[gt]->t_nodes[0],
+				st->treelist->tree[gt]->t_nodes[0]->v[0],
+				st->treelist->tree[gt]->t_nodes[0]->b[0],
 				st->treelist->tree[gt],
 				st->treelist->tree[gt]->data);
 	}
@@ -1501,7 +1547,7 @@ void PART_Speed_Spr(supert_tree *st)
 	     (int)(st->tree->t_current-st->tree->t_beg),
 	     st->tree->c_lnL,st->tree->c_pars);
 
-      /* Record the current best LOG-likleihood  */
+      /* Record the current best log-likleihood  */
       st->tree->best_lnL = st->tree->c_lnL;
 
       if(st->tree->c_lnL < old_lnL)
@@ -1522,7 +1568,9 @@ void PART_Speed_Spr(supert_tree *st)
   
 }
 
-/*********************************************************/
+//////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////
+
 
 
 void PART_Test_All_Spr_Targets(t_edge *pruned, t_node *n_link, supert_tree *st)
@@ -1544,7 +1592,9 @@ void PART_Test_All_Spr_Targets(t_edge *pruned, t_node *n_link, supert_tree *st)
     }
 }
 
-/*********************************************************/
+//////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////
+
 
 void PART_Test_One_Spr_Target_Recur(t_node *a, t_node *d, t_edge *target, t_edge *pruned, t_node *n_link, supert_tree *st)
 {
@@ -1564,7 +1614,9 @@ void PART_Test_One_Spr_Target_Recur(t_node *a, t_node *d, t_edge *target, t_edge
     }
 }
 
-/*********************************************************/
+//////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////
+
 
 void PART_Test_One_Spr_Target(t_edge *st_p, t_edge *st_t, t_node *n_link, supert_tree *st) 
 {
@@ -1590,7 +1642,9 @@ void PART_Test_One_Spr_Target(t_edge *st_p, t_edge *st_t, t_node *n_link, supert
   Include_One_Spr_To_List_Of_Spr(st->tree->spr_list[st->tree->size_spr_list],st->tree);
 }
 
-/*********************************************************/
+//////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////
+
 
 int Map_Spr_Move(t_edge *st_pruned, t_edge *st_target, t_node *st_link, t_tree *gt, supert_tree *st)
 {
@@ -1639,7 +1693,9 @@ int Map_Spr_Move(t_edge *st_pruned, t_edge *st_target, t_node *st_link, t_tree *
   return -2;
 }
 
-/*********************************************************/
+//////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////
+
 
 int PART_Test_List_Of_Regraft_Pos(spr **st_spr_list, int list_size, supert_tree *st)
 {
@@ -1794,7 +1850,9 @@ int PART_Test_List_Of_Regraft_Pos(spr **st_spr_list, int list_size, supert_tree 
 }
 
 
-/*********************************************************/
+//////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////
+
 
 int PART_Try_One_Spr_Move(spr *st_move, supert_tree *st)
 {
@@ -1944,9 +2002,9 @@ int PART_Try_One_Spr_Move(spr *st_move, supert_tree *st)
 /* 	      if(gt_move[gt]) */
 /* 		{ */
 /* 		  Lk(st->treelist->tree[gt]); */
-/* 		  Fast_Br_Len_Recur(st->treelist->tree[gt]->noeud[0], */
-/* 				    st->treelist->tree[gt]->noeud[0]->v[0], */
-/* 				    st->treelist->tree[gt]->noeud[0]->b[0], */
+/* 		  Fast_Br_Len_Recur(st->treelist->tree[gt]->t_nodes[0], */
+/* 				    st->treelist->tree[gt]->t_nodes[0]->v[0], */
+/* 				    st->treelist->tree[gt]->t_nodes[0]->b[0], */
 /* 				    st->treelist->tree[gt]); */
 /* 		} */
 /* 	    } */
@@ -2038,7 +2096,9 @@ int PART_Try_One_Spr_Move(spr *st_move, supert_tree *st)
 
 }
 
-/*********************************************************/
+//////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////
+
 
 void PART_NNI(t_edge *st_b, supert_tree *st)
 {  
@@ -2081,14 +2141,14 @@ void PART_NNI(t_edge *st_b, supert_tree *st)
   lk_init = st->tree->c_lnL;
   
 /*   PhyML_Printf("oooooooo\n"); */
-/*   Print_Node(st->tree->noeud[0], */
-/* 	     st->tree->noeud[0]->v[0], */
+/*   Print_Node(st->tree->t_nodes[0], */
+/* 	     st->tree->t_nodes[0]->v[0], */
 /* 	     st->tree); */
 /*   PhyML_Printf(">>>>>>>\n"); */
 /*   For(i,st->n_part) */
 /*     { */
-/*       Print_Node(st->treelist->tree[i]->noeud[0], */
-/* 		 st->treelist->tree[i]->noeud[0]->v[0], */
+/*       Print_Node(st->treelist->tree[i]->t_nodes[0], */
+/* 		 st->treelist->tree[i]->t_nodes[0]->v[0], */
 /* 		 st->treelist->tree[i]); */
 /*       PhyML_Printf("<<<<<<<\n"); */
 /*     } */
@@ -2099,7 +2159,7 @@ void PART_NNI(t_edge *st_b, supert_tree *st)
   For(i,st->n_part) map_edge_bef_swap[i] = NULL;
   For(i,st->n_part) if(st->map_st_edge_in_gt[i][st_b->num]) map_edge_bef_swap[i] = st->map_st_edge_in_gt[i][st_b->num];
 
-  /* First alternative topoLOGical configuration */
+  /* First alternative topological configuration */
   /* Swap */
   PART_Swap(v2,st_b->left,st_b->rght,v3,st);
   Swap(v2,st_b->left,st_b->rght,v3,st->tree);
@@ -2154,7 +2214,7 @@ void PART_NNI(t_edge *st_b, supert_tree *st)
 
 
 
-  /* Second alternative topoLOGical configuration */
+  /* Second alternative topological configuration */
   /* Swap */
   PART_Swap(v2,st_b->left,st_b->rght,v4,st);
   Swap(v2,st_b->left,st_b->rght,v4,st->tree);
@@ -2209,7 +2269,7 @@ void PART_NNI(t_edge *st_b, supert_tree *st)
     }
 
 
-  /* Back to the initial topoLOGical configuration 
+  /* Back to the initial topological configuration 
    * and branch lengths.
    */
   PART_Do_Mapping(st);
@@ -2309,7 +2369,9 @@ void PART_NNI(t_edge *st_b, supert_tree *st)
   Free(map_edge_bef_swap);
 }
 
-/*********************************************************/
+//////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////
+
 
 void PART_Swap(t_node *st_a, t_node *st_b, t_node *st_c, t_node *st_d, supert_tree *st)
 {
@@ -2358,7 +2420,9 @@ void PART_Swap(t_node *st_a, t_node *st_b, t_node *st_c, t_node *st_d, supert_tr
     }
 }
 
-/*********************************************************/
+//////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////
+
 
 void PART_Set_Bl(phydbl **bl, supert_tree *st)
 {
@@ -2396,7 +2460,9 @@ void PART_Set_Bl(phydbl **bl, supert_tree *st)
     }
 }
 
-/*********************************************************/
+//////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////
+
 
 void PART_Record_Br_Len(supert_tree *st)
 {
@@ -2404,7 +2470,9 @@ void PART_Record_Br_Len(supert_tree *st)
   For(i,st->n_part) For(j,2*st->tree->n_otu-3) st->bl_cpy[i][j] = st->bl[i][j];
 }
 
-/*********************************************************/
+//////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////
+
 
 void PART_Restore_Br_Len(supert_tree *st)
 {
@@ -2412,7 +2480,9 @@ void PART_Restore_Br_Len(supert_tree *st)
   For(i,st->n_part) For(j,2*st->tree->n_otu-3) st->bl[i][j] = st->bl_cpy[i][j];
 }
 
-/*********************************************************/
+//////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////
+
 
 phydbl PART_Lk(supert_tree *st)
 {
@@ -2432,7 +2502,9 @@ phydbl PART_Lk(supert_tree *st)
   return st->tree->c_lnL;
 }
 
-/*********************************************************/
+//////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////
+
 
 phydbl PART_Lk_At_Given_Edge(t_edge *st_b, supert_tree *st)
 {
@@ -2455,7 +2527,9 @@ phydbl PART_Lk_At_Given_Edge(t_edge *st_b, supert_tree *st)
   return st->tree->c_lnL;
 }
 
-/*********************************************************/
+//////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////
+
 
 phydbl PART_Update_Lk_At_Given_Edge(t_edge *st_b, supert_tree *st)
 {
@@ -2476,7 +2550,9 @@ phydbl PART_Update_Lk_At_Given_Edge(t_edge *st_b, supert_tree *st)
 }
 
 
-/*********************************************************/
+//////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////
+
 
 void PART_Fill_Model_Partitions_Table(supert_tree *st)
 {
@@ -2555,7 +2631,9 @@ void PART_Fill_Model_Partitions_Table(supert_tree *st)
   Free(abc);
 }
 
-/*********************************************************/
+//////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////
+
 
 phydbl PART_Br_Len_Brent(t_edge *st_b, int quickdirty, supert_tree *st)
 {
@@ -2583,7 +2661,9 @@ phydbl PART_Br_Len_Brent(t_edge *st_b, int quickdirty, supert_tree *st)
   return st->tree->c_lnL;
 }
 
-/*********************************************************/
+//////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////
+
 
 void PART_Initialise_Bl_Partition(supert_tree *st)
 {
@@ -2598,7 +2678,9 @@ void PART_Initialise_Bl_Partition(supert_tree *st)
     }
 }
 
-/*********************************************************/
+//////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////
+
 
 void PART_Optimize_Br_Len_Serie(t_node *st_a, t_node *st_d, t_edge *st_b, supert_tree *st)
 {
@@ -2627,7 +2709,9 @@ void PART_Optimize_Br_Len_Serie(t_node *st_a, t_node *st_d, t_edge *st_b, supert
 
 }
 
-/*********************************************************/
+//////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////
+
 
 void PART_Update_P_Lk(t_edge *st_b, t_node *st_n, supert_tree *st)
 {
@@ -2653,7 +2737,9 @@ void PART_Update_P_Lk(t_edge *st_b, t_node *st_n, supert_tree *st)
     }
 }
 
-/*********************************************************/
+//////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////
+
 
 void PART_Make_N_Swap(t_edge **st_b, int beg, int end, supert_tree *st)
 {
@@ -2690,7 +2776,9 @@ void PART_Make_N_Swap(t_edge **st_b, int beg, int end, supert_tree *st)
     }
 }
 
-/*********************************************************/
+//////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////
+
 
 void PART_Update_Bl(phydbl fact, supert_tree *st)
 {
@@ -2706,7 +2794,9 @@ void PART_Update_Bl(phydbl fact, supert_tree *st)
   PART_Set_Bl(st->bl,st);
 }
 
-/*********************************************************/
+//////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////
+
 
 void PART_Update_Bl_Swaped(t_edge **st_b, int n, supert_tree *st)
 {
@@ -2725,7 +2815,9 @@ void PART_Update_Bl_Swaped(t_edge **st_b, int n, supert_tree *st)
   PART_Set_Bl(st->bl,st);
 }
 
-/*********************************************************/
+//////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////
+
 
 void PART_Do_Mapping(supert_tree *st)
 {
@@ -2743,7 +2835,9 @@ void PART_Do_Mapping(supert_tree *st)
     }
 }
 
-/*********************************************************/
+//////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////
+
 
 void PART_Print_Bl(supert_tree *st)
 {
@@ -2759,5 +2853,9 @@ void PART_Print_Bl(supert_tree *st)
     }
 }
 
-/*********************************************************/
-/*********************************************************/
+//////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////
+
+//////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////
+

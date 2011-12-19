@@ -13,7 +13,9 @@ the GNU public licence.  See http://www.opensource.org for details.
 #include "simu.h"
 
 
-/*********************************************************/
+//////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////
+
 
 void Simu_Loop(t_tree *tree)
 {
@@ -27,11 +29,10 @@ void Simu_Loop(t_tree *tree)
   do
     {
       lk_old = tree->c_lnL;
-      Optimiz_All_Free_Param(tree,(tree->io->quiet)?(0):(tree->mod->s_opt->print));
+      Optimiz_All_Free_Param(tree,(tree->io->quiet)?(0):(tree->mod->s_opt->print));      
       if(!Simu(tree,10)) Check_NNI_Five_Branches(tree);
     }
   while(tree->c_lnL > lk_old + tree->mod->s_opt->min_diff_lk_global);
-
 
   do
     {
@@ -43,7 +44,9 @@ void Simu_Loop(t_tree *tree)
 
 }
 
-/*********************************************************/
+//////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////
+
 
 int Simu(t_tree *tree, int n_step_max)
 {
@@ -104,7 +107,7 @@ int Simu(t_tree *tree, int n_step_max)
 
       if(tree->io->print_trace)
 	{
-	  PhyML_Fprintf(tree->io->fp_out_trace,"[%f]%s\n",tree->c_lnL,Write_Tree(tree)); fflush(tree->io->fp_out_trace);
+	  PhyML_Fprintf(tree->io->fp_out_trace,"[%f]%s\n",tree->c_lnL,Write_Tree(tree,NO)); fflush(tree->io->fp_out_trace);
 	  if(tree->io->print_site_lnl) Print_Site_Lk(tree,tree->io->fp_out_lk); fflush(tree->io->fp_out_lk);
 	}
 
@@ -153,7 +156,9 @@ int Simu(t_tree *tree, int n_step_max)
   return n_tested;
 }
 
-/*********************************************************/
+//////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////
+
 
 void Simu_Pars(t_tree *tree, int n_step_max)
 {
@@ -244,7 +249,9 @@ void Simu_Pars(t_tree *tree, int n_step_max)
   Free(tested_b);
 }
 
-/*********************************************************/
+//////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////
+
 
 void Select_Edges_To_Swap(t_tree *tree, t_edge **sorted_b, int *n_neg)
 {
@@ -272,7 +279,9 @@ void Select_Edges_To_Swap(t_tree *tree, t_edge **sorted_b, int *n_neg)
     }
 }
 
-/*********************************************************/
+//////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////
+
 
 void Update_Bl(t_tree *tree, phydbl fact)
 {
@@ -286,7 +295,9 @@ void Update_Bl(t_tree *tree, phydbl fact)
     }
 }
 
-/*********************************************************/
+//////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////
+
 
 void Make_N_Swap(t_tree *tree,t_edge **b, int beg, int end)
 {
@@ -312,6 +323,20 @@ void Make_N_Swap(t_tree *tree,t_edge **b, int beg, int end)
 	   b[i]->nni->swap_node_v3->v[tree->t_dir[b[i]->nni->swap_node_v3->num*dim+b[i]->nni->swap_node_v4->num]],
 	   tree);
 
+      if(!Check_Topo_Constraints(tree,tree->io->cstr_tree))
+	{
+	  /* Undo this swap as it violates one of the topological constraints 
+	     defined in the input constraint tree 
+	  */
+	  Swap(b[i]->nni->swap_node_v2->v[tree->t_dir[b[i]->nni->swap_node_v2->num*dim+b[i]->nni->swap_node_v1->num]],
+	       b[i]->nni->swap_node_v2,
+	       b[i]->nni->swap_node_v3,
+	       b[i]->nni->swap_node_v3->v[tree->t_dir[b[i]->nni->swap_node_v3->num*dim+b[i]->nni->swap_node_v4->num]],
+	       tree);	 
+	}
+
+
+
       if(tree->n_root)
 	{
 	  tree->n_root->v[0] = tree->e_root->left;
@@ -328,7 +353,9 @@ void Make_N_Swap(t_tree *tree,t_edge **b, int beg, int end)
 
 }
 
-/*********************************************************/
+//////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////
+
 
 int Make_Best_Swap(t_tree *tree)
 {
@@ -358,6 +385,19 @@ int Make_Best_Swap(t_tree *tree)
 	   b->nni->swap_node_v3->v[tree->t_dir[b->nni->swap_node_v3->num*dim+b->nni->swap_node_v4->num]],
 	   tree);
 
+      if(!Check_Topo_Constraints(tree,tree->io->cstr_tree))
+	{
+	  /* Undo this swap as it violates one of the topological constraints 
+	     defined in the input constraint tree 
+	  */
+	  Swap(b->nni->swap_node_v2->v[tree->t_dir[b->nni->swap_node_v2->num*dim+b->nni->swap_node_v1->num]],
+	       b->nni->swap_node_v2,
+	       b->nni->swap_node_v3,
+	       b->nni->swap_node_v3->v[tree->t_dir[b->nni->swap_node_v3->num*dim+b->nni->swap_node_v4->num]],
+	       tree);	 
+	}
+
+
 
       b->l = b->nni->best_l;
 
@@ -379,7 +419,9 @@ int Make_Best_Swap(t_tree *tree)
   return return_value;
 }
 
-/*********************************************************/
+//////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////
+
 
 int Mov_Backward_Topo_Bl(t_tree *tree, phydbl lk_old, t_edge **tested_b, int n_tested)
 {
@@ -449,7 +491,9 @@ int Mov_Backward_Topo_Bl(t_tree *tree, phydbl lk_old, t_edge **tested_b, int n_t
   else                                                    return  0;
 }
 
-/*********************************************************/
+//////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////
+
 
 int Mov_Backward_Topo_Pars(t_tree *tree, int pars_old, t_edge **tested_b, int n_tested)
 {
@@ -497,7 +541,9 @@ int Mov_Backward_Topo_Pars(t_tree *tree, int pars_old, t_edge **tested_b, int n_
   else                              return  0;
 }
 
-/*********************************************************/
+//////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////
+
 
 void Unswap_N_Branch(t_tree *tree, t_edge **b, int beg, int end)
 {
@@ -527,6 +573,18 @@ void Unswap_N_Branch(t_tree *tree, t_edge **b, int beg, int end)
 	       b[i]->nni->swap_node_v3->v[tree->t_dir[b[i]->nni->swap_node_v3->num*dim+b[i]->nni->swap_node_v4->num]],
 	       tree);
 
+	  if(!Check_Topo_Constraints(tree,tree->io->cstr_tree))
+	    {
+	      /* Undo this swap as it violates one of the topological constraints 
+		 defined in the input constraint tree 
+	      */
+	      Swap(b[i]->nni->swap_node_v2->v[tree->t_dir[b[i]->nni->swap_node_v2->num*dim+b[i]->nni->swap_node_v1->num]],
+		   b[i]->nni->swap_node_v2,
+		   b[i]->nni->swap_node_v3,
+		   b[i]->nni->swap_node_v3->v[tree->t_dir[b[i]->nni->swap_node_v3->num*dim+b[i]->nni->swap_node_v4->num]],
+		   tree);	 
+	    }
+
 
 /* 	  (b[i]->nni->best_conf == 1)? */
 /* 	    (Swap(b[i]->left->v[b[i]->l_v2],b[i]->left,b[i]->rght,b[i]->rght->v[b[i]->r_v1],tree)): */
@@ -545,12 +603,27 @@ void Unswap_N_Branch(t_tree *tree, t_edge **b, int beg, int end)
 	       b[i]->nni->swap_node_v3->v[tree->t_dir[b[i]->nni->swap_node_v3->num*dim+b[i]->nni->swap_node_v4->num]],
 	       tree);
 
+	  if(!Check_Topo_Constraints(tree,tree->io->cstr_tree))
+	    {
+	      /* Undo this swap as it violates one of the topological constraints 
+		 defined in the input constraint tree 
+	      */
+	      Swap(b[i]->nni->swap_node_v2->v[tree->t_dir[b[i]->nni->swap_node_v2->num*dim+b[i]->nni->swap_node_v1->num]],
+		   b[i]->nni->swap_node_v2,
+		   b[i]->nni->swap_node_v3,
+		   b[i]->nni->swap_node_v3->v[tree->t_dir[b[i]->nni->swap_node_v3->num*dim+b[i]->nni->swap_node_v4->num]],
+		   tree);	 
+	    }
+	  
+
 	  b[i]->l = b[i]->l_old;
 	}
     }
 }
 
-/*********************************************************/
+//////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////
+
 
 void Swap_N_Branch(t_tree *tree,t_edge **b, int beg, int end)
 {
@@ -569,6 +642,19 @@ void Swap_N_Branch(t_tree *tree,t_edge **b, int beg, int end)
 	       b[i]->nni->swap_node_v3->v[tree->t_dir[b[i]->nni->swap_node_v3->num*dim+b[i]->nni->swap_node_v4->num]],
 	       tree);
 
+	  if(!Check_Topo_Constraints(tree,tree->io->cstr_tree))
+	    {
+	      /* Undo this swap as it violates one of the topological constraints 
+		 defined in the input constraint tree 
+	      */
+	      Swap(b[i]->nni->swap_node_v2->v[tree->t_dir[b[i]->nni->swap_node_v2->num*dim+b[i]->nni->swap_node_v1->num]],
+		   b[i]->nni->swap_node_v2,
+		   b[i]->nni->swap_node_v3,
+		   b[i]->nni->swap_node_v3->v[tree->t_dir[b[i]->nni->swap_node_v3->num*dim+b[i]->nni->swap_node_v4->num]],
+		   tree);	 
+	    }
+
+	  
 
 	  b[i]->l = b[i]->nni->best_l;
 
@@ -584,12 +670,26 @@ void Swap_N_Branch(t_tree *tree,t_edge **b, int beg, int end)
 	       b[i]->nni->swap_node_v3->v[tree->t_dir[b[i]->nni->swap_node_v3->num*dim+b[i]->nni->swap_node_v4->num]],
 	       tree);
 
+	  if(!Check_Topo_Constraints(tree,tree->io->cstr_tree))
+	    {
+	      /* Undo this swap as it violates one of the topological constraints 
+		 defined in the input constraint tree 
+	      */
+	      Swap(b[i]->nni->swap_node_v2->v[tree->t_dir[b[i]->nni->swap_node_v2->num*dim+b[i]->nni->swap_node_v1->num]],
+		   b[i]->nni->swap_node_v2,
+		   b[i]->nni->swap_node_v3,
+		   b[i]->nni->swap_node_v3->v[tree->t_dir[b[i]->nni->swap_node_v3->num*dim+b[i]->nni->swap_node_v4->num]],
+		   tree);	 
+	    }
+
 	  b[i]->l = b[i]->nni->best_l;
 	}
     }
 }
 
-/*********************************************************/
+//////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////
+
 
 void Check_NNI_Scores_Around(t_node *a, t_node *d, t_edge *b, phydbl *best_score, t_tree *tree)
 {
@@ -613,14 +713,36 @@ void Check_NNI_Scores_Around(t_node *a, t_node *d, t_edge *b, phydbl *best_score
     }
 }
 
-/*********************************************************/
-/*********************************************************/
-/*********************************************************/
-/*********************************************************/
-/*********************************************************/
-/*********************************************************/
-/*********************************************************/
-/*********************************************************/
-/*********************************************************/
-/*********************************************************/
-/*********************************************************/
+//////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////
+
+//////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////
+
+//////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////
+
+//////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////
+
+//////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////
+
+//////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////
+
+//////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////
+
+//////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////
+
+//////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////
+
+//////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////
+
+//////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////
+

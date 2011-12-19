@@ -10,6 +10,8 @@ the GNU public licence. See http://www.opensource.org for details.
 
 */
 
+#include <config.h>
+
 #ifndef MCMC_H
 #define MCMC_H
 
@@ -39,7 +41,7 @@ void MCMC_Lexp(t_tree *tree);
 void MCMC_Print_Param(t_mcmc *mcmc, t_tree *tree);
 t_mcmc *MCMC_Make_MCMC_Struct();
 void MCMC_Free_MCMC(t_mcmc *mcmc);
-void MCMC_Init_MCMC_Struct(char *filename, t_mcmc *mcmc);
+void MCMC_Init_MCMC_Struct(char *filename, option *io,t_mcmc *mcmc);
 void MCMC(t_tree *tree);
 void MCMC_Alpha(t_tree *tree);
 void MCMC_Randomize_Branch_Lengths(t_tree *tree);
@@ -131,5 +133,13 @@ void MCMC_Make_Move(phydbl *cur, phydbl *new, phydbl inf, phydbl sup, phydbl *lo
 void MCMC_Randomize_Rate_Across_Sites(t_tree *tree);
 void MCMC_Randomize_Kappa(t_tree *tree);
 void MCMC_Updown_T_Cr(t_tree *tree);
+void MCMC_Linreg_Par(t_tree *tree);
+void MCMC_Covarion_Rates(t_tree *tree);
+void MCMC_Covarion_Switch(t_tree *tree);
+void MCMC_Randomize_Covarion_Rates(t_tree *tree);
+void MCMC_Randomize_Covarion_Switch(t_tree *tree);
+void MCMC_Read_Param_Vals(t_tree *tree);
+void MCMC_Birth_Rate(t_tree *tree);
+void MCMC_Randomize_Birth(t_tree *tree);
 
 #endif

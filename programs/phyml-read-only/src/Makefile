@@ -14,15 +14,6 @@
 
 
 
-# Uncomment (i.e. remove the `#' character at the begining of) 
-# the two lines below if you want to use MPI.
-
-# CC=mpicc
-# DEFS=-DUNIX -D$(PROG) -DDEBUG -DMPI
-
-# Comment the line below if you want to use MPI.
-# Uncomment the line below if you don't want to use MPI.
-
 
 pkgdatadir = $(datadir)/phyml
 pkglibdir = $(libdir)/phyml
@@ -42,6 +33,8 @@ POST_UNINSTALL = :
 build_triplet = i386-apple-darwin10.8.0
 host_triplet = i386-apple-darwin10.8.0
 bin_PROGRAMS = phyml$(EXEEXT)
+#bin_PROGRAMS = phyml-mpi$(EXEEXT)
+#bin_PROGRAMS = rf$(EXEEXT)
 #bin_PROGRAMS = m4$(EXEEXT)
 #bin_PROGRAMS = tiporder$(EXEEXT)
 #bin_PROGRAMS = part$(EXEEXT)
@@ -155,9 +148,9 @@ am__phyml_SOURCES_DIST = main.c utilities.c utilities.h optimiz.c \
 	optimiz.h lk.c lk.h bionj.c bionj.h models.c models.h free.c \
 	free.h help.c help.h simu.c simu.h eigen.c eigen.h pars.c \
 	pars.h alrt.c alrt.h interface.c interface.h cl.c cl.h spr.c \
-	spr.h draw.c draw.h mpi_boot.c mpi_boot.h stats.c stats.h \
-	rates.c rates.h mcmc.c mcmc.h times.c times.h tiporder.c \
-	tiporder.h mg.c mg.h m4.c m4.h
+	spr.h draw.c draw.h stats.c stats.h rates.c rates.h mcmc.c \
+	mcmc.h times.c times.h tiporder.c tiporder.h mg.c mg.h m4.c \
+	m4.h
 am_phyml_OBJECTS = main.$(OBJEXT) \
 	utilities.$(OBJEXT) \
 	optimiz.$(OBJEXT) \
@@ -174,7 +167,6 @@ am_phyml_OBJECTS = main.$(OBJEXT) \
 	cl.$(OBJEXT) \
 	spr.$(OBJEXT) \
 	draw.$(OBJEXT) \
-	mpi_boot.$(OBJEXT) \
 	stats.$(OBJEXT) \
 	rates.$(OBJEXT) \
 	mcmc.$(OBJEXT) \
@@ -184,6 +176,39 @@ am_phyml_OBJECTS = main.$(OBJEXT) \
 	m4.$(OBJEXT)
 phyml_OBJECTS = $(am_phyml_OBJECTS)
 phyml_DEPENDENCIES =
+am__phyml_mpi_SOURCES_DIST = main.c utilities.c utilities.h optimiz.c \
+	optimiz.h lk.c lk.h bionj.c bionj.h models.c models.h free.c \
+	free.h help.c help.h simu.c simu.h eigen.c eigen.h pars.c \
+	pars.h alrt.c alrt.h interface.c interface.h cl.c cl.h spr.c \
+	spr.h draw.c draw.h mpi_boot.c mpi_boot.h stats.c stats.h \
+	rates.c rates.h mcmc.c mcmc.h times.c times.h tiporder.c \
+	tiporder.h mg.c mg.h m4.c m4.h
+#am_phyml_mpi_OBJECTS = main.$(OBJEXT) \
+#	utilities.$(OBJEXT) \
+#	optimiz.$(OBJEXT) \
+#	lk.$(OBJEXT) \
+#	bionj.$(OBJEXT) \
+#	models.$(OBJEXT) \
+#	free.$(OBJEXT) \
+#	help.$(OBJEXT) \
+#	simu.$(OBJEXT) \
+#	eigen.$(OBJEXT) \
+#	pars.$(OBJEXT) \
+#	alrt.$(OBJEXT) \
+#	interface.$(OBJEXT) \
+#	cl.$(OBJEXT) \
+#	spr.$(OBJEXT) \
+#	draw.$(OBJEXT) \
+#	mpi_boot.$(OBJEXT) \
+#	stats.$(OBJEXT) \
+#	rates.$(OBJEXT) \
+#	mcmc.$(OBJEXT) \
+#	times.$(OBJEXT) \
+#	tiporder.$(OBJEXT) \
+#	mg.$(OBJEXT) \
+#	m4.$(OBJEXT)
+phyml_mpi_OBJECTS = $(am_phyml_mpi_OBJECTS)
+phyml_mpi_DEPENDENCIES =
 am__phytime_SOURCES_DIST = main.c utilities.c utilities.h optimiz.c \
 	optimiz.h lk.c lk.h bionj.c bionj.h models.c models.h free.c \
 	free.h help.c help.h simu.c simu.h eigen.c eigen.h pars.c \
@@ -203,6 +228,37 @@ am__phytime_SOURCES_DIST = main.c utilities.c utilities.h optimiz.c \
 #	tiporder.$(OBJEXT)
 phytime_OBJECTS = $(am_phytime_OBJECTS)
 phytime_DEPENDENCIES =
+am__rf_SOURCES_DIST = main.c utilities.c utilities.h optimiz.c \
+	optimiz.h lk.c lk.h bionj.c bionj.h models.c models.h free.c \
+	free.h help.c help.h simu.c simu.h eigen.c eigen.h pars.c \
+	pars.h alrt.c alrt.h interface.c interface.h cl.c cl.h mg.c \
+	mg.h times.c times.h mcmc.c mcmc.h rates.c rates.h spr.c spr.h \
+	draw.c draw.h stats.c stats.h tiporder.c tiporder.h m4.c m4.h
+#am_rf_OBJECTS = main.$(OBJEXT) \
+#	utilities.$(OBJEXT) \
+#	optimiz.$(OBJEXT) \
+#	lk.$(OBJEXT) \
+#	bionj.$(OBJEXT) \
+#	models.$(OBJEXT) \
+#	free.$(OBJEXT) \
+#	help.$(OBJEXT) \
+#	simu.$(OBJEXT) \
+#	eigen.$(OBJEXT) \
+#	pars.$(OBJEXT) \
+#	alrt.$(OBJEXT) \
+#	interface.$(OBJEXT) \
+#	cl.$(OBJEXT) \
+#	mg.$(OBJEXT) \
+#	times.$(OBJEXT) \
+#	mcmc.$(OBJEXT) \
+#	rates.$(OBJEXT) \
+#	spr.$(OBJEXT) \
+#	draw.$(OBJEXT) \
+#	stats.$(OBJEXT) \
+#	tiporder.$(OBJEXT) \
+#	m4.$(OBJEXT)
+rf_OBJECTS = $(am_rf_OBJECTS)
+rf_DEPENDENCIES =
 am__tiporder_SOURCES_DIST = main.c utilities.c utilities.h optimiz.c \
 	optimiz.h lk.c lk.h bionj.c bionj.h models.c models.h free.c \
 	free.h help.c help.h simu.c simu.h eigen.c eigen.h pars.c \
@@ -242,26 +298,28 @@ COMPILE = $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) \
 CCLD = $(CC)
 LINK = $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o $@
 SOURCES = $(m4_SOURCES) $(part_SOURCES) $(phycont_SOURCES) \
-	$(phyml_SOURCES) $(phytime_SOURCES) $(tiporder_SOURCES)
+	$(phyml_SOURCES) $(phyml_mpi_SOURCES) $(phytime_SOURCES) \
+	$(rf_SOURCES) $(tiporder_SOURCES)
 DIST_SOURCES = $(am__m4_SOURCES_DIST) $(am__part_SOURCES_DIST) \
 	$(am__phycont_SOURCES_DIST) $(am__phyml_SOURCES_DIST) \
-	$(am__phytime_SOURCES_DIST) $(am__tiporder_SOURCES_DIST)
+	$(am__phyml_mpi_SOURCES_DIST) $(am__phytime_SOURCES_DIST) \
+	$(am__rf_SOURCES_DIST) $(am__tiporder_SOURCES_DIST)
 ETAGS = etags
 CTAGS = ctags
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
-ACLOCAL = ${SHELL} /Users/Rob/Dropbox/Current_work/phyml-read-only/missing --run aclocal-1.10
-AMTAR = ${SHELL} /Users/Rob/Dropbox/Current_work/phyml-read-only/missing --run tar
-AUTOCONF = ${SHELL} /Users/Rob/Dropbox/Current_work/phyml-read-only/missing --run autoconf
-AUTOHEADER = ${SHELL} /Users/Rob/Dropbox/Current_work/phyml-read-only/missing --run autoheader
-AUTOMAKE = ${SHELL} /Users/Rob/Dropbox/Current_work/phyml-read-only/missing --run automake-1.10
+ACLOCAL = ${SHELL} /Users/Rob/phyml-read-only/missing --run aclocal-1.10
+AMTAR = ${SHELL} /Users/Rob/phyml-read-only/missing --run tar
+AUTOCONF = ${SHELL} /Users/Rob/phyml-read-only/missing --run autoconf
+AUTOHEADER = ${SHELL} /Users/Rob/phyml-read-only/missing --run autoheader
+AUTOMAKE = ${SHELL} /Users/Rob/phyml-read-only/missing --run automake-1.10
 AWK = awk
 CC = gcc
 CCDEPMODE = depmode=gcc3
-CFLAGS = -O3 -fomit-frame-pointer -funroll-loops -Wall -arch x86_64 -mmacosx-version-min=10.4
+CFLAGS = -ansi -pedantic -Wall -std=c99 -O3 -fomit-frame-pointer -funroll-loops -arch i386 -mmacosx-version-min=10.4
 CPP = gcc -E
 CPPFLAGS = 
 CYGPATH_W = echo
-DEFS = -DUNIX -D$(PROG) -DDEBUG $(REVISION)
+DEFS = $(REVISION)
 DEPDIR = .deps
 ECHO_C = \c
 ECHO_N = 
@@ -274,28 +332,28 @@ INSTALL_DATA = ${INSTALL} -m 644
 INSTALL_PROGRAM = ${INSTALL}
 INSTALL_SCRIPT = ${INSTALL}
 INSTALL_STRIP_PROGRAM = $(install_sh) -c -s
-LDFLAGS = -arch x86_64 -mmacosx-version-min=10.4
+LDFLAGS = 
 LIBOBJS = 
 LIBS = -lm 
 LTLIBOBJS = 
-MAKEINFO = ${SHELL} /Users/Rob/Dropbox/Current_work/phyml-read-only/missing --run makeinfo
+MAKEINFO = ${SHELL} /Users/Rob/phyml-read-only/missing --run makeinfo
 MKDIR_P = .././install-sh -c -d
 OBJEXT = o
 PACKAGE = phyml
-PACKAGE_BUGREPORT = guindon@stat.auckland.ac.nz
+PACKAGE_BUGREPORT = s.guindon@auckland.ac.nz
 PACKAGE_NAME = PhyML
-PACKAGE_STRING = PhyML 20110815
+PACKAGE_STRING = PhyML 20111219
 PACKAGE_TARNAME = phyml
-PACKAGE_VERSION = 20110815
+PACKAGE_VERSION = 20111219
 PATH_SEPARATOR = :
 SET_MAKE = 
 SHELL = /bin/sh
 STRIP = 
-VERSION = 20110815
-abs_builddir = /Users/Rob/Dropbox/Current_work/phyml-read-only/src
-abs_srcdir = /Users/Rob/Dropbox/Current_work/phyml-read-only/src
-abs_top_builddir = /Users/Rob/Dropbox/Current_work/phyml-read-only
-abs_top_srcdir = /Users/Rob/Dropbox/Current_work/phyml-read-only
+VERSION = 20111219
+abs_builddir = /Users/Rob/phyml-read-only/src
+abs_srcdir = /Users/Rob/phyml-read-only/src
+abs_top_builddir = /Users/Rob/phyml-read-only
+abs_top_srcdir = /Users/Rob/phyml-read-only
 ac_ct_CC = gcc
 am__include = include
 am__leading_dot = .
@@ -322,7 +380,7 @@ host_vendor = apple
 htmldir = ${docdir}
 includedir = ${prefix}/include
 infodir = ${datarootdir}/info
-install_sh = $(SHELL) /Users/Rob/Dropbox/Current_work/phyml-read-only/install-sh
+install_sh = $(SHELL) /Users/Rob/phyml-read-only/install-sh
 libdir = ${exec_prefix}/lib
 libexecdir = ${exec_prefix}/libexec
 localedir = ${datarootdir}/locale
@@ -342,13 +400,14 @@ target_alias =
 top_builddir = ..
 top_srcdir = ..
 PROG = PHYML
+#PROG = PHYML
+#PROG = RF
 #PROG = M4
 #PROG = TIPORDER
 #PROG = RWRAP
 #PROG = PART
 #PROG = PHYCONT
 #PROG = PHYTIME
-# endif
 #phytime_SOURCES = main.c \
 #utilities.c utilities.h\
 #optimiz.c optimiz.h\
@@ -502,7 +561,57 @@ PROG = PHYML
 #m4.c m4.h
 
 #m4_LDADD = -lm
-# if WANT_PHYML
+#rf_SOURCES = main.c \
+#utilities.c utilities.h\
+#optimiz.c optimiz.h\
+#lk.c lk.h\
+#bionj.c bionj.h\
+#models.c models.h\
+#free.c free.h\
+#help.c help.h\
+#simu.c simu.h\
+#eigen.c eigen.h\
+#pars.c pars.h\
+#alrt.c alrt.h\
+#interface.c interface.h\
+#cl.c cl.h\
+#mg.c mg.h\
+#times.c times.h\
+#mcmc.c mcmc.h\
+#rates.c rates.h\
+#spr.c spr.h\
+#draw.c draw.h\
+#stats.c stats.h\
+#tiporder.c tiporder.h\
+#m4.c m4.h
+
+#rf_LDADD = -lm
+#phyml_mpi_SOURCES = main.c \
+#utilities.c  utilities.h\
+#optimiz.c  optimiz.h\
+#lk.c  lk.h\
+#bionj.c bionj.h\
+#models.c  models.h\
+#free.c  free.h\
+#help.c  help.h\
+#simu.c  simu.h\
+#eigen.c  eigen.h\
+#pars.c  pars.h\
+#alrt.c  alrt.h\
+#interface.c  interface.h\
+#cl.c  cl.h\
+#spr.c spr.h\
+#draw.c  draw.h\
+#mpi_boot.c  mpi_boot.h\
+#stats.c stats.h\
+#rates.c rates.h\
+#mcmc.c mcmc.h\
+#times.c times.h\
+#tiporder.c tiporder.h\
+#mg.c mg.h\
+#m4.c m4.h
+
+#phyml_mpi_LDADD = -lm
 phyml_SOURCES = main.c \
 utilities.c  utilities.h\
 optimiz.c  optimiz.h\
@@ -519,7 +628,6 @@ interface.c  interface.h\
 cl.c  cl.h\
 spr.c spr.h\
 draw.c  draw.h\
-mpi_boot.c  mpi_boot.h\
 stats.c stats.h\
 rates.c rates.h\
 mcmc.c mcmc.h\
@@ -597,9 +705,15 @@ phycont$(EXEEXT): $(phycont_OBJECTS) $(phycont_DEPENDENCIES)
 phyml$(EXEEXT): $(phyml_OBJECTS) $(phyml_DEPENDENCIES) 
 	@rm -f phyml$(EXEEXT)
 	$(LINK) $(phyml_OBJECTS) $(phyml_LDADD) $(LIBS)
+phyml-mpi$(EXEEXT): $(phyml_mpi_OBJECTS) $(phyml_mpi_DEPENDENCIES) 
+	@rm -f phyml-mpi$(EXEEXT)
+	$(LINK) $(phyml_mpi_OBJECTS) $(phyml_mpi_LDADD) $(LIBS)
 phytime$(EXEEXT): $(phytime_OBJECTS) $(phytime_DEPENDENCIES) 
 	@rm -f phytime$(EXEEXT)
 	$(LINK) $(phytime_OBJECTS) $(phytime_LDADD) $(LIBS)
+rf$(EXEEXT): $(rf_OBJECTS) $(rf_DEPENDENCIES) 
+	@rm -f rf$(EXEEXT)
+	$(LINK) $(rf_OBJECTS) $(rf_LDADD) $(LIBS)
 tiporder$(EXEEXT): $(tiporder_OBJECTS) $(tiporder_DEPENDENCIES) 
 	@rm -f tiporder$(EXEEXT)
 	$(LINK) $(tiporder_OBJECTS) $(tiporder_LDADD) $(LIBS)
@@ -827,7 +941,6 @@ uninstall-am: uninstall-binPROGRAMS
 	uninstall-am uninstall-binPROGRAMS
 
 # endif
-# endif
 
 all-am:	intro $(bin_PROGRAMS)$(EXEEXT)
 	@echo ""
@@ -836,7 +949,7 @@ all-am:	intro $(bin_PROGRAMS)$(EXEEXT)
 intro:	
 	@echo ""
 	@echo ""
-	@echo ":: Building $(PROG). Version $(VERSION) ::"
+	@echo ":: Building [$(bin_PROGRAMS)]. Version $(VERSION) ::"
 	@echo ""
 	@echo ""
 # Tell versions [3.59,3.63) of GNU make to not export all variables.

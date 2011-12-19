@@ -1,5 +1,8 @@
 /* config.h.in.  Generated from configure.ac by autoheader.  */
 
+/* Debug tag on */
+#undef DEBUG
+
 /* Define to 1 if you don't have `vprintf' but do have `_doprnt.' */
 #undef HAVE_DOPRNT
 
@@ -65,6 +68,12 @@
 /* Define to 1 if you have the `vprintf' function. */
 #undef HAVE_VPRINTF
 
+/* m4 tag on */
+#undef M4
+
+/* MPI tag on */
+#undef MPI
+
 /* Name of package */
 #undef PACKAGE
 
@@ -83,8 +92,26 @@
 /* Define to the version of this package. */
 #undef PACKAGE_VERSION
 
+/* PART tag on */
+#undef PART
+
+/* PHYCONT tag on */
+#undef PHYCONT
+
+/* PHYML tag on */
+#undef PHYML
+
+/* PHYTIME tag on */
+#undef PHYTIME
+
 /* Define to 1 if the C compiler supports function prototypes. */
 #undef PROTOTYPES
+
+/* RF tag on */
+#undef RF
+
+/* RWRAP tag on */
+#undef RWRAP
 
 /* Define to 1 if the `setvbuf' function takes the buffering type as its
    second argument and the buffer pointer as the third, as on System V before
@@ -93,6 +120,12 @@
 
 /* Define to 1 if you have the ANSI C header files. */
 #undef STDC_HEADERS
+
+/* TIPORDER tag on */
+#undef TIPORDER
+
+/* Unix tag on */
+#undef UNIX
 
 /* Version number of package */
 #undef VERSION

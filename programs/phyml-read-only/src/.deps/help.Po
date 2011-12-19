@@ -1,4 +1,4 @@
-help.o help.o: help.c help.h utilities.h /usr/include/stdio.h \
+help.o help.o: help.c help.h ../config.h utilities.h /usr/include/stdio.h \
   /usr/include/_types.h /usr/include/sys/_types.h \
   /usr/include/sys/cdefs.h /usr/include/machine/_types.h \
   /usr/include/i386/_types.h \
@@ -17,7 +17,8 @@ help.o help.o: help.c help.h utilities.h /usr/include/stdio.h \
   /usr/include/i386/_types.h /usr/include/math.h \
   /usr/include/architecture/i386/math.h /usr/include/ctype.h \
   /usr/include/runetype.h /usr/include/string.h /usr/include/time.h \
-  /usr/include/_structs.h \
+  /usr/include/_structs.h /usr/include/machine/_limits.h \
+  /usr/include/i386/_limits.h \
   /usr/lib/gcc/i686-apple-darwin10/4.2.1/include/limits.h \
   /usr/lib/gcc/i686-apple-darwin10/4.2.1/include/syslimits.h \
   /usr/include/limits.h /usr/include/machine/limits.h \
@@ -28,10 +29,12 @@ help.o help.o: help.c help.h utilities.h /usr/include/stdio.h \
   models.h eigen.h stats.h lk.h optimiz.h mg.h tiporder.h times.h bionj.h \
   simu.h pars.h alrt.h m4.h draw.h rates.h mcmc.h /usr/include/unistd.h \
   /usr/include/sys/unistd.h /usr/include/sys/select.h \
-  /usr/include/sys/_select.h /usr/include/signal.h ../config.h cl.h \
+  /usr/include/sys/_select.h /usr/include/signal.h cl.h \
   /usr/include/getopt.h interface.h
 
 help.h:
+
+../config.h:
 
 utilities.h:
 
@@ -107,6 +110,10 @@ utilities.h:
 
 /usr/include/_structs.h:
 
+/usr/include/machine/_limits.h:
+
+/usr/include/i386/_limits.h:
+
 /usr/lib/gcc/i686-apple-darwin10/4.2.1/include/limits.h:
 
 /usr/lib/gcc/i686-apple-darwin10/4.2.1/include/syslimits.h:
@@ -172,8 +179,6 @@ mcmc.h:
 /usr/include/sys/_select.h:
 
 /usr/include/signal.h:
-
-../config.h:
 
 cl.h:
 

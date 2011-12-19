@@ -60,6 +60,7 @@ void Read_Command_Line(option *io, int argc, char **argv)
       {"random_boot",       required_argument,NULL,29},
       {"print_trace",       no_argument,NULL,30},
       {"print_site_lnl",    no_argument,NULL,31},
+      {"print_site_lk",    no_argument,NULL,31},
       {"cov",               no_argument,NULL,32},
       {"cov_delta",         required_argument,NULL,33},
       {"cov_alpha",         required_argument,NULL,34},
@@ -78,7 +79,9 @@ void Read_Command_Line(option *io, int argc, char **argv)
       {"pars",              no_argument,NULL,47},
       {"quiet",             no_argument,NULL,48},
       {"version",           no_argument,NULL,49},
-      {"calibration",       required_argument,NULL,50},
+      {"calibration_file",    required_argument,NULL,50},
+      {"calibration",         required_argument,NULL,50},
+      {"clade_file",          required_argument,NULL,50},
       {"boot_progress_every", required_argument,NULL,51},
       {"aa_rate_file",        required_argument,NULL,52},
       {"chain_len",           required_argument,NULL,53},
@@ -88,13 +91,22 @@ void Read_Command_Line(option *io, int argc, char **argv)
       {"no_colalias",         no_argument,NULL,57},
       {"alias_subpatt",       no_argument,NULL,58},      
       {"no_data",             no_argument,NULL,59},      
+      {"prior",               no_argument,NULL,59},      
       {"fastlk",              no_argument,NULL,60},      
       {"free_rates",          no_argument,NULL,61},
+      {"freerates",           no_argument,NULL,61},
       {"is",                  no_argument,NULL,62},
       {"constrained_lens",    no_argument,NULL,63},
       {"rate_model",          required_argument,NULL,64},
+      {"ratemodel",           required_argument,NULL,64},
       {"log_l",               no_argument,NULL,65},
       {"gamma_lens",          no_argument,NULL,66},
+      {"codpos",              required_argument,NULL,67},
+      {"constraint_file",     required_argument,NULL,68},
+      {"constraint_tree",     required_argument,NULL,68},
+      {"help",                no_argument,NULL,69},
+      {"mutmap",              no_argument,NULL,70},
+      {"parvals",             required_argument,NULL,71},
       {0,0,0,0}
     };
 
@@ -107,6 +119,68 @@ void Read_Command_Line(option *io, int argc, char **argv)
     {
       switch(c)
 	{
+	case 71:
+	  {
+	    io->mcmc->in_fp_par = fopen(optarg,"r");
+	    io->mcmc->randomize = NO;
+	    break;
+	  }
+	case 70:
+	  {
+	    io->mutmap = YES;
+	    break;
+	  }
+	case 68:
+	  {
+	    char *tmp;
+	    tmp = (char *)mCalloc(T_MAX_FILE, sizeof(char));
+	    if(strlen(optarg) > T_MAX_FILE -11)
+	      {
+		char choix;
+		strcpy (tmp, "\n. The file name'");
+		strcat (tmp, optarg);
+		strcat (tmp, "' is too long.\n");
+		PhyML_Printf("%s",tmp);
+		PhyML_Printf("\n. Type any key to exit.\n");
+		if(!scanf("%c",&choix)) Exit("\n");
+		Exit("\n");
+	      }
+	    else if (!Filexists (optarg))
+	      {
+		char choix;
+		strcpy (tmp, "\n. The file '");
+		strcat (tmp, optarg);
+		strcat (tmp, "' doesn't exist.\n");
+		PhyML_Printf("%s",tmp);
+		PhyML_Printf("\n. Type any key to exit.\n");
+		if(!scanf("%c",&choix)) Exit("\n");
+		Exit("\n");
+	      }
+	    else
+	      {
+		strcpy(io->in_constraint_tree_file, optarg);
+		io->fp_in_constraint_tree = Openfile(io->in_constraint_tree_file,0);
+	      }
+	    Free(tmp);
+	    break;
+	  }
+	case 67:
+	  {
+	    phydbl pos;
+	    pos = atof(optarg);
+	    io->codpos = (int)pos;
+	    if(io->codpos < 1 || io->codpos > 3)
+	      {
+		char choix;
+		PhyML_Printf("\n. Coding position must be set to 1, 2 or 3.\n");
+		PhyML_Printf("\n. Type any key to exit.\n");
+		if(!scanf("%c",&choix)) Exit("\n");
+		Exit("\n");
+	      }
+	    break;
+	    
+	    break;
+	  }
 	case 66:
 	  {
 	    io->mod->gamma_mgf_bl = YES;
@@ -125,12 +199,15 @@ void Read_Command_Line(option *io, int argc, char **argv)
 	    s = (char *)mCalloc(T_MAX_NAME,sizeof(char));
 	    i = 0;
 	    while(optarg[i++]) s[i]=tolower(optarg[i]);
-	    if(!strcmp(optarg,"thorne")) io->rates->model       = THORNE;
-	    else if(!strcmp(optarg,"guindon")) io->rates->model = GUINDON;
-	    else if(!strcmp(optarg,"gamma")) io->rates->model   = GAMMA;
+	    if(!strcmp(optarg,"thorne")) io->rates->model            = THORNE;
+	    else if(!strcmp(optarg,"guindon")) io->rates->model      = GUINDON;
+	    else if(!strcmp(optarg,"gamma")) io->rates->model        = GAMMA;
+	    else if(!strcmp(optarg,"clock")) io->rates->model        = STRICTCLOCK;
+	    else if(!strcmp(optarg,"strictclock")) io->rates->model  = STRICTCLOCK;
+	    else if(!strcmp(optarg,"strict_clock")) io->rates->model = STRICTCLOCK;
 	    else 
 	      {
-		PhyML_Printf("\n. rate_model should be 'thorne' or 'guindon'.");
+		PhyML_Printf("\n. rate_model should be 'thorne', 'guindon', 'gamma' or 'strictclock'.");
 		Exit("\n");
 	      }
 	    Free(s);
@@ -168,7 +245,7 @@ void Read_Command_Line(option *io, int argc, char **argv)
 	    break;
 	  }
 	case 57:
-	  {
+	  {	    
 	    io->colalias = NO;
 	    break;
 	  }
@@ -228,6 +305,7 @@ void Read_Command_Line(option *io, int argc, char **argv)
 	    s = (char *)mCalloc(T_MAX_FILE, sizeof(char));
 	    strcpy(s,optarg);
 	    io->fp_aa_rate_mat = Openfile(s,0);
+	    strcpy(io->aa_rate_mat_file,s);
 	    Free(s);
 	    break;
 	  }
@@ -317,15 +395,6 @@ void Read_Command_Line(option *io, int argc, char **argv)
 	  }
 	case 39 :
 	  {
-	    char choix;
-	    io->mod->n_rr_branch = (int)atoi(optarg);
-	    if(io->mod->n_rr_branch < 1)
-	      {
-		PhyML_Printf("\n. The number of classes must be an integer greater than 0.\n");
-		PhyML_Printf("\n. Type any key to exit.\n");
-		if(!scanf("%c",&choix)) Exit("\n");
-		Exit("\n");
-	      }
 	    break;
 	  }
 	case 38 :
@@ -390,7 +459,7 @@ void Read_Command_Line(option *io, int argc, char **argv)
 	    if(!strcmp(optarg,"e") || !strcmp(optarg,"E") ||
 	       !strcmp(optarg,"estimated") || !strcmp(optarg,"ESTIMATED"))
 	      {
-		io->mod->s_opt->opt_cov_delta = 1;
+		io->mod->s_opt->opt_cov_delta = YES;
 		io->mod->m4mod->delta         = 1.0;
 	      }
 	    else
@@ -539,9 +608,10 @@ void Read_Command_Line(option *io, int argc, char **argv)
 	  {
 	    if(!strcmp(optarg,"nt"))
 	      {
-		io->datatype      = NT;
-		io->mod->ns = 4;
-		io->mod->state_len     = 1;
+		io->datatype        = NT;
+		io->mod->ns         = 4;
+		io->mod->state_len  = 1;
+		io->mod->m4mod->n_o = 4;
 		
 		if(
 		   (io->mod->whichmodel == LG)       ||
@@ -568,9 +638,11 @@ void Read_Command_Line(option *io, int argc, char **argv)
 	    else if (!strcmp(optarg,"aa"))
 	      {
 		io->datatype              = AA;
-		io->mod->state_len             = 1;
+		io->mod->state_len        = 1;
 		io->mod->s_opt->opt_kappa = 0;
-		io->mod->ns         = 20;
+		io->mod->ns               = 20;
+		io->mod->m4mod->n_o       = 20;
+
 		if(
 		   (io->mod->whichmodel == JC69)   ||
 		   (io->mod->whichmodel == K80)    ||
@@ -769,7 +841,7 @@ void Read_Command_Line(option *io, int argc, char **argv)
 	      }
 	    else
 	      {
-		io->mod->alpha = (phydbl)atof(optarg);
+		io->mod->alpha->v = (phydbl)atof(optarg);
 		io->mod->s_opt->opt_alpha  = 0;
 	      }
 	    break;
@@ -875,31 +947,31 @@ void Read_Command_Line(option *io, int argc, char **argv)
 		/* 		       io->mod->user_b_freq+2, */
 		/* 		       io->mod->user_b_freq+3); */
 		sscanf(optarg,"%lf,%lf,%lf,%lf",&val1,&val2,&val3,&val4);
-		io->mod->user_b_freq[0] = (phydbl)val1;
-		io->mod->user_b_freq[1] = (phydbl)val2;
-		io->mod->user_b_freq[2] = (phydbl)val3;
-		io->mod->user_b_freq[3] = (phydbl)val4;
+		io->mod->user_b_freq->v[0] = (phydbl)val1;
+		io->mod->user_b_freq->v[1] = (phydbl)val2;
+		io->mod->user_b_freq->v[2] = (phydbl)val3;
+		io->mod->user_b_freq->v[3] = (phydbl)val4;
 		
 		sum =
-		  (io->mod->user_b_freq[0] +
-		   io->mod->user_b_freq[1] +
-		   io->mod->user_b_freq[2] +
-		   io->mod->user_b_freq[3]);
+		  (io->mod->user_b_freq->v[0] +
+		   io->mod->user_b_freq->v[1] +
+		   io->mod->user_b_freq->v[2] +
+		   io->mod->user_b_freq->v[3]);
 		
-		io->mod->user_b_freq[0] /= sum;
-		io->mod->user_b_freq[1] /= sum;
-		io->mod->user_b_freq[2] /= sum;
-		io->mod->user_b_freq[3] /= sum;
+		io->mod->user_b_freq->v[0] /= sum;
+		io->mod->user_b_freq->v[1] /= sum;
+		io->mod->user_b_freq->v[2] /= sum;
+		io->mod->user_b_freq->v[3] /= sum;
 		
 		
-		if(io->mod->user_b_freq[0] < .0 ||
-		   io->mod->user_b_freq[1] < .0 ||
-		   io->mod->user_b_freq[2] < .0 ||
-		   io->mod->user_b_freq[3] < .0 ||
-		   io->mod->user_b_freq[0] > 1. ||
-		   io->mod->user_b_freq[1] > 1. ||
-		   io->mod->user_b_freq[2] > 1. ||
-		   io->mod->user_b_freq[3] > 1.)
+		if(io->mod->user_b_freq->v[0] < .0 ||
+		   io->mod->user_b_freq->v[1] < .0 ||
+		   io->mod->user_b_freq->v[2] < .0 ||
+		   io->mod->user_b_freq->v[3] < .0 ||
+		   io->mod->user_b_freq->v[0] > 1. ||
+		   io->mod->user_b_freq->v[1] > 1. ||
+		   io->mod->user_b_freq->v[2] > 1. ||
+		   io->mod->user_b_freq->v[3] > 1.)
 		  {
 		    Warn_And_Exit("\n. Invalid base frequencies.\n");
 		  }
@@ -907,7 +979,7 @@ void Read_Command_Line(option *io, int argc, char **argv)
 	    break;
 	  }
 	  
-	case 'h':
+	case 'h':case 69:
 	  {
 	    Usage();
 	    break;
@@ -978,7 +1050,7 @@ void Read_Command_Line(option *io, int argc, char **argv)
 		    (strcmp(optarg, "estimated") == 0) ||
 		    (strcmp(optarg, "ESTIMATED") == 0))
 		  {
-		    io->mod->kappa                 = 4.0;
+		    io->mod->kappa->v                 = 4.0;
 		    io->mod->s_opt->opt_kappa      = 1;
 		    if (io->mod->whichmodel == TN93)
 		      io->mod->s_opt->opt_lambda   = 1;
@@ -995,7 +1067,7 @@ void Read_Command_Line(option *io, int argc, char **argv)
 		      }
 		    else
 		      {
-			io->mod->kappa = (phydbl)atof(optarg);
+			io->mod->kappa->v = (phydbl)atof(optarg);
 			io->mod->s_opt->opt_kappa  = 0;
 			io->mod->s_opt->opt_lambda = 0;
 		      }
@@ -1078,8 +1150,8 @@ void Read_Command_Line(option *io, int argc, char **argv)
 	      }
 	    else
 	      {
-		io->mod->pinvar = (phydbl)atof(optarg);
-		if (io->mod->pinvar > 0.0+SMALL)
+		io->mod->pinvar->v = (phydbl)atof(optarg);
+		if (io->mod->pinvar->v > 0.0+SMALL)
 		  io->mod->invar = 1;
 		else
 		  io->mod->invar = 0;
@@ -1091,43 +1163,43 @@ void Read_Command_Line(option *io, int argc, char **argv)
 	  {
 	    if(!strcmp(optarg,"tlr"))
 	      {
-		io->mod->s_opt->opt_topo        = 1;
-		io->mod->s_opt->opt_bl          = 1;
-		io->mod->s_opt->opt_subst_param = 1;
+		io->mod->s_opt->opt_topo        = YES;
+		io->mod->s_opt->opt_bl          = YES;
+		io->mod->s_opt->opt_subst_param = YES;
 	      }
 	    else if(!strcmp(optarg,"tl"))
 	      {
-		io->mod->s_opt->opt_topo        = 1;
-		io->mod->s_opt->opt_bl          = 1;
-		io->mod->s_opt->opt_subst_param = 0;
+		io->mod->s_opt->opt_topo        = YES;
+		io->mod->s_opt->opt_bl          = YES;
+		io->mod->s_opt->opt_subst_param = NO;
 	      }
 	    else if(!strcmp(optarg,"t"))
 	      {
-		Warn_And_Exit("\n. You can't optimize the topoLOGy without adjusting branch length too...\n");
+		Warn_And_Exit("\n. You can't optimize the topology without adjusting branch length too...\n");
 	      }
 	    else if(!strcmp(optarg,"lr"))
 	      {
-		io->mod->s_opt->opt_topo        = 0;
-		io->mod->s_opt->opt_bl          = 1;
-		io->mod->s_opt->opt_subst_param = 1;
+		io->mod->s_opt->opt_topo        = NO;
+		io->mod->s_opt->opt_bl          = YES;
+		io->mod->s_opt->opt_subst_param = YES;
 	      }
 	    else if(!strcmp(optarg,"l"))
 	      {
-		io->mod->s_opt->opt_topo        = 0;
-		io->mod->s_opt->opt_bl          = 1;
-		io->mod->s_opt->opt_subst_param = 0;
+		io->mod->s_opt->opt_topo        = NO;
+		io->mod->s_opt->opt_bl          = YES;
+		io->mod->s_opt->opt_subst_param = NO;
 	      }
 	    else if(!strcmp(optarg,"r"))
 	      {
-		io->mod->s_opt->opt_topo        = 0;
-		io->mod->s_opt->opt_bl          = 0;
-		io->mod->s_opt->opt_subst_param = 1;
+		io->mod->s_opt->opt_topo        = NO;
+		io->mod->s_opt->opt_bl          = NO;
+		io->mod->s_opt->opt_subst_param = YES;
 	      }
 	    else if(!strcmp(optarg,"none") || !strcmp(optarg,"n"))
 	      {
-		io->mod->s_opt->opt_topo        = 0;
-		io->mod->s_opt->opt_bl          = 0;
-		io->mod->s_opt->opt_subst_param = 0;
+		io->mod->s_opt->opt_topo        = NO;
+		io->mod->s_opt->opt_bl          = NO;
+		io->mod->s_opt->opt_subst_param = NO;
 	      }
 	    else
 	      {
@@ -1173,7 +1245,7 @@ void Read_Command_Line(option *io, int argc, char **argv)
   if(io->mod->s_opt->constrained_br_len == YES)
     {
       io->mod->s_opt->opt_topo = NO;
-      io->mod->s_opt->opt_bl   = NO;
+      /* io->mod->s_opt->opt_bl   = NO; */
     }
 
 #ifndef PHYML
@@ -1320,4 +1392,6 @@ void Read_Command_Line(option *io, int argc, char **argv)
   return;
 }
 
-/*********************************************************/
+//////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////
+

@@ -11,6 +11,8 @@ the GNU public licence.  See http://www.opensource.org for details.
 
 */
 
+#include <config.h>
+
 #ifndef CL_H
 #define CL_H
 

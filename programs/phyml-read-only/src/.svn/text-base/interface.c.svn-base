@@ -75,6 +75,7 @@ void Launch_Interface(option *io)
       PhyML_Printf("\n. Enter the rate matrix file name > "); fflush(NULL);
       Getstring_Stdin(filename);
       io->fp_aa_rate_mat = Openfile(filename,0);
+      strcpy(io->aa_rate_mat_file,filename);
       PhyML_Printf("\n");
       Free(filename);
       fflush(NULL);
@@ -201,7 +202,9 @@ void Launch_Interface(option *io)
     }
 }
 
-/*********************************************************/
+//////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////
+
 
 void Clear()
 {
@@ -212,7 +215,9 @@ void Clear()
 #endif
 }
 
-/*********************************************************/
+//////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////
+
 
 void Launch_Interface_Input(option *io)
 {
@@ -330,6 +335,8 @@ void Launch_Interface_Input(option *io)
       else             io->out_stats_file_open_mode = 2;
     }
 
+  printf("\n. MODE = %d",io->out_stats_file_open_mode);
+
   io->fp_out_stats = Openfile(io->out_stats_file,io->out_stats_file_open_mode);
 
 #ifdef WIN32
@@ -376,7 +383,9 @@ void Launch_Interface_Input(option *io)
   io->fp_out_tree = Openfile(io->out_tree_file,io->out_tree_file_open_mode);
 }
 
-/*********************************************************/
+//////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////
+
 
 void Launch_Interface_Data_Type(option *io)
 {
@@ -561,7 +570,9 @@ void Launch_Interface_Data_Type(option *io)
   Free(s);
   Free(buff);
 }
-/*********************************************************/
+//////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////
+
 
 void Launch_Interface_Model(option *io)
 {
@@ -668,14 +679,14 @@ void Launch_Interface_Model(option *io)
     {
       strcpy(s,(io->mod->s_opt->opt_kappa)?("estimated"):("fixed"));
       (io->mod->s_opt->opt_kappa)?((char *)strcat(s,"")):((char *)strcat(s," (ts/tv = "));
-/*       (io->mod->s_opt->opt_kappa)?((char *)strcat(s,"")):((char *)sprintf(s+(int)strlen((char *)s),"%3.2f)",io->mod->kappa)); */
+/*       (io->mod->s_opt->opt_kappa)?((char *)strcat(s,"")):((char *)sprintf(s+(int)strlen((char *)s),"%3.2f)",io->mod->kappa->v)); */
       if(io->mod->s_opt->opt_kappa)
 	{
 	  strcat((char *)s,"");
 	}
       else
 	{
-	  sprintf((char *)(s+(int)strlen(s)),"%3.2f)",io->mod->kappa);
+	  sprintf((char *)(s+(int)strlen(s)),"%3.2f)",io->mod->kappa->v);
 	}
 
       PhyML_Printf("                [T] "
@@ -693,7 +704,7 @@ void Launch_Interface_Model(option *io)
     }
   else
     {
-      sprintf((char *)(s+strlen((char *)s)),"%3.2f)",io->mod->pinvar);
+      sprintf((char *)(s+strlen((char *)s)),"%3.2f)",io->mod->pinvar->v);
     }
 
   PhyML_Printf("                [V] "
@@ -733,7 +744,7 @@ void Launch_Interface_Model(option *io)
 	}
       else
 	{
-	  sprintf(s+strlen(s),"%3.2f)",io->mod->alpha);
+	  sprintf(s+strlen(s),"%3.2f)",io->mod->alpha->v);
 	}
 
       PhyML_Printf("                [A] "
@@ -824,7 +835,7 @@ void Launch_Interface_Model(option *io)
 	    if(n_trial == 10) Exit("");
 
 
-	    if(!mod->rr) Make_Custom_Model(mod);
+	    if(!mod->rr->v) Make_Custom_Model(mod);
 	    Translate_Custom_Mod_String(io->mod);
 
 	    strcpy(rr_param[0],"A<->C");
@@ -841,7 +852,7 @@ void Launch_Interface_Model(option *io)
 		sprintf(rr,"\n. [");
 		For(j,6)
 		  {
-		    if(mod->rr_num[j] == i) 
+		    if(mod->rr_num->v[j] == i) 
 		      {
 			sprintf(rr+strlen(rr),"%s = ",rr_param[j]);
 		      }
@@ -849,7 +860,7 @@ void Launch_Interface_Model(option *io)
 		sprintf(rr+strlen(rr)-3,"]");
 		PhyML_Printf("%s",rr);
 
-		PhyML_Printf("  (current=%.2f) > ",mod->rr_val[i]);
+		PhyML_Printf("  (current=%.2f) > ",mod->rr_val->v[i]);
 		
 		Getstring_Stdin(rr);
 		
@@ -864,7 +875,7 @@ void Launch_Interface_Model(option *io)
 			PhyML_Printf("\n. Enter a new value > ");
 			Getstring_Stdin(rr);
 		      }
-		    io->mod->rr_val[i] = (phydbl)atof(rr);
+		    io->mod->rr_val->v[i] = (phydbl)atof(rr);
 		  }
 	      }
 
@@ -916,20 +927,20 @@ void Launch_Interface_Model(option *io)
 			    PhyML_Printf("\n. Enter a new value > ");
 			    Getstring_Stdin(bs);
 			  }
-			io->mod->user_b_freq[i] = (phydbl)atof(bs);
-			sum += io->mod->user_b_freq[i];
+			io->mod->user_b_freq->v[i] = (phydbl)atof(bs);
+			sum += io->mod->user_b_freq->v[i];
 		      }
 		
-		    For(i,4) io->mod->user_b_freq[i] /= sum;
+		    For(i,4) io->mod->user_b_freq->v[i] /= sum;
 
 		    if(sum > 1.0 || sum < 1.0)
 		      {
 			PhyML_Printf("\n. The nucleotide frequencies have to be normalised in order to sum to 1.0.\n");
 			PhyML_Printf("\n. The frequencies are now : f(A)=%f, f(C)=%f, f(G)=%f, f(T)=%f.\n",
-			       io->mod->user_b_freq[0],
-			       io->mod->user_b_freq[1],
-			       io->mod->user_b_freq[2],
-			       io->mod->user_b_freq[3]);			  
+			       io->mod->user_b_freq->v[0],
+			       io->mod->user_b_freq->v[1],
+			       io->mod->user_b_freq->v[2],
+			       io->mod->user_b_freq->v[3]);			  
 			PhyML_Printf("\n. Enter any key to continue.\n");
 			if(!scanf("%c",bs)) Exit("\n");
 		      }
@@ -995,7 +1006,7 @@ void Launch_Interface_Model(option *io)
 	    {
 	      char *a;
 	      a = (char *)mCalloc(100,sizeof(char));
-	      io->mod->alpha = 10.0;
+	      io->mod->alpha->v = 10.0;
 	      io->mod->s_opt->opt_alpha = 0;
 	      PhyML_Printf("\n. Enter your value of alpha > ");
 	      Getstring_Stdin(a);
@@ -1007,7 +1018,7 @@ void Launch_Interface_Model(option *io)
 		  PhyML_Printf("\n. Enter a new value > ");
 		  Getstring_Stdin(a);
 		}
-	      io->mod->alpha = (phydbl)atof(a);
+	      io->mod->alpha->v = (phydbl)atof(a);
 	      Free(a);
 	      io->mod->s_opt->opt_alpha  = 0;
 	      break;
@@ -1086,7 +1097,7 @@ void Launch_Interface_Model(option *io)
 	    {
 	      io->mod->s_opt->opt_subst_param = 1;
 	      io->mod->s_opt->opt_pinvar = 1;
-	      io->mod->pinvar = 0.2;
+	      io->mod->pinvar->v = 0.2;
 	      io->mod->invar  = 1;
 	      break;
 	    }
@@ -1105,9 +1116,9 @@ void Launch_Interface_Model(option *io)
 		  PhyML_Printf("\n. Enter a new value > ");
 		  Getstring_Stdin(p);
 		}
-	      io->mod->pinvar = (phydbl)atof(p);
+	      io->mod->pinvar->v = (phydbl)atof(p);
 
-	      if(io->mod->pinvar > 0.0+SMALL) io->mod->invar = 1;
+	      if(io->mod->pinvar->v > 0.0+SMALL) io->mod->invar = 1;
 	      else                             io->mod->invar = 0;
 
 	      Free(p);
@@ -1172,7 +1183,7 @@ void Launch_Interface_Model(option *io)
 	  {
 	  case 'Y' : case 'y' :
 	    {
-	      io->mod->kappa = 4.0;
+	      io->mod->kappa->v = 4.0;
 	      io->mod->s_opt->opt_subst_param = 1;
 	      io->mod->s_opt->opt_kappa = 1;
 	      if(io->mod->whichmodel == TN93)
@@ -1194,7 +1205,7 @@ void Launch_Interface_Model(option *io)
 		  PhyML_Printf("\n. Enter a new value > ");
 		  Getstring_Stdin(t);
 		}
-	      io->mod->kappa = (phydbl)atof(t);
+	      io->mod->kappa->v = (phydbl)atof(t);
 	      io->mod->s_opt->opt_kappa  = 0;
 	      io->mod->s_opt->opt_lambda = 0;
 	      Free(t);
@@ -1357,7 +1368,9 @@ void Launch_Interface_Model(option *io)
   Free(s);
 }
 
-/*********************************************************/
+//////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////
+
 
 void Launch_Interface_Topo_Search(option *io)
 {
@@ -1592,7 +1605,9 @@ void Launch_Interface_Topo_Search(option *io)
     }
 }
 
-/*********************************************************/
+//////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////
+
 
 void Launch_Interface_Branch_Support(option *io)
 {
@@ -1812,7 +1827,8 @@ void Launch_Interface_Branch_Support(option *io)
     }
 }
 
-/*********************************************************/
+//////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////
 
 void Launch_Interface_Multigene(option *io)
 {

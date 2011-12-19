@@ -30,7 +30,7 @@
 \setpapersize{A4}
 % \hypersetup{colorlinks=true,linkcolor=blue,urlcolor=red,linkbordercolor=000}
 \hypersetup{colorlinks=true,linkcolor=blue,urlcolor=red}
-\renewcommand{\baselinestretch}{1}
+\renewcommand{\baselinestretch}{1.2}
 \makeindex
 \begin{document}
 \sloppy
@@ -71,6 +71,21 @@ the GNU public licence. See http://www.opensource.org for details.
   S. 2010, {\it Molecular Biology and Evolution}, {\bf \small 27}(8):1768-81
 \end{itemize}
 }
+
+{
+\noindent
+\setlength{\baselineskip}{0.5\baselineskip}
+\section{Availability}
+\begin{itemize}
+\item Binaries: \href{http://www.atgc-montpellier.fr/phyml}{http://www.atgc-montpellier.fr/phyml}
+\item Sources: \href{http://code.google.com/p/phyml}{http://code.google.com/p/phyml}
+\item Discussion forum: \href{http://groups.google.com/group/phyml-forum}{http://groups.google.com/group/phyml-forum}
+\end{itemize}
+}
+
+
+
+
 
 {
 \noindent
@@ -120,7 +135,7 @@ character  long.   For  larger  data  sets,  we  recommend using  other  softwar
 
 The sources of the  program are available free of charge by sending  an e-mail to St\'ephane Guindon
 at                      \href{mailto:guindon@lirmm.fr}{\x{guindon@lirmm.fr}}                      or
-\href{mailto:guindon@stat.auckland.ac.nz}{\x{guindon@stat.auckland.ac.nz}}.
+\href{mailto:s.guindon@auckland.ac.nz}{\x{s.guindon@auckland.ac.nz}}.
 
 The compilation on UNIX-like systems is fairly  standard. It is described in the `INSTALL' file that
 comes with the sources. In a command-line window,  go to the directory that contains the sources and
@@ -134,9 +149,21 @@ make;
 \end{verbatim}
 }
 
-{\em Note} -- when PhyML  is going to be used mostly of exclusively in  batch mode, it is preferable
-to turn on the batch mode option in the  Makefile. In order to do so, the file \x{Makefile.am} needs
-to be modified: add \x{-DBATCH} to the line with \x{DEFS=-DUNIX -D\$(PROG) -DDEBUG}.
+By default, PhyML will be compiled with optimization flags turned on. It is possible to generate a
+version of PhyML that can run through a debugging tool (such as \x{ddd}\label{ddd}) or a profiling
+tool (such as \x{gprof}\label{gprof}) using the following instructions:
+
+{\setlength{\baselineskip}{0.5\baselineskip}
+\begin{verbatim}
+./configure --enable-debug;
+make clean;
+make;
+\end{verbatim}
+}
+
+% {\em Note} -- when PhyML  is going to be used mostly of exclusively in  batch mode, it is preferable
+% to turn on the batch mode option in the  Makefile. In order to do so, the file \x{Makefile.am} needs
+% to be modified: add \x{-DBATCH} to the line with \x{DEFS=-DUNIX -D\$(PROG) -DDEBUG}.
 
 
 
@@ -164,23 +191,25 @@ processors available.
 This  feature of  PhyML relies  on the  MPI (Message  Passing Interface)  library. To  use  it, your
 computer must  have MPI  installed on  it. In case  MPI is  not installed, you  can dowload  it from
 \href{http://www.mcs.anl.gov/research/projects/mpich2/}{http://www.mcs.anl.gov/research/projects/mpich2/}.
-Once  MPI is  installed, a  few modification  of the  file `\x{Makefile.am}'  must be  applied.  The
-relevant section  of this file  and the  instruction to add  or remove the  MPI option to  PhyML are
-printed below:
-
+Once MPI is  installed, it is necessary to launch  the MPI daemon. This can be  done by entering the
+following instruction: \x{mpd \&}.  Note however that in most cases, the  MPI daemon will already be
+running on your server so  that you most likely do not need to worry  about this. You can then just
+go in the \x{phyml/} directory (the directory that contains the \x{src/}, \x{examples/} and \x{doc/}
+folders) and enter the commands below: {\setlength{\baselineskip}{0.5\baselineskip}
 \begin{verbatim}
-# Uncomment (i.e. remove the `#' character at the begining of) 
-# the two lines below if you want to use MPI.
-# Comment the two lines below if you don't want to use MPI.
-
-# CC=mpicc
-# DEFS=-DUNIX -D$(PROG) -DDEBUG -DMPI
-
-# Comment the line below if you want to use MPI.
-# Uncomment the line below if you don't want to use MPI.
-
-DEFS=-DUNIX -D$(PROG) -DDEBUG
+./configure --enable-mpi;
+make clean;
+make;
 \end{verbatim}
+}
+A binary file named \x{phyml-mpi} has now been created in the \x{src/} directory and is ready to use
+with MPI. A typical MPI command-line which uses 4 CPUs is given below:
+{\setlength{\baselineskip}{0.5\baselineskip}
+\begin{verbatim}
+mpirun -n 4 ./phyml-mpi -i myseq -b 100
+\end{verbatim}
+}
+
 
 
 \section{Program usage.}\label{sec:phyml_new}
@@ -347,9 +376,6 @@ correspond to moderate to  low heterogeneity. The gamma shape parameter can be  
 estimated via maximum-likelihood. Type \x{A} to select one or the other option.
 
 
-
-
-
 \subsubsection{Tree searching sub-menu}
 
 \begin{center} \framebox{\x{[O] ........................... Optimise tree topology}} \end{center} By
@@ -510,6 +536,15 @@ likelihood estimate. The value of this parameter is estimated in the maximum lik
 The middle of each substitution rate class in the discrete gamma distribution is taken as the
 median. The mean is used by default.
 
+\item \x{--free\_rates} \index{command-line options!\x{--free\_rates}}\\
+As an alternative to the discrete gamma model, it is possible to estimate the (relative) rate in
+each class of the (mixture) model and the corresponding frequencies. This model has more parameters
+than the discrete gamma one but usually provides a significantly better fit to the data.
+
+\item \x{--codpos} \x{1,2 or 3} \index{command-line options!\x{--codpos}}\\
+When analysing an alignment of coding sequences, use this option to consider only the first, second
+or third coding position for the estimation.
+
 \item \x{-s} (or \x{--search}) \x{move}\index{NNI}\index{SPR} \index{command-line options!\x{--search}}\\
 Tree topology search operation option. Can be either \x{NNI} (default, fast) or \x{SPR} (a bit slower than \x{NNI}) or \x{BEST} (best of NNI and SPR search).
 
@@ -539,13 +574,29 @@ This option sets the initial tree to random. It is only valid if SPR searches ar
 \item \x{--print\_site\_lnl}\index{likelihood!print site likelihood} \index{command-line options!\x{--print\_site\_lk}}\\
 Print the likelihood for each site in file *\_phyml\_lk.txt.
 
-\item \x{--print\_trace} \index{command-line options!\x{--print\_trace}}\\
+\item \x{--print\_trace}\index{command-line options!\x{--print\_trace}}\\
 Print each phylogeny explored during the tree search process in file *\_phyml\_trace.txt.
 
 \item \x{--run\_id ID\_string}\index{run ID} \index{command-line options!\x{--run\_id}}\\
 Append the string ID\_string at the end of each PhyML output file. This option may be useful when
 running simulations involving PhyML. It can also be used to `tag' multiple analysis of the same data
 set with various program settings.
+
+\item \x{--no\_memory\_check} \index{command-line options!\x{--no\_memory\_check}}\\
+By default, when processing a large data set, PhyML will pause and ask the user to confirm that
+she/he wants to continue with the execution of the analysis despite the large amount of memory
+required. The \x{--no\_memory\_check}  skips this question. It is especially useful when running
+PhyML in batch mode.
+
+\item \x{--no\_jcolalias} \index{command-line options!\x{--no\_colalias}}\\
+By default, PhyML preprocesses each alignment by putting together (or aliasing) the columns that are
+identical. Use this option to skip this step but be aware that the analysis might then take more
+time to complete. 
+
+\item \x{--contrained\_lens} \index{command-line options!\x{--constrained\_lens}}\\
+When an input tree with branch lengths is provided, this option will find the branch multiplier that
+maximises the likelihood (i.e., the relative branch lengths remain constant)
+
 
 \end{itemize}
 
@@ -777,7 +828,7 @@ $K$       & Lysine &          & (can be any amino acid) \\
 \caption{{\bf List of valid characters in protein sequences and the corresponding amino acids.}}\label{tab:ambigu_aa}
 \end{table}
 
-\subsubsection{Specifying outgroup sequences}
+\subsubsection{Specifying outgroup sequences}\label{sec:outgroupspecify}
 
 PhyML can return rooted trees provided outgroup taxa are identified from the sequence file. In
 order to do so, sequence names that display a `*' character will be automatically considered as
@@ -905,6 +956,34 @@ When the random  tree option is turned on,  the maximum likelihood trees estimat
 starting trees are printed in a separate tree file (see last row of Table \ref{tab:output}).
 
 
+\subsection{Treatment of invariable sites with fixed branch lengths}
+
+PhyML  allows users  to give  an input  tree with  fixed topology  and branch  lengths and  find the
+proportion of invariable sites that maximise the likelihood (option \x{-o r}). These two options can
+be considered  as conflicting since  branch lengths depend  on the proportion of  invariants. Hence,
+changing the proportion  of invariants implies that branch lengths are  changing too. More formally,
+let $l$ denote the length of a branch,  i.e., the expected number of substitutions per site, and $p$
+be  the proportion  of invariants.  We have  $l =  (1-p)l'$, where  $l'$ is  the expected  number of
+substitutions per  \_variable\_ sites.  When  asked to optimize  $p$ but leave $l$  unchanged, PhyML
+does the following:
+\begin{enumerate}
+\item Calculate $l' = l/(1-p)$ and leave $l'$ unchanged throughout the optimization.
+\item Find the value of $p$ that maximises the likelihood. Let $p^{*}$ denote this value.
+\item Set $l^{*} = (1-p^{*})l'$ and print out the tree with $l^{*}$ (instead of $l$).
+\end{enumerate} 
+
+PhyML therefore  assumes that the  users wants  to fix the  branch lengths measured  at \_variable\_
+sites only  (i.e., $l^{*}$ is  fixed). This is the  reason why the  branch lengths in the  input and
+output trees  do differ  despite the  use of the  the \x{-o  r} option. While  we believe  that this
+approach relies on a sound rationale, it  is not perfect. In particular, the original transformation
+of  branch lengths  ($l' =  l/(1-p)$) relies  on a  default  value for  $p$ with  is set  to 0.2  in
+practice. It is difficult  to justify the use of this value rather  than another one. One suggestion
+proposed by  Bart Hazes is  to avoid fixing  the branch lengths  altogether and rather  estimate the
+value  of   a  scaling  factor   applied  to   each  branch  length   in  the  input   tree  (option
+\x{--contrained\_lens}).  We  agree  that  this  solution  probably matches  very  well  most  users
+expectation, i.e., ``find the  best value of $p$ while constraining the ratio  of branch lengths to be
+that given in the input tree''. Please feel free to send us your suggestions regarding this problem
+by posting on forum (\url{http://groups.google.com/group/phyml-forum}).
 
 \section{Other programs in the PhyML package}
 
@@ -1266,19 +1345,13 @@ so that this number reaches at least 100.
 \end{itemize}
 \item {\it Does PhyML handle outgroup sequences ?}\\
 \begin{itemize}
-\item No,  PhyML does  not make  any difference between  outgroup and  ingroup sequences.   The best
-solution to take into account outgroup sequences is to run two separate analysis. The first analysis
-should be  conducted on the set  of aligned sequences  {\it excluding} the outgroup  sequences. This
-data set is  used to estimate the ingroup  phylogeny. The second analysis includes the  whole set of
-sequences. The tree corresponds to the ingroup+outgroup phylogeny. The third step is to position the
-root on the ingroup phylogeny using  the ingroup+outgroup phylogeny. The advantage of this technique
-is to  avoid long-branch attraction  in the phylogeny  estimation due to distantly  related outgroup
-sequences.
+\item Yes, it does. Outgroup taxa are identified by adding the `*' sign at the end of each
+  corresponding sequence name (see Section \ref{sec:outgroupspecify})
 \end{itemize}
 \item {\it Does PhyML estimate clock-constrained trees ?}\\
 \begin{itemize}
-\item No, PhyML cannot  do that at the moment. However, future releases  of the program will include
-this feature.
+\item No, the PhyML program does not estimate clock-contrained trees. One can however use the
+  program PhyTime to perform such analysis but the tree topology will not be estimated.
 \end{itemize}
 \item {\it Can PhyML analyse partitioned data, such as multiple gene sequences ?}\\
 \begin{itemize}
@@ -1296,8 +1369,8 @@ The development of PhyML since 2000 has been supported by the Centre National de
 Scientifique (CNRS) and the Minist\`ere de l'\'Education Nationale.
 
 % \bibliographystyle{/home/guindon/latex/biblio/OUPnum}
-\bibliographystyle{/Users/guindon/latex/biblio/nature/naturemag}
-\bibliography{/Users/guindon/latex/biblio/ref}
+\bibliographystyle{/home/guindon/latex/biblio/nature/naturemag}
+\bibliography{/home/guindon/latex/biblio/ref}
 
 \printindex
 \end{document}
