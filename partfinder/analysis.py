@@ -138,10 +138,14 @@ class Analysis(object):
                                              'start_tree', 'user_topology.phy')
                 phyml.dupfile(user_path, topology_path)
             else:
-                topology_path = phyml.make_topology(self.filtered_alignment_path)
+                topology_path = phyml.make_topology(self.filtered_alignment_path, self.cfg.datatype)
 
             # Now estimate branch lengths
-            tree_path = phyml.make_branch_lengths(self.filtered_alignment_path, topology_path)
+            if self.cfg.datatype == "DNA":
+                tree_path = phyml.make_branch_lengths(self.filtered_alignment_path, topology_path)
+            elif self.cfg.datatype == "protein":
+                tree_path = phyml.make_branch_lengths_protein(self.filtered_alignment_path, topology_path)
+                
 
         self.tree_path = tree_path
         log.info("Starting tree with branch lengths is here: %s", self.tree_path) 

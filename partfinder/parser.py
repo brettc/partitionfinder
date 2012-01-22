@@ -95,7 +95,7 @@ class Parser(object):
         modellist = delimitedList(MODELNAME)
         modeldef = Keyword("models") + EQUALS + Group(
             (
-            CaselessKeyword("all") | CaselessKeyword("mrbayes") | CaselessKeyword("raxml")
+            CaselessKeyword("all") | CaselessKeyword("mrbayes") | CaselessKeyword("raxml") | CaselessKeyword("all_protein")
             )("predefined") | 
             Group(modellist)("userlist")) + SEMICOLON
         modeldef.setParseAction(self.set_models)
@@ -159,31 +159,59 @@ class Parser(object):
 
         
     def set_models(self, text, loc, tokens):
-        all_mods = set(phyml_models.get_all_models())
+        all_mods            = set(phyml_models.get_all_models())
+        all_protein_mods    = set(phyml_models.get_all_protein_models())
+        total_mods          = all_mods.union(all_protein_mods)
         mods = tokens[1]
+        DNA_mods  = 0
+        prot_mods = 0
         if mods.userlist:
             self.cfg.models = []
             # It is a list of models
             for m in mods.userlist:
-                if m not in all_mods:
+                
+                if m not in total_mods:
                     raise ParserError(
                         text, loc, "'%s' is not a valid model" % m)
+                
+                if m in all_mods:
+                    DNA_mods  = DNA_mods + 1
+                if m in all_protein_mods:
+                    prot_mods = prot_mods + 1                    
+                
                 self.cfg.models.append(m)
             log.info("Setting 'models' to a userlist containing: %s", 
                       ", ".join(self.cfg.models))
+            
         else:
             modsgroup = mods.predefined
             if modsgroup.lower() == "all":
                 self.cfg.models = list(all_mods)
+                DNA_mods = DNA_mods + 1
             elif modsgroup.lower() == "mrbayes":
                 mrbayes_mods = set(phyml_models.get_mrbayes_models())
                 self.cfg.models = list(mrbayes_mods)
+                DNA_mods = DNA_mods + 1
             elif modsgroup.lower() == "raxml":
                 self.cfg.models = phyml_models.get_raxml_models()
+                DNA_mods = DNA_mods + 1
+            elif modsgroup.lower() == "all_protein":
+                self.cfg.models = phyml_models.get_all_protein_models()
+                prot_mods = prot_mods + 1
             else:
                 pass
             log.info("Setting 'models' to '%s'", modsgroup)
-                    
+
+        #set datatype, and check that we've got a sensible model list
+        if DNA_mods>0 and prot_mods==0:
+            log.info("Setting datatype to 'DNA'")
+            self.cfg.datatype = "DNA"
+        elif prot_mods>0 and DNA_mods==0:
+            log.info("Setting datatype to 'protein'")
+            self.cfg.datatype = "protein"
+        else: #we've got a mixture, which won't work.            
+            raise ParserError(
+                text, loc, "The models list contains a mixture of protein and DNA models. Please use one or the other, but not both (see manual for help)")
 
     def define_range(self, part):
         """Turn the 1, 2 or 3 tokens into integers, supplying a default if needed"""

@@ -110,15 +110,22 @@ def dupfile(src, dst):
         log.error("Cannot link/copy file %s to %s", src, dst)
         raise PhymlError
 
-def make_topology(alignment_path):
-    '''Make a BioNJ tree to start the analysis'''
-    log.info("Making BioNJ tree for %s", alignment_path)
+def make_topology(alignment_path, datatype):
+	'''Make a BioNJ tree to start the analysis'''
+	log.info("Making BioNJ tree for %s", alignment_path)
 
-    # First get the BioNJ topology like this:
-    command = "-i '%s' -o n -b 0" % (alignment_path)
-    run_phyml(command)
-    output_path = make_tree_path(alignment_path)
-    return output_path
+	# First get the BioNJ topology like this:
+	if datatype=="DNA":
+		command = "-i '%s' -o n -b 0" % (alignment_path)
+	elif datatype=="protein":
+		command = "-i '%s' -o n -b 0 -d aa" % (alignment_path)
+	else:
+		log.error("Unrecognised datatype: '%s'" % (datatype))
+		raise(PhymlError)
+		
+	run_phyml(command)
+	output_path = make_tree_path(alignment_path)
+	return output_path
 
 def make_branch_lengths(alignment_path, topology_path):
     # Now we re-estimate branchlengths using a GTR+I+G model on the (unpartitioned) dataset
@@ -137,6 +144,25 @@ def make_branch_lengths(alignment_path, topology_path):
 
     # Now return the path of the final tree alignment
     return output_path
+
+def make_branch_lengths_protein(alignment_path, topology_path):
+    # Now we re-estimate branchlengths using the LG model on the (unpartitioned) dataset
+    log.info("Estimating LG+F branch lengths on tree")
+    dir_path, fname = os.path.split(topology_path)
+    tree_path = os.path.join(dir_path, 'topology_tree.phy')
+    log.debug("Copying %s to %s", topology_path, tree_path)
+    dupfile(topology_path, tree_path)
+
+    command = "-i '%s' -u '%s' -m LG -c 1 -v 0 -f m -d aa -o lr -b 0" % (
+        alignment_path, tree_path)
+    run_phyml(command)
+
+    output_path = make_tree_path(alignment_path)
+    log.info("Branchlength estimation finished")
+
+    # Now return the path of the final tree alignment
+    return output_path
+
 
 def analyse(model, alignment_path, analysis_path, tree_path, branchlengths):
     """Do the analysis -- this will overwrite stuff!"""

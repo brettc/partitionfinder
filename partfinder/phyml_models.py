@@ -41,6 +41,25 @@ _base_models = {
     "GTR"   :   (5+3, "-m 012345 -f e")
 }
 
+# number of free parameters in substitution model, listed as "aa_frequencies"
+# and the model string for PhyML as the second of the tuple
+_base_protein_models = {
+    "LG"            :   (0, "-m LG        -d aa"),
+    "WAG"           :   (0, "-m WAG       -d aa"),
+    "mtREV"         :   (0, "-m mtREV     -d aa"),
+    "Dayhoff"       :   (0, "-m Dayhoff   -d aa"),
+    "DCMut"         :   (0, "-m DCMut     -d aa"),
+    "JTT"           :   (0, "-m JTT       -d aa"),
+    "VT"            :   (0, "-m VT        -d aa"),
+    "Blosum62"      :   (0, "-m Blosum62  -d aa"),
+    "CpREV"         :   (0, "-m CpREV     -d aa"),
+    "RtREV"         :   (0, "-m RtREV     -d aa"),
+    "MtMam"         :   (0, "-m MtMam     -d aa"),
+    "MtArt"         :   (0, "-m MtArt     -d aa"),
+    "HIVb"          :   (0, "-m HIVb      -d aa"),
+    "HIVw"          :   (0, "-m HIVw      -d aa"),
+ }
+
 # All the functions in here return the same thing with the same parameters, 
 # this just caches the return ...
 def memoize(f):
@@ -62,6 +81,24 @@ def get_all_models():
         model_list.append("%s+I"   %(model))
         model_list.append("%s+G"   %(model))
         model_list.append("%s+I+G" %(model))
+    return model_list
+
+@memoize
+def get_all_protein_models():
+    '''
+    Return a list of all implemented _base__protein_models
+    '''
+    model_list = []
+    for model in _base_protein_models.keys():
+        model_list.append(model)
+        model_list.append("%s+F"     %(model))
+        model_list.append("%s+I"     %(model))
+        model_list.append("%s+G"     %(model))
+        model_list.append("%s+I+G"   %(model))
+        model_list.append("%s+I+F"   %(model))
+        model_list.append("%s+G+F"   %(model))
+        model_list.append("%s+I+G"   %(model))
+        model_list.append("%s+I+G+F" %(model))
     return model_list
 
 @memoize
@@ -87,13 +124,32 @@ def get_raxml_models():
     return model_list
 
 @memoize
+def get_protein_models():
+    '''
+    Return a list of all protein models implemented in PhyML
+    '''
+    model_list = [
+		"LG",
+		"cheese"
+	]
+    return model_list
+
+
+
+@memoize
 def get_num_params(modelstring):
     '''
     Input a model string like HKY+I+G, and get the number of parameters
     '''
     elements = modelstring.split("+")
     model_name = elements[0]
-    model_params = _base_models[model_name][0]
+    if model_name in _base_models.keys():
+        model_params = _base_models[model_name][0]
+    else:
+        model_params = _base_protein_models[model_name][0]
+        if "F" in elements[1:]:
+            model_params = model_params+19
+    
     extras = modelstring.count("+")
     total = model_params+extras
     return total
@@ -109,10 +165,19 @@ def get_model_commandline(modelstring):
 
     elements = modelstring.split("+")
     model_name = elements[0]
-    commandline.append(_base_models[model_name][1])
 
     # Everything but the first element
     extras = elements[1:]
+
+    if model_name in _base_models.keys(): #DNA models
+        commandline.append(_base_models[model_name][1])
+    else: #protein models
+        commandline.append(_base_protein_models[model_name][1])
+        if "F" in extras:
+            commandline.append("-f m")
+        else:
+            commandline.append("-f e")
+
 
     if "I" in extras:
         commandline.append("-v e")
@@ -134,3 +199,6 @@ if __name__ == "__main__":
         print model.ljust(12),
         print str(get_num_params(model)).ljust(10),
         print get_model_commandline(model)
+    for model in get_protein_models():
+        print model
+
