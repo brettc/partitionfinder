@@ -119,6 +119,8 @@ class Subset(object):
         result.bic  = (-2.0*lnL) + (K * logarithm(n))
         result.aicc = result.aic + (((2.0*K)*(K+1.0))/(n-K-1.0))
 
+        log.debug("Adding model to subset. Model: %s, params %d" %(model, K))
+
         if model in self.results:
             log.error("Can't add model result %s, it already exists in %s",
                     model, self)
@@ -145,6 +147,8 @@ class Subset(object):
                 self.best_info_score = info_score
                 self.best_model = result.model
                 self.best_params = result.params
+        log.debug("Model Selection. best model: %s, params: %d" %(self.best_model, self.best_params))
+
 
     _template = "%-15s | %-15s | %-15s | %-15s | %-15s\n"
     def write_summary(self, path):

@@ -85,16 +85,25 @@ class Scheme(object):
 		#how you do this depends on whether brlens are linked or not.
         self.nsubs = len(self.subsets) #number of subsets
         sum_subset_k = sum([s.best_params for s in self]) #sum of number of parameters in the best model of each subset
+
+        log.debug("Calculating number of parameters in scheme:")
+        log.debug("Total parameters from subset models: %d" %(sum_subset_k))
         
         if branchlengths == 'linked': #linked brlens - only one extra parameter per subset
             self.sum_k = sum_subset_k + (self.nsubs-1) + ((2*nseq)-3) #number of parameters in a scheme
+            log.debug("Total parameters from brlens: %d" %((2*nseq) -3))
+            log.debug("Parameters from subset multipliers: %d" %(self.nsubs-1))        
+
         elif branchlengths == 'unlinked': #unlinked brlens - every subset has its own set of brlens
             self.sum_k = sum_subset_k + (self.nsubs*((2*nseq)-3)) #number of parameters in a scheme
+            log.debug("Total parameters from brlens: %d" %((2*nseq) -3)*self.nsubs)
 
         else:
             # WTF?
             log.error("Unknown option for branchlengths: %s", branchlengths)
             raise AnalysisError
+        
+        log.debug("Grand total parameters: %d" %(self.sum_k))
         
         self.lnl = sum([s.best_lnl for s in self])
         self.nsites = sum([len(s.columnset) for s in self])

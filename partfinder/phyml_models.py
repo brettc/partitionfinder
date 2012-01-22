@@ -16,7 +16,7 @@
 #agree with those licences and conditions as well.
 
 import logging
-log = logging.getLogger("phyml")
+log = logging.getLogger("analysis")
 
 import config
 
@@ -139,7 +139,7 @@ def get_protein_models():
 @memoize
 def get_num_params(modelstring):
     '''
-    Input a model string like HKY+I+G, and get the number of parameters
+    Input a model string like HKY+I+G or LG+G+F, and get the number of parameters
     '''
     elements = modelstring.split("+")
     model_name = elements[0]
@@ -148,10 +148,12 @@ def get_num_params(modelstring):
     else:
         model_params = _base_protein_models[model_name][0]
         if "F" in elements[1:]:
-            model_params = model_params+19
+            model_params = model_params+19-1 #the -1 here is to account for the fact we add 1 for the + in '+F' below
     
     extras = modelstring.count("+")
     total = model_params+extras
+    log.debug("Model: %s Params: %d" %(modelstring, total))
+
     return total
     
 @memoize
