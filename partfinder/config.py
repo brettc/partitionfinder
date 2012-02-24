@@ -58,6 +58,11 @@ class Configuration(object):
         base_path = os.path.normpath(base_path)
         # pth = os.path.abspath(pth)
 
+        #check that user didn't enter a file instead of a folder
+        if os.path.isfile(base_path):
+            log.error("The second argument of the commandline currently points to a file, but it should point to the folder that contains the alignment and .cfg files, please check.")
+            raise ConfigurationError            
+        
         util.check_folder_exists(base_path)
         self.set_base_path(base_path)
 

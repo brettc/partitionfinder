@@ -108,9 +108,12 @@ class Scheme(object):
         self.lnl = sum([s.best_lnl for s in self])
         self.nsites = sum([len(s.columnset) for s in self])
 
+
         K = float(self.sum_k)
         n = float(self.nsites)
         lnL = float(self.lnl)		
+
+        log.debug("n: %d\tK: %d" %(n, K))
    
         self.aic  = (-2.0*lnL) + (2.0*K)
         self.bic  = (-2.0*lnL) + (K * logarithm(n))
