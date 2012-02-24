@@ -1,8 +1,8 @@
 def options(opt):
-    opt.load('compiler_c')
+    opt.load('gcc')
 
 def configure(conf): 
-    conf.load('compiler_c')
+    conf.load('gcc')
 
 def build(bld):
     # Stuff Taken from Makefile
@@ -11,6 +11,7 @@ def build(bld):
     rates.c mcmc.c stats.c mg.c tiporder.c""".split()
     srcs = ['src/%s' % s for s in srcs]
     CFLAGS = "-ansi -pedantic -Wall -std=c99 -O3 -fomit-frame-pointer -funroll-loops".split()
+    # CFLAGS = "/O2 /Oy /Oi"
     # Nott sure what these are
     # -MD -MP -MF -MT 
     # bld.env.ARCH = 'ppc'

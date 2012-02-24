@@ -51,7 +51,7 @@ def find_program():
     if not os.path.exists(pth) or not os.path.isfile(pth):
         log.error("No such file: '%s'", pth)
         raise PhymlError
-    log.debug("Found program %s at '%s'", _binary_name, pth)
+    log.info("Found program %s at '%s'", _binary_name, pth)
     return pth
 
 # def alt_run_phyml(command):
@@ -77,7 +77,7 @@ def run_phyml(command):
 
     # Add in the command file
     log.debug("Running 'phyml %s'", command)
-    command = "%s %s" % (_phyml_binary, command)
+    command = "\"%s\" %s" % (_phyml_binary, command)
 
     # Note: We use shlex.split as it does a proper job of handling command
     # lines that are complex
