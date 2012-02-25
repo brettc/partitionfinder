@@ -6,3 +6,5 @@ partfinder.log
 example/analysis
 tests/testing.log
 log.txt
+programs/phyml-read-only/.lock-waf_darwin_build
+programs/phyml-read-only/build/
