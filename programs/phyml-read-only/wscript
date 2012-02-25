@@ -1,0 +1,23 @@
+def options(opt):
+    opt.load('compiler_c')
+
+def configure(conf): 
+    conf.load('compiler_c')
+
+def build(bld):
+    # Stuff Taken from Makefile
+    srcs = """main.c utilities.c optimiz.c lk.c bionj.c models.c free.c help.c
+    simu.c eigen.c pars.c alrt.c interface.c cl.c spr.c times.c m4.c draw.c
+    rates.c mcmc.c stats.c mg.c tiporder.c""".split()
+    srcs = ['src/%s' % s for s in srcs]
+    CFLAGS = "-ansi -pedantic -Wall -std=c99 -O3 -fomit-frame-pointer -funroll-loops".split()
+    # Nott sure what these are
+    # -MD -MP -MF -MT 
+    # bld.env.ARCH = 'ppc'
+    bld.program(
+        source=srcs, 
+        target='phyml',
+        includes = ['.'],
+        install_path = '../',
+        cflags = CFLAGS
+    )
