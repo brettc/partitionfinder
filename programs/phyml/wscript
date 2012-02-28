@@ -10,7 +10,7 @@ def build(bld):
     simu.c eigen.c pars.c alrt.c interface.c cl.c spr.c times.c m4.c draw.c
     rates.c mcmc.c stats.c mg.c tiporder.c""".split()
     srcs = ['src/%s' % s for s in srcs]
-    CFLAGS = "-ansi -pedantic -Wall -std=c99 -O3 -fomit-frame-pointer -funroll-loops".split()
+    CFLAGS = "-ansi -pedantic -std=c99 -O3 -fomit-frame-pointer -funroll-loops".split()
     # CFLAGS = "/O2 /Oy /Oi"
     # Nott sure what these are
     # -MD -MP -MF -MT 
