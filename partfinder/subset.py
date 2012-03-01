@@ -180,31 +180,3 @@ class Subset(object):
         log.debug("Reading binary cached results for %s", self)
         f = open(path, 'rb')
         self.__dict__.update(pickle.load(f))
-
-
-if __name__ == '__main__':
-    import logging
-    import tempfile
-    logging.basicConfig(level=logging.DEBUG)
-    import config
-    from partition import Partition
-
-    c = config.Configuration()
-
-    pa = Partition(c, 'a', (1, 10, 3))
-    pb = Partition(c, 'b', (2, 10, 3))
-    pc = Partition(c, 'c', (3, 10, 3))
-
-    s1 = Subset(pa, pb)
-    s2 = Subset(pa, pb)
-    s3 = Subset(pa, pc)
-    s4 = Subset(pa, pb)
-    print s1 is s2
-    print s1
-    # s2 = Subset(pa, pb, pc)
-    # s3 = Subset(pc)
-
-    # print s1.name
-    # print s2.name
-
-
