@@ -281,8 +281,6 @@ def model_to_scheme(model, scheme_name, cfg):
 	#log.info("Created scheme %d of %d" %(scheme_name, len(all_schemes)))	
 	return scheme
 
-
-
 def generate_all_schemes(cfg):
     """Convert the abstract schema given by the algorithm into subsets"""
     import subset
@@ -321,20 +319,3 @@ def generate_all_schemes(cfg):
         scheme_name += 1
 		
     return scheme_list
-
-if __name__ == '__main__':
-    import logging
-    logging.basicConfig(level=logging.DEBUG)
-    from partition import Partition
-    from subset import Subset
-
-    pa = Partition('a', (1, 10, 3))
-    pb = Partition('b', (2, 10, 3))
-    pc = Partition('c', (3, 10, 3))
-    pd = Partition('d', (11, 20))
-    # s = Scheme('x', Subset(pa, pc), Subset(pb))
-
-    generate_all_schemes()
-    # This should give us an error!
-    # s = Scheme('y', Subset(pa, pc), Subset(pb))
-    
