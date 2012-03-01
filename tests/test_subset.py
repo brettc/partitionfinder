@@ -6,8 +6,8 @@ from partfinder.config import Configuration
 class TestSubset(PartitionFinderTestCase):
 
     def test_identity(self):
-        c = Configuration()
 
+        c = Configuration()
         pa = Partition(c, 'a', (1, 10, 3))
         pb = Partition(c, 'b', (2, 10, 3))
         pc = Partition(c, 'c', (3, 10, 3))
@@ -17,7 +17,10 @@ class TestSubset(PartitionFinderTestCase):
         s3 = Subset(pa, pc)
         s4 = Subset(pa, pb)
 
+        # Not just equal BUT THE SAME
         assert s1 is s2
+        assert s1 is s4
+        assert s1 is not s3
 
 if __name__ == '__main__':
     unittest.main()
