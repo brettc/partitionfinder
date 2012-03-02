@@ -43,6 +43,15 @@ def make_dir(pth):
     else:
         os.mkdir(pth)
 
+class AnalysisResults(object):
+    """This should hold all the results
+
+    We can then do what we want with it. Save it to binary or whatever
+    """
+    def __init__(self):
+        pass
+
+
 class Analysis(object):
     """Performs the analysis and collects the results"""
     def __init__(self, cfg, force_restart, save_phyml, threads=1):
@@ -354,13 +363,13 @@ class Analysis(object):
         best_scheme = start_scheme
         best_score  = get_score(start_scheme)
                          
-        round = 1
+        step = 1
         cur_s = 2
 
         #now we try out all lumpings of the current scheme, to see if we can find a better one
         #and if we do, we just keep going
         while True:
-            log.info("***Greedy algorithm step %d***" % round)
+            log.info("***Greedy algorithm step %d***" % step)
 
             #get a list of all possible lumpings of the best_scheme
             lumpings = algorithm.lumpings(start_description)
@@ -387,12 +396,12 @@ class Analysis(object):
                 start_description = best_lumping_desc				
                 if len(set(best_lumping_desc))==1: #then it's the scheme with everything equal, so quit
 				    break
-                round = round+1
+                step = step+1
 
             else:
                 break
 
-        log.info("Greedy algorithm finished after %d rounds" % round)
+        log.info("Greedy algorithm finished after %d steps" % step)
         log.info("Highest scoring scheme is scheme %s, with %s score of %.3f" %(best_scheme.name, method, best_score))
 
         best_schemes_file = os.path.join(self.cfg.output_path, 'best_schemes.txt')
