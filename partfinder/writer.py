@@ -35,5 +35,14 @@ class BinaryWriter(Writer):
 
     def final(self, analysis):
 
+        write pickle out
 
 
+# Things to do
+#
+# QUESTION: Why is it not conssintent
+#
+# 0. Separet core from analysis_method.py
+# 1. make a summary object in analysis. Summary(object)
+# 2. xform to binary here
+# 3. make a comparator for it
