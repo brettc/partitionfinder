@@ -20,11 +20,11 @@ log = logging.getLogger("submodels")
 import algorithm
 
 def submodel_generator(result, pat, current, maxn):
-    ''' result is a list to append to
+    """ result is a list to append to
         pat is the current pattern (starts as empty list)
         current is the current number of the pattern
         maxn is the number of items in the pattern
-    '''
+    """
     if pat:
         curmax = max(pat)
     else: 
@@ -39,7 +39,7 @@ def submodel_generator(result, pat, current, maxn):
                 submodel_generator(result, newpat, current+1, maxn)
 
 def submodel_iterator(pat, current, maxn):
-    '''same as generator but yields instead'''
+    """same as generator but yields instead"""
     if pat:
         curmax = max(pat)
     else: 
@@ -54,20 +54,18 @@ def submodel_iterator(pat, current, maxn):
                 for b in submodel_iterator(newpat, current+1, maxn):
                     yield b
 
-
 def a_choose_b(n,k):
     return reduce(lambda a,b: a*(n-b)/(b+1),xrange(k),1)
 
 def count_greedy_schemes(N):
-    '''oeis.org reveals this is 1+(N*(N+1)*(N-1))/6'''
+    """oeis.org reveals this is 1+(N*(N+1)*(N-1))/6"""
     count = 1+(N*(N+1)*(N-1))/6
     return count
 
 def count_greedy_subsets(N):
-    '''oeis.org says thes are Central polygonal numbers: n^2 - n + 1. '''
+    """oeis.org says thes are Central polygonal numbers: n^2 - n + 1. """
     count = (N*N) - N + 1
     return count
-
 
 def bell_numbers(N):
     ## Return the bell number for N subsets
@@ -87,26 +85,6 @@ def bell_numbers(N):
 
 def get_submodels(N):
     """Return all the submodels
-
-    Let's do a test case:
-    >>> submodels = get_submodels(4)
-    >>> for s in submodels:
-    ...     print s
-    [0, 0, 0, 0]
-    [0, 0, 0, 1]
-    [0, 0, 1, 0]
-    [0, 0, 1, 1]
-    [0, 0, 1, 2]
-    [0, 1, 0, 0]
-    [0, 1, 0, 1]
-    [0, 1, 0, 2]
-    [0, 1, 1, 0]
-    [0, 1, 1, 1]
-    [0, 1, 1, 2]
-    [0, 1, 2, 0]
-    [0, 1, 2, 1]
-    [0, 1, 2, 2]
-    [0, 1, 2, 3]
     """
     log.debug("Generating submodels for %s partitions", N)
     result = []
@@ -115,41 +93,12 @@ def get_submodels(N):
     return result
 
 def count_all_schemes(N):
-    """Count the number of submodels we've got
-    These are the right numbers...
-    >>> print count_all_schemes(1)
-    1
-    >>> print count_all_schemes(5)
-    52
-    >>> print count_all_schemes(10)
-    115975
-    """
+    """Count the number of submodels we"ve got"""
     count = bell_numbers(N)
     return count
 
 def count_all_subsets(N):
-    '''Count the number of subses we'll have to look at given a certain number of starting partitions'''
+    """Count the number of subses we'll have to look at given a certain number of starting partitions"""
     count = (2**N) - 1
     return count
 
-if __name__ == "__main__":
-    import doctest
-    doctest.testmod()
-    
-    print "Getting All Submodels for N=5"
-    result = get_submodels(5)
-    for a in result:
-        print a
-    
-    print "Iterator test"
-    b = submodel_iterator([], 1, 11)
-    for model in b: print b
-        
-    
-
-    
-#    print "A table of number of partitions versus number of schemes and number of subsets for greedy analyses"
-#    print "Parts\tGreedySchemes\tGreedySubsets\tAllSchemes\tAllSubsets"
- 
-#    for i in range(1,201):
-#        print "%d, %g, %g, %g, %g" %(i, count_greedy_schemes(i), count_greedy_subsets(i), count_all_schemes(i), count_all_subsets(i))
