@@ -19,6 +19,12 @@ import logging
 log = logging.getLogger("subset")
 import os
 import weakref
+
+from hashlib import md5
+
+# import base64
+# from zlib import compress
+
 import cPickle as pickle
 
 import alignment
@@ -97,11 +103,18 @@ class Subset(object):
         else:
             s = sorted([p.name for p in self.partitions])
             nm = '-'.join(s)
-            # Don't go crazy
-            if len(nm) > 50:
-                s = sorted([str(p.sequence) for p in self.partitions])
-            nm = '-'.join(s)
+
+            # Possible alternative (reversible too)
+            # nm = compress(nm)
+            # nm = base64.b32encode(nm)
+
+            # This gets super long -- we can shorten it like this...  This is
+            # a slightly lazy solution. There is some vanishingly small chance
+            # that we'll get the same thing. Google "MD5 Hash Collision"
+            nm = md5(nm).hexdigest()
             self._name = nm
+
+            
 
         return nm
 
