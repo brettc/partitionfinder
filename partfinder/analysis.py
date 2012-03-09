@@ -300,9 +300,8 @@ class Analysis(object):
  
         # AIC needs the number of sequences 
         number_of_seq = len(self.alignment.species)
-        sch.assemble_results(number_of_seq, self.cfg.branchlengths)
-        sch.write_summary(os.path.join(self.schemes_path, sch.name+'.txt'))
-
+        result = scheme.SchemeResult(sch, number_of_seq, self.cfg.branchlengths)
+        # sch.write_summary(os.path.join(self.schemes_path, sch.name+'.txt'))
 
     def write_best_scheme(self, list_of_schemes):
         # Which is the best?

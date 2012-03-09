@@ -24,6 +24,47 @@ from util import PartitionFinderError
 class SchemeError(PartitionFinderError):
     pass
 
+class SchemeResult(object):
+    def __init__(self, sch, nseq, branchlengths):
+		#calculate AIC, BIC, AICc for each scheme.
+		#how you do this depends on whether brlens are linked or not.
+        self.nsubs = len(sch.subsets) #number of subsets
+        sum_subset_k = sum([s.best_params for s in self]) #sum of number of parameters in the best model of each subset
+
+        log.debug("Calculating number of parameters in scheme:")
+        log.debug("Total parameters from subset models: %d" %(sum_subset_k))
+        
+        if branchlengths == 'linked': #linked brlens - only one extra parameter per subset
+            self.sum_k = sum_subset_k + (self.nsubs-1) + ((2*nseq)-3) #number of parameters in a scheme
+            log.debug("Total parameters from brlens: %d" %((2*nseq) -3))
+            log.debug("Parameters from subset multipliers: %d" %(self.nsubs-1))        
+
+        elif branchlengths == 'unlinked': #unlinked brlens - every subset has its own set of brlens
+            self.sum_k = sum_subset_k + (self.nsubs*((2*nseq)-3)) #number of parameters in a scheme
+            log.debug("Total parameters from brlens: %d" %((2*nseq) -3)*self.nsubs)
+
+        else:
+            # WTF?
+            log.error("Unknown option for branchlengths: %s", branchlengths)
+            raise AnalysisError
+        
+        log.debug("Grand total parameters: %d" %(self.sum_k))
+        
+        self.lnl = sum([s.best_lnl for s in sch])
+        self.nsites = sum([len(s.columnset) for s in sch])
+
+
+        K = float(self.sum_k)
+        n = float(self.nsites)
+        lnL = float(self.lnl)		
+
+        log.debug("n: %d\tK: %d" %(n, K))
+   
+        self.aic  = (-2.0*lnL) + (2.0*K)
+        self.bic  = (-2.0*lnL) + (K * logarithm(n))
+        self.aicc = self.aic + (((2.0*K)*(K+1.0))/(n-K-1.0))
+
+
 class Scheme(object):
     def __init__(self, cfg, name, *subsets):
         """A set of subsets of partitions"""
@@ -80,49 +121,13 @@ class Scheme(object):
         ss = ', '.join([str(s) for s in self.subsets])
         return "Scheme(%s, %s)" % (self.name, ss)
 
-    def assemble_results(self, nseq, branchlengths):
-		#calculate AIC, BIC, AICc for each scheme.
-		#how you do this depends on whether brlens are linked or not.
-        self.nsubs = len(self.subsets) #number of subsets
-        sum_subset_k = sum([s.best_params for s in self]) #sum of number of parameters in the best model of each subset
-
-        log.debug("Calculating number of parameters in scheme:")
-        log.debug("Total parameters from subset models: %d" %(sum_subset_k))
-        
-        if branchlengths == 'linked': #linked brlens - only one extra parameter per subset
-            self.sum_k = sum_subset_k + (self.nsubs-1) + ((2*nseq)-3) #number of parameters in a scheme
-            log.debug("Total parameters from brlens: %d" %((2*nseq) -3))
-            log.debug("Parameters from subset multipliers: %d" %(self.nsubs-1))        
-
-        elif branchlengths == 'unlinked': #unlinked brlens - every subset has its own set of brlens
-            self.sum_k = sum_subset_k + (self.nsubs*((2*nseq)-3)) #number of parameters in a scheme
-            log.debug("Total parameters from brlens: %d" %((2*nseq) -3)*self.nsubs)
-
-        else:
-            # WTF?
-            log.error("Unknown option for branchlengths: %s", branchlengths)
-            raise AnalysisError
-        
-        log.debug("Grand total parameters: %d" %(self.sum_k))
-        
-        self.lnl = sum([s.best_lnl for s in self])
-        self.nsites = sum([len(s.columnset) for s in self])
-
-
-        K = float(self.sum_k)
-        n = float(self.nsites)
-        lnL = float(self.lnl)		
-
-        log.debug("n: %d\tK: %d" %(n, K))
-   
-        self.aic  = (-2.0*lnL) + (2.0*K)
-        self.bic  = (-2.0*lnL) + (K * logarithm(n))
-        self.aicc = self.aic + (((2.0*K)*(K+1.0))/(n-K-1.0))
-
 
     _header_template = "%-15s: %s\n"
     _subset_template = "%-6s | %-10s | %-30s | %-30s | %-40s\n"
     def write_summary(self, path, write_type = 'wb', extra_line=None):
+
+        # TODO FIX THIS
+        return
         f = open(path, write_type)
         if extra_line:
 		    f.write(extra_line)
