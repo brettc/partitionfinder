@@ -15,8 +15,6 @@
 #own licenses and conditions, using PartitionFinder implies that you
 #agree with those licences and conditions as well.
 
-import analysis
-
 def k_subsets_i(n, k):
     '''
 	from http://code.activestate.com/recipes/500268-all-k-subsets-from-an-n-set/
