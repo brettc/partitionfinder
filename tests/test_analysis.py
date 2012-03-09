@@ -1,7 +1,7 @@
 from basetest import *
 import os, shutil
 
-from partfinder import analysis, config
+from partfinder import config, analysis_method
 
 class TestAnalysis(PartitionFinderTestCase):
 
@@ -10,8 +10,9 @@ class TestAnalysis(PartitionFinderTestCase):
             pth = os.path.join(ANALYSIS_PATH, name)
             cfg = config.Configuration()
             cfg.load_base_path(pth)
-            anal = analysis.Analysis(cfg, True, False)
-            anal.do_analysis()
+            method = analysis_method.choose_method(cfg.search)
+            anal = method(cfg, True, False)
+            anal.do_analysis(cfg.models, cfg.model_selection)
         finally:
             # Always do this
             shutil.rmtree(cfg.output_path)

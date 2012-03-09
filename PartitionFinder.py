@@ -26,7 +26,7 @@ log = logging.getLogger("main")
 from optparse import OptionParser
 import sys
 
-from partfinder import config, analysis, util, parser
+from partfinder import config, analysis_method, util, parser
 
 
 def main():
@@ -111,15 +111,18 @@ def main():
             # For finer grain, see the logging.cfg file
             if options.verbose:
                 logging.getLogger('analysis').setLevel(logging.DEBUG)
+                logging.getLogger('analysis_method').setLevel(logging.DEBUG)
+
+            method = analysis_method.choose_method(cfg.search)
 
             # Now try processing everything....
-            anal = analysis.Analysis(
+            anal = method(
                 cfg, 
                 options.force_restart,
                 options.save_phyml,
                 options.processes,
             )
-            anal.do_analysis()
+            anal.do_analysis(cfg.models, cfg.model_selection)
             
         # Successful exit
         log.info("Processing complete.")
