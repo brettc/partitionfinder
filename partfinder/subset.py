@@ -127,10 +127,12 @@ class Subset(object):
 
         K = float(result.params)
         n = float(len(self.columnset))
-        lnL = float(result.lnl)		   
+        lnL = float(result.lnl)
+        aicc_denominator = n-K-1.0
+        if aicc_denominator<1: aicc_denominator=1 #it's nonsensical to have this <1 - you either get a zero division, or if it's negative it gives totally the opposite results to the one it's built to do.
         result.aic  = (-2.0*lnL) + (2.0*K)
         result.bic  = (-2.0*lnL) + (K * logarithm(n))
-        result.aicc = result.aic + (((2.0*K)*(K+1.0))/(n-K-1.0))
+        result.aicc = result.aic + (((2.0*K)*(K+1.0))/(aicc_denominator))
 
         if model in self.results:
             log.error("Can't add model result %s, it already exists in %s",
