@@ -29,17 +29,9 @@ import scheme
 import subset
 import util
 
-from util import PartitionFinderError
+from util import PartitionFinderError, make_dir
 class AnalysisError(PartitionFinderError):
     pass
-
-def make_dir(pth):
-    if os.path.exists(pth):
-        if not os.path.isdir(pth):
-            log.error("Cannot create folder '%s'", pth)
-            raise AnalysisError
-    else:
-        os.mkdir(pth)
 
 class AnalysisResults(object):
     """This should hold all the results
@@ -48,8 +40,6 @@ class AnalysisResults(object):
     """
     def __init__(self):
         pass
-
-
 class Analysis(object):
     """Performs the analysis and collects the results"""
     def __init__(self, cfg, force_restart, save_phyml, threads=1):
