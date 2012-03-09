@@ -16,33 +16,95 @@
 #agree with those licences and conditions as well.
 
 import logging
-log = logging.getLogger("writer")
+log = logging.getLogger("reporter")
 
-class Writer(object):
+
+scheme_header_template = "%-15s: %s\n"
+scheme_subset_template = "%-6s | %-10s | %-30s | %-30s | %-40s\n"
+
+class TextReporter(object):
     def __init__(self):
         pass
 
-    def final(self):
-        pass
-        # write out the final stuff
-        #
+    # TODO. REMOVE 'write' from these. They could be output to a display
+    def write_scheme_summary(self, sch, results, output):
+        self.write_scheme_header(sch, results, output)
+        # self.write_subsets(s)
+        # self.write_raxml(s)
 
-class ReportWriter(Writer):
-    # ONE Day.... 
-    pass
+    def write_scheme_header(self, sch, results, output):
+        output.write(scheme_header_template % ("Scheme Name", sch.name))
+        output.write(scheme_header_template % ("Scheme lnL", results.lnl))
+        output.write(scheme_header_template % ("Scheme AIC", results.aic))
+        output.write(scheme_header_template % ("Scheme AICc", results.aicc))
+        output.write(scheme_header_template % ("Scheme BIC", results.bic))
+        output.write(scheme_header_template % ("Num params", results.sum_k))
+        output.write(scheme_header_template % ("Num sites", results.nsites))
+        output.write(scheme_header_template % ("Num subsets", results.nsubs))
+        output.write("\n")
 
-class BinaryWriter(Writer):
+    # TODO FIX THIS and add them on. Write extra lines into the calling thing?
+    def write_subsets(self, s):
+        s.write(scheme_subset_template % (
+            "Subset", "Best Model", "Subset Partitions", "Subset Sites",  "Alignment"))
+        number = 1
+        sorted_subsets = [sub for sub in self]
+        sorted_subsets.sort(key=lambda sub: min(sub.columns), reverse=False)
+                
+        for sub in sorted_subsets:
+            desc = {}
+            names= []
+            for part in sub:
+                desc[part.description[0][0]] = part.description[0] #dict keyed by first site in part
+                names.append(part.name)
 
-    def final(self, analysis):
+            #pretty print the sites in the scheme
+            desc_starts = desc.keys()
+            desc_starts.sort()            
+            parts = []
+            for key in desc_starts:
+                part = desc[key]
+                if part[2]==1:
+                    text = "%s-%s" %(part[0], part[1])
+                else:
+                    text = "%s-%s\\%s" % tuple(part)
+                parts.append(text)
+            parts = ', '.join(parts)
+            	
+            names.sort()
+            names = ', '.join(names)
+			
+            s.write(scheme_subset_template % (
+                number, sub.best_model, names, parts, sub.alignment_path))
+            number += 1
 
-        write pickle out
+    def write_raxml(self, s):
+        """Print out partition definitions in RaxML-like format, might be
+        useful to some people
+        """
 
+        s.write("\n\nRaxML-style partition definitions\n")
+        number = 1
+        for sub in sorted_subsets:
+            desc = {}
+            names= []
+            for part in sub:
+                desc[part.description[0][0]] = part.description[0] #dict keyed by first site in part
+                names.append(part.name)
 
-# Things to do
-#
-# QUESTION: Why is it not conssintent
-#
-# 0. Separet core from analysis_method.py
-# 1. make a summary object in analysis. Summary(object)
-# 2. xform to binary here
-# 3. make a comparator for it
+            #pretty print the sites in the scheme
+            desc_starts = desc.keys()
+            desc_starts.sort()            
+            parts = []
+            for key in desc_starts:
+                part = desc[key]
+                if part[2]==1:
+                    text = "%s-%s" %(part[0], part[1])
+                else:
+                    text = "%s-%s\\%s" % tuple(part)
+                parts.append(text)
+            parts = ', '.join(parts)
+            line = "DNA, p%s = %s\n" %(number, parts)
+            s.write(line)
+
+            number += + 1

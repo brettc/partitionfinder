@@ -26,8 +26,7 @@ log = logging.getLogger("main")
 from optparse import OptionParser
 import sys
 
-from partfinder import config, analysis_method, util, parser
-
+from partfinder import config, analysis_method, util, parser, reporter
 
 def main():
     log.info("-------------------------------- PartitionFinder v0.9 ------------------------------------")
@@ -115,7 +114,13 @@ def main():
 
             method = analysis_method.choose_method(cfg.search)
             # Now try processing everything....
-            anal = method(cfg, options.force_restart, options.save_phyml, options.processes)
+            anal = method(
+                cfg, 
+                reporter.TextReporter(),
+                options.force_restart, 
+                options.save_phyml,
+                options.processes
+            )
             anal.do_analysis()
             
         # Successful exit

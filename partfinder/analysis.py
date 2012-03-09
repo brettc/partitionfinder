@@ -35,20 +35,25 @@ class AnalysisError(PartitionFinderError):
 
 class AnalysisResults(object):
     """This should hold all the results
-
-    We can then do what we want with it. Save it to binary or whatever
     """
     def __init__(self):
         pass
+
+    def add_scheme_result(self, scheme, result):
+        pass
+
 class Analysis(object):
     """Performs the analysis and collects the results"""
-    def __init__(self, cfg, force_restart, save_phyml, threads=1):
+    def __init__(self, cfg, rpt, force_restart, save_phyml, threads=1):
         cfg.validate()
 
-        log.info("Beginning Analysis")
-        self.threads = threads
         self.cfg = cfg
+        self.rpt = rpt
+        self.threads = threads
         self.save_phyml = save_phyml
+        self.results = AnalysisResults()
+
+        log.info("Beginning Analysis")
         if force_restart:
             if os.path.exists(self.cfg.output_path):
                 log.warning("Deleting all previous workings in '%s'", 
@@ -136,7 +141,6 @@ class Analysis(object):
             elif self.cfg.datatype == "protein":
                 tree_path = phyml.make_branch_lengths_protein(self.filtered_alignment_path, topology_path)
                 
-
         self.tree_path = tree_path
         log.info("Starting tree with branch lengths is here: %s", self.tree_path) 
 
@@ -161,10 +165,10 @@ class Analysis(object):
             percent_done = float(self.subsets_analysed)*100.0/float(self.total_subset_num)
             log.info("Analysing subset %d/%d: %.2f%s done" %(self.subsets_analysed,self.total_subset_num, percent_done, r"%"))
 
-        sub_bin_path = os.path.join(self.subsets_path, sub.name + '.bin')
+        subset_cache_path = os.path.join(self.subsets_path, sub.name + '.bin')
         # We might have already saved a bunch of results, try there first
         if not sub.results:
-            sub.read_binary_summary(sub_bin_path)
+            sub.read_cache(subset_cache_path)
 
         # First, see if we've already got the results loaded. Then we can
         # shortcut all the other checks
@@ -241,7 +245,7 @@ class Analysis(object):
         sub_summary_path = os.path.join(self.subsets_path, sub.name + '.txt')
         sub.write_summary(sub_summary_path)
         # We also need to update this
-        sub.write_binary_summary(sub_bin_path)
+        sub.write_cache(subset_cache_path)
 
     def parse_results(self, sub, models_to_do):
         """Read in the results and parse them"""
@@ -291,7 +295,11 @@ class Analysis(object):
         # AIC needs the number of sequences 
         number_of_seq = len(self.alignment.species)
         result = scheme.SchemeResult(sch, number_of_seq, self.cfg.branchlengths)
-        # sch.write_summary(os.path.join(self.schemes_path, sch.name+'.txt'))
+
+        # TODO: should put all paths into config. Then reporter should decide
+        # whether to create stuff
+        fname = os.path.join(self.schemes_path, sch.name+'.txt')
+        self.rpt.write_scheme_summary(sch, result, open(fname, 'w'))
 
     def write_best_scheme(self, list_of_schemes):
         # Which is the best?

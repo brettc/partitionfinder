@@ -166,7 +166,6 @@ class Subset(object):
                 self.best_params = result.params
         log.debug("Model Selection. best model: %s, params: %d" %(self.best_model, self.best_params))
 
-
     _template = "%-15s | %-15s | %-15s | %-15s | %-15s\n"
     def write_summary(self, path):
         # Sort everything
@@ -180,17 +179,15 @@ class Subset(object):
         for bic, r in model_results:
             f.write(Subset._template % (r.model, r.lnl, r.aic, r.aicc, r.bic))
 
-    
     # These are the fields that get stored for quick loading
-    _store = "alignment_path best_lnl best_info_score best_model best_params results".split()
-
-    def write_binary_summary(self, path):
+    _cache_fields = "alignment_path best_lnl best_info_score best_model best_params results".split()
+    def write_cache(self, path):
         """Write out the results we've collected to a binary file"""
         f = open(path, 'wb')
-        store = dict([(x, getattr(self, x)) for x in Subset._store])
+        store = dict([(x, getattr(self, x)) for x in Subset._cache_fields])
         pickle.dump(store, f, -1)
 
-    def read_binary_summary(self, path):
+    def read_cache(self, path):
         if not os.path.exists(path):
             return False
 
