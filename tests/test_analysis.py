@@ -12,7 +12,7 @@ class TestAnalysis(PartitionFinderTestCase):
             cfg.load_base_path(pth)
             method = analysis_method.choose_method(cfg.search)
             anal = method(cfg, True, False)
-            anal.do_analysis(cfg.models, cfg.model_selection)
+            anal.do_analysis()
         finally:
             # Always do this
             shutil.rmtree(cfg.output_path)

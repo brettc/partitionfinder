@@ -114,15 +114,9 @@ def main():
                 logging.getLogger('analysis_method').setLevel(logging.DEBUG)
 
             method = analysis_method.choose_method(cfg.search)
-
             # Now try processing everything....
-            anal = method(
-                cfg, 
-                options.force_restart,
-                options.save_phyml,
-                options.processes,
-            )
-            anal.do_analysis(cfg.models, cfg.model_selection)
+            anal = method(cfg, options.force_restart, options.save_phyml, options.processes)
+            anal.do_analysis()
             
         # Successful exit
         log.info("Processing complete.")
