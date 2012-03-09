@@ -95,27 +95,29 @@ class Subset(object):
     def __str__(self):
         return "Subset(%s)" % ", ".join([str(p) for p in self.partitions])
 
+
+    @property
+    def full_name(self):
+        if hasattr(self, '_full_name'):
+            nm = self._full_name
+        else:
+            s = sorted([p.name for p in self.partitions])
+            nm = '-'.join(s)
+            self._full_name = nm
+        return nm
+
     @property
     def name(self):
         # Cache this
         if hasattr(self, '_name'):
             nm = self._name
         else:
-            s = sorted([p.name for p in self.partitions])
-            nm = '-'.join(s)
-
-            # Possible alternative (reversible too)
-            # nm = compress(nm)
-            # nm = base64.b32encode(nm)
-
+            nm = self.full_name
             # This gets super long -- we can shorten it like this...  This is
             # a slightly lazy solution. There is some vanishingly small chance
             # that we'll get the same thing. Google "MD5 Hash Collision"
             nm = md5(nm).hexdigest()
             self._name = nm
-
-            
-
         return nm
 
     def __iter__(self):
@@ -171,7 +173,7 @@ class Subset(object):
         model_results = [(r.bic, r) for r in self.results.values()]
         model_results.sort()
         f = open(path, 'w')
-        f.write("Model selection results for subset: %s\n" % self.name)
+        f.write("Model selection results for subset: %s\n" % self.full_name)
         f.write("Subset alignment stored here: %s\n" % self.alignment_path)
         f.write("Models are organised according to their BIC scores\n\n")
         f.write(Subset._template % ("Model", "lNL", "AIC", "AICc", "BIC"))
