@@ -29,7 +29,7 @@ import scheme
 import subset
 import util
 
-from util import PartitionFinderError, make_dir
+from util import PartitionFinderError
 class AnalysisError(PartitionFinderError):
     pass
 
@@ -64,12 +64,7 @@ class Analysis(object):
         self.cfg.check_for_old_config()
 
         # Make some folders for the analysis
-        make_dir(self.cfg.output_path)
-        self.make_output_dir('subsets')
-        self.make_output_dir('schemes')
-        self.make_output_dir('phyml')
-        self.make_output_dir('start_tree')
-
+        self.cfg.make_output_folders()
         self.make_alignment(cfg.alignment_path)
 
         self.make_tree(cfg.user_tree_topology_path)
@@ -90,7 +85,7 @@ class Analysis(object):
         self.alignment.read(source_alignment_path)
 
         # We start by copying the alignment
-        self.alignment_path = os.path.join(self.cfg.output_path, 'start_tree', 'source.phy')
+        self.alignment_path = os.path.join(self.cfg.start_tree_path, 'source.phy')
         if os.path.exists(self.alignment_path):
             # Make sure it is the same
             old_align = Alignment()
@@ -109,8 +104,7 @@ class Analysis(object):
         subset_with_everything = subset.Subset(*list(self.cfg.partitions))
         self.filtered_alignment = SubsetAlignment(self.alignment, 
                                                   subset_with_everything)
-        self.filtered_alignment_path = os.path.join(self.cfg.output_path,
-                                                    'start_tree',
+        self.filtered_alignment_path = os.path.join(self.cfg.start_tree_path,
                                                     'filtered_source.phy')
         self.filtered_alignment.write(self.filtered_alignment_path)
 
@@ -120,7 +114,7 @@ class Analysis(object):
         self.cfg.partitions.finalise()
 
         # We start by copying the alignment
-        self.alignment_path = os.path.join(self.cfg.output_path, 'start_tree', 'source.phy')
+        self.alignment_path = os.path.join(self.cfg.start_tree_path, 'source.phy')
 
         # Now check for the tree
         tree_path = phyml.make_tree_path(self.filtered_alignment_path)
@@ -129,8 +123,8 @@ class Analysis(object):
             if user_path != None and user_path != "":
                 # Copy it into the start tree folder
                 log.info("Using user supplied topology at %s", user_path)
-                topology_path = os.path.join(self.cfg.output_path,
-                                             'start_tree', 'user_topology.phy')
+                topology_path = os.path.join(self.cfg.start_tree_path,
+                                             'user_topology.phy')
                 phyml.dupfile(user_path, topology_path)
             else:
                 topology_path = phyml.make_topology(self.filtered_alignment_path, self.cfg.datatype)
@@ -144,10 +138,6 @@ class Analysis(object):
         self.tree_path = tree_path
         log.info("Starting tree with branch lengths is here: %s", self.tree_path) 
 
-    def make_output_dir(self, name):
-        new_path = os.path.join(self.cfg.output_path, name)
-        make_dir(new_path)
-        setattr(self, name+"_path", new_path)
 
     def analyse_subset(self, sub, models):
         """Analyse the subset using the models given
@@ -165,7 +155,7 @@ class Analysis(object):
             percent_done = float(self.subsets_analysed)*100.0/float(self.total_subset_num)
             log.info("Analysing subset %d/%d: %.2f%s done" %(self.subsets_analysed,self.total_subset_num, percent_done, r"%"))
 
-        subset_cache_path = os.path.join(self.subsets_path, sub.name + '.bin')
+        subset_cache_path = os.path.join(self.cfg.subsets_path, sub.name + '.bin')
         # We might have already saved a bunch of results, try there first
         if not sub.results:
             sub.read_cache(subset_cache_path)
@@ -187,7 +177,7 @@ class Analysis(object):
 
         # Make an Alignment from the source, using this subset
         sub_alignment = SubsetAlignment(self.alignment, sub)
-        sub_path = os.path.join(self.subsets_path, sub.name + '.phy')
+        sub_path = os.path.join(self.cfg.subsets_path, sub.name + '.phy')
         # Add it into the sub, so we keep it around
         sub.alignment_path = sub_path
 
@@ -219,7 +209,7 @@ class Analysis(object):
         # What is left, we actually have to analyse...
         tasks = []
         for m in models_to_do:
-            a_path, out_path = phyml.make_analysis_path(self.phyml_path, sub.name, m)
+            a_path, out_path = phyml.make_analysis_path(self.cfg.phyml_path, sub.name, m)
             tasks.append((phyml.analyse, 
                           (m, sub_path, a_path, self.tree_path, self.cfg.branchlengths)))
 
@@ -242,7 +232,7 @@ class Analysis(object):
         sub.model_selection(self.cfg.model_selection, self.cfg.models)        
         
         # If we made it to here, we should write out the new summary
-        sub_summary_path = os.path.join(self.subsets_path, sub.name + '.txt')
+        sub_summary_path = os.path.join(self.cfg.subsets_path, sub.name + '.txt')
         sub.write_summary(sub_summary_path)
         # We also need to update this
         sub.write_cache(subset_cache_path)
@@ -252,7 +242,7 @@ class Analysis(object):
         models_done = []
         for m in list(models_to_do):
             # sub.alignment_path
-            a_path, out_path = phyml.make_analysis_path(self.phyml_path, sub.name, m)
+            a_path, out_path = phyml.make_analysis_path(self.cfg.phyml_path, sub.name, m)
             if os.path.exists(out_path):
                 sub_output = open(out_path, 'rb').read()
                 # Annotate with the parameters of the model
@@ -295,10 +285,11 @@ class Analysis(object):
         # AIC needs the number of sequences 
         number_of_seq = len(self.alignment.species)
         result = scheme.SchemeResult(sch, number_of_seq, self.cfg.branchlengths)
+        self.results.add_scheme_result(sch, result)
 
         # TODO: should put all paths into config. Then reporter should decide
         # whether to create stuff
-        fname = os.path.join(self.schemes_path, sch.name+'.txt')
+        fname = os.path.join(self.cfg.schemes_path, sch.name+'.txt')
         self.rpt.write_scheme_summary(sch, result, open(fname, 'w'))
 
     def write_best_scheme(self, list_of_schemes):

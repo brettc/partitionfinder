@@ -51,7 +51,6 @@ class Configuration(object):
 
     def load_base_path(self, base_path):
         """Load using a base path folder"""
-
         # Allow for user and environment variables
         base_path = os.path.expanduser(base_path)
         base_path = os.path.expandvars(base_path)
@@ -71,6 +70,18 @@ class Configuration(object):
 
         self.init_logger(base_path)
         self.load(config_path)
+
+    def make_output_dir(self, name):
+        new_path = os.path.join(self.output_path, name)
+        util.make_dir(new_path)
+        setattr(self, name+"_path", new_path)
+
+    def make_output_folders(self):
+        util.make_dir(self.output_path)
+        self.make_output_dir('subsets')
+        self.make_output_dir('schemes')
+        self.make_output_dir('phyml')
+        self.make_output_dir('start_tree')
 
     def init_logger(self, pth):
         handler = logging.FileHandler(os.path.join(pth, "log.txt"), 'a')
