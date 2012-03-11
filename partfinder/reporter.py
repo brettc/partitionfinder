@@ -34,7 +34,9 @@ class TextReporter(object):
         model_results = [(r.bic, r) for r in sub.results.values()]
         model_results.sort()
         f = open(pth, 'w')
-        f.write("Model selection results for subset: %s\n" % sub.full_name)
+        # TODO change back to full name...
+        # f.write("Model selection results for subset: %s\n" % sub.full_name)
+        f.write("Model selection results for subset: %s\n" % sub.name)
         f.write("Subset alignment stored here: %s\n" % sub.alignment_path)
         f.write("Models are organised according to their BIC scores\n\n")
         f.write(subset_template % ("Model", "lNL", "AIC", "AICc", "BIC"))
