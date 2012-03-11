@@ -176,7 +176,7 @@ class Subset(object):
 
     
     # These are the fields that get stored for quick loading
-    _store = "alignment_path best_lnl best_info_score best_model best_params results".split()
+    _store = "alignment_path results".split()
 
     def write_binary_summary(self, path):
         """Write out the results we've collected to a binary file"""
