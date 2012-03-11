@@ -2,6 +2,7 @@ Brett test enhancing:
 ---------------------
 
 TODO 
+* Make the output match (why aren't schemes numbered the same...)
 * Only makes sense to report ONE IC in the greedy algo output...
 * make progress part of the reporter too
 * change name back to full_name in subset reporting
