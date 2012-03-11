@@ -134,8 +134,9 @@ class Scheme(object):
             desc = {}
             names= []
             for part in sub:
-                desc[part.description[0][0]] = part.description[0] #dict keyed by first site in part
                 names.append(part.name)
+                for subpart in part.description: #loop through each sub-part of the partition
+                    desc[subpart[0]] = subpart
 
             #pretty print the sites in the scheme
             desc_starts = desc.keys()
@@ -164,8 +165,9 @@ class Scheme(object):
             desc = {}
             names= []
             for part in sub:
-                desc[part.description[0][0]] = part.description[0] #dict keyed by first site in part
                 names.append(part.name)
+                for subpart in part.description: #loop through each sub-part of the partition
+                    desc[subpart[0]] = subpart
 
             #pretty print the sites in the scheme
             desc_starts = desc.keys()
