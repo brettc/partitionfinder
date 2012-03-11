@@ -1,3 +1,31 @@
+Brett test enhancing:
+---------------------
+
+DONE
+* move path creation into config
+* make results member of scheme? or keep a paired list
+* put all of the summarising of results info (finding best) into the AnalysisResults
+* move subset writing out into reporter
+* finish making reports fleshed out
+* Final wiritng takes Analysis results
+* think about reporter, how should it look? with config?
+
+TODO 
+* make progress part of the reporter too
+*
+* THEN USE Analysis results to produce a test_object_compartor.
+* The write methods for comparining that into AnalysisResults (with epsilon differences)
+*
+* THEN: Do a folder diff on example folder, making sure that these changes
+* produce expactly the same thing!
+*
+* THEN: ask Rob to double check
+*
+* THEN: think about using __slots__ in subset and scheme?
+* THEN: think about ditching schemes, and subset info?
+
+
+
 Before initial release (in order of priority)
 ---------------------------------------------
 
