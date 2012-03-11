@@ -166,18 +166,6 @@ class Subset(object):
                 self.best_params = result.params
         log.debug("Model Selection. best model: %s, params: %d" %(self.best_model, self.best_params))
 
-    _template = "%-15s | %-15s | %-15s | %-15s | %-15s\n"
-    def write_summary(self, path):
-        # Sort everything
-        model_results = [(r.bic, r) for r in self.results.values()]
-        model_results.sort()
-        f = open(path, 'w')
-        f.write("Model selection results for subset: %s\n" % self.full_name)
-        f.write("Subset alignment stored here: %s\n" % self.alignment_path)
-        f.write("Models are organised according to their BIC scores\n\n")
-        f.write(Subset._template % ("Model", "lNL", "AIC", "AICc", "BIC"))
-        for bic, r in model_results:
-            f.write(Subset._template % (r.model, r.lnl, r.aic, r.aicc, r.bic))
 
     # These are the fields that get stored for quick loading
     _cache_fields = "alignment_path best_lnl best_info_score best_model best_params results".split()

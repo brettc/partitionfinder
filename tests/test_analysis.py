@@ -1,7 +1,7 @@
 from basetest import *
 import os, shutil
 
-from partfinder import config, analysis_method
+from partfinder import config, analysis_method, reporter
 
 class TestAnalysis(PartitionFinderTestCase):
 
@@ -11,7 +11,8 @@ class TestAnalysis(PartitionFinderTestCase):
             cfg = config.Configuration()
             cfg.load_base_path(pth)
             method = analysis_method.choose_method(cfg.search)
-            anal = method(cfg, True, False)
+            rpt = reporter.TextReporter(cfg)
+            anal = method(cfg, rpt, True, False)
             anal.do_analysis()
         finally:
             # Always do this

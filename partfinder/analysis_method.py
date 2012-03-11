@@ -18,7 +18,6 @@ class UserAnalysis(Analysis):
         if self.total_scheme_num>0:
             for s in current_schemes:
                  self.analyse_scheme(s, models)
-            self.write_best_scheme(current_schemes)
         else:
             log.error("Search set to 'user', but no user schemes detected in .cfg file. Please check.")
             raise AnalysisError
@@ -45,13 +44,10 @@ class AllAnalysis(Analysis):
         model_iterator = submodels.submodel_iterator([], 1, partnum)
 
         scheme_name = 1
-        list_of_schemes = []
         for m in model_iterator:
             s = scheme.model_to_scheme(m, scheme_name, self.cfg)
             scheme_name = scheme_name+1
             self.analyse_scheme(s, models)
-            list_of_schemes.append(s)
-        self.write_best_scheme(list_of_schemes)
 
 class GreedyAnalysis(Analysis):
 
@@ -80,24 +76,24 @@ class GreedyAnalysis(Analysis):
         start_description = range(len(self.cfg.partitions))
         start_scheme = scheme.create_scheme(self.cfg, 1, start_description)
         log.info("Analysing starting scheme (scheme %s)" % start_scheme.name)
-        self.analyse_scheme(start_scheme, models)
+        result = self.analyse_scheme(start_scheme, models)
         
-        def get_score(my_scheme):
+        def get_score(my_result):
             #TODO: this is bad. Should use self.cfg.model_selection, or write
             #a new model_selection for scheme.py
             if model_selection=="aic":
-                score=my_scheme.aic
+                score=my_result.aic
             elif model_selection=="aicc":
-                score=my_scheme.aicc
+                score=my_result.aicc
             elif model_selection=="bic":
-                score=my_scheme.bic
+                score=my_result.bic
             else:
                 log.error("Unrecognised model_selection variable '%s', please check" %(score))
                 raise AnalysisError
             return score
 
-        best_scheme = start_scheme
-        best_score  = get_score(start_scheme)
+        best_result = result
+        best_score  = get_score(result)
                          
         step = 1
         cur_s = 2
@@ -118,15 +114,16 @@ class GreedyAnalysis(Analysis):
             for lumped_description in lumpings:
                 lumped_scheme = scheme.create_scheme(self.cfg, cur_s, lumped_description)
                 cur_s = cur_s + 1
-                self.analyse_scheme(lumped_scheme, models)
-                new_score = get_score(lumped_scheme)
+                result = self.analyse_scheme(lumped_scheme, models)
+                new_score = get_score(result)
 
-                if best_lumping_score==None or new_score<best_lumping_score:
+                if best_lumping_score==None or new_score < best_lumping_score:
                     best_lumping_score  = new_score
+                    best_result = result
                     best_lumping_scheme = lumped_scheme
                     best_lumping_desc   = lumped_description
 
-            if best_lumping_score<best_score:
+            if best_lumping_score < best_score:
                 best_scheme = best_lumping_scheme
                 best_score  = best_lumping_score
                 start_description = best_lumping_desc               
@@ -139,18 +136,18 @@ class GreedyAnalysis(Analysis):
 
         log.info("Greedy algorithm finished after %d steps" % step)
         log.info("Highest scoring scheme is scheme %s, with %s score of %.3f"
-                 %(best_scheme.name, model_selection, best_score))
+                 %(best_result.scheme.name, model_selection, best_score))
 
-        best_schemes_file = os.path.join(self.cfg.output_path, 'best_schemes.txt')
-        best_scheme.write_summary(
-            best_schemes_file, 'wb', 
-            "Best scheme according to Greedy algorithm, analysed with %s\n\n" % model_selection)
-        log.info("Information on best scheme is here: %s" %(best_schemes_file))
+        # best_schemes_file = os.path.join(self.cfg.output_path, 'best_schemes.txt')
+        # best_scheme.write_summary(
+            # best_schemes_file, 'wb', 
+            # "Best scheme according to Greedy algorithm, analysed with %s\n\n" % model_selection)
+        # log.info("Information on best scheme is here: %s" %(best_schemes_file))
 
-        current_schemes = [s for s in self.cfg.schemes]
-        current_schemes.sort(key=lambda s: int(s.name), reverse=False)
+        # current_schemes = [s for s in self.cfg.schemes]
+        # current_schemes.sort(key=lambda s: int(s.name), reverse=False)
 
-        self.write_all_schemes(current_schemes) #this also writes a file which has info on all analysed schemes, useful for extra analysis if that's what you're interested in...
+        # self.write_all_schemes(current_schemes) #this also writes a file which has info on all analysed schemes, useful for extra analysis if that's what you're interested in...
 
 def choose_method(search):
     if search == 'all':

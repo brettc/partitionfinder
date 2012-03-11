@@ -37,10 +37,23 @@ class AnalysisResults(object):
     """This should hold all the results
     """
     def __init__(self):
-        pass
+        self.scheme_results = []
 
-    def add_scheme_result(self, scheme, result):
-        pass
+    def add_scheme_result(self, result):
+        self.scheme_results.append(result)
+
+    def finalise(self):
+        # TODO use sort instead
+        # sort(student_objects, key=lambda student: student.age)   # sort by age
+        sorted_schemes_aic = [(r.aic, r) for r in self.scheme_results]
+        sorted_schemes_aic.sort()
+        sorted_schemes_aicc = [(r.aicc, r) for r in self.scheme_results]
+        sorted_schemes_aicc.sort()
+        sorted_schemes_bic = [(r.bic, r) for r in self.scheme_results]
+        sorted_schemes_bic.sort()
+        self.best_aic  = sorted_schemes_aic[0][1]
+        self.best_aicc = sorted_schemes_aicc[0][1]
+        self.best_bic  = sorted_schemes_bic[0][1]
 
 class Analysis(object):
     """Performs the analysis and collects the results"""
@@ -74,10 +87,11 @@ class Analysis(object):
         self.schemes_analysed = 0 #a counter for user info
         self.total_scheme_num = None
 
-    def do_analysis(self):
-        log.error("Base analysis class called. You should instantiate a\
-                  specific analysis method")
-        raise AnalysisError
+    def analyse(self):
+        self.do_analysis()
+        self.results.finalise()
+        self.rpt.write_best_scheme(self.results)
+        self.rpt.write_all_schemes(self.results)
 
     def make_alignment(self, source_alignment_path):
         # Make the alignment 
@@ -232,8 +246,7 @@ class Analysis(object):
         sub.model_selection(self.cfg.model_selection, self.cfg.models)        
         
         # If we made it to here, we should write out the new summary
-        sub_summary_path = os.path.join(self.cfg.subsets_path, sub.name + '.txt')
-        sub.write_summary(sub_summary_path)
+        self.rpt.write_subset_summary(sub)
         # We also need to update this
         sub.write_cache(subset_cache_path)
 
@@ -285,36 +298,12 @@ class Analysis(object):
         # AIC needs the number of sequences 
         number_of_seq = len(self.alignment.species)
         result = scheme.SchemeResult(sch, number_of_seq, self.cfg.branchlengths)
-        self.results.add_scheme_result(sch, result)
+        self.results.add_scheme_result(result)
 
         # TODO: should put all paths into config. Then reporter should decide
         # whether to create stuff
         fname = os.path.join(self.cfg.schemes_path, sch.name+'.txt')
-        self.rpt.write_scheme_summary(sch, result, open(fname, 'w'))
+        self.rpt.write_scheme_summary(result, open(fname, 'w'))
 
-    def write_best_scheme(self, list_of_schemes):
-        # Which is the best?
-        sorted_schemes_aic = [(s.aic, s) for s in list_of_schemes]
-        sorted_schemes_aic.sort()
-        sorted_schemes_aicc = [(s.aicc, s) for s in list_of_schemes]
-        sorted_schemes_aicc.sort()
-        sorted_schemes_bic = [(s.bic, s) for s in list_of_schemes]
-        sorted_schemes_bic.sort()
-        best_aic  = sorted_schemes_aic[0][1]
-        best_aicc = sorted_schemes_aicc[0][1]
-        best_bic  = sorted_schemes_bic[0][1]
-        best_schemes_file = os.path.join(self.cfg.output_path, 'best_schemes.txt')
-        best_aic.write_summary(best_schemes_file, 'wb', "Best scheme according to AIC\n")
-        best_aicc.write_summary(best_schemes_file, 'ab', "\n\n\nBest scheme according to AICc\n")
-        best_bic.write_summary(best_schemes_file, 'ab', "\n\n\nBest scheme according to BIC\n")
-        log.info("Information on best schemes is here: %s" %(best_schemes_file))
-        self.write_all_schemes(list_of_schemes) #this also writes a file which has info on all analysed schemes, useful for extra analysis if that's what you're interested in...
+        return result
 
-    def write_all_schemes(self, list_of_schemes):
-        all_schemes_file = os.path.join(self.cfg.output_path, 'all_schemes.txt')
-        f = open(all_schemes_file, 'wb')
-        f.write("Name\tlnL\t#params\t#sites\t#subsets\tAIC\tAICc\tBIC\n")
-        list_of_schemes.sort()
-        for s in list_of_schemes:
-            f.write("%s\t%.3f\t%d\t%d\t%d\t%.3f\t%.3f\t%.3f\n" %(s.name,s.lnl,s.sum_k,s.nsites,s.nsubs,s.aic,s.aicc,s.bic))
-        log.info("Information on all schemes analysed is here: %s" %(all_schemes_file))

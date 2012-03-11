@@ -26,8 +26,10 @@ class SchemeError(PartitionFinderError):
 
 class SchemeResult(object):
     def __init__(self, sch, nseq, branchlengths):
-		#calculate AIC, BIC, AICc for each scheme.
-		#how you do this depends on whether brlens are linked or not.
+        self.scheme = sch
+
+		# Calculate AIC, BIC, AICc for each scheme.
+		# How you do this depends on whether brlens are linked or not.
         self.nsubs = len(sch.subsets) #number of subsets
         sum_subset_k = sum([s.best_params for s in sch]) #sum of number of parameters in the best model of each subset
 
