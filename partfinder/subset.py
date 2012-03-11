@@ -166,9 +166,8 @@ class Subset(object):
                 self.best_params = result.params
         log.debug("Model Selection. best model: %s, params: %d" %(self.best_model, self.best_params))
 
-
     # These are the fields that get stored for quick loading
-    _cache_fields = "alignment_path best_lnl best_info_score best_model best_params results".split()
+    _cache_fields = "alignment_path results".split()
     def write_cache(self, path):
         """Write out the results we've collected to a binary file"""
         f = open(path, 'wb')

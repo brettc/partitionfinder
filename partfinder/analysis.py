@@ -183,8 +183,8 @@ class Analysis(object):
         # Empty set means we're done
         if not models_to_do:
             log.debug("Using results that are already loaded %s", sub)
-            if models_done!=set(models): #redo model selection if we have different models
-            	sub.model_selection(self.cfg.model_selection, self.cfg.models)        
+            #if models_done!=set(models): #redo model selection if we have different models
+            sub.model_selection(self.cfg.model_selection, self.cfg.models)        
             return
 
         log.debug("About to analyse %s using models %s", sub, ", ".join(list(models)))
@@ -216,8 +216,8 @@ class Analysis(object):
         # Try and read in some previous analyses
         self.parse_results(sub, models_to_do)
         if not models_to_do:
-            if models_done!=set(models): #redo model selection if we have different models
-            	sub.model_selection(self.cfg.model_selection, self.cfg.models)        
+            #if models_done!=set(models): #redo model selection if we have different models
+            sub.model_selection(self.cfg.model_selection, self.cfg.models)        
             return
 
         # What is left, we actually have to analyse...
