@@ -2,9 +2,9 @@ Brett test enhancing:
 ---------------------
 
 TODO 
+* Only makes sense to report ONE IC in the greedy algo output...
 * make progress part of the reporter too
 * change name back to full_name in subset reporting
-*
 * Only makes sense to report ONE IC in the greedy algo output...
 * make progress part of the reporter too
 * change name back to full_name in subset reporting
@@ -24,6 +24,15 @@ TODO
 DONE
 * Make the output match (why aren't schemes numbered the same...)
 * Only makes sense to report ONE IC in the greedy algo output...
+* move path creation into config
+* make results member of scheme? or keep a paired list
+* put all of the summarising of results info (finding best) into the AnalysisResults
+* move subset writing out into reporter
+* finish making reports fleshed out
+* Final wiritng takes Analysis results
+* think about reporter, how should it look? with config?
+
+DONE
 * move path creation into config
 * make results member of scheme? or keep a paired list
 * put all of the summarising of results info (finding best) into the AnalysisResults
