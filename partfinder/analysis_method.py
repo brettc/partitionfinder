@@ -113,23 +113,24 @@ class GreedyAnalysis(Analysis):
             best_lumping_score = None
             for lumped_description in lumpings:
                 lumped_scheme = scheme.create_scheme(self.cfg, cur_s, lumped_description)
-                cur_s = cur_s + 1
+                cur_s += 1
                 result = self.analyse_scheme(lumped_scheme, models)
                 new_score = get_score(result)
 
                 if best_lumping_score==None or new_score < best_lumping_score:
                     best_lumping_score  = new_score
-                    best_result = result
+                    best_lumping_result = result
                     best_lumping_scheme = lumped_scheme
                     best_lumping_desc   = lumped_description
 
             if best_lumping_score < best_score:
                 best_scheme = best_lumping_scheme
                 best_score  = best_lumping_score
+                best_result = best_lumping_result
                 start_description = best_lumping_desc               
-                if len(set(best_lumping_desc))==1: #then it's the scheme with everything equal, so quit
+                if len(set(best_lumping_desc)) == 1: #then it's the scheme with everything equal, so quit
                     break
-                step = step+1
+                step += 1
 
             else:
                 break
@@ -138,16 +139,14 @@ class GreedyAnalysis(Analysis):
         log.info("Highest scoring scheme is scheme %s, with %s score of %.3f"
                  %(best_result.scheme.name, model_selection, best_score))
 
-        # best_schemes_file = os.path.join(self.cfg.output_path, 'best_schemes.txt')
-        # best_scheme.write_summary(
-            # best_schemes_file, 'wb', 
-            # "Best scheme according to Greedy algorithm, analysed with %s\n\n" % model_selection)
-        # log.info("Information on best scheme is here: %s" %(best_schemes_file))
+        self.best_result = best_result
 
-        # current_schemes = [s for s in self.cfg.schemes]
-        # current_schemes.sort(key=lambda s: int(s.name), reverse=False)
 
-        # self.write_all_schemes(current_schemes) #this also writes a file which has info on all analysed schemes, useful for extra analysis if that's what you're interested in...
+    def report(self):
+        txt = "Best scheme according to Greedy algorithm, analysed with %s"
+        best = [(txt % self.cfg.model_selection, self.best_result)]
+        self.rpt.write_best_schemes(best)
+        self.rpt.write_all_schemes(self.results)
 
 def choose_method(search):
     if search == 'all':

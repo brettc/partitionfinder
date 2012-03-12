@@ -90,7 +90,15 @@ class Analysis(object):
     def analyse(self):
         self.do_analysis()
         self.results.finalise()
-        self.rpt.write_best_scheme(self.results)
+        self.report()
+
+    def report(self):
+        best = [
+            ("Best scheme according to AIC", self.results.best_aic),
+            ("Best scheme according to AICc", self.results.best_aicc),
+            ("Best scheme according to BIC", self.results.best_bic),
+        ]
+        self.rpt.write_best_schemes(best)
         self.rpt.write_all_schemes(self.results)
 
     def make_alignment(self, source_alignment_path):

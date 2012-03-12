@@ -62,7 +62,6 @@ class TextReporter(object):
         output.write(scheme_header_template % ("Num subsets", result.nsubs))
         output.write("\n")
 
-    # TODO FIX THIS and add them on. Write extra lines into the calling thing?
     def write_subsets(self, result, output, sorted_subsets):
         output.write(scheme_subset_template % (
             "Subset", "Best Model", "Subset Partitions", "Subset Sites",  "Alignment"))
@@ -127,22 +126,15 @@ class TextReporter(object):
 
             number += 1
 
-    def write_best_scheme(self, results):
-        # Which is the best?
+    def write_best_schemes(self, best):
         best_schemes_pth = os.path.join(self.cfg.output_path, 'best_schemes.txt')
         output = open(best_schemes_pth, 'wb')
 
-        output.write("Best scheme according to AIC\n")
-        self.write_scheme_summary(results.best_aic, output)
-        output.write("\n")
-
-        output.write("Best scheme according to AICc\n")
-        self.write_scheme_summary(results.best_aicc, output)
-        output.write("\n")
-
-        output.write("Best scheme according to BIC\n")
-        self.write_scheme_summary(results.best_bic, output)
-        output.write("\n")
+        for head, res in best:
+            output.write(head)
+            output.write("\n\n")
+            self.write_scheme_summary(res, output)
+            output.write("\n\n\n")
 
         log.info("Information on best schemes is here: %s", best_schemes_pth)
 
