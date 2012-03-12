@@ -1,0 +1,17 @@
+CHANGELOG
+_________
+
+
+
+12 March: *** Version 0.9.2 ***
+- Added CHANGES.txt
+- Fixed bug in model selection when re-running AIC then BIC etc.
+- Fixed bug in printout of schemes
+- Fixed bug in AICc calculations
+
+
+8th March: *** Version 0.9.1 ***
+- Changed to MD5 subset names
+
+18th Jan *** Version 0.9 ***
+- First version, released with the paper in MBE
