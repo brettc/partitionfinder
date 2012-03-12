@@ -2,11 +2,12 @@ Brett test enhancing:
 ---------------------
 
 TODO 
-* Make the output match (why aren't schemes numbered the same...)
-* Only makes sense to report ONE IC in the greedy algo output...
 * make progress part of the reporter too
 * change name back to full_name in subset reporting
 *
+* Only makes sense to report ONE IC in the greedy algo output...
+* make progress part of the reporter too
+* change name back to full_name in subset reporting
 *
 * THEN USE Analysis results to produce a test_object_compartor.
 * The write methods for comparining that into AnalysisResults (with epsilon differences)
@@ -20,8 +21,9 @@ TODO
 * THEN: Consider dropping part_subsets in schemes (only need it for checking...)
 * THEN: think about ditching schemes, and subset info?
 
-
 DONE
+* Make the output match (why aren't schemes numbered the same...)
+* Only makes sense to report ONE IC in the greedy algo output...
 * move path creation into config
 * make results member of scheme? or keep a paired list
 * put all of the summarising of results info (finding best) into the AnalysisResults
