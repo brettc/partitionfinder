@@ -183,16 +183,3 @@ class Partition(object):
     def __str__(self):
         outlist = ", ".join(["%s-%s\\%s" % tuple(p) for p in self.description])
         return "Partition(%s, %s)" % (self.name, outlist)
-
-
-if __name__ == '__main__':
-    import logging
-    logging.basicConfig(level=logging.DEBUG)
-    p1 = Partition('one', (1, 10))
-    p2 = Partition('two', (11, 20))
-    p3 = Partition('three', (21, 21))
-    print p3.columnset
-
-    # ps = PartitionSet(p1, p2)
-
-    # print ps

@@ -40,3 +40,11 @@ def get_root_install_path():
     pth, not_used = os.path.split(pth)
     pth, not_used = os.path.split(pth)
     return pth
+
+def make_dir(pth):
+    if os.path.exists(pth):
+        if not os.path.isdir(pth):
+            log.error("Cannot create folder '%s'", pth)
+            raise AnalysisError
+    else:
+        os.mkdir(pth)

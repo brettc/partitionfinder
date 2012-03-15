@@ -24,6 +24,48 @@ from util import PartitionFinderError
 class SchemeError(PartitionFinderError):
     pass
 
+class SchemeResult(object):
+    def __init__(self, sch, nseq, branchlengths):
+        self.scheme = sch
+
+		# Calculate AIC, BIC, AICc for each scheme.
+		# How you do this depends on whether brlens are linked or not.
+        self.nsubs = len(sch.subsets) #number of subsets
+        sum_subset_k = sum([s.best_params for s in sch]) #sum of number of parameters in the best model of each subset
+
+        log.debug("Calculating number of parameters in scheme:")
+        log.debug("Total parameters from subset models: %d" %(sum_subset_k))
+        
+        if branchlengths == 'linked': #linked brlens - only one extra parameter per subset
+            self.sum_k = sum_subset_k + (self.nsubs-1) + ((2*nseq)-3) #number of parameters in a scheme
+            log.debug("Total parameters from brlens: %d" %((2*nseq) -3))
+            log.debug("Parameters from subset multipliers: %d" %(self.nsubs-1))        
+
+        elif branchlengths == 'unlinked': #unlinked brlens - every subset has its own set of brlens
+            self.sum_k = sum_subset_k + (self.nsubs*((2*nseq)-3)) #number of parameters in a scheme
+            log.debug("Total parameters from brlens: %d" %((2*nseq) -3)*self.nsubs)
+
+        else:
+            # WTF?
+            log.error("Unknown option for branchlengths: %s", branchlengths)
+            raise AnalysisError
+        
+        log.debug("Grand total parameters: %d" %(self.sum_k))
+        
+        self.lnl = sum([s.best_lnl for s in sch])
+        self.nsites = sum([len(s.columnset) for s in sch])
+
+        K = float(self.sum_k)
+        n = float(self.nsites)
+        lnL = float(self.lnl)		
+
+        log.debug("n: %d\tK: %d" %(n, K))
+   
+        self.aic  = (-2.0*lnL) + (2.0*K)
+        self.bic  = (-2.0*lnL) + (K * logarithm(n))
+        self.aicc = self.aic + (((2.0*K)*(K+1.0))/(n-K-1.0))
+
+
 class Scheme(object):
     def __init__(self, cfg, name, *subsets):
         """A set of subsets of partitions"""
@@ -80,124 +122,6 @@ class Scheme(object):
         ss = ', '.join([str(s) for s in self.subsets])
         return "Scheme(%s, %s)" % (self.name, ss)
 
-    def assemble_results(self, nseq, branchlengths):
-		#calculate AIC, BIC, AICc for each scheme.
-		#how you do this depends on whether brlens are linked or not.
-        self.nsubs = len(self.subsets) #number of subsets
-        sum_subset_k = sum([s.best_params for s in self]) #sum of number of parameters in the best model of each subset
-
-        log.debug("Calculating number of parameters in scheme:")
-        log.debug("Total parameters from subset models: %d" %(sum_subset_k))
-        
-        if branchlengths == 'linked': #linked brlens - only one extra parameter per subset
-            self.sum_k = sum_subset_k + (self.nsubs-1) + ((2*nseq)-3) #number of parameters in a scheme
-            log.debug("Total parameters from brlens: %d" %((2*nseq) -3))
-            log.debug("Parameters from subset multipliers: %d" %(self.nsubs-1))        
-
-        elif branchlengths == 'unlinked': #unlinked brlens - every subset has its own set of brlens
-            self.sum_k = sum_subset_k + (self.nsubs*((2*nseq)-3)) #number of parameters in a scheme
-            log.debug("Total parameters from brlens: %d" %((2*nseq) -3)*self.nsubs)
-
-        else:
-            # WTF?
-            log.error("Unknown option for branchlengths: %s", branchlengths)
-            raise AnalysisError
-        
-        log.debug("Grand total parameters: %d" %(self.sum_k))
-        
-        self.lnl = sum([s.best_lnl for s in self])
-        self.nsites = sum([len(s.columnset) for s in self])
-
-
-        K = float(self.sum_k)
-        n = float(self.nsites)
-        lnL = float(self.lnl)		
-
-        log.debug("n: %d\tK: %d" %(n, K))
-   
-        self.aic  = (-2.0*lnL) + (2.0*K)
-        self.bic  = (-2.0*lnL) + (K * logarithm(n))
-        self.aicc = self.aic + (((2.0*K)*(K+1.0))/(n-K-1.0))
-
-
-    _header_template = "%-15s: %s\n"
-    _subset_template = "%-6s | %-10s | %-30s | %-30s | %-40s\n"
-    def write_summary(self, path, write_type = 'wb', extra_line=None):
-        f = open(path, write_type)
-        if extra_line:
-		    f.write(extra_line)
-        f.write(Scheme._header_template % ("Scheme Name", self.name))
-        f.write(Scheme._header_template % ("Scheme lnL", self.lnl))
-        f.write(Scheme._header_template % ("Scheme AIC", self.aic))
-        f.write(Scheme._header_template % ("Scheme AICc", self.aicc))
-        f.write(Scheme._header_template % ("Scheme BIC", self.bic))
-        f.write(Scheme._header_template % ("Num params", self.sum_k))
-        f.write(Scheme._header_template % ("Num sites", self.nsites))
-        f.write(Scheme._header_template % ("Num subsets", self.nsubs))
-        f.write("\n")
-        f.write(Scheme._subset_template % (
-            "Subset", "Best Model", "Subset Partitions", "Subset Sites",  "Alignment"))
-        number = 1
-        
-        sorted_subsets = [sub for sub in self]
-        sorted_subsets.sort(key=lambda sub: min(sub.columns), reverse=False)
-                
-        for sub in sorted_subsets:
-            desc = {}
-            names= []
-            for part in sub:
-                desc[part.description[0][0]] = part.description[0] #dict keyed by first site in part
-                names.append(part.name)
-
-            #pretty print the sites in the scheme
-            desc_starts = desc.keys()
-            desc_starts.sort()            
-            parts = []
-            for key in desc_starts:
-                part = desc[key]
-                if part[2]==1:
-                    text = "%s-%s" %(part[0], part[1])
-                else:
-                    text = "%s-%s\\%s" % tuple(part)
-                parts.append(text)
-            parts = ', '.join(parts)
-            	
-            names.sort()
-            names = ', '.join(names)
-			
-            f.write(Scheme._subset_template % (
-                number, sub.best_model, names, parts, sub.alignment_path))
-            number = number + 1
-
-		#print out partition definitions in RaxML-like format, might be usefult to some people
-        f.write("\n\nRaxML-style partition definitions\n")
-        number = 1
-        for sub in sorted_subsets:
-            desc = {}
-            names= []
-            for part in sub:
-                desc[part.description[0][0]] = part.description[0] #dict keyed by first site in part
-                names.append(part.name)
-
-            #pretty print the sites in the scheme
-            desc_starts = desc.keys()
-            desc_starts.sort()            
-            parts = []
-            for key in desc_starts:
-                part = desc[key]
-                if part[2]==1:
-                    text = "%s-%s" %(part[0], part[1])
-                else:
-                    text = "%s-%s\\%s" % tuple(part)
-                parts.append(text)
-            parts = ', '.join(parts)
-            line = "DNA, p%s = %s\n" %(number, parts)
-			
-            f.write(line)
-            number = number + 1
-
-		
-        f.close()
 
 class SchemeSet(object):
     """All the schemes added, and also a list of all unique subsets"""
@@ -281,8 +205,6 @@ def model_to_scheme(model, scheme_name, cfg):
 	#log.info("Created scheme %d of %d" %(scheme_name, len(all_schemes)))	
 	return scheme
 
-
-
 def generate_all_schemes(cfg):
     """Convert the abstract schema given by the algorithm into subsets"""
     import subset
@@ -321,20 +243,3 @@ def generate_all_schemes(cfg):
         scheme_name += 1
 		
     return scheme_list
-
-if __name__ == '__main__':
-    import logging
-    logging.basicConfig(level=logging.DEBUG)
-    from partition import Partition
-    from subset import Subset
-
-    pa = Partition('a', (1, 10, 3))
-    pb = Partition('b', (2, 10, 3))
-    pc = Partition('c', (3, 10, 3))
-    pd = Partition('d', (11, 20))
-    # s = Scheme('x', Subset(pa, pc), Subset(pb))
-
-    generate_all_schemes()
-    # This should give us an error!
-    # s = Scheme('y', Subset(pa, pc), Subset(pb))
-    

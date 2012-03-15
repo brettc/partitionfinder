@@ -19,6 +19,12 @@ import logging
 log = logging.getLogger("subset")
 import os
 import weakref
+
+from hashlib import md5
+
+# import base64
+# from zlib import compress
+
 import cPickle as pickle
 
 import alignment
@@ -89,20 +95,29 @@ class Subset(object):
     def __str__(self):
         return "Subset(%s)" % ", ".join([str(p) for p in self.partitions])
 
+
+    @property
+    def full_name(self):
+        if hasattr(self, '_full_name'):
+            nm = self._full_name
+        else:
+            s = sorted([p.name for p in self.partitions])
+            nm = '-'.join(s)
+            self._full_name = nm
+        return nm
+
     @property
     def name(self):
         # Cache this
         if hasattr(self, '_name'):
             nm = self._name
         else:
-            s = sorted([p.name for p in self.partitions])
-            nm = '-'.join(s)
-            # Don't go crazy
-            if len(nm) > 50:
-                s = sorted([str(p.sequence) for p in self.partitions])
-            nm = '-'.join(s)
+            nm = self.full_name
+            # This gets super long -- we can shorten it like this...  This is
+            # a slightly lazy solution. There is some vanishingly small chance
+            # that we'll get the same thing. Google "MD5 Hash Collision"
+            nm = md5(nm).hexdigest()
             self._name = nm
-
         return nm
 
     def __iter__(self):
@@ -114,10 +129,12 @@ class Subset(object):
 
         K = float(result.params)
         n = float(len(self.columnset))
-        lnL = float(result.lnl)		   
+        lnL = float(result.lnl)
+        aicc_denominator = n-K-1.0
+        if aicc_denominator<1: aicc_denominator=1 #it's nonsensical to have this <1 - you either get a zero division, or if it's negative it gives totally the opposite results to the one it's built to do.
         result.aic  = (-2.0*lnL) + (2.0*K)
         result.bic  = (-2.0*lnL) + (K * logarithm(n))
-        result.aicc = result.aic + (((2.0*K)*(K+1.0))/(n-K-1.0))
+        result.aicc = result.aic + (((2.0*K)*(K+1.0))/(aicc_denominator))
 
         log.debug("Adding model to subset. Model: %s, params %d" %(model, K))
 
@@ -149,62 +166,18 @@ class Subset(object):
                 self.best_params = result.params
         log.debug("Model Selection. best model: %s, params: %d" %(self.best_model, self.best_params))
 
-
-    _template = "%-15s | %-15s | %-15s | %-15s | %-15s\n"
-    def write_summary(self, path):
-        # Sort everything
-        model_results = [(r.bic, r) for r in self.results.values()]
-        model_results.sort()
-        f = open(path, 'w')
-        f.write("Model selection results for subset: %s\n" % self.name)
-        f.write("Subset alignment stored here: %s\n" % self.alignment_path)
-        f.write("Models are organised according to their BIC scores\n\n")
-        f.write(Subset._template % ("Model", "lNL", "AIC", "AICc", "BIC"))
-        for bic, r in model_results:
-            f.write(Subset._template % (r.model, r.lnl, r.aic, r.aicc, r.bic))
-
-    
     # These are the fields that get stored for quick loading
-    _store = "alignment_path best_lnl best_info_score best_model best_params results".split()
-
-    def write_binary_summary(self, path):
+    _cache_fields = "alignment_path results".split()
+    def write_cache(self, path):
         """Write out the results we've collected to a binary file"""
         f = open(path, 'wb')
-        store = dict([(x, getattr(self, x)) for x in Subset._store])
+        store = dict([(x, getattr(self, x)) for x in Subset._cache_fields])
         pickle.dump(store, f, -1)
 
-    def read_binary_summary(self, path):
+    def read_cache(self, path):
         if not os.path.exists(path):
             return False
 
         log.debug("Reading binary cached results for %s", self)
         f = open(path, 'rb')
         self.__dict__.update(pickle.load(f))
-
-
-if __name__ == '__main__':
-    import logging
-    import tempfile
-    logging.basicConfig(level=logging.DEBUG)
-    import config
-    from partition import Partition
-
-    c = config.Configuration()
-
-    pa = Partition(c, 'a', (1, 10, 3))
-    pb = Partition(c, 'b', (2, 10, 3))
-    pc = Partition(c, 'c', (3, 10, 3))
-
-    s1 = Subset(pa, pb)
-    s2 = Subset(pa, pb)
-    s3 = Subset(pa, pc)
-    s4 = Subset(pa, pb)
-    print s1 is s2
-    print s1
-    # s2 = Subset(pa, pb, pc)
-    # s3 = Subset(pc)
-
-    # print s1.name
-    # print s2.name
-
-
