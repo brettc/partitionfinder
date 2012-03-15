@@ -68,10 +68,18 @@ class Analysis(object):
 
         log.info("Beginning Analysis")
         if force_restart:
+            # Remove everything
             if os.path.exists(self.cfg.output_path):
                 log.warning("Deleting all previous workings in '%s'", 
                             self.cfg.output_path)
                 shutil.rmtree(self.cfg.output_path)
+        else:
+            # Just remove the schemes folder
+            if os.path.exists(self.cfg.schemes_path):
+                log.info("Removing Schemes in '%s' (they will be "
+                         "recalculated from existing subset data)",
+                         self.cfg.schemes_path)
+                shutil.rmtree(self.cfg.schemes_path)
 
         #check for old analyses to see if we can use the old data
         self.cfg.check_for_old_config()

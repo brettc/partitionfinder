@@ -68,20 +68,28 @@ class Configuration(object):
         config_path = os.path.join(base_path, "partition_finder.cfg")
         util.check_file_exists(config_path)
 
+        self._output_folders = []
+        self.register_output_folders()
+
         self.init_logger(base_path)
         self.load(config_path)
 
-    def make_output_dir(self, name):
+    def register_folder(self, name):
+        # Separate the naming and construction of folders
         new_path = os.path.join(self.output_path, name)
-        util.make_dir(new_path)
+        self._output_folders.append(new_path)
         setattr(self, name+"_path", new_path)
 
     def make_output_folders(self):
         util.make_dir(self.output_path)
-        self.make_output_dir('subsets')
-        self.make_output_dir('schemes')
-        self.make_output_dir('phyml')
-        self.make_output_dir('start_tree')
+        for pth in self._output_folders:
+            util.make_dir(pth)
+
+    def register_output_folders(self):
+        self.register_folder('subsets')
+        self.register_folder('schemes')
+        self.register_folder('phyml')
+        self.register_folder('start_tree')
 
     def init_logger(self, pth):
         handler = logging.FileHandler(os.path.join(pth, "log.txt"), 'a')
