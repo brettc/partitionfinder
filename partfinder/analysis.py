@@ -43,17 +43,15 @@ class AnalysisResults(object):
         self.scheme_results.append(result)
 
     def finalise(self):
-        # TODO use sort instead
-        # sort(student_objects, key=lambda student: student.age)   # sort by age
-        sorted_schemes_aic = [(r.aic, r) for r in self.scheme_results]
-        sorted_schemes_aic.sort()
-        sorted_schemes_aicc = [(r.aicc, r) for r in self.scheme_results]
-        sorted_schemes_aicc.sort()
-        sorted_schemes_bic = [(r.bic, r) for r in self.scheme_results]
-        sorted_schemes_bic.sort()
-        self.best_aic  = sorted_schemes_aic[0][1]
-        self.best_aicc = sorted_schemes_aicc[0][1]
-        self.best_bic  = sorted_schemes_bic[0][1]
+        self.scheme_results.sort(key=lambda sch: sch.aic)
+        self.best_aic  = self.scheme_results[0]
+        self.scheme_results.sort(key=lambda sch: sch.aicc)
+        self.best_aicc  = self.scheme_results[0]
+
+        # Lets make the default the one sorted by Bic -- so leave it like this
+        self.scheme_results.sort(key=lambda sch: sch.bic)
+        self.best_bic  = self.scheme_results[0]
+
 
 class Analysis(object):
     """Performs the analysis and collects the results"""
