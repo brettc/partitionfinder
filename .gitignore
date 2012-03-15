@@ -8,4 +8,4 @@ tests/testing.log
 log.txt
 .lock*
 .waf*
-programs/phyml/build/
+programs/phyml_source/build/
