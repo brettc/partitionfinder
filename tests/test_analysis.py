@@ -23,9 +23,10 @@ class TestAnalysis(PartitionFinderTestCase):
 # See here: http://stackoverflow.com/questions/1193909/pythons-unittest-and-dynamic-creation-of-test-cases
 analysis_dirs = os.listdir(ANALYSIS_PATH)
 for f in analysis_dirs:
-    def ch(f):
-        return lambda self: self.load_cfg_and_run(f)
-    setattr(TestAnalysis, 'test_' + f, ch(f))
+    if os.path.isdir(f):
+        def ch(f):
+            return lambda self: self.load_cfg_and_run(f)
+        setattr(TestAnalysis, 'test_' + f, ch(f))
 
 if __name__ == '__main__':
     unittest.main()
