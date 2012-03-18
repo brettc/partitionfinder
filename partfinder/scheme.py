@@ -66,6 +66,26 @@ class SchemeResult(object):
         self.aicc = self.aic + (((2.0*K)*(K+1.0))/(n-K-1.0))
 
 
+    def compare(self, other):
+        def close_enough(a, b):
+            if abs(a-b) < .00000001:
+                return True
+
+        if close_enough(self.aic, other.aic) and\
+           close_enough(self.aicc, other.aicc) and\
+           close_enough(self.bic, other.bic):
+            return True
+
+        return False
+        
+    def __repr__(self):
+        return "SchemeResult<aic:%f, aicc:%f, bic:%f>" % (self.aic, self.aicc,
+                                                          self.bic)
+
+
+
+
+
 class Scheme(object):
     def __init__(self, cfg, name, *subsets):
         """A set of subsets of partitions"""

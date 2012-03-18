@@ -12,8 +12,9 @@ class TestAnalysis(PartitionFinderTestCase):
             cfg.load_base_path(pth)
             method = analysis_method.choose_method(cfg.search)
             rpt = reporter.TextReporter(cfg)
-            anal = method(cfg, rpt, True, False)
-            anal.do_analysis()
+            meth = method(cfg, rpt, True, False)
+            results = meth.analyse()
+            results.compare(cfg)
         finally:
             # Always do this
             shutil.rmtree(cfg.output_path)
@@ -23,6 +24,7 @@ class TestAnalysis(PartitionFinderTestCase):
 # See here: http://stackoverflow.com/questions/1193909/pythons-unittest-and-dynamic-creation-of-test-cases
 analysis_dirs = os.listdir(ANALYSIS_PATH)
 for f in analysis_dirs:
+    # if os.path.isdir(f):
     def ch(f):
         return lambda self: self.load_cfg_and_run(f)
     setattr(TestAnalysis, 'test_' + f, ch(f))

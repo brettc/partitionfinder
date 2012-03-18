@@ -74,6 +74,8 @@ class Configuration(object):
         self.init_logger(base_path)
         self.load(config_path)
 
+        self.make_output_folders()
+
     def register_folder(self, name):
         # Separate the naming and construction of folders
         new_path = os.path.join(self.output_path, name)

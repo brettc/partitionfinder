@@ -28,30 +28,11 @@ import threadpool
 import scheme
 import subset
 import util
+import results
 
 from util import PartitionFinderError
 class AnalysisError(PartitionFinderError):
     pass
-
-class AnalysisResults(object):
-    """This should hold all the results
-    """
-    def __init__(self):
-        self.scheme_results = []
-
-    def add_scheme_result(self, result):
-        self.scheme_results.append(result)
-
-    def finalise(self):
-        self.scheme_results.sort(key=lambda sch: sch.aic)
-        self.best_aic  = self.scheme_results[0]
-        self.scheme_results.sort(key=lambda sch: sch.aicc)
-        self.best_aicc  = self.scheme_results[0]
-
-        # Lets make the default the one sorted by Bic -- so leave it like this
-        self.scheme_results.sort(key=lambda sch: sch.bic)
-        self.best_bic  = self.scheme_results[0]
-
 
 class Analysis(object):
     """Performs the analysis and collects the results"""
@@ -62,7 +43,7 @@ class Analysis(object):
         self.rpt = rpt
         self.threads = threads
         self.save_phyml = save_phyml
-        self.results = AnalysisResults()
+        self.results = results.AnalysisResults()
 
         log.info("Beginning Analysis")
         if force_restart:
@@ -97,6 +78,7 @@ class Analysis(object):
         self.do_analysis()
         self.results.finalise()
         self.report()
+        return self.results
 
     def report(self):
         best = [
