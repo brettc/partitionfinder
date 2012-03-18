@@ -45,20 +45,32 @@ class AnalysisResults(object):
         self.best_bic  = self.scheme_results[0]
 
     def get_dump_path(self, cfg):
-        return os.path.join(cfg.output_path, 'results.bin')
+        return os.path.join(cfg.base_path, 'results.bin')
 
     def dump(self, cfg):
         pth = self.get_dump_path(cfg) 
+        log.info("Dumping all results to '%s'", pth)
         f = open(pth, 'wb')
         pickle.dump(self.scheme_results, f, -1)
 
     def compare(self, cfg):
         pth = self.get_dump_path(cfg) 
+        if not os.path.exists(pth):
+            log.error("Previous results file not found at '%s'. "
+                      "Did you run --dump-results previously?", pth)
+            raise ComparisonError
+
+        log.info("Loading old results from '%s'", pth)
         f = open(pth, 'rb')
         old_results = pickle.load(f)
 
+        log.info("Comparing results...")
         # Now do the comparison
-        if old_results != self.scheme_results:
-            log.error("Results were not equal")
-            raise ComparisonError
+        for old, new in zip(old_results, self.scheme_results):
+            if not old.compare(new):
+                # TODO Make this better
+                log.error("Results were not equal")
+                raise ComparisonError
+
+        log.info("Results were equal to dumped results")
 
