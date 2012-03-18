@@ -88,8 +88,23 @@ def main():
         "--save-phyml",
         action="store_true", dest="save_phyml",
         help="save all of the phyml output. This can take a lot of space(!)")
+    parser.add_option(
+        "--dump-results",
+        action="store_true", dest="dump_results",
+        help="Dump all results to a binary file. "
+        "This is only of use for testing purposes.")
+    parser.add_option(
+        "--compare-results",
+        action="store_true", dest="compare_results",
+        help="Compare the results to previously dumped binary results. "
+        "This is only of use for testing purposes.")
     
     options, args = parser.parse_args()
+
+    # Error checking
+    if options.dump_results and options.compare_results:
+        log.error("You can't dump and compare results in one run!")
+        log.error("Please select just one of these")
 
     # We should have one argument: the folder to read the configuration from
     if not args:
@@ -119,7 +134,12 @@ def main():
                           options.force_restart, 
                           options.save_phyml,
                           options.processes)
-            anal.analyse()
+            results = anal.analyse()
+
+            if options.dump_results:
+                results.dump(cfg)
+            elif options.compare_results:
+                results.compare(cfg)
             
         # Successful exit
         log.info("Processing complete.")
