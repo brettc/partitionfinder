@@ -6,3 +6,6 @@ partfinder.log
 example/analysis
 tests/testing.log
 log.txt
+.waf*
+.lock*
+programs/phyml_source/build
