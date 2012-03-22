@@ -9,3 +9,5 @@ log.txt
 .lock*
 .waf*
 programs/phyml_source/build/
+programs/phyml
+programs/pyhml.exe
