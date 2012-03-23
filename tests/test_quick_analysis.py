@@ -5,7 +5,7 @@ from partfinder import config, analysis_method, reporter
 
 def load_cfg_and_run(name):
     try:
-        pth = os.path.join(ANALYSIS_PATH, name)
+        pth = os.path.join(TEST_PATH, 'quick_analysis', name)
         cfg = config.Configuration()
         cfg.load_base_path(pth)
         method = analysis_method.choose_method(cfg.search)

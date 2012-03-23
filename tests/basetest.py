@@ -10,7 +10,6 @@ ROOT_PATH = os.path.relpath(ROOT_PATH)
 TEST_PATH = os.path.relpath(TEST_PATH)
 sys.path.append(ROOT_PATH)
 CFG_PATH = os.path.join(TEST_PATH, 'cfg')
-PHYML_PATH = os.path.join(TEST_PATH, 'phyml')
 ANALYSIS_PATH = os.path.join(TEST_PATH, 'analysis')
 del here
 
