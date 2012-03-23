@@ -193,6 +193,7 @@ class Configuration(object):
             #store a nice binary
             f = open(old_cfg_path, 'wb')
             pickle.dump(cfg_list, f, -1)
+            f.close()
             return 0
     
         else: #there are subsets
@@ -205,6 +206,7 @@ class Configuration(object):
                 #we have an old config, load it and compare the important bits
                 f = open(old_cfg_path, 'rb')
                 old_cfg = pickle.load(f)
+                f.close()
                 fail = []
                 
                 if not old_cfg[0]==cfg_list[0]:

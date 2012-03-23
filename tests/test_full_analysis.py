@@ -22,7 +22,8 @@ def path_from_function():
 
 def cleanup(cfg):
     shutil.rmtree(cfg.output_path)
-    os.remove(os.path.join(cfg.base_path, 'log.txt'))
+    # TODO CAUSE PROBLEMS ON WINDOWS -- maybe call logging.shutdown()??
+    # os.remove(os.path.join(cfg.base_path, 'log.txt'))
 
 def load_cfg_and_run(pth, compare=True, fails=False):
 
@@ -138,7 +139,7 @@ def test_rerun05():
 def test_rerun06():
     load_rerun(path_from_function())
 
-@attr('rerun')
+@attr('rerun', 'slow')
 def test_rerun07():
     load_rerun(path_from_function())
 
