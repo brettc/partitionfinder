@@ -11,3 +11,7 @@ log.txt
 programs/phyml_source/build/
 programs/phyml
 programs/pyhml.exe
+
+.noseids
+
+example/results.bin

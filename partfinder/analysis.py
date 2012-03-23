@@ -36,7 +36,10 @@ class AnalysisError(PartitionFinderError):
 
 class Analysis(object):
     """Performs the analysis and collects the results"""
-    def __init__(self, cfg, rpt, force_restart, save_phyml, threads=1):
+    def __init__(self, cfg, rpt, 
+                 force_restart=False, 
+                 save_phyml=False,
+                 threads=-1):
         cfg.validate()
 
         self.cfg = cfg

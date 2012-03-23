@@ -1,0 +1,76 @@
+Test descriptions
+
+Name    brlens      models          selection   search      outcome
+-------------------------------------------------------------------
+Prot1   linked      all_protein     bic         all         success
+Prot2   unlinked    selection*      bic         all         success
+Prot3   linked      selection*      aic         all         success
+Prot4   linked      selection*      aicc        all         success
+Prot5   linked      selection*      bic         user        success
+Prot6   linked      all_protein     bic         greedy      success
+Prot7   unlinked    all_protein     aicc        all         success
+Prot8   unlinked    all_protein     bic         greedy      success
+
+DNA1    linked      all             bic         all         success
+DNA2    unlinked    selection*      bic         all         success
+DNA3    linked      selection*      aic         all         success
+DNA4    linked      selection*      aicc        all         success
+DNA5    linked      selection*      bic         user        success
+DNA6    linked      all             bic         greedy      success
+DNA7    unlinked    all             aicc        all         success
+DNA8    unlinked    all             bic         greedy      success
+
+rerun1^	linked	    selection*		bic         all         success (this is a direct rerun)
+rerun2	linked	    selection*		aic         all         success (just changed selection to aic)
+rerun3	linked	    selection*		aicc        all         success (just changed selection to aicc)
+rerun4	linked	    selection*		bic         greedy      success (changed search to greedy)
+rerun5	linked	    selection*		bic         user        success (changed search to user)
+rerun6	linked	    selection2**	bic         user        success (new set of models)
+rerun7	linked	    selection3***	bic         user        success (added one extra model)
+rerun8	linked	    selection4****	bic         user        success (removed three models)
+
+rerun9  unlinked    selection       bic         all         failure (shouldn't be able to switch to unlinked after linked, the subsets will need to be deleted and re-analysed)  
+rerun10 unlinked    selection       aic         all         failure (shouldn't be able to switch to unlinked after linked, the subsets will need to be deleted and re-analysed)  
+rerun11 unlinked    selection       aic         greedy      failure (shouldn't be able to switch to unlinked after linked, the subsets will need to be deleted and re-analysed)  
+rerun12 unlinked    selection       aicc        user        failure (shouldn't be able to switch to unlinked after linked, the subsets will need to be deleted and re-analysed)  
+rerun13 unlinked    all             aicc        user        failure (shouldn't be able to switch to unlinked after linked, the subsets will need to be deleted and re-analysed)
+
+rerun14	linked	    selection		bic         all         failure (I edited a sequence in the original alignment)
+rerun15	linked	    selection		bic         all         failure (I edited a spp name in the original alignment)
+rerun16	linked	    selection		bic         all         failure (I edited a data_block definition to change the boundaries)
+rerun17	linked	    selection		bic         all         success (I added a data_block)
+rerun18	linked	    selection		bic         all         failure (I removed a data_block - this could work in theory but right now we have it conservatively set up to fail, this is OK in my opinion)
+rerun19	linked	    selection		bic         all         failure (I changed the alignment filename, but the alignment itself is identical to the original. Again, this is conservative but OK)
+rerun20	linked	    selection		bic         user        failure (I screwed up the user definitions to include a data_block that doesn't exist)
+rerun21	linked	    selection		bic         user        failure (I screwed up the user definitions to exclude a data_block that does exist)
+
+
+^
+all reruns start with all the files from DNA3 in there. This lets us test
+various things about loading in .cfg files with changes, added or subtracted
+models, changed alignments etc.
+
+*
+Protein models for the selection
+WAG, WAG+G, LG+I+G+F, JTT+F
+
+DNA models for the selection
+JC, JC+I, HKY, HKY+I+G, GTR, GTR+G
+
+**
+selection 2 has no models in common with selection
+JC+G, HKY+I, GTR+I+G
+
+***
+selection 3 adds one model to the original selection
+JC, JC+I, HKY, HKY+I+G, GTR, GTR+G, JC+I+G
+
+****
+selection 4 removes three models from the original selection
+JC, HKY+I+G, GTR+G
+
+Notes
+-----
+
+rerun9-13 are just various combinations to check that we always spot the
+changed .cfg file if we switch to unlinked brlens

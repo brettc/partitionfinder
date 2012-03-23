@@ -66,11 +66,26 @@ class AnalysisResults(object):
 
         log.info("Comparing results...")
         # Now do the comparison
-        for old, new in zip(old_results, self.scheme_results):
-            if not old.compare(new):
-                # TODO Make this better
-                log.error("Results were not equal")
+        err = False
+        old_results = dict([(res.scheme.name, res) for res in old_results])
+        new_results = dict([(res.scheme.name, res) for res in self.scheme_results])
+
+        for sch_name in old_results:
+            old = old_results[sch_name]
+            try:
+                new = new_results[sch_name]
+            except KeyError:
+                log.error("Results do not have the same schemes")
                 raise ComparisonError
 
-        log.info("Results were equal to dumped results")
+            if not old.compare(new):
+                # TODO Make this better
+                err = True
+                log.error("Results were not equal")
+                log.error("%s to %s", old, new)
+
+        if err:
+            raise ComparisonError
+        else:
+            log.info("Results were equal to dumped results")
 

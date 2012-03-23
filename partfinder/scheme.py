@@ -68,12 +68,13 @@ class SchemeResult(object):
 
     def compare(self, other):
         def close_enough(a, b):
-            if abs(a-b) < .00000001:
+            if abs(a-b) < .001:
                 return True
 
         if close_enough(self.aic, other.aic) and\
            close_enough(self.aicc, other.aicc) and\
-           close_enough(self.bic, other.bic):
+           close_enough(self.bic, other.bic) and\
+           close_enough(self.lnl, other.lnl):
             return True
 
         return False
@@ -81,9 +82,6 @@ class SchemeResult(object):
     def __repr__(self):
         return "SchemeResult<aic:%f, aicc:%f, bic:%f>" % (self.aic, self.aicc,
                                                           self.bic)
-
-
-
 
 
 class Scheme(object):
