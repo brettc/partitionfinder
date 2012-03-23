@@ -85,7 +85,7 @@ def test_DNA8():
     load_cfg_and_run(path_from_function())
 
 # Protein -----------------------------------
-@attr('slow', 'prot')
+@attr('slow', 'prot', 'ug')
 def test_prot1():
     load_cfg_and_run(path_from_function())
 

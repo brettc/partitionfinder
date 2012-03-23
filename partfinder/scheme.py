@@ -64,20 +64,6 @@ class SchemeResult(object):
         self.aic  = (-2.0*lnL) + (2.0*K)
         self.bic  = (-2.0*lnL) + (K * logarithm(n))
         self.aicc = self.aic + (((2.0*K)*(K+1.0))/(n-K-1.0))
-
-
-    def compare(self, other):
-        def close_enough(a, b):
-            if abs(a-b) < .001:
-                return True
-
-        if close_enough(self.aic, other.aic) and\
-           close_enough(self.aicc, other.aicc) and\
-           close_enough(self.bic, other.bic) and\
-           close_enough(self.lnl, other.lnl):
-            return True
-
-        return False
         
     def __repr__(self):
         return "SchemeResult<aic:%f, aicc:%f, bic:%f>" % (self.aic, self.aicc,

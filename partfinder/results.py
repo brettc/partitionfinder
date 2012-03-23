@@ -28,6 +28,9 @@ class ComparisonError(PartitionFinderError):
 class AnalysisResults(object):
     """This should hold all the results
     """
+
+    MAX_ERROR = .01
+
     def __init__(self):
         self.scheme_results = []
 
@@ -53,6 +56,43 @@ class AnalysisResults(object):
         f = open(pth, 'wb')
         pickle.dump(self.scheme_results, f, -1)
 
+    def compare_schemes(self, old, new):
+
+        lnl_err = abs(old.lnl - new.lnl)
+        aic_err = abs(old.aic - new.aic)
+        aicc_err = abs(old.aicc - new.aicc)
+        bic_err = abs(old.bic - new.bic)
+
+        # Keep a list of errors
+        self.lnl_errs.append(lnl_err)
+        self.aic_errs.append(aic_err)
+        self.aicc_errs.append(aicc_err)
+        self.bic_errs.append(bic_err)
+
+        if lnl_err > AnalysisResults.MAX_ERROR and\
+           aic_err > AnalysisResults.MAX_ERROR and\
+           aicc_err > AnalysisResults.MAX_ERROR and\
+           bic_err > AnalysisResults.MAX_ERROR:
+            return True
+
+        return False 
+
+    def output_error_stats(self):
+        def mean_and_var(lst):
+            m = sum(lst) / float(len(lst))
+            vrs = [(x-m)*(x-m) for x in lst]
+            v = sum(vrs)
+            return m, v
+
+        log.info("LNL Error, Mean %8.8f, Variance %8.8f",
+                    *mean_and_var(self.lnl_errs))
+        log.info("AIC Error, Mean %8.8f, Variance %8.8f",
+                    *mean_and_var(self.aic_errs))
+        log.info("AICc Error, Mean %8.8f, Variance %8.8f",
+                    *mean_and_var(self.aicc_errs))
+        log.info("BIC Error, Mean %8.8f, Variance %8.8f",
+                    *mean_and_var(self.bic_errs))
+
     def compare(self, cfg):
         pth = self.get_dump_path(cfg) 
         if not os.path.exists(pth):
@@ -70,6 +110,11 @@ class AnalysisResults(object):
         old_results = dict([(res.scheme.name, res) for res in old_results])
         new_results = dict([(res.scheme.name, res) for res in self.scheme_results])
 
+        self.lnl_errs = []
+        self.aic_errs = []
+        self.aicc_errs = []
+        self.bic_errs = []
+
         for sch_name in old_results:
             old = old_results[sch_name]
             try:
@@ -78,14 +123,15 @@ class AnalysisResults(object):
                 log.error("Results do not have the same schemes")
                 raise ComparisonError
 
-            if not old.compare(new):
-                # TODO Make this better
+            if self.compare_schemes(old, new):
                 err = True
-                log.error("Results were not equal")
+                log.error("Scheme Results were more than acceptable value of %s", AnalysisResults.MAX_ERROR)
                 log.error("%s to %s", old, new)
 
+        self.output_error_stats()
         if err:
             raise ComparisonError
         else:
-            log.info("Results were equal to dumped results")
+            log.info("All results were within an acceptable %s of the dumped results",
+                     AnalysisResults.MAX_ERROR)
 
