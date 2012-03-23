@@ -24,14 +24,14 @@ def cleanup(cfg):
     shutil.rmtree(cfg.output_path)
     os.remove(os.path.join(cfg.base_path, 'log.txt'))
 
-def load_cfg_and_run(pth, compare=True, restart=True, fails=False):
+def load_cfg_and_run(pth, compare=True, fails=False):
 
     try:
         cfg = config.Configuration()
         cfg.load_base_path(pth)
         method = analysis_method.choose_method(cfg.search)
         rpt = reporter.TextReporter(cfg)
-        meth = method(cfg, rpt, force_restart=restart, threads=-1)
+        meth = method(cfg, rpt, force_restart=False, threads=-1)
         results = meth.analyse()
         if compare:
             results.compare(cfg)
@@ -49,7 +49,7 @@ def load_cfg_and_run(pth, compare=True, restart=True, fails=False):
 def load_rerun(pth, fails=False):
     dna3 = ZipFile(os.path.join(FULL_PATH, 'DNA3-analysis.zip'))
     dna3.extractall(pth)
-    load_cfg_and_run(pth, compare=False, restart=False, fails=fails)
+    load_cfg_and_run(pth, compare=False, fails=fails)
 
 # See ./full_analysis/tests.txt for details
 # NOTE We could get all of these automatically, but declaring makes it easier
