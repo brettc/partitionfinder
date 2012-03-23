@@ -8,10 +8,7 @@ from nose.tools import raises
 from partfinder import config, analysis_method, reporter
 from partfinder import analysis, scheme, util
 
-
 FULL_PATH = os.path.join(TEST_PATH, 'full_analysis')
-# def path_for(nm):
-    # return os.path.join(FULL_PATH, nm)
 
 # We grab the name of the path from the function name. A bit sneaky, but it
 # avoids screwing up function name / folder correspondence. See here:
@@ -23,25 +20,36 @@ def path_from_function():
     dirname = funcname[5:]
     return os.path.join(FULL_PATH, dirname)
 
-def load_cfg_and_run(pth, compare=True, restart=True):
-    cfg = config.Configuration()
-    cfg.load_base_path(pth)
-    method = analysis_method.choose_method(cfg.search)
-    rpt = reporter.TextReporter(cfg)
-    meth = method(cfg, rpt, force_restart=restart, threads=-1)
-    results = meth.analyse()
-    if compare:
-        results.compare(cfg)
-
-    # Note -- we only get here if everything completes
-    # Failed tests leave shit around!
+def cleanup(cfg):
     shutil.rmtree(cfg.output_path)
     os.remove(os.path.join(cfg.base_path, 'log.txt'))
 
-def load_rerun(pth):
+def load_cfg_and_run(pth, compare=True, restart=True, fails=False):
+
+    try:
+        cfg = config.Configuration()
+        cfg.load_base_path(pth)
+        method = analysis_method.choose_method(cfg.search)
+        rpt = reporter.TextReporter(cfg)
+        meth = method(cfg, rpt, force_restart=restart, threads=-1)
+        results = meth.analyse()
+        if compare:
+            results.compare(cfg)
+
+        # Note -- we only get here if everything completes
+        # Failed tests leave shit around!
+    finally:
+        # If it fails, but we expect it to, then clean up
+        if fails:
+            cleanup(cfg)
+
+    if not fails:
+        cleanup(cfg)
+
+def load_rerun(pth, fails=False):
     dna3 = ZipFile(os.path.join(FULL_PATH, 'DNA3-analysis.zip'))
     dna3.extractall(pth)
-    load_cfg_and_run(pth, compare=False, restart=False)
+    load_cfg_and_run(pth, compare=False, restart=False, fails=fails)
 
 # See ./full_analysis/tests.txt for details
 # NOTE We could get all of these automatically, but declaring makes it easier
@@ -142,66 +150,66 @@ def test_rerun08():
 @attr('rerun', 'fails')
 @raises(config.ConfigurationError)
 def test_rerun09():
-    load_rerun(path_from_function())
+    load_rerun(path_from_function(), fails=True)
 
 @attr('rerun', 'fails')
 @raises(config.ConfigurationError)
 def test_rerun10():
-    load_rerun(path_from_function())
+    load_rerun(path_from_function(), fails=True)
 
 @attr('rerun', 'fails')
 @raises(config.ConfigurationError)
 def test_rerun11():
-    load_rerun(path_from_function())
+    load_rerun(path_from_function(), fails=True)
 
 @attr('rerun', 'fails')
 @raises(config.ConfigurationError)
 def test_rerun12():
-    load_rerun(path_from_function())
+    load_rerun(path_from_function(), fails=True)
 
 @attr('rerun', 'fails')
 @raises(config.ConfigurationError)
 def test_rerun13():
-    load_rerun(path_from_function())
+    load_rerun(path_from_function(), fails=True)
 
 @attr('rerun', 'fails')
 @raises(analysis.AnalysisError)
 def test_rerun14():
-    load_rerun(path_from_function())
+    load_rerun(path_from_function(), fails=True)
 
 @attr('rerun', 'fails')
 @raises(analysis.AnalysisError)
 def test_rerun15():
-    load_rerun(path_from_function())
+    load_rerun(path_from_function(), fails=True)
 
 @attr('rerun', 'fails')
 @raises(config.ConfigurationError)
 def test_rerun16():
-    load_rerun(path_from_function())
+    load_rerun(path_from_function(), fails=True)
 
 @attr('rerun', 'slow')
 def test_rerun17():
     load_rerun(path_from_function())
 
-@attr('rerun')
+@attr('rerun', 'fails')
 @raises(util.PartitionFinderError)
 def test_rerun18():
-    load_rerun(path_from_function())
+    load_rerun(path_from_function(), fails=True)
 
-@attr('rerun')
+@attr('rerun', 'fails')
 @raises(util.PartitionFinderError)
 def test_rerun19():
-    load_rerun(path_from_function())
+    load_rerun(path_from_function(), fails=True)
 
-@attr('rerun')
+@attr('rerun', 'fails')
 @raises(util.PartitionFinderError)
 def test_rerun20():
-    load_rerun(path_from_function())
+    load_rerun(path_from_function(), fails=True)
 
-@attr('rerun')
+@attr('rerun', 'fails')
 @raises(util.PartitionFinderError)
 def test_rerun21():
-    load_rerun(path_from_function())
+    load_rerun(path_from_function(), fails=True)
 
 if __name__ == '__main__':
     nose.runmodule()

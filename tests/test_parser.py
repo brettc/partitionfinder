@@ -2,6 +2,7 @@ from basetest import *
 from partfinder import config, parser
 import os
 
+
 def load_config(f):
     config_file = os.path.join(CFG_PATH, f)
     c = config.Configuration()
