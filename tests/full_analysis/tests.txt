@@ -20,16 +20,16 @@ DNA6    linked      all             bic         greedy      success
 DNA7    unlinked    all             aicc        all         success
 DNA8    unlinked    all             bic         greedy      success
 
-rerun1^	linked	    selection*		bic         all         success (this is a direct rerun)
-rerun2	linked	    selection*		aic         all         success (just changed selection to aic)
-rerun3	linked	    selection*		aicc        all         success (just changed selection to aicc)
-rerun4	linked	    selection*		bic         greedy      success (changed search to greedy)
-rerun5	linked	    selection*		bic         user        success (changed search to user)
-rerun6	linked	    selection2**	bic         user        success (new set of models)
-rerun7	linked	    selection3***	bic         user        success (added one extra model)
-rerun8	linked	    selection4****	bic         user        success (removed three models)
+rerun01^linked	    selection*		bic         all         success (this is a direct rerun)
+rerun02	linked	    selection*		aic         all         success (just changed selection to aic)
+rerun03	linked	    selection*		aicc        all         success (just changed selection to aicc)
+rerun04	linked	    selection*		bic         greedy      success (changed search to greedy)
+rerun05	linked	    selection*		bic         user        success (changed search to user)
+rerun06	linked	    selection2**	bic         user        success (new set of models)
+rerun07	linked	    selection3***	bic         user        success (added one extra model)
+rerun08	linked	    selection4****	bic         user        success (removed three models)
 
-rerun9  unlinked    selection       bic         all         failure (shouldn't be able to switch to unlinked after linked, the subsets will need to be deleted and re-analysed)  
+rerun09 unlinked    selection       bic         all         failure (shouldn't be able to switch to unlinked after linked, the subsets will need to be deleted and re-analysed)  
 rerun10 unlinked    selection       aic         all         failure (shouldn't be able to switch to unlinked after linked, the subsets will need to be deleted and re-analysed)  
 rerun11 unlinked    selection       aic         greedy      failure (shouldn't be able to switch to unlinked after linked, the subsets will need to be deleted and re-analysed)  
 rerun12 unlinked    selection       aicc        user        failure (shouldn't be able to switch to unlinked after linked, the subsets will need to be deleted and re-analysed)  
