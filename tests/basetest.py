@@ -13,3 +13,15 @@ CFG_PATH = os.path.join(TEST_PATH, 'cfg')
 ANALYSIS_PATH = os.path.join(TEST_PATH, 'analysis')
 del here
 
+# Setup the logging. We don't want anything going to the output. Just send it
+# out to a testing.log file in the tests folder
+import logging
+handler = logging.FileHandler(os.path.join(TEST_PATH, 'testing.log'),
+        mode='w', encoding=None, delay=False)
+formatter = logging.Formatter(
+        "%(levelname)-8s | %(asctime)s | %(name)-10s | %(message)s")
+handler.setFormatter(formatter)
+logging.getLogger("").addHandler(handler)
+logging.getLogger("").setLevel(logging.INFO)
+del handler
+del formatter
