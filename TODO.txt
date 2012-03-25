@@ -1,3 +1,14 @@
+Rob protein stuff
+_________________
+
+TODO
+
+* Run PF on a single subset of a protein alignment, compare to ProtTest and jModeltest
+* use Name_fixer2 on large analysed datasets, and start them re-running on the server
+
+DONE
+
+
 Brett test enhancing:
 ---------------------
 
@@ -28,14 +39,9 @@ DONE
 *
 
 
-Before initial release (in order of priority)
----------------------------------------------
-
-- the numbers of columns are wrong when we warn that there are missing columns. Need to add 1 to the final number.
-
-
 Done
 ____
+- the numbers of columns are wrong when we warn that there are missing columns. Need to add 1 to the final number.
 - we don't save phyml output by default now, but we have the option to
 - we have universal line break support now
 - flag a warning if ANYTHING in the .cfg file has changed. Do this by putting a copy of the .cfg file in the 'analysis' folder, loading it and comparing it to the current one

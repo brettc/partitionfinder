@@ -176,9 +176,9 @@ def get_model_commandline(modelstring):
     else: #protein models
         commandline.append(_base_protein_models[model_name][1])
         if "F" in extras:
-            commandline.append("-f m")
+            commandline.append("-f e") #emprical AA frequencies (+19 params)
         else:
-            commandline.append("-f e")
+            commandline.append("-f m") #AA frequences from the model (+0 params)
 
 
     if "I" in extras:
