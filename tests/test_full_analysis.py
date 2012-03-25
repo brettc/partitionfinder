@@ -44,7 +44,7 @@ def load_cfg_and_run(pth, compare=True, fails=False):
         if fails:
             cleanup(cfg)
 
-    if not fails:
+    if not fails: # Might already be done
         cleanup(cfg)
 
 def load_rerun(pth, fails=False):
@@ -82,6 +82,10 @@ def test_DNA6():
     load_cfg_and_run(path_from_function())
 
 @attr('slow', 'DNA')
+def test_DNA7():
+    load_cfg_and_run(path_from_function())
+
+@attr('slow', 'DNA')
 def test_DNA8():
     load_cfg_and_run(path_from_function())
 
@@ -108,6 +112,10 @@ def test_prot5():
 
 @attr('slow', 'prot')
 def test_prot6():
+    load_cfg_and_run(path_from_function())
+
+@attr('slow', 'prot')
+def test_prot7():
     load_cfg_and_run(path_from_function())
 
 @attr('slow', 'prot')
