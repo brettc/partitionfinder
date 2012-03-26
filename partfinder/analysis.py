@@ -28,6 +28,7 @@ import threadpool
 import scheme
 import subset
 import util
+from phyml_models import get_model_difficulty
 
 from util import PartitionFinderError
 class AnalysisError(PartitionFinderError):
@@ -236,7 +237,18 @@ class Analysis(object):
 
         # What is left, we actually have to analyse...
         tasks = []
+
+        #for efficiency, we rank the models by their difficulty - most difficult first
+        difficulty = []        
         for m in models_to_do:
+            difficulty.append(get_model_difficulty(m))
+        
+        #hat tip to http://scienceoss.com/sort-one-list-by-another-list/
+        difficulty_and_m = zip(difficulty, models_to_do)
+        difficulty_and_m.sort(reverse=True)
+        sorted_difficulty, sorted_models_to_do = zip(*difficulty_and_m)
+                
+        for m in sorted_models_to_do:
             a_path, out_path = phyml.make_analysis_path(self.cfg.phyml_path, sub.name, m)
             tasks.append((phyml.analyse, 
                           (m, sub_path, a_path, self.tree_path, self.cfg.branchlengths)))
