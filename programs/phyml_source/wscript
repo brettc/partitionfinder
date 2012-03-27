@@ -1,0 +1,66 @@
+# This is a waf build file. We use it to build phyml, rather than dealing with
+# configure / Make etc. It seemed easier to do this than try and get all that
+# working on Windows
+#
+# For instructions see the ../README.txt
+#
+# See here for more info
+# http://code.google.com/p/waf/
+
+
+# Note that we force gcc to be used rather than just any c compiler. That
+# means you need gcc on windows too.
+def options(opt):
+    opt.load('gcc')
+
+def configure(conf): 
+    # TODO Create the config.h in here
+    conf.load('gcc') 
+
+    # conf.check(header_name='time.h', features='c cprogram')
+    # conf.check_cc(function_name='printf', header_name="stdio.h", mandatory=False)
+    # conf.check_cc(fragment='int main() {2+2==4;}\n', define_name="boobah")
+    # conf.check_cc(lib='m', cflags='-Wall', defines=['var=foo', 'x=y'], uselib_store='M')
+    # conf.check_cxx(lib='linux', use='M', cxxflags='-O2')
+    # conf.check_cc(fragment='''
+            # #include <stdio.h>
+            # int main() { printf("4"); return 0; } ''',
+        # define_name = "booeah",
+        # execute     = True,
+        # define_ret  = True,
+        # msg         = "Checking for something")
+
+    # conf.check(features='c', fragment='int main(){return 0;}')
+
+    # conf.define(’NOLIBF’, 1)
+    # conf.undefine(’NOLIBF’)
+    # conf.define(’LIBF’, 1)
+    # conf.define(’LIBF_VERSION’, ’1.0.2’)
+    # conf.write_config_header(’config.h’)
+
+def build(bld):
+    # List taken from the Makefile
+    srcs = """main.c utilities.c optimiz.c lk.c bionj.c models.c free.c help.c
+    simu.c eigen.c pars.c alrt.c interface.c cl.c spr.c times.c m4.c draw.c
+    rates.c mcmc.c stats.c mg.c tiporder.c""".split()
+
+    # This are actually in the src folder...
+    srcs = ['src/%s' % s for s in srcs]
+
+    # Again, this was taken from the Makefile
+    CFLAGS = "-ansi -pedantic -std=c99 -O3 -fomit-frame-pointer -funroll-loops".split()
+
+    # Not sure what these do
+    # -MD -MP -MF -MT 
+    
+    # We can specify an arch like this...
+    # bld.env.ARCH = 'ppc'
+    # For new let's stick with the default
+    
+    bld.program(
+        source=srcs, 
+        target='phyml',
+        includes = ['.'],
+        install_path = '../',
+        cflags = CFLAGS
+    )

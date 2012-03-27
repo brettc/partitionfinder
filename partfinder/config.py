@@ -68,20 +68,30 @@ class Configuration(object):
         config_path = os.path.join(base_path, "partition_finder.cfg")
         util.check_file_exists(config_path)
 
+        self._output_folders = []
+        self.register_output_folders()
+
         self.init_logger(base_path)
         self.load(config_path)
 
-    def make_output_dir(self, name):
+        self.make_output_folders()
+
+    def register_folder(self, name):
+        # Separate the naming and construction of folders
         new_path = os.path.join(self.output_path, name)
-        util.make_dir(new_path)
+        self._output_folders.append(new_path)
         setattr(self, name+"_path", new_path)
 
     def make_output_folders(self):
         util.make_dir(self.output_path)
-        self.make_output_dir('subsets')
-        self.make_output_dir('schemes')
-        self.make_output_dir('phyml')
-        self.make_output_dir('start_tree')
+        for pth in self._output_folders:
+            util.make_dir(pth)
+
+    def register_output_folders(self):
+        self.register_folder('subsets')
+        self.register_folder('schemes')
+        self.register_folder('phyml')
+        self.register_folder('start_tree')
 
     def init_logger(self, pth):
         handler = logging.FileHandler(os.path.join(pth, "log.txt"), 'a')
@@ -183,6 +193,7 @@ class Configuration(object):
             #store a nice binary
             f = open(old_cfg_path, 'wb')
             pickle.dump(cfg_list, f, -1)
+            f.close()
             return 0
     
         else: #there are subsets
@@ -195,6 +206,7 @@ class Configuration(object):
                 #we have an old config, load it and compare the important bits
                 f = open(old_cfg_path, 'rb')
                 old_cfg = pickle.load(f)
+                f.close()
                 fail = []
                 
                 if not old_cfg[0]==cfg_list[0]:

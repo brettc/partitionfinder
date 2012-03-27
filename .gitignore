@@ -8,3 +8,8 @@ tests/testing.log
 log.txt
 build/
 dist/
+.lock*
+.waf*
+programs/phyml_source/build/
+.noseids
+example/results.bin

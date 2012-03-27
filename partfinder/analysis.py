@@ -28,50 +28,40 @@ import threadpool
 import scheme
 import subset
 import util
+import results
 
 from util import PartitionFinderError
 class AnalysisError(PartitionFinderError):
     pass
 
-class AnalysisResults(object):
-    """This should hold all the results
-    """
-    def __init__(self):
-        self.scheme_results = []
-
-    def add_scheme_result(self, result):
-        self.scheme_results.append(result)
-
-    def finalise(self):
-        # TODO use sort instead
-        # sort(student_objects, key=lambda student: student.age)   # sort by age
-        sorted_schemes_aic = [(r.aic, r) for r in self.scheme_results]
-        sorted_schemes_aic.sort()
-        sorted_schemes_aicc = [(r.aicc, r) for r in self.scheme_results]
-        sorted_schemes_aicc.sort()
-        sorted_schemes_bic = [(r.bic, r) for r in self.scheme_results]
-        sorted_schemes_bic.sort()
-        self.best_aic  = sorted_schemes_aic[0][1]
-        self.best_aicc = sorted_schemes_aicc[0][1]
-        self.best_bic  = sorted_schemes_bic[0][1]
-
 class Analysis(object):
     """Performs the analysis and collects the results"""
-    def __init__(self, cfg, rpt, force_restart, save_phyml, threads=1):
+    def __init__(self, cfg, rpt, 
+                 force_restart=False, 
+                 save_phyml=False,
+                 threads=-1):
         cfg.validate()
 
         self.cfg = cfg
         self.rpt = rpt
         self.threads = threads
         self.save_phyml = save_phyml
-        self.results = AnalysisResults()
+        self.results = results.AnalysisResults()
 
         log.info("Beginning Analysis")
         if force_restart:
+            # Remove everything
             if os.path.exists(self.cfg.output_path):
                 log.warning("Deleting all previous workings in '%s'", 
                             self.cfg.output_path)
                 shutil.rmtree(self.cfg.output_path)
+        else:
+            # Just remove the schemes folder
+            if os.path.exists(self.cfg.schemes_path):
+                log.info("Removing Schemes in '%s' (they will be "
+                         "recalculated from existing subset data)",
+                         self.cfg.schemes_path)
+                shutil.rmtree(self.cfg.schemes_path)
 
         #check for old analyses to see if we can use the old data
         self.cfg.check_for_old_config()
@@ -91,6 +81,7 @@ class Analysis(object):
         self.do_analysis()
         self.results.finalise()
         self.report()
+        return self.results
 
     def report(self):
         best = [
