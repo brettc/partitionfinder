@@ -28,6 +28,9 @@ class TextReporter(object):
     def __init__(self, config):
         self.cfg = config
 
+    def relpath_to_base(self, pth):
+        return os.path.relpath(pth, self.cfg.base_path)
+
     def write_subset_summary(self, sub):
         pth = os.path.join(self.cfg.subsets_path, sub.name + '.txt')
         # Sort everything
@@ -37,7 +40,7 @@ class TextReporter(object):
         # TODO change back to full name...
         # f.write("Model selection results for subset: %s\n" % sub.full_name)
         f.write("Model selection results for subset: %s\n" % sub.name)
-        f.write("Subset alignment stored here: %s\n" % sub.alignment_path)
+        f.write("Subset alignment stored here: %s\n" % self.relpath_to_base(sub.alignment_path))
         f.write("Models are organised according to their BIC scores\n\n")
         f.write(subset_template % ("Model", "lNL", "AIC", "AICc", "BIC"))
         for bic, r in model_results:
@@ -92,7 +95,7 @@ class TextReporter(object):
             names = ', '.join(names)
 			
             output.write(scheme_subset_template % (
-                number, sub.best_model, names, parts, sub.alignment_path))
+                number, sub.best_model, names, parts, self.relpath_to_base(sub.alignment_path)))
             number += 1
 
     def write_raxml(self, result, output, sorted_subsets):
