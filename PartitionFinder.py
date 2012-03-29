@@ -26,7 +26,7 @@ log = logging.getLogger("main")
 from optparse import OptionParser
 import sys
 
-from partfinder import config, analysis_method, util, parser, reporter
+from partfinder import config, analysis_method, util, parser, reporter, phyml
 
 def main():
     log.info("-------------------------------- PartitionFinder v0.9 ------------------------------------")
@@ -127,6 +127,10 @@ def main():
                 logging.getLogger('analysis').setLevel(logging.DEBUG)
                 logging.getLogger('analysis_method').setLevel(logging.DEBUG)
 
+            
+            # Some stuff for windows...
+            phyml.init_phyml(cfg)
+
             # Now try processing everything....
             method = analysis_method.choose_method(cfg.search)
             rpt = reporter.TextReporter(cfg)
@@ -140,6 +144,7 @@ def main():
                 results.dump(cfg)
             elif options.compare_results:
                 results.compare(cfg)
+
             
         # Successful exit
         log.info("Processing complete.")
@@ -152,6 +157,9 @@ def main():
 
     except KeyboardInterrupt:
         log.error("User interrupted the Program")
+
+    finally:
+            phyml.shutdown_phyml(cfg)
 
     return 1
 
