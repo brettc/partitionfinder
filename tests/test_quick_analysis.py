@@ -16,7 +16,8 @@ def load_cfg_and_run(name):
         results = meth.analyse()
     finally:
         # Always do this
-        shutil.rmtree(cfg.output_path)
+        shutil.rmtree(cfg.full_output_path)
+        cfg.reset()
 
 def test_all_analyses():
     analysis_dirs = os.listdir(QUICK_PATH)

@@ -38,23 +38,23 @@ from util import PartitionFinderError
 class PhymlError(PartitionFinderError):
     pass
 
-def init_phyml(cfg):
-    global _phyml_binary
-    pth = find_program()
-    if sys.platform == 'win32':
-        pth = relocate_binary(cfg, pth)
-    _phyml_binary = pth
+# def init_phyml(cfg):
+    # global _phyml_binary
+    # pth = find_program()
+    # if sys.platform == 'win32':
+        # pth = relocate_binary(cfg, pth)
+    # _phyml_binary = pth
 
-def relocate_binary(cfg, pth):
-    """Relocate binary in windows cos it spits the dummy on long paths"""
-    newpth = os.path.join(cfg.base_path, _binary_name)
-    shutil.copy(pth, newpth)
-    return newpth
+# def relocate_binary(cfg, pth):
+    # """Relocate binary in windows cos it spits the dummy on long paths"""
+    # newpth = os.path.join(cfg.base_path, _binary_name)
+    # shutil.copy(pth, newpth)
+    # return newpth
 
-def shutdown_phyml(cfg):
-    newpth = os.path.join(cfg.base_path, _binary_name)
-    if os.path.exists(newpth):
-        os.remove(newpth)
+# def shutdown_phyml(cfg):
+    # newpth = os.path.join(cfg.base_path, _binary_name)
+    # if os.path.exists(newpth):
+        # os.remove(newpth)
 
 def find_program():
     """Locate the binary ..."""

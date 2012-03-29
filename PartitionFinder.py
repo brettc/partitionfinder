@@ -127,10 +127,6 @@ def main():
                 logging.getLogger('analysis').setLevel(logging.DEBUG)
                 logging.getLogger('analysis_method').setLevel(logging.DEBUG)
 
-            
-            # Some stuff for windows...
-            phyml.init_phyml(cfg)
-
             # Now try processing everything....
             method = analysis_method.choose_method(cfg.search)
             rpt = reporter.TextReporter(cfg)
@@ -157,9 +153,6 @@ def main():
 
     except KeyboardInterrupt:
         log.error("User interrupted the Program")
-
-    finally:
-            phyml.shutdown_phyml(cfg)
 
     return 1
 

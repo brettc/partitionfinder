@@ -21,7 +21,7 @@ def path_from_function():
     return os.path.join(FULL_PATH, dirname)
 
 def cleanup(cfg):
-    shutil.rmtree(cfg.output_path)
+    shutil.rmtree(cfg.full_output_path)
     # TODO CAUSE PROBLEMS ON WINDOWS -- maybe call logging.shutdown()??
     # os.remove(os.path.join(cfg.base_path, 'log.txt'))
 
@@ -43,6 +43,7 @@ def load_cfg_and_run(pth, compare=True, fails=False):
         # If it fails, but we expect it to, then clean up
         if fails:
             cleanup(cfg)
+        cfg.reset()
 
     if not fails: # Might already be done
         cleanup(cfg)
