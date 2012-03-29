@@ -16,7 +16,7 @@ setup(
     		#includes = ['objc', 'Foundation', 'AppKit'],
     		#packages = ['GUI'],
             # resources=['resources/License.txt'],
-            iconfile='resources/blob_app.icns',
+            iconfile='resources/pf.icns',
             packages='wx',
             site_packages=True,
     		plist = dict(
