@@ -29,7 +29,6 @@ from pyparsing import (
 
 from phyml_models import get_model_commandline
 
-_phyml_binary = None
 _binary_name = 'phyml'
 if sys.platform == 'win32':
     _binary_name += ".exe"
@@ -37,24 +36,6 @@ if sys.platform == 'win32':
 from util import PartitionFinderError
 class PhymlError(PartitionFinderError):
     pass
-
-def init_phyml(cfg):
-    global _phyml_binary
-    pth = find_program()
-    if sys.platform == 'win32':
-        pth = relocate_binary(cfg, pth)
-    _phyml_binary = pth
-
-def relocate_binary(cfg, pth):
-    """Relocate binary in windows cos it spits the dummy on long paths"""
-    newpth = os.path.join(cfg.base_path, _binary_name)
-    shutil.copy(pth, newpth)
-    return newpth
-
-def shutdown_phyml(cfg):
-    newpth = os.path.join(cfg.base_path, _binary_name)
-    if os.path.exists(newpth):
-        os.remove(newpth)
 
 def find_program():
     """Locate the binary ..."""
@@ -85,10 +66,12 @@ def find_program():
         # log.error("command '%s' failed to execute successfully", command)
         # raise PhymlError
 
+_phyml_binary = None
 def run_phyml(command):
     global _phyml_binary
     if _phyml_binary is None:
         _phyml_binary = find_program()
+
     #turn off any memory checking in PhyML - thanks Jess T. for pointing out this problem
     command = "%s --no_memory_check" %(command)
 
