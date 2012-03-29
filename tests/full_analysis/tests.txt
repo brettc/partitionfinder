@@ -44,6 +44,9 @@ rerun19	linked	    selection		bic         all         failure (I changed the ali
 rerun20	linked	    selection		bic         user        failure (I screwed up the user definitions to include a data_block that doesn't exist)
 rerun21	linked	    selection		bic         user        failure (I screwed up the user definitions to exclude a data_block that does exist)
 
+D N A 5 linked      selection       bic         user        success (A copy of DNA5 but with stupid spaces in the filename)
+
+
 
 ^
 all reruns start with all the files from DNA3 in there. This lets us test
