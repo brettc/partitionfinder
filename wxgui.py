@@ -1,39 +1,44 @@
-"""
-MacApp.py
+#
+# Many ideas are taken from here:
+# http://wiki.wxpython.org/Optimizing%20for%20Mac%20OS%20X
+#
 
-This is a small, simple app that tried to do all the right things on
-OS-X -- putting standard menus in the right place, etc. It should work
-just fine on other platforms as well : that's the beauty of wx!
-"""
-
+import logging
+log = logging.getLogger("gui")
 import wx
+import wx.lib.sized_controls as sc
 
-class DemoFrame(wx.Frame):
+from gui_logging import LogHtmlListBox
+
+class MainFrame(sc.SizedFrame):
     """ This window displays a button """
-    def __init__(self, title = "Micro App"):
-        wx.Frame.__init__(self, None , -1, title)
+    def __init__(self, title = "Partition Finder"):
+        sc.SizedFrame.__init__(self, None , -1, title)
+
+        self.CreateMenu()
+        self.CreateContent()
+        # self.CreateStatusBar()
+
+        self.Fit()
+        self.SetMinSize(self.GetSize())
+
+
+    def CreateMenu(self):
 
         MenuBar = wx.MenuBar()
-
         FileMenu = wx.Menu()
-        
         item = FileMenu.Append(wx.ID_EXIT, text = "&Exit")
         self.Bind(wx.EVT_MENU, self.OnQuit, item)
-
         item = FileMenu.Append(wx.ID_ANY, text = "&Open")
         self.Bind(wx.EVT_MENU, self.OnOpen, item)
-
         item = FileMenu.Append(wx.ID_PREFERENCES, text = "&Preferences")
         self.Bind(wx.EVT_MENU, self.OnPrefs, item)
-
         MenuBar.Append(FileMenu, "&File")
         
         HelpMenu = wx.Menu()
-
         item = HelpMenu.Append(wx.ID_HELP, "Test &Help",
                                 "Help for this simple test")
         self.Bind(wx.EVT_MENU, self.OnHelp, item)
-
         ## this gets put in the App menu on OS-X
         item = HelpMenu.Append(wx.ID_ABOUT, "&About",
                                 "More information About this program")
@@ -42,11 +47,85 @@ class DemoFrame(wx.Frame):
 
         self.SetMenuBar(MenuBar)
 
-        btn = wx.Button(self, label = "Quit")
 
-        btn.Bind(wx.EVT_BUTTON, self.OnQuit )
+    def CreateContent(self):
 
-        self.Bind(wx.EVT_CLOSE, self.OnQuit)
+        pane = self.GetContentsPane()
+        # pane.SetSizerType("grid", {"cols":3}) # 3-column grid layout
+        # 
+        # # row 1
+        # wx.TextCtrl(pane, -1).SetSizerProps(halign="left")
+        # wx.TextCtrl(pane, -1).SetSizerProps(halign="center")
+        # wx.TextCtrl(pane, -1).SetSizerProps(halign="right")
+        # 
+        # # row 2
+        # wx.TextCtrl(pane, -1).SetSizerProps(valign="center")
+        # wx.TextCtrl(pane, -1).SetSizerProps(expand=True, proportion=1)
+        # wx.TextCtrl(pane, -1).SetSizerProps(valign="center")
+        # 
+        # # row 3
+        # wx.TextCtrl(pane, -1).SetSizerProps(halign="left")
+        # wx.TextCtrl(pane, -1).SetSizerProps(halign="center")
+        # wx.TextCtrl(pane, -1).SetSizerProps(halign="right")
+
+        pane.SetSizerType("grid", options={'cols':2})
+        
+        # row 1
+        wx.StaticText(pane, -1, "Dir")
+        self.button = wx.Button(pane, -1, "...")
+        self.Bind(wx.EVT_BUTTON, self.OnButton, self.button)
+        # textCtrl = wx.TextCtrl(pane, -1, "Your name here")
+        self.button.SetSizerProps(expand=True)
+        
+        # row 2
+        wx.StaticText(pane, -1, "Email")
+        self.pressme = wx.Button(pane, -1, "push me")
+        self.Bind(wx.EVT_BUTTON, self.OnPressed, self.pressme)
+        
+        # row 3
+        wx.StaticText(pane, -1, "Gender")
+        wx.Choice(pane, -1, choices=["male", "female"])
+        
+        # row 4
+        wx.StaticText(pane, -1, "State")
+        wx.TextCtrl(pane, -1, size=(60, -1)) # two chars for state
+        
+        # row 5
+        wx.StaticText(pane, -1, "Log")
+        html = LogHtmlListBox(pane, size=(60, 100))
+        html.SetSizerProps(expand=True)
+        
+        # here's how to add a 'nested sizer' using sized_controls
+        # radioPane = sc.SizedPanel(pane, -1)
+        # radioPane.SetSizerType("horizontal")
+        # radioPane.SetSizerProps(expand=True)
+        
+        # make these children of the radioPane to have them use
+        # the horizontal layout
+        # wx.RadioButton(radioPane, -1, "Mr.")
+        # wx.RadioButton(radioPane, -1, "Mrs.")
+        # wx.RadioButton(radioPane, -1, "Dr.")
+        # end row 5
+
+    def OnPressed(self, evt):
+        log.warning("fuck me")
+
+    def OnButton(self, evt):
+        # In this case we include a "New directory" button. 
+        dlg = wx.DirDialog(self, "Choose a directory:",
+                        style=wx.DD_DEFAULT_STYLE
+                        #| wx.DD_DIR_MUST_EXIST
+                        #| wx.DD_CHANGE_DIR
+                        )
+
+        # If the user selects OK, then we process the dialog's data.
+        # This is done by getting the path data from the dialog - BEFORE
+        # we destroy it. 
+        if dlg.ShowModal() == wx.ID_OK:
+            self.button.SetLabel(dlg.GetPath())
+
+        # Only destroy a dialog after you're done with it.
+        dlg.Destroy()
 
         
     def OnQuit(self,Event):
@@ -80,17 +159,21 @@ class DemoFrame(wx.Frame):
         dlg.ShowModal()
         dlg.Destroy()
         
-class MyApp(wx.App):
+class App(wx.App):
     def __init__(self, *args, **kwargs):
         wx.App.__init__(self, *args, **kwargs)
+
+        iconFile = "Resources/pf512.ico"
+        icon = wx.Icon(iconFile, wx.BITMAP_TYPE_ICO)
+        tbicon = wx.TaskBarIcon()
+        tbicon.SetIcon(icon, "I am an Icon")
         
         # This catches events when the app is asked to activate by some other
         # process
         self.Bind(wx.EVT_ACTIVATE_APP, self.OnActivate)
 
     def OnInit(self):
-
-        frame = DemoFrame()
+        frame = MainFrame()
         frame.Show()
 
         import sys
@@ -119,11 +202,11 @@ class MyApp(wx.App):
         dlg.ShowModal()
         dlg.Destroy()
 
-    def MacOpenFile(self, filename):
-        """Called for files droped on dock icon, or opened via finders context menu"""
-        print filename
-        print "%s dropped on app"%(filename) #code to load filename goes here.
-        self.OpenFileMessage(filename)
+    # def MacOpenFile(self, filename):
+        # """Called for files droped on dock icon, or opened via finders context menu"""
+        # print filename
+        # print "%s dropped on app"%(filename) #code to load filename goes here.
+        # self.OpenFileMessage(filename)
         
     def MacReopenApp(self):
         """Called when the doc icon is clicked, and ???"""
@@ -134,6 +217,8 @@ class MyApp(wx.App):
     
     def MacPrintFile(self, file_path):
         pass
+
+
  
-app = MyApp(False)
+app = App(False)
 app.MainLoop()
