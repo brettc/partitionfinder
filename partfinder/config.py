@@ -71,7 +71,7 @@ class Configuration(object):
         self._output_folders = []
         self.register_output_folders()
 
-        self.init_logger(base_path)
+        # self.init_logger(base_path)
         self.load(config_path)
 
         self.make_output_folders()

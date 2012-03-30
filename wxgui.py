@@ -4,10 +4,12 @@
 #
 
 import logging
+import thread
 log = logging.getLogger("gui")
 import wx
 import wx.lib.sized_controls as sc
 
+import gui_logging 
 from gui_logging import LogHtmlListBox, LogListCtrl
 
 class MainFrame(sc.SizedFrame):
@@ -21,6 +23,7 @@ class MainFrame(sc.SizedFrame):
 
         self.Fit()
         self.SetMinSize(self.GetSize())
+        self.running = None
 
 
     def CreateMenu(self):
@@ -93,10 +96,10 @@ class MainFrame(sc.SizedFrame):
         # row 5
         # radioPane = sc.SizedPanel(pane, -1)
         wx.StaticText(pane, -1, "Log")
-        # html = LogHtmlListBox(pane, size=(60, 100))
-        # html.SetSizerProps(expand=True)
-        loglist = LogListCtrl(pane)
-        loglist.SetSizerProps(expand=True)
+        html = LogHtmlListBox(pane, size=(60, 100))
+        html.SetSizerProps(expand=True)
+        # loglist = LogListCtrl(pane)
+        # loglist.SetSizerProps(expand=True)
         
         # here's how to add a 'nested sizer' using sized_controls
         # radioPane = sc.SizedPanel(pane, -1)
@@ -111,7 +114,9 @@ class MainFrame(sc.SizedFrame):
         # end row 5
 
     def OnPressed(self, evt):
-        log.warning("fuck me")
+        if self.running is None:
+            self.running = PFThread()
+            self.running.Start()
 
     def OnButton(self, evt):
         # In this case we include a "New directory" button. 
@@ -222,6 +227,31 @@ class App(wx.App):
         pass
 
 
+class PFThread(object):
+    def __init__(self):
+        pass
+
+    def Start(self):
+        log.warning("FUCK!")
+        self.keepGoing = self.running = True
+        thread.start_new_thread(self.Run, ())
+
+    def Stop(self):
+        self.keepGoing = False
+
+    def IsRunning(self):
+        return self.running
+
+    def Run(self):
+        from partfinder import config, analysis_method, reporter
+        logging.getLogger("").addHandler(gui_logging.gui_handler) # add at base level
+        logging.getLogger("").setLevel(logging.INFO)
+        cfg = config.Configuration()
+        cfg.load_base_path('example')
+        method = analysis_method.choose_method(cfg.search)
+        rpt = reporter.TextReporter(cfg)
+        anal = method(cfg, rpt, False, False)
+        anal.analyse()
  
-app = App(False)
+app = App(True)
 app.MainLoop()
