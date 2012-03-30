@@ -8,7 +8,7 @@ log = logging.getLogger("gui")
 import wx
 import wx.lib.sized_controls as sc
 
-from gui_logging import LogHtmlListBox
+from gui_logging import LogHtmlListBox, LogListCtrl
 
 class MainFrame(sc.SizedFrame):
     """ This window displays a button """
@@ -91,9 +91,12 @@ class MainFrame(sc.SizedFrame):
         wx.TextCtrl(pane, -1, size=(60, -1)) # two chars for state
         
         # row 5
+        # radioPane = sc.SizedPanel(pane, -1)
         wx.StaticText(pane, -1, "Log")
-        html = LogHtmlListBox(pane, size=(60, 100))
-        html.SetSizerProps(expand=True)
+        # html = LogHtmlListBox(pane, size=(60, 100))
+        # html.SetSizerProps(expand=True)
+        loglist = LogListCtrl(pane)
+        loglist.SetSizerProps(expand=True)
         
         # here's how to add a 'nested sizer' using sized_controls
         # radioPane = sc.SizedPanel(pane, -1)

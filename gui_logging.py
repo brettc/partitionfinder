@@ -66,7 +66,7 @@ class LogHtmlListBox(wx.HtmlListBox):
         # Place some simple separation between each of the items.
 
         dc.SetBrush(wx.NullBrush)
-        dc.SetPen(wx.GREY_PEN)
+        dc.SetPen(wx.LIGHT_GREY_PEN)
         dc.DrawLine(rect.left, rect.bottom, rect.right, rect.bottom)
 
     # def OnDblClicked(self, evt):
@@ -78,6 +78,45 @@ class LogHtmlListBox(wx.HtmlListBox):
         # rec = gui_handler[n]
 # import events
 
+class LogListCtrl(wx.ListCtrl):
+    '''For showing incoming log messages'''
+
+    COLUMNS = 'name levelname'.split()
+
+    def __init__(self, parent):
+        global gui_handler
+        wx.ListCtrl.__init__(self, parent, wx.NewId(), size=(300,200),
+                style = wx.LC_REPORT | wx.LC_VIRTUAL)
+
+        self.SetItemCount(len(gui_handler))
+
+        self.lookup = {}
+        for c, nm in enumerate(self.COLUMNS):
+            self.InsertColumn(c, nm, wx.LIST_FORMAT_LEFT)
+            self.lookup[c] = nm
+
+        # gui_handler.add_watch(self)
+        subscribe('newx.log.message', self.Update)
+
+    def Update(self, evt=None):
+        global gui_handler
+        items = len(gui_handler)
+        self.SetItemCount(items)
+            # setattr(self, nm, c)
+        self.Focus(items-1)
+
+    #---------------------------------------------------
+    # These methods are callbacks for implementing the
+    # "virtualness" of the list...
+    def OnGetItemText(self, item, col):
+        global gui_handler
+        return getattr(gui_handler[item], self.lookup[col])
+
+    def OnGetItemImage(self, item):
+        return 0
+
+    def OnGetItemAttr(self, item):
+        return None
 
 class KeepAroundHandler(logging.Handler):
     """
