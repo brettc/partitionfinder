@@ -97,7 +97,6 @@ def get_all_protein_models():
         model_list.append("%s+I+G"   %(model))
         model_list.append("%s+I+F"   %(model))
         model_list.append("%s+G+F"   %(model))
-        model_list.append("%s+I+G"   %(model))
         model_list.append("%s+I+G+F" %(model))
     return model_list
 
