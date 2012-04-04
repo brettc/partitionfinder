@@ -96,10 +96,10 @@ class MainFrame(sc.SizedFrame):
         # row 5
         # radioPane = sc.SizedPanel(pane, -1)
         wx.StaticText(pane, -1, "Log")
-        html = LogHtmlListBox(pane, size=(60, 100))
-        html.SetSizerProps(expand=True)
-        # loglist = LogListCtrl(pane)
-        # loglist.SetSizerProps(expand=True)
+        # html = LogHtmlListBox(pane, size=(60, 100))
+        # html.SetSizerProps(expand=True)
+        loglist = LogListCtrl(pane)
+        loglist.SetSizerProps(expand=True)
         
         # here's how to add a 'nested sizer' using sized_controls
         # radioPane = sc.SizedPanel(pane, -1)

@@ -54,7 +54,7 @@ class LogHtmlListBox(wx.HtmlListBox):
     def Update(self, evt=None):
         global gui_handler
         self.SetItemCount(len(gui_handler))
-        self.ScrollToLine(self.GetLineCount())
+        # self.ScrollToLine(self.GetLineCount())
         self.Refresh()
 
     def OnGetItem(self, n):
@@ -103,7 +103,7 @@ class LogListCtrl(wx.ListCtrl):
         items = len(gui_handler)
         self.SetItemCount(items)
             # setattr(self, nm, c)
-        self.Focus(items-1)
+        # self.Focus(items-1)
 
     #---------------------------------------------------
     # These methods are callbacks for implementing the
