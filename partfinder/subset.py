@@ -93,7 +93,7 @@ class Subset(object):
         # Everything is relegated to above...
 
     def __str__(self):
-        return "Subset(%s)" % ", ".join([str(p) for p in self.partitions])
+        return "(%s)" % ", ".join([str(p.name) for p in self.partitions])
 
 
     @property
@@ -130,11 +130,22 @@ class Subset(object):
         K = float(result.params)
         n = float(len(self.columnset))
         lnL = float(result.lnl)
-        aicc_denominator = n-K-1.0
-        if aicc_denominator<1: aicc_denominator=1 #it's nonsensical to have this <1 - you either get a zero division, or if it's negative it gives totally the opposite results to the one it's built to do.
+        #here we put in a catch for small subsets, where n<K+2
+        #if this happens, the AICc actually starts rewarding very small datasets, which is wrong
+        #a simple but crude catch for this is just to never allow n to go below k+2
+        if n<(K+2): 
+            log.warning("The subset containing the following data_blocks: %s, has a very small"
+                        " number of sites (%d) compared to the number of parameters"
+                        " in the model being estimated (the %s model which has %d parameters)."
+                        " This may give misleading AICc results, so please check carefully"
+                        " if you are using the AICc for your analyses."
+                        " The model selection results for this subset are in the following file:" 
+                        " /analysis/subsets/%s.txt\n" % (self, n, model, K, self.name))
+            n = K+2 
+
         result.aic  = (-2.0*lnL) + (2.0*K)
         result.bic  = (-2.0*lnL) + (K * logarithm(n))
-        result.aicc = result.aic + (((2.0*K)*(K+1.0))/(aicc_denominator))
+        result.aicc = (-2.0*lnL) + ((2.0*K)*(n/(n-K-1.0)))
 
         log.debug("Adding model to subset. Model: %s, params %d" %(model, K))
 
