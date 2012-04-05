@@ -38,6 +38,7 @@ class TextReporter(object):
         # f.write("Model selection results for subset: %s\n" % sub.full_name)
         f.write("Model selection results for subset: %s\n" % sub.name)
         f.write("Subset alignment stored here: %s\n" % sub.alignment_path)
+        f.write("This subset contains the following data_blocks: %s\n" % sub)
         f.write("Models are organised according to their BIC scores\n\n")
         f.write(subset_template % ("Model", "lNL", "AIC", "AICc", "BIC"))
         for bic, r in model_results:
