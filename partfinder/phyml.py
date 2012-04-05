@@ -69,7 +69,7 @@ def find_program():
     if not os.path.exists(pth) or not os.path.isfile(pth):
         log.error("No such file: '%s'", pth)
         raise PhymlError
-    log.info("Found program %s at '%s'", _binary_name, pth)
+    log.debug("Found program %s at '%s'", _binary_name, pth)
     return pth
 
 # def alt_run_phyml(command):
