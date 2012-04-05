@@ -95,7 +95,6 @@ class Subset(object):
     def __str__(self):
         return "(%s)" % ", ".join([str(p.name) for p in self.partitions])
 
-
     @property
     def full_name(self):
         if hasattr(self, '_full_name'):

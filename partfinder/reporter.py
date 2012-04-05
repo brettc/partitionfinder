@@ -66,7 +66,9 @@ class TextReporter(object):
         output.write(scheme_subset_template % (
             "Subset", "Best Model", "Subset Partitions", "Subset Sites",  "Alignment"))
         number = 1
-                
+        
+        pf_scheme_description = [] #a way to print out the scheme in PF format
+        
         for sub in sorted_subsets:
             desc = {}
             names= []
@@ -90,11 +92,17 @@ class TextReporter(object):
             	
             names.sort()
             names = ', '.join(names)
+
+            pf_scheme_description.append("(%s)" %names)
 			
             output.write(scheme_subset_template % (
                 number, sub.best_model, names, parts, sub.alignment_path))
             number += 1
 
+        pf_scheme_description = " ".join(pf_scheme_description)
+        output.write("\n\nScheme Description in PartitionFinder format\n")
+        output.write("Scheme_%s = %s;" % (result.scheme.name, pf_scheme_description))
+            
     def write_raxml(self, result, output, sorted_subsets):
         """Print out partition definitions in RaxML-like format, might be
         useful to some people
