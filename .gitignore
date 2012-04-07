@@ -11,3 +11,4 @@ log.txt
 programs/phyml_source/build/
 .noseids
 example/results.bin
+.DS_Store
