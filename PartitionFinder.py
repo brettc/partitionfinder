@@ -29,7 +29,7 @@ import sys
 from partfinder import config, analysis_method, util, parser, reporter
 
 def main():
-    log.info("-------------------------------- PartitionFinder v0.9 ------------------------------------")
+    log.info("-------------------------------- PartitionFinder v1.0.0 ------------------------------------")
     usage = """usage: python %prog [options] <foldername>
 
     PartitionFinder is designed to discover optimal partitioning schemes for
