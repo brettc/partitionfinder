@@ -29,7 +29,7 @@ import sys
 from partfinder import config, analysis_method, util, parser, reporter
 
 def main():
-    log.info("-------------------------------- PartitionFinder v1.0.0 ------------------------------------")
+    log.info("-------------------------------- PartitionFinderProtein v1.0.0 ------------------------------------")
     usage = """usage: python %prog [options] <foldername>
 
     PartitionFinder is designed to discover optimal partitioning schemes for
@@ -115,14 +115,13 @@ def main():
     # Load, using the first argument as the folder
     try:
         cfg = config.Configuration()
-
+        
         #here we hard-code the datatype. This is what differs in PF-prot.
-        cfg.datatype = "DNA"
-        log.info("Setting datatype to 'DNA'")
+        cfg.datatype = "protein"
+        log.info("Setting datatype to 'protein'")
 
         cfg.load_base_path(args[0])
-
-                
+        
         if options.check_only:
             log.info("Exiting without processing (because of the -c/--check-only option ...")
         else:
@@ -149,7 +148,6 @@ def main():
             
         # Successful exit
         log.info("Processing complete.")
-
         return 0
 
     except util.PartitionFinderError:
