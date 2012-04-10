@@ -11,62 +11,52 @@ class UserAnalysis(Analysis):
 
     def do_analysis(self):
         """Process everything when search=user"""
-        models = self.cfg.models
+        scheme_count = len(self.cfg.schemes)
+        self.progress.begin(scheme_count)
 
-        current_schemes = [s for s in self.cfg.schemes]
-        self.total_scheme_num = len(current_schemes)
-        if self.total_scheme_num>0:
-            for s in current_schemes:
-                 self.analyse_scheme(s, models)
+        if scheme_count > 0:
+            for s in self.cfg.schemes:
+                 self.analyse_scheme(s, self.cfg.models)
         else:
             log.error("Search set to 'user', but no user schemes detected in .cfg file. Please check.")
             raise AnalysisError
 
+        self.progress.end()
+
 class AllAnalysis(Analysis):
 
     def do_analysis(self):
-        models = self.cfg.models
+        log.info("Performing a Full Analysis")
         partnum = len(self.cfg.partitions)
+        scheme_count = submodels.count_all_schemes(partnum)
+        subset_count = submodels.count_all_subsets(partnum)
+        self.progress.begin(scheme_count, subset_count)
 
-        self.total_scheme_num = submodels.count_all_schemes(partnum)
-        log.info("Analysing all possible schemes for %d starting partitions", partnum)
-        log.info("This will result in %s schemes being created", self.total_scheme_num)
-        self.total_subset_num = submodels.count_all_subsets(partnum)
-        log.info("PartitionFinder will have to analyse %d subsets to complete this analysis" %(self.total_subset_num))
-        if self.total_subset_num>10000:
-            log.warning("%d is a lot of subsets, this might take a long time to analyse", self.total_subset_num)
-            log.warning("Perhaps consider using a different search scheme instead (see Manual)")
-
-        #clear any schemes that are currently loaded
+        # Clear any schemes that are currently loaded
         self.cfg.schemes.clear_schemes()
 
-        #iterate over submodels, which we can turn into schemes afterwards in the loop
+        # Iterate over submodels, which we can turn into schemes afterwards in the loop
         model_iterator = submodels.submodel_iterator([], 1, partnum)
 
         scheme_name = 1
         for m in model_iterator:
             s = scheme.model_to_scheme(m, scheme_name, self.cfg)
             scheme_name = scheme_name+1
-            self.analyse_scheme(s, models)
+            self.analyse_scheme(s, self.cfg.models)
+
+        self.progress.end()
 
 class GreedyAnalysis(Analysis):
 
     def do_analysis(self):
         '''A greedy algorithm for heuristic partitioning searches'''
         log.info("Performing greedy analysis")
-        models = self.cfg.models
-        model_selection = self.cfg.model_selection
         partnum = len(self.cfg.partitions)
+        scheme_count = submodels.count_greedy_schemes(partnum)
+        subset_count = submodels.count_greedy_subsets(partnum)
+        self.progress.begin(scheme_count, subset_count)
 
-        self.total_scheme_num = submodels.count_greedy_schemes(partnum)
-        log.info("This will result in a maximum of %s schemes being created", self.total_scheme_num)
-
-        self.total_subset_num = submodels.count_greedy_subsets(partnum)
-        log.info("PartitionFinder will have to analyse a maximum of %d subsets of sites to complete this analysis" %(self.total_subset_num))
-
-        if self.total_subset_num>10000:
-            log.warning("%d is a lot of subsets, this might take a long time to analyse", self.total_subset_num)
-            log.warning("Perhaps consider using a different search scheme instead (see Manual)")
+        model_selection = self.cfg.model_selection
 
         #clear any schemes that are currently loaded
         # TODO Not sure we need this...
@@ -76,7 +66,7 @@ class GreedyAnalysis(Analysis):
         start_description = range(len(self.cfg.partitions))
         start_scheme = scheme.create_scheme(self.cfg, 1, start_description)
         log.info("Analysing starting scheme (scheme %s)" % start_scheme.name)
-        result = self.analyse_scheme(start_scheme, models)
+        result = self.analyse_scheme(start_scheme, self.cfg.models)
         
         def get_score(my_result):
             #TODO: this is bad. Should use self.cfg.model_selection, or write
@@ -114,7 +104,7 @@ class GreedyAnalysis(Analysis):
             for lumped_description in lumpings:
                 lumped_scheme = scheme.create_scheme(self.cfg, cur_s, lumped_description)
                 cur_s += 1
-                result = self.analyse_scheme(lumped_scheme, models)
+                result = self.analyse_scheme(lumped_scheme, self.cfg.models)
                 new_score = get_score(result)
 
                 if best_lumping_score==None or new_score < best_lumping_score:
@@ -141,6 +131,7 @@ class GreedyAnalysis(Analysis):
 
         self.best_result = best_result
 
+        self.progress.end()
 
     def report(self):
         txt = "Best scheme according to Greedy algorithm, analysed with %s"

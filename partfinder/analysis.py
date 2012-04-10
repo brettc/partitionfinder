@@ -29,6 +29,7 @@ import scheme
 import subset
 import util
 import results
+import progress
 
 from util import PartitionFinderError
 class AnalysisError(PartitionFinderError):
@@ -47,6 +48,7 @@ class Analysis(object):
         self.threads = threads
         self.save_phyml = save_phyml
         self.results = results.AnalysisResults()
+        self.progress = progress.Progress()
 
         log.info("Beginning Analysis")
         if force_restart:
@@ -71,11 +73,6 @@ class Analysis(object):
         self.make_alignment(cfg.alignment_path)
 
         self.make_tree(cfg.user_tree_topology_path)
-        self.subsets_analysed_set = set() #a counter for user info
-        self.subsets_analysed = 0 #a counter for user info
-        self.total_subset_num = None
-        self.schemes_analysed = 0 #a counter for user info
-        self.total_scheme_num = None
 
     def analyse(self):
         self.do_analysis()
@@ -157,16 +154,7 @@ class Analysis(object):
         This is the core place where everything comes together
         The results are placed into subset.result
         """
-        #keep people informed about what's going on
-        #if we don't know the total subset number, we can usually get it like this
-        if self.total_subset_num == None:
-            self.total_subset_num = len(sub._cache)
-        old_num_analysed = self.subsets_analysed
-        self.subsets_analysed_set.add(sub.name)
-        self.subsets_analysed = len(self.subsets_analysed_set)
-        if self.subsets_analysed>old_num_analysed: #we've just analysed a subset we haven't seen yet
-            percent_done = float(self.subsets_analysed)*100.0/float(self.total_subset_num)
-            log.info("Analysing subset %d/%d: %.2f%s done" %(self.subsets_analysed,self.total_subset_num, percent_done, r"%"))
+        self.progress.another_subset(sub)
 
         subset_cache_path = os.path.join(self.cfg.subsets_path, sub.name + '.bin')
         # We might have already saved a bunch of results, try there first
@@ -289,8 +277,7 @@ class Analysis(object):
         pool.join()
 
     def analyse_scheme(self, sch, models):
-        self.schemes_analysed = self.schemes_analysed + 1        
-        log.info("Analysing scheme %d/%d" %(self.schemes_analysed, self.total_scheme_num))
+        self.progress.another_scheme(sch)
         for sub in sch:
             self.analyse_subset(sub, models)
  
@@ -303,6 +290,8 @@ class Analysis(object):
         # whether to create stuff
         fname = os.path.join(self.cfg.schemes_path, sch.name+'.txt')
         self.rpt.write_scheme_summary(result, open(fname, 'w'))
+
+        self.progress.another_scheme(sch)
 
         return result
 
