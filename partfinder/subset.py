@@ -183,6 +183,7 @@ class Subset(object):
         f = open(path, 'wb')
         store = dict([(x, getattr(self, x)) for x in Subset._cache_fields])
         pickle.dump(store, f, -1)
+        f.close()
 
     def read_cache(self, path):
         if not os.path.exists(path):
@@ -191,3 +192,4 @@ class Subset(object):
         log.debug("Reading binary cached results for %s", self)
         f = open(path, 'rb')
         self.__dict__.update(pickle.load(f))
+        f.close()
