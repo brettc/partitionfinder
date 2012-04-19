@@ -90,7 +90,7 @@ def run_phyml(command):
     if _phyml_binary is None:
         _phyml_binary = find_program()
 
-    #turn off any memory checking in PhyML - thanks Jess T. for pointing out this problem
+    #turn off any memory checking in PhyML - thanks Jess Thomas for pointing out this problem
     command = "%s --no_memory_check" %(command)
 
     # Add in the command file
