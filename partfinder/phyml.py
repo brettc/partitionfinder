@@ -107,6 +107,7 @@ def run_phyml(command):
 
     # Capture the output, we might put it into the errors
     stdout, stderr = p.communicate()
+    # p.terminate()
 
     if p.returncode != 0:
         log.error("Phyml did not execute successfully")
@@ -182,11 +183,11 @@ def make_branch_lengths_protein(alignment_path, topology_path):
     return output_path
 
 
-def analyse(model, alignment_path, analysis_path, tree_path, branchlengths):
+def analyse(model, alignment_path, tree_path, branchlengths):
     """Do the analysis -- this will overwrite stuff!"""
 
     # Move it to a new name to stop phyml stomping on different model analyses
-    dupfile(alignment_path, analysis_path)
+    # dupfile(alignment_path, analysis_path)
     model_params = get_model_commandline(model)
 
     if branchlengths == 'linked':
@@ -200,21 +201,23 @@ def analyse(model, alignment_path, analysis_path, tree_path, branchlengths):
         log.error("Unknown option for branchlengths: %s", branchlengths)
         raise PhymlError
 
-    command = "-b 0 -i '%s' -u '%s' %s %s" % (analysis_path, tree_path, model_params, bl)
+    command = "--run_id %s -b 0 -i '%s' -u '%s' %s %s" % (
+        model, alignment_path, tree_path, model_params, bl)
     run_phyml(command)
 
     # Now get rid of this -- we have the original elsewhere
-    os.remove(analysis_path)
+    # os.remove(analysis_path)
 
 def make_tree_path(alignment_path):
     pth, ext = os.path.splitext(alignment_path)
     return pth + ".phy_phyml_tree.txt"
 
-def make_analysis_path(root_path, name, model):
-    analyse_path = os.path.join(root_path, name + "[" + model + "].phy")
-    pth, ext = os.path.splitext(analyse_path)
-    output_path = pth + ".phy_phyml_stats.txt"
-    return analyse_path, output_path
+def make_output_path(sub_path, model):
+    # analyse_path = os.path.join(root_path, name + ".phy")
+    pth, ext = os.path.splitext(sub_path)
+    stats_path = "%s.phy_phyml_stats_%s.txt" % (pth, model)
+    tree_path = "%s.phy_phyml_tree_%s.txt" % (pth, model)
+    return stats_path, tree_path
 
 class PhymlResult(object):
     def __init__(self, lnl, seconds):

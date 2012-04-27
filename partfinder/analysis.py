@@ -234,9 +234,8 @@ class Analysis(object):
         sorted_difficulty, sorted_models_to_do = zip(*difficulty_and_m)
                 
         for m in sorted_models_to_do:
-            a_path, out_path = phyml.make_analysis_path(self.cfg.phyml_path, sub.name, m)
             tasks.append((phyml.analyse, 
-                          (m, sub_path, a_path, self.tree_path, self.cfg.branchlengths)))
+                          (m, sub_path, self.tree_path, self.cfg.branchlengths)))
 
         if self.threads == 1:
             self.run_models_concurrent(tasks)
@@ -266,9 +265,9 @@ class Analysis(object):
         models_done = []
         for m in list(models_to_do):
             # sub.alignment_path
-            a_path, out_path = phyml.make_analysis_path(self.cfg.phyml_path, sub.name, m)
-            if os.path.exists(out_path):
-                sub_output = open(out_path, 'rb').read()
+            stats_path, tree_path = phyml.make_output_path(sub.alignment_path, m)
+            if os.path.exists(stats_path):
+                sub_output = open(stats_path, 'rb').read()
                 # Annotate with the parameters of the model
                 try:
                     result = phyml.parse(sub_output)
@@ -281,13 +280,13 @@ class Analysis(object):
                     if self.save_phyml:
                         pass
                     else:
-                        os.remove(out_path)
-                        os.remove(''.join([out_path.split("stats.txt")[0], 'tree.txt']))
+                        os.remove(stats_path)
+                        os.remove(tree_path)
 
                 except phyml.PhymlError:
                     log.warning("Failed loading parse output from %s."
                               "Output maybe corrupted. I'll run it again.",
-                              out_path)
+                              stats_path)
 
         if models_done:
             log.debug("Loaded analysis for %s, models %s", sub, ", ".join(models_done))
