@@ -24,62 +24,25 @@ myformatter = logging.Formatter(
     """%(levelname)s: %(name)s, %(asctime)s,%(filename)s, %(lineno)s: %(message)s\n"""
 )
 
-# Make Publishing easier
-from wx.lib.pubsub import Publisher
-publisher = Publisher()
-
-def publish(path, data=None):
-    assert isinstance(path, str)
-    topic = tuple(path.split('.'))
-    # print topic, data
-    publisher.sendMessage(topic, data)
-
-def subscribe(path, listener):
-    assert isinstance(path, str)
-    topic = tuple(path.split('.'))
-    # print listener, topic
-    publisher.subscribe(listener, topic)
-
-def unsubscribe(path, listener):
-    assert isinstance(path, str)
-    topic = tuple(path.split('.'))
-    publisher.unsubscribe(listener, topic)
-
 class Handler(logging.Handler):
         
     def emit(self, record):
         self.output.AddText(myformatter.format(record))
 
-class BasePanel(wx.Panel):
-    def __init__(self, parent):
-        wx.Panel.__init__(self, parent)
-        self.sizer = self.make_contents(parent)
-        self.SetSizer(self.sizer)
-        self.sizer.Fit(self)
-        self.Fit()
-
 class DetailsPane(wx.Panel):
     def __init__(self, parent):
         pass
 
-class MainPanel(BasePanel):
-    def make_contents(self, parent):
-        box = wx.GridBagSizer()
-
-        self.path = wx.StaticText(parent, -1, "?")
-        box.Add(self.path, 1, wx.EXPAND|wx.ALL, 5)
-
-        self.button = wx.Button(parent, -1, "...")
-        box.Add(self.button, 1, wx.EXPAND|wx.ALL, 5)
-        parent.Bind(wx.EVT_BUTTON, lambda x: publish('button.press', x), self.button)
-
-        subscribe('data.change', self.DataUpdate)
-        self.SetMinSize((400, 400))
-        return box
-
-    def DataUpdate(self, msg):
-        self.path.SetLabel(msg.data.base_path)
-
+class MainPanel(wx.Panel):
+    def __init__(self, parent):
+        wx.Panel.__init__(self, parent)
+        box = wx.BoxSizer(wx.VERTICAL)
+        box.Add(wx.StaticText(parent, -1, "Blarg"), 0, wx.EXPAND)
+        box.Add(wx.Button(parent, -1, "..."), 0, wx.EXPAND)
+        self.sizer = box
+        self.SetSizer(self.sizer)
+        self.sizer.Fit(self)
+        self.Fit()
 
 class MainFrame(wx.Frame):
     def __init__(self, title = "Partition Finder"):
@@ -89,17 +52,12 @@ class MainFrame(wx.Frame):
         # self.CreateContent()
         self.CreateStatusBar()
 
-        self.sizer = wx.BoxSizer(wx.VERTICAL)
         self.panel = MainPanel(self)
-        # self.Bind(wx.EVT_BUTTON, self.OnButton, self.panel.button)
-        self.sizer.Add(self.panel, 1, wx.EXPAND)
-        self.SetSizer(self.sizer)
 
         self.Fit()
         self.SetMinSize(self.GetSize())
 
         self.cfg = config.Configuration()
-        subscribe('button.press', self.GetPath)
 
         self.running = None
 
@@ -127,12 +85,65 @@ class MainFrame(wx.Frame):
 
         self.SetMenuBar(MenuBar)
 
-    # def OnPressed(self, evt):
-        # if self.running is None:
-            # self.running = PFThread()
-            # self.running.Start()
+    def CreateContent(self):
 
-    def GetPath(self, evt):
+        pane = self.GetContentsPane()
+
+        pane.SetSizerType("grid", options={'cols':2})
+        
+        # row 1
+        wx.StaticText(pane, -1, "Dir")
+        self.button = wx.Button(pane, -1, "...")
+        self.Bind(wx.EVT_BUTTON, self.OnButton, self.button)
+        # textCtrl = wx.TextCtrl(pane, -1, "Your name here")
+        self.button.SetSizerProps(expand=True)
+        
+        # row 2
+        wx.StaticText(pane, -1, "Start")
+        self.pressme = wx.Button(pane, -1, "push me")
+        self.Bind(wx.EVT_BUTTON, self.OnPressed, self.pressme)
+        
+        # row 3
+        wx.StaticText(pane, -1, "Gender")
+        wx.Choice(pane, -1, choices=["male", "female"])
+        
+        # row 4
+        wx.StaticText(pane, -1, "State")
+        wx.TextCtrl(pane, -1, size=(60, -1)) # two chars for state
+        
+        # row 5
+        # radioPane = sc.SizedPanel(pane, -1)
+        wx.StaticText(pane, -1, "Log")
+        loglist = stc.StyledTextCtrl(pane)
+        # loglist.SetReadOnly(True)
+        loglist.SetWrapMode(1)
+        # loglist.SetWrapStartIndent(10)
+
+        self.handler = Handler()
+        self.handler.output = loglist
+        logging.getLogger().addHandler(self.handler) # add at base level
+
+        # loglist = LogListCtrl(pane)
+        loglist.SetSizerProps(expand=True, valign='bottom')
+        
+        # here's how to add a 'nested sizer' using sized_controls
+        # radioPane = sc.SizedPanel(pane, -1)
+        # radioPane.SetSizerType("horizontal")
+        # radioPane.SetSizerProps(expand=True)
+        
+        # make these children of the radioPane to have them use
+        # the horizontal layout
+        # wx.RadioButton(radioPane, -1, "Mr.")
+        # wx.RadioButton(radioPane, -1, "Mrs.")
+        # wx.RadioButton(radioPane, -1, "Dr.")
+        # end row 5
+
+    def OnPressed(self, evt):
+        if self.running is None:
+            self.running = PFThread()
+            self.running.Start()
+
+    def OnButton(self, evt):
         # In this case we include a "New directory" button. 
         dlg = wx.DirDialog(self, "Choose a directory:",
                         style=wx.DD_DEFAULT_STYLE
@@ -145,11 +156,7 @@ class MainFrame(wx.Frame):
         # we destroy it. 
         if dlg.ShowModal() == wx.ID_OK:
             path = dlg.GetPath()
-            try:
-                self.cfg.load_base_path(path)
-            except:
-                pass
-            publish('data.change', self.cfg)
+            self.cfg.load_base_path(path)
 
         # Only destroy a dialog after you're done with it.
         dlg.Destroy()
