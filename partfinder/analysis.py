@@ -158,6 +158,9 @@ class Analysis(object):
         This is the core place where everything comes together
         The results are placed into subset.result
         """
+
+        log.debug("About to analyse %s using models %s", sub, ", ".join(list(models)))
+
         #keep people informed about what's going on
         #if we don't know the total subset number, we can usually get it like this
         if self.total_subset_num == None:
@@ -172,22 +175,27 @@ class Analysis(object):
         subset_cache_path = os.path.join(self.cfg.subsets_path, sub.name + '.bin')
         # We might have already saved a bunch of results, try there first
         if not sub.results:
+            log.debug("Reading in cached data from the subsets file")
             sub.read_cache(subset_cache_path)
 
         # First, see if we've already got the results loaded. Then we can
         # shortcut all the other checks
         models_done = set(sub.results.keys())
+        log.debug("These models have already been done: %s", models_done)
         models_required = set(models)
         models_to_do = models_required - models_done
+        log.debug("Which leaves these models still to analyse: %s", models_to_do)
+
+        
+
         
         # Empty set means we're done
         if not models_to_do:
-            log.debug("Using results that are already loaded %s", sub)
+            log.debug("All models already done, so using just the cached results for subset %s", sub)
             #if models_done!=set(models): #redo model selection if we have different models
             sub.model_selection(self.cfg.model_selection, self.cfg.models)        
             return
 
-        log.debug("About to analyse %s using models %s", sub, ", ".join(list(models)))
 
         # Make an Alignment from the source, using this subset
         sub_alignment = SubsetAlignment(self.alignment, sub)
@@ -214,6 +222,7 @@ class Analysis(object):
             sub_alignment.write(sub_path)
 
         # Try and read in some previous analyses
+        log.debug("Checking for old results in the phyml folder")
         self.parse_results(sub, models_to_do)
         if not models_to_do:
             #if models_done!=set(models): #redo model selection if we have different models
@@ -232,8 +241,10 @@ class Analysis(object):
         difficulty_and_m = zip(difficulty, models_to_do)
         difficulty_and_m.sort(reverse=True)
         sorted_difficulty, sorted_models_to_do = zip(*difficulty_and_m)
-                
+            
+        log.debug("About to analyse these models, in this order: %s", sorted_models_to_do)
         for m in sorted_models_to_do:
+            a_path, out_path = phyml.make_analysis_path(self.cfg.phyml_path, sub.name, m)
             tasks.append((phyml.analyse, 
                           (m, sub_path, self.tree_path, self.cfg.branchlengths)))
 
