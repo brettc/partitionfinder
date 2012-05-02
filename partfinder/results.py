@@ -103,6 +103,7 @@ class AnalysisResults(object):
         log.info("Loading old results from '%s'", pth)
         f = open(pth, 'rb')
         old_results = pickle.load(f)
+        f.close()
 
         log.info("Comparing results...")
         # Now do the comparison

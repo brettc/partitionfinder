@@ -202,6 +202,7 @@ class Alignment(object):
             fd.write(shortened)
             fd.write(sequence)
             fd.write("\n")
+        fd.close()
 
 class SubsetAlignment(Alignment):
     """Create an alignment based on some others and a subset definition"""
