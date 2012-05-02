@@ -244,7 +244,7 @@ class Analysis(object):
             
         log.debug("About to analyse these models, in this order: %s", sorted_models_to_do)
         for m in sorted_models_to_do:
-            a_path, out_path = phyml.make_analysis_path(self.cfg.phyml_path, sub.name, m)
+            #a_path, out_path = phyml.make_analysis_path(self.cfg.phyml_path, sub.name, m)
             tasks.append((phyml.analyse, 
                           (m, sub_path, self.tree_path, self.cfg.branchlengths)))
 
