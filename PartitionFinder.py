@@ -29,20 +29,19 @@ import sys
 from partfinder import config, analysis_method, util, parser, reporter
 
 def main():
-    log.info("-------------------------------- PartitionFinder v1.0.0 ------------------------------------")
     usage = """usage: python %prog [options] <foldername>
 
-    PartitionFinder is designed to discover optimal partitioning schemes for
-    DNA sequence alignments. It it also useful for finding the best model of
-    sequence evolution for one or more partitions.
+    PartitionFinder and PartitionFinderProtein are designed to discover optimal 
+    partitioning schemes for nucleotide and amino acid sequence alignments. 
+    They are also useful for finding the best model of sequence evolution for datasets.
 
     The Input: <foldername>: the full path to a folder containing:
         - A configuration file (partition_finder.cfg)
-        - A DNA alignment in Phylip format
+        - A nucleotide/aa alignment in Phylip format
     Take a look at the included 'example' folder for more details.
 
     The Output: A file in the same directory as the .cfg file, named
-    'alignment_pf_output.txt' This file contains information on the best
+    'analysis' This file contains information on the best
     partitioning scheme, and the best model for each partiiton
 
     Usage Examples: 
@@ -111,6 +110,21 @@ def main():
         # Otherwise exit, printing the help
         parser.print_help()
         return 2
+
+    #before we start, let's check the python version is above 2.7 but lower than 3.0
+    log.info("-------------------------------- PartitionFinder v1.0.0 ------------------------------------")
+    
+    python_version = float("%d.%d" %(sys.version_info.major, sys.version_info.minor))
+
+    if python_version<2.7:
+        log.error("Your Python version is %.1f, but this program requires Python 2.7. "
+        "Please upgrade to version 2.7 by visiting www.python.org/getit, or by following"
+        " the instructions in this program's manual." % python_version)
+        return 0
+
+    if python_version>2.0:
+        log.warning("Your Python version is %.1f. This program was not built to run with "
+        "version 3 or higher. To guarantee success, please use Python 2.7.x" % python_version)
 
     # Load, using the first argument as the folder
     try:
