@@ -122,7 +122,7 @@ def main():
         " the instructions in this program's manual." % python_version)
         return 0
 
-    if python_version>2.0:
+    if python_version>3.0:
         log.warning("Your Python version is %.1f. This program was not built to run with "
         "version 3 or higher. To guarantee success, please use Python 2.7.x" % python_version)
 
