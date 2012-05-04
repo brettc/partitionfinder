@@ -29,6 +29,7 @@ import sys
 from partfinder import config, analysis_method, util, parser, reporter
 
 def main():
+    log.info("-------------------------------- PartitionFinder v1.0.0 ------------------------------------")
     usage = """usage: python %prog [options] <foldername>
 
     PartitionFinder and PartitionFinderProtein are designed to discover optimal 
@@ -111,9 +112,7 @@ def main():
         parser.print_help()
         return 2
 
-    #before we start, let's check the python version is above 2.7 but lower than 3.0
-    log.info("-------------------------------- PartitionFinder v1.0.0 ------------------------------------")
-    
+    #before we start, let's check the python version is above 2.7 but lower than 3.0    
     python_version = float("%d.%d" %(sys.version_info.major, sys.version_info.minor))
 
     if python_version<2.7:
