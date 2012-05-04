@@ -112,6 +112,20 @@ def main():
         parser.print_help()
         return 2
 
+    #before we start, let's check the python version is above 2.7 but lower than 3.0    
+    python_version = float("%d.%d" %(sys.version_info.major, sys.version_info.minor))
+
+    if python_version<2.7:
+        log.error("Your Python version is %.1f, but this program requires Python 2.7. "
+        "Please upgrade to version 2.7 by visiting www.python.org/getit, or by following"
+        " the instructions in this program's manual." % python_version)
+        return 0
+
+    if python_version>3.0:
+        log.warning("Your Python version is %.1f. This program was not built to run with "
+        "version 3 or higher. To guarantee success, please use Python 2.7.x" % python_version)
+
+
     # Load, using the first argument as the folder
     try:
         cfg = config.Configuration()
