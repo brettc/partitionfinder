@@ -199,7 +199,7 @@ class Analysis(object):
 
         # Make an Alignment from the source, using this subset
         sub_alignment = SubsetAlignment(self.alignment, sub)
-        sub_path = os.path.join(self.cfg.subsets_path, sub.name + '.phy')
+        sub_path = os.path.join(self.cfg.phyml_path, sub.name + '.phy')
         # Add it into the sub, so we keep it around
         sub.alignment_path = sub_path
 
