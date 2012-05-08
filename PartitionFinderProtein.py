@@ -128,11 +128,7 @@ def main():
 
     # Load, using the first argument as the folder
     try:
-        cfg = config.Configuration()
-        
-        #here we hard-code the datatype. This is what differs in PF-prot.
-        cfg.datatype = "protein"
-        log.info("Setting datatype to 'protein'")
+        cfg = config.Configuration("protein")
 
         cfg.load_base_path(args[0])
         

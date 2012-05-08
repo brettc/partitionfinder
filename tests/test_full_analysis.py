@@ -28,6 +28,10 @@ def cleanup(cfg):
 def load_cfg_and_run(pth, compare=True, fails=False):
 
     try:
+        if "DNA" in pth:
+            dt = "DNA"
+        else:
+            dt = "protein"
         cfg = config.Configuration()
         cfg.load_base_path(pth)
         method = analysis_method.choose_method(cfg.search)

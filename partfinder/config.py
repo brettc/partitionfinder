@@ -35,13 +35,21 @@ class Configuration(object):
         'search': ['all', 'user', 'greedy']
         }
 
-    def __init__(self):
+    def __init__(self, datatype="DNA"):
         self.partitions = partition.PartitionSet()
         self.schemes = scheme.SchemeSet()
 
         self.base_path = '.'
         self.alignment = None
         self.user_tree = None
+
+        if datatype != "DNA" and datatype != "protein":
+            log.error("datatype must be 'DNA' or 'protein'")
+            raise ConfigurationError
+
+        log.info("Setting datatype to '%s'", datatype)
+        self.datatype = datatype
+
 
         # Set the defaults into the class. These can be reset by calling
         # set_option(...)
