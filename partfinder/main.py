@@ -129,7 +129,7 @@ def main(name, version, datatype):
         cfg = config.Configuration(datatype)
 
         #here we hard-code the datatype. This is what differs in PF-prot.
-        cfg.datatype = "DNA"
+        cfg.datatype = datatype
         log.info("Setting datatype to 'DNA'")
 
         cfg.load_base_path(args[0])
