@@ -28,11 +28,12 @@ def cleanup(cfg):
 def load_cfg_and_run(pth, compare=True, fails=False):
 
     try:
-        if "DNA" in pth:
+        # This is a crappy way to do it, but it works
+        if "DNA" in pth or "rerun" in pth:
             dt = "DNA"
         else:
             dt = "protein"
-        cfg = config.Configuration()
+        cfg = config.Configuration(dt)
         cfg.load_base_path(pth)
         method = analysis_method.choose_method(cfg.search)
         rpt = reporter.TextReporter(cfg)
@@ -111,7 +112,7 @@ def test_prot3():
 def test_prot4():
     load_cfg_and_run(path_from_function())
 
-@attr('slow', 'prot')
+@attr('prot')
 def test_prot5():
     load_cfg_and_run(path_from_function())
 
