@@ -17,11 +17,17 @@
 
 import logging, os, sys
 
-curdir = os.path.dirname(os.path.abspath(__file__))
-rootdir, here = os.path.split(curdir)
-config_path = os.path.join(rootdir, 'logging.cfg')
-from logging import config as _logconfig
-_logconfig.fileConfig(config_path)
+logging.basicConfig(
+    format='%(levelname)-8s | %(asctime)s | %(message)s',
+    # format='%(levelname)s:%(message)s', 
+    level=logging.INFO
+)
+
+# curdir = os.path.dirname(os.path.abspath(__file__))
+# rootdir, here = os.path.split(curdir)
+# config_path = os.path.join(rootdir, 'logging.cfg')
+# from logging import config as _logconfig
+# _logconfig.fileConfig(config_path)
 
 log = logging.getLogger("main")
 from optparse import OptionParser
@@ -127,13 +133,7 @@ def main(name, version, datatype):
     # Load, using the first argument as the folder
     try:
         cfg = config.Configuration(datatype)
-
-        #here we hard-code the datatype. This is what differs in PF-prot.
-        cfg.datatype = datatype
-        log.info("Setting datatype to 'DNA'")
-
         cfg.load_base_path(args[0])
-
                 
         if options.check_only:
             log.info("Exiting without processing (because of the -c/--check-only option ...")

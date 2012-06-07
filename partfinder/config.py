@@ -62,6 +62,32 @@ class Configuration(object):
         if hasattr(self, 'old_cwd'):
             os.chdir(self.old_cwd)
 
+    def find_config_file(self, pth):
+        """Try and get the base folder and config file from the path"""
+        if os.path.isfile(pth):
+            # Is it a config file
+            pth, ext = os.path.splitext(pth)
+            folder, filename = os.path.split(pth)
+            filename += ext
+            if ext == '.cfg':
+                return folder, filename
+            # We still need a filename
+        else:
+            folder = pth
+
+        util.check_folder_exists(folder)
+
+        # Now let's find the filename. Just return the first hit.
+        for filename in os.listdir(folder):
+            if fnmatch.fnmatch(filename, '*.cfg'):
+                return folder, filename
+
+        log.error("Cannot find a configuration file"
+                  "working folder '%s'", folder)
+
+        raise ConfigurationError
+
+
     def load_base_path(self, pth):
         """Load using a base path folder"""
         # Allow for user and environment variables
@@ -69,16 +95,17 @@ class Configuration(object):
         pth = os.path.expandvars(pth)
         pth = os.path.normpath(pth)
 
+        folder, filename = self.find_config_file(pth)
+
         #check that user didn't enter a file instead of a folder
-        if os.path.isfile(pth):
-            log.error("The second argument of the commandline currently points to a file, but it should point to the folder that contains the alignment and .cfg files, please check.")
-            raise ConfigurationError            
+        # if os.path.isfile(pth):
+            # log.error("The second argument of the commandline currently points to a file, but it should point to the folder that contains the alignment and .cfg files, please check.")
+            # raise ConfigurationError            
         
-        util.check_folder_exists(pth)
-        self.set_base_path(pth)
+        self.set_base_path(folder)
 
         # From now on we refer to relative paths
-        config_path = os.path.join(self.base_path, "partition_finder.cfg")
+        config_path = os.path.join(self.base_path, filename)
         util.check_file_exists(config_path)
 
         self._output_folders = []
