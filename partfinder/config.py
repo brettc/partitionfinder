@@ -105,12 +105,9 @@ class Configuration(object):
         self.set_base_path(folder)
 
         # From now on we refer to relative paths
-<<<<<<< HEAD
         config_path = os.path.join(self.base_path, filename)
-=======
         log.debug("About to search for partition_finder.cfg file...")
         config_path = os.path.join(self.base_path, "partition_finder.cfg")
->>>>>>> better error and debug for configuration file
         util.check_file_exists(config_path)
 
         self._output_folders = []
