@@ -26,7 +26,7 @@ class PartitionFinderError(Exception):
 
 def check_file_exists(pth):
     if not os.path.exists(pth) or not os.path.isfile(pth):
-        log.error("No such file: '%s'", pth)
+        log.error("Looking for file: '%s'\n but couldn't find it. Please check and try again", pth)
         raise PartitionFinderError
 
 def check_folder_exists(pth):
