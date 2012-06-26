@@ -118,12 +118,14 @@ def main(name, version, datatype):
         return 2
 
     #before we start, let's check the python version is above 2.7 but lower than 3.0    
-    python_version = float("%d.%d" %(sys.version_info.major, sys.version_info.minor))
+    python_version = float("%d.%d" %(sys.version_info[0], sys.version_info[1]))
+
+    log.info("You have Python version %.1f" %python_version)
 
     if python_version<2.7:
         log.error("Your Python version is %.1f, but this program requires Python 2.7. "
         "Please upgrade to version 2.7 by visiting www.python.org/getit, or by following"
-        " the instructions in this program's manual." % python_version)
+        " the instructions in the PartitionFinder manual." % python_version)
         return 0
 
     if python_version>3.0:
