@@ -104,6 +104,10 @@ class AlignmentParser(object):
             defs = self.root_parser.parseString(s)
         except ParseException, p:
             log.error("Error in Alignment Parsing:" + str(p))
+            log.error("A common cause of this error is having whitespace"
+            ", i.e. spaces or tabs, in the species names. Please check this and remove"
+            " all whitespace from species names, or replace them with e.g. underscores")
+                        
             raise AlignmentError
 
         # Check that all the sequences are equal length
@@ -202,6 +206,7 @@ class Alignment(object):
             fd.write(shortened)
             fd.write(sequence)
             fd.write("\n")
+        fd.close()
 
 class SubsetAlignment(Alignment):
     """Create an alignment based on some others and a subset definition"""

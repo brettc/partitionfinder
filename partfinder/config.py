@@ -35,7 +35,7 @@ class Configuration(object):
         'search': ['all', 'user', 'greedy']
         }
 
-    def __init__(self):
+    def __init__(self, datatype="DNA"):
         self.partitions = partition.PartitionSet()
         self.schemes = scheme.SchemeSet()
 
@@ -43,35 +43,48 @@ class Configuration(object):
         self.alignment = None
         self.user_tree = None
 
+        if datatype != "DNA" and datatype != "protein":
+            log.error("datatype must be 'DNA' or 'protein'")
+            raise ConfigurationError
+
+        log.info("Setting datatype to '%s'", datatype)
+        self.datatype = datatype
+
+
         # Set the defaults into the class. These can be reset by calling
         # set_option(...)
         for o, v in self.options.items():
             # Could call self.set_option here -- but it might confuse users
             setattr(self, o, v[0])
 
-    def load_base_path(self, base_path):
+    def reset(self):
+        # Only required in tests, when we keep changing folders
+        if hasattr(self, 'old_cwd'):
+            os.chdir(self.old_cwd)
+
+    def load_base_path(self, pth):
         """Load using a base path folder"""
         # Allow for user and environment variables
-        base_path = os.path.expanduser(base_path)
-        base_path = os.path.expandvars(base_path)
-        base_path = os.path.normpath(base_path)
-        # pth = os.path.abspath(pth)
+        pth = os.path.expanduser(pth)
+        pth = os.path.expandvars(pth)
+        pth = os.path.normpath(pth)
 
         #check that user didn't enter a file instead of a folder
-        if os.path.isfile(base_path):
+        if os.path.isfile(pth):
             log.error("The second argument of the commandline currently points to a file, but it should point to the folder that contains the alignment and .cfg files, please check.")
             raise ConfigurationError            
         
-        util.check_folder_exists(base_path)
-        self.set_base_path(base_path)
+        util.check_folder_exists(pth)
+        self.set_base_path(pth)
 
-        config_path = os.path.join(base_path, "partition_finder.cfg")
+        # From now on we refer to relative paths
+        config_path = os.path.join(self.base_path, "partition_finder.cfg")
         util.check_file_exists(config_path)
 
         self._output_folders = []
         self.register_output_folders()
 
-        # self.init_logger(base_path)
+        self.init_logger(self.base_path)
         self.load(config_path)
 
         self.make_output_folders()
@@ -104,16 +117,25 @@ class Configuration(object):
 
     def load(self, config_path):
         """We get the parser to construct the configuration"""
-        log.info("-------------------------------- BEGINNING NEW RUN ------------------------------------")
+        log.info("------------------------ BEGINNING NEW RUN -------------------------------")
         log.info("Loading configuration at '%s'", config_path)
         self.config_path = config_path
         p = parser.Parser(self)
         p.parse_file(config_path)
             
     def set_base_path(self, base_path):
-        log.info("Using folder: '%s'", base_path)
-        self.base_path = base_path
-        self.output_path = os.path.join(base_path, "analysis")
+        self.full_base_path = os.path.abspath(base_path)
+        log.info("Setting working folder to: '%s'", self.full_base_path)
+
+        # Now make our working folder this folder. All of our other paths will
+        # be relative to this
+        self.old_cwd = os.getcwd()
+        os.chdir(base_path)
+
+        # Our base path is now this
+        self.base_path = '.'
+        self.output_path = os.path.join(self.base_path, "analysis")
+        self.full_output_path = os.path.join(self.full_base_path, "analysis")
 
     def set_alignment_file(self, align):
         log.info("Setting 'alignment' to '%s'", align)

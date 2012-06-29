@@ -23,7 +23,7 @@ import config
 # TODO need some error checking!
 
 # number of free parameters in substitution model, listed as "model+base_frequencies"
-# and the model string for PhyML as the second of the tuple
+# and the model string for PhyML as the second of the tuple.
 _base_models = {
     "JC"    :   (0+0, "-m 000000 -f '0.25, 0.25, 0.25, 0.25'"),
     "K80"   :   (1+0, "-m 010010 -f '0.25, 0.25, 0.25, 0.25'"),
@@ -97,7 +97,6 @@ def get_all_protein_models():
         model_list.append("%s+I+G"   %(model))
         model_list.append("%s+I+F"   %(model))
         model_list.append("%s+G+F"   %(model))
-        model_list.append("%s+I+G"   %(model))
         model_list.append("%s+I+G+F" %(model))
     return model_list
 
@@ -155,7 +154,35 @@ def get_num_params(modelstring):
     log.debug("Model: %s Params: %d" %(modelstring, total))
 
     return total
+ 
+@memoize
+def get_model_difficulty(modelstring):
+    '''
+    Input a model string like HKY+I+G or LG+G+F, and a guess about how long it takes to analyse
+    Right now, this is done with a simple hack. I just return a number that is the number of params
+    plus a modifier for extra stuff like +I and +G
+    the hardest models are +I+G, then +G, then +I
+    this is just used to rank models for ordering the analysis
+    The return is a 'difficulty' score that can be used to rank models
+    '''
+    elements = modelstring.split("+")
+
+    model_params = get_num_params(modelstring)
     
+    difficulty = 0
+    if "G" in elements[1:]:
+        difficulty = difficulty + 2000
+    if "I" in elements[1:]: 
+        difficulty = difficulty + 1000
+    
+    extras = modelstring.count("+")
+    total = model_params+extras+difficulty
+    log.debug("Model: %s Difficulty: %d" %(modelstring, total))
+
+    return total
+ 
+ 
+ 
 @memoize
 def get_model_commandline(modelstring):
     '''

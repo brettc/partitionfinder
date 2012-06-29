@@ -6,6 +6,7 @@ import py2app
 
 setup(
     app=['wxgui.py'],
+    # app=['PartitionFinder.py'],
     # data_files=[
         # 'Resources/blob.tiff',
         # 'Resources/blob_file.icns',

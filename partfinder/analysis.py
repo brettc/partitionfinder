@@ -29,7 +29,7 @@ import scheme
 import subset
 import util
 import results
-import progress
+from phyml_models import get_model_difficulty
 
 from util import PartitionFinderError
 class AnalysisError(PartitionFinderError):
@@ -48,7 +48,6 @@ class Analysis(object):
         self.threads = threads
         self.save_phyml = save_phyml
         self.results = results.AnalysisResults()
-        self.progress = progress.Progress()
 
         log.info("Beginning Analysis")
         if force_restart:
@@ -73,6 +72,11 @@ class Analysis(object):
         self.make_alignment(cfg.alignment_path)
 
         self.make_tree(cfg.user_tree_topology_path)
+        self.subsets_analysed_set = set() #a counter for user info
+        self.subsets_analysed = 0 #a counter for user info
+        self.total_subset_num = None
+        self.schemes_analysed = 0 #a counter for user info
+        self.total_scheme_num = None
 
     def analyse(self):
         self.do_analysis()
@@ -154,31 +158,48 @@ class Analysis(object):
         This is the core place where everything comes together
         The results are placed into subset.result
         """
-        self.progress.another_subset(sub)
+
+        log.debug("About to analyse %s using models %s", sub, ", ".join(list(models)))
+
+        #keep people informed about what's going on
+        #if we don't know the total subset number, we can usually get it like this
+        if self.total_subset_num == None:
+            self.total_subset_num = len(sub._cache)
+        old_num_analysed = self.subsets_analysed
+        self.subsets_analysed_set.add(sub.name)
+        self.subsets_analysed = len(self.subsets_analysed_set)
+        if self.subsets_analysed>old_num_analysed: #we've just analysed a subset we haven't seen yet
+            percent_done = float(self.subsets_analysed)*100.0/float(self.total_subset_num)
+            log.info("Analysing subset %d/%d: %.2f%s done" %(self.subsets_analysed,self.total_subset_num, percent_done, r"%"))
 
         subset_cache_path = os.path.join(self.cfg.subsets_path, sub.name + '.bin')
         # We might have already saved a bunch of results, try there first
         if not sub.results:
+            log.debug("Reading in cached data from the subsets file")
             sub.read_cache(subset_cache_path)
 
         # First, see if we've already got the results loaded. Then we can
         # shortcut all the other checks
         models_done = set(sub.results.keys())
+        log.debug("These models have already been done: %s", models_done)
         models_required = set(models)
         models_to_do = models_required - models_done
+        log.debug("Which leaves these models still to analyse: %s", models_to_do)
+
+        
+
         
         # Empty set means we're done
         if not models_to_do:
-            log.debug("Using results that are already loaded %s", sub)
+            log.debug("All models already done, so using just the cached results for subset %s", sub)
             #if models_done!=set(models): #redo model selection if we have different models
             sub.model_selection(self.cfg.model_selection, self.cfg.models)        
             return
 
-        log.debug("About to analyse %s using models %s", sub, ", ".join(list(models)))
 
         # Make an Alignment from the source, using this subset
         sub_alignment = SubsetAlignment(self.alignment, sub)
-        sub_path = os.path.join(self.cfg.subsets_path, sub.name + '.phy')
+        sub_path = os.path.join(self.cfg.phyml_path, sub.name + '.phy')
         # Add it into the sub, so we keep it around
         sub.alignment_path = sub_path
 
@@ -201,6 +222,7 @@ class Analysis(object):
             sub_alignment.write(sub_path)
 
         # Try and read in some previous analyses
+        log.debug("Checking for old results in the phyml folder")
         self.parse_results(sub, models_to_do)
         if not models_to_do:
             #if models_done!=set(models): #redo model selection if we have different models
@@ -209,10 +231,22 @@ class Analysis(object):
 
         # What is left, we actually have to analyse...
         tasks = []
+
+        #for efficiency, we rank the models by their difficulty - most difficult first
+        difficulty = []        
         for m in models_to_do:
-            a_path, out_path = phyml.make_analysis_path(self.cfg.phyml_path, sub.name, m)
+            difficulty.append(get_model_difficulty(m))
+        
+        #hat tip to http://scienceoss.com/sort-one-list-by-another-list/
+        difficulty_and_m = zip(difficulty, models_to_do)
+        difficulty_and_m.sort(reverse=True)
+        sorted_difficulty, sorted_models_to_do = zip(*difficulty_and_m)
+            
+        log.debug("About to analyse these models, in this order: %s", sorted_models_to_do)
+        for m in sorted_models_to_do:
+            #a_path, out_path = phyml.make_analysis_path(self.cfg.phyml_path, sub.name, m)
             tasks.append((phyml.analyse, 
-                          (m, sub_path, a_path, self.tree_path, self.cfg.branchlengths)))
+                          (m, sub_path, self.tree_path, self.cfg.branchlengths)))
 
         if self.threads == 1:
             self.run_models_concurrent(tasks)
@@ -242,9 +276,9 @@ class Analysis(object):
         models_done = []
         for m in list(models_to_do):
             # sub.alignment_path
-            a_path, out_path = phyml.make_analysis_path(self.cfg.phyml_path, sub.name, m)
-            if os.path.exists(out_path):
-                sub_output = open(out_path, 'rb').read()
+            stats_path, tree_path = phyml.make_output_path(sub.alignment_path, m)
+            if os.path.exists(stats_path):
+                sub_output = open(stats_path, 'rb').read()
                 # Annotate with the parameters of the model
                 try:
                     result = phyml.parse(sub_output)
@@ -257,13 +291,13 @@ class Analysis(object):
                     if self.save_phyml:
                         pass
                     else:
-                        os.remove(out_path)
-                        os.remove(''.join([out_path.split("stats.txt")[0], 'tree.txt']))
+                        os.remove(stats_path)
+                        os.remove(tree_path)
 
                 except phyml.PhymlError:
                     log.warning("Failed loading parse output from %s."
                               "Output maybe corrupted. I'll run it again.",
-                              out_path)
+                              stats_path)
 
         if models_done:
             log.debug("Loaded analysis for %s, models %s", sub, ", ".join(models_done))
@@ -277,7 +311,8 @@ class Analysis(object):
         pool.join()
 
     def analyse_scheme(self, sch, models):
-        self.progress.another_scheme(sch)
+        self.schemes_analysed = self.schemes_analysed + 1        
+        log.info("Analysing scheme %d/%d" %(self.schemes_analysed, self.total_scheme_num))
         for sub in sch:
             self.analyse_subset(sub, models)
  
@@ -290,8 +325,6 @@ class Analysis(object):
         # whether to create stuff
         fname = os.path.join(self.cfg.schemes_path, sch.name+'.txt')
         self.rpt.write_scheme_summary(result, open(fname, 'w'))
-
-        self.progress.another_scheme(sch)
 
         return result
 

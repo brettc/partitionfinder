@@ -46,7 +46,7 @@ def cpu_count():
         except (ValueError, OSError, AttributeError):
             num = 0
 
-    if num >= 1:
+    if num > 1:
         log.info("You appear to have %s cpus", num)
         return num
     # This will have to do

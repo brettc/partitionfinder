@@ -202,17 +202,34 @@ class Parser(object):
                 pass
             log.info("Setting 'models' to '%s'", modsgroup)
 
-        #set datatype, and check that we've got a sensible model list
-        if DNA_mods>0 and prot_mods==0:
+        #check datatype against the model list that we've got a sensible model list
+        if DNA_mods>0 and prot_mods==0 and self.cfg.datatype=="DNA":
             log.info("Setting datatype to 'DNA'")
-            self.cfg.datatype = "DNA"
-        elif prot_mods>0 and DNA_mods==0:
+        elif DNA_mods==0 and prot_mods>0 and self.cfg.datatype=="protein":
             log.info("Setting datatype to 'protein'")
-            self.cfg.datatype = "protein"
-        else: #we've got a mixture, which won't work.            
+        elif DNA_mods==0 and prot_mods>0 and self.cfg.datatype=="DNA":
             raise ParserError(
-                text, loc, "The models list contains a mixture of protein and DNA models. Please use one or the other, but not both (see manual for help)")
+                text, loc, "The models list contains only models of amino acid change." 
+                " PartitionFinder.py only works with nucleotide models (like the GTR model)."
+                " If you're analysing an amino acid dataset, please use PartitionFinderProtein,"
+                " which you can download here: www.robertlanfear.com/partitionfinder."
+                " The models line in the .cfg file is")
+        elif DNA_mods>0 and prot_mods==0 and self.cfg.datatype=="protein":
+            raise ParserError(
+                text, loc, "The models list contains only models of nucelotide change." 
+                " PartitionFinderProtein.py only works with amino acid models (like the WAG model)."
+                " If you're analysing a nucelotide dataset, please use PartitionFinder.py,"
+                " which you can download here: www.robertlanfear.com/partitionfinder"
+                " The models line in the .cfg file is")
+        else: #we've got a mixture of models.            
+            raise ParserError(
+                text, loc, "The models list contains a mixture of protein and nucelotide models." 
+                " If you're analysing a nucelotide dataset, please use PartitionFinder."
+                " If you're analysing an amino acid dataset, please use PartitionFinderProtein."
+                " You can download both of these programs from here: www.robertlanfear.com/partitionfinder"
+                " The models line in the .cfg file is")
 
+        
     def define_range(self, part):
         """Turn the 1, 2 or 3 tokens into integers, supplying a default if needed"""
         fromc = int(part.start)

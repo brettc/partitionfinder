@@ -31,22 +31,14 @@ publisher = Publisher()
 def publish(path, data=None):
     assert isinstance(path, str)
     topic = tuple(path.split('.'))
-    # print topic, data
     publisher.sendMessage(topic, data)
 
 def subscribe(path, listener):
     assert isinstance(path, str)
     topic = tuple(path.split('.'))
-    # print listener, topic
     publisher.subscribe(listener, topic)
 
-def unsubscribe(path, listener):
-    assert isinstance(path, str)
-    topic = tuple(path.split('.'))
-    publisher.unsubscribe(listener, topic)
-
 class Handler(logging.Handler):
-        
     def emit(self, record):
         self.output.AddText(myformatter.format(record))
 
@@ -64,13 +56,13 @@ class DetailsPane(wx.Panel):
 
 class MainPanel(BasePanel):
     def make_contents(self, parent):
-        box = wx.GridBagSizer()
+        box = wx.BoxSizer()
 
         self.path = wx.StaticText(parent, -1, "?")
-        box.Add(self.path, 1, wx.EXPAND|wx.ALL, 5)
+        box.Add(self.path, wx.EXPAND|wx.ALL, 5)
 
         self.button = wx.Button(parent, -1, "...")
-        box.Add(self.button, 1, wx.EXPAND|wx.ALL, 5)
+        box.Add(self.button, wx.EXPAND|wx.ALL, 5)
         parent.Bind(wx.EVT_BUTTON, lambda x: publish('button.press', x), self.button)
 
         subscribe('data.change', self.DataUpdate)
