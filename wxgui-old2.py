@@ -2,39 +2,30 @@
 # Many ideas are taken from here:
 # http://wiki.wxpython.org/Optimizing%20for%20Mac%20OS%20X
 #
+#
 # TODO
 # * Set a flag for breaking out of the analysis cleanly (make it part of the
 # progress monitor?)
 # * Sort out the logging later
 # * Editing, on another tab
+# * Multiple windows, or not... 
 # * Use the dv.PyDataViewIndexListModel Example for the logger
+# * How to resize vertically!
 
 import logging
 import thread
-import os
 log = logging.getLogger("gui")
-
 import wx
-from wx.lib.pubsub import Publisher
-from wx.lib import newevent, sized_controls
-# We'll create a new event type to post messages across threads
-(LogEvent, EVT_LOG_EVENT) = newevent.NewEvent()
+import wx.stc as stc
 
 from partfinder import config, analysis_method, reporter
 
-# First, organise all the logging
 myformatter = logging.Formatter(
     """%(levelname)s: %(name)s, %(asctime)s,%(filename)s, %(lineno)s: %(message)s\n"""
 )
 
-class Handler(logging.Handler):
-    def emit(self, record):
-        pass
-        # self.output.AddText(myformatter.format(record))
-
-logging.getLogger("").addHandler(Handler())
-
-# Publishing stuff --- this is easier, but do I need it?
+# Make Publishing easier
+from wx.lib.pubsub import Publisher
 publisher = Publisher()
 
 def publish(path, data=None):
@@ -47,86 +38,63 @@ def subscribe(path, listener):
     topic = tuple(path.split('.'))
     publisher.subscribe(listener, topic)
 
+class Handler(logging.Handler):
+    def emit(self, record):
+        pass
+        # self.output.AddText(myformatter.format(record))
 
-class MainFrame(sized_controls.SizedFrame):
+class BasePanel(wx.Panel):
+    def __init__(self, parent):
+        wx.Panel.__init__(self, parent)
+        self.sizer = self.make_contents(parent)
+        self.SetSizer(self.sizer)
+        self.sizer.Fit(self)
+        self.Fit()
+
+class DetailsPane(wx.Panel):
+    def __init__(self, parent):
+        pass
+
+class MainPanel(BasePanel):
+    def make_contents(self, parent):
+        box = wx.BoxSizer()
+
+        self.path = wx.StaticText(parent, -1, "?")
+        box.Add(self.path, wx.EXPAND|wx.ALL, 5)
+
+        self.button = wx.Button(parent, -1, "...")
+        box.Add(self.button, wx.EXPAND|wx.ALL, 5)
+        parent.Bind(wx.EVT_BUTTON, lambda x: publish('button.press', x), self.button)
+
+        subscribe('data.change', self.DataUpdate)
+        self.SetMinSize((400, 400))
+        return box
+
+    def DataUpdate(self, msg):
+        self.path.SetLabel(msg.data.base_path)
+
+
+class MainFrame(wx.Frame):
     def __init__(self, title = "Partition Finder"):
-        sized_controls.SizedFrame.__init__(self, None , -1, title)
-        pane = self.GetContentsPane()
-        pane.SetSizerType("form")
-        
-        # row 1
-        wx.StaticText(pane, -1, "")
-        button = wx.Button(pane, -1, "Choose a configuration file", (50,50))
-        button.SetSizerProps(expand=True)
-        self.Bind(wx.EVT_BUTTON, self.OnLoadConfig, button)
+        wx.Frame.__init__(self, None , -1, title)
 
-        # row 2
-        wx.StaticText(pane, -1, "Email")
-        emailCtrl = wx.TextCtrl(pane, -1, "")
-        emailCtrl.SetSizerProps(expand=True)
-        
-        # row 3
-        wx.StaticText(pane, -1, "Gender")
-        wx.Choice(pane, -1, choices=["male", "female"])
-        
-        # row 4
-        wx.StaticText(pane, -1, "State")
-        wx.TextCtrl(pane, -1, size=(60, -1)) # two chars for state
-        
-        # row 5
-        wx.StaticText(pane, -1, "Title")
-        
-        # here's how to add a 'nested sizer' using sized_controls
-        radioPane = sized_controls.SizedPanel(pane, -1)
-        radioPane.SetSizerType("horizontal")
-        radioPane.SetSizerProps(expand=True)
-        
-        # make these children of the radioPane to have them use
-        # the horizontal layout
-        wx.RadioButton(radioPane, -1, "Mr.")
-        wx.RadioButton(radioPane, -1, "Mrs.")
-        wx.RadioButton(radioPane, -1, "Dr.")
-        # end row 5
-        #
-        wx.StaticText(pane, -1, "Log")
-        self.listCtrl = wx.ListCtrl(pane, -1, size=(400, 200), style=wx.LC_REPORT)
-        self.listCtrl.SetSizerProps(expand=True, proportion=1)
-        # self.ConfigureListCtrl()
-        
         self.CreateMenu()
+        # self.CreateContent()
         self.CreateStatusBar()
+
+        self.sizer = wx.BoxSizer(wx.VERTICAL)
+        self.panel = MainPanel(self)
+        # self.Bind(wx.EVT_BUTTON, self.OnButton, self.panel.button)
+        self.sizer.Add(self.panel, 1, wx.EXPAND)
+        self.SetSizer(self.sizer)
+
         self.Fit()
         self.SetMinSize(self.GetSize())
 
-
         self.cfg = config.Configuration()
-        # subscribe('button.press', self.GetPath)
+        subscribe('button.press', self.GetPath)
+
         self.running = None
-
-    def OnLoadConfig(self, evt):
-        # In this case we include a "New directory" button. 
-
-        dlg = wx.FileDialog(
-            self, message="Choose a file",
-            defaultDir=os.getcwd(), 
-            defaultFile="",
-            wildcard="Configuration File (*.cfg)|*.cfg",
-            style=wx.OPEN | wx.CHANGE_DIR
-            )
-        # If the user selects OK, then we process the dialog's data.
-        # This is done by getting the path data from the dialog - BEFORE
-        # we destroy it. 
-        if dlg.ShowModal() == wx.ID_OK:
-            path = dlg.GetPath()
-            try:
-                self.cfg.load_base_path(path)
-                publish('data.change', self.cfg)
-            except:
-                raise
-                pass
-
-        # Only destroy a dialog after you're done with it.
-        dlg.Destroy()
 
     def CreateMenu(self):
 
@@ -152,13 +120,32 @@ class MainFrame(sized_controls.SizedFrame):
 
         self.SetMenuBar(MenuBar)
 
-        cfg = config.Configuration("DNA")
-
     # def OnPressed(self, evt):
         # if self.running is None:
             # self.running = PFThread()
             # self.running.Start()
 
+    def GetPath(self, evt):
+        # In this case we include a "New directory" button. 
+        dlg = wx.DirDialog(self, "Choose a directory:",
+                        style=wx.DD_DEFAULT_STYLE
+                        #| wx.DD_DIR_MUST_EXIST
+                        #| wx.DD_CHANGE_DIR
+                        )
+
+        # If the user selects OK, then we process the dialog's data.
+        # This is done by getting the path data from the dialog - BEFORE
+        # we destroy it. 
+        if dlg.ShowModal() == wx.ID_OK:
+            path = dlg.GetPath()
+            try:
+                self.cfg.load_base_path(path)
+            except:
+                pass
+            publish('data.change', self.cfg)
+
+        # Only destroy a dialog after you're done with it.
+        dlg.Destroy()
 
         
     def OnQuit(self,Event):
@@ -203,9 +190,9 @@ class App(wx.App):
         frame = MainFrame()
         frame.Show()
 
-        # import sys
-        # for f in  sys.argv[1:]:
-            # self.OpenFileMessage(f)
+        import sys
+        for f in  sys.argv[1:]:
+            self.OpenFileMessage(f)
 
         return True
 

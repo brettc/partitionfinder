@@ -25,7 +25,7 @@ setup(
                 CFBundleShortVersionString = "1.0",     # must be in X.X.X format
                 CFBundleGetInfoString      = "PartitionFinder 1.0",
                 CFBundleExecutable         = "PartitionFinder",
-                CFBundleIdentifier         = "com.example.myappname",
+                CFBundleIdentifier         = "com.robertlanfear.partitionfinder",
                 # CFBundleIconFile = "blob_app",
                 # CFBundleDocumentTypes = [
                     # dict(CFBundleTypeName = "PartitionFinder Document",
