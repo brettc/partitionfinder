@@ -1,10 +1,4 @@
-Rob protein stuff
-_________________
 
-TODO
-
-* Run PF on a single subset of a protein alignment, compare to ProtTest and jModeltest
-* use Name_fixer2 on large analysed datasets, and start them re-running on the server
 
 DONE
 
