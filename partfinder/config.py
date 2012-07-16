@@ -196,13 +196,14 @@ class Configuration(object):
         # Just path validation for now.
         util.check_folder_exists(self.base_path)
         self.alignment_path = os.path.join(self.base_path, self.alignment)
+        log.info("Looking for alignment file '%s'...", self.alignment_path)
         util.check_file_exists(self.alignment_path)
         if self.user_tree is None:
             self.user_tree_topology_path = None
         else:
-            log.info("Loading user tree topology from file")
             self.user_tree_topology_path = os.path.join(self.base_path,
                                                         self.user_tree)
+            log.info("Looking for tree file '%s'...", self.user_tree_topology_path)
             util.check_file_exists(self.user_tree_topology_path)
             
 
