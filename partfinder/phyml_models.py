@@ -114,6 +114,20 @@ def get_mrbayes_models():
         model_list.append("%s+I+G" %(model))
     return model_list
 
+def get_beast_models():
+    '''
+    Return a list of all models implemented in BEAST v1.7.2.
+    '''
+    beast_base_models = ["K80", "TrNef", "SYM", "HKY", "TrN", "GTR"]
+    model_list = []
+    for model in beast_base_models:
+        model_list.append(model)
+        model_list.append("%s+I"   %(model))
+        model_list.append("%s+G"   %(model))
+        model_list.append("%s+I+G" %(model))
+    return model_list
+
+
 @memoize
 def get_raxml_models():
     '''

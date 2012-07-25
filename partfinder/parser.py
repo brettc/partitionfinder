@@ -95,7 +95,7 @@ class Parser(object):
         modellist = delimitedList(MODELNAME)
         modeldef = Keyword("models") + EQUALS + Group(
             (
-            CaselessKeyword("all") | CaselessKeyword("mrbayes") | CaselessKeyword("raxml") | CaselessKeyword("all_protein")
+            CaselessKeyword("all") | CaselessKeyword("mrbayes") | CaselessKeyword("raxml") | CaselessKeyword("beast") | CaselessKeyword("all_protein")
             )("predefined") | 
             Group(modellist)("userlist")) + SEMICOLON
         modeldef.setParseAction(self.set_models)
@@ -191,6 +191,10 @@ class Parser(object):
             elif modsgroup.lower() == "mrbayes":
                 mrbayes_mods = set(phyml_models.get_mrbayes_models())
                 self.cfg.models = list(mrbayes_mods)
+                DNA_mods = DNA_mods + 1
+            elif modsgroup.lower() == "beast":
+                beast_mods = set(phyml_models.get_beast_models())
+                self.cfg.models = list(beast_mods)
                 DNA_mods = DNA_mods + 1
             elif modsgroup.lower() == "raxml":
                 self.cfg.models = phyml_models.get_raxml_models()
