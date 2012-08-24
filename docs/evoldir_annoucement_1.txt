@@ -1,0 +1,29 @@
+Dear all,
+
+We're pleased to announce the release of PartitionFinder v1.0.1, a program for the combined selection of partitioning schemes and models of molecular evolution for phylogenetic analyses.
+
+PartitionFinder automatically and objectively finds best-fit partitioning schemes for DNA and protein alignments, and also does all of the model selection into the bargain. It means you no longer have to spend a long time evaluating partitioning schemes and running model selection programs before you can run your phylogenetic analyses. Detailed instructions on installing and using PartitionFinder are provided in the manual. PartitionFinder is free and open source. It works on Windows, Mac, and Linux. 
+
+You can download PartitionFinder from here: 
+
+www.robertlanfear.com/partitionfinder
+
+The website also has links to the manual, FAQs, a tutorial, and a google group for questions.
+
+A paper describing the program came out earlier this year in MBE:
+http://mbe.oxfordjournals.org/content/29/6/1695
+
+PartitionFinder can be used for the following:
+
+    * Find best-fit partitioning schemes for DNA and protein datasets, given a set of starting partitions
+    * Calculate the AIC, AICc and BIC of any given partitioning scheme for any given dataset
+    * Calculate best fit models of molecular evolution for partitioned or unpartitioned datasets
+    * Compare all the usual models of molecular evolution for DNA and protein alignments
+    
+We are actively working on the program, so please do get in touch if you have questions, suggestions, or comments.
+
+Yours
+
+Rob Lanfear
+
+rob.lanfear@anu.edu.au
