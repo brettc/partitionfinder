@@ -143,6 +143,7 @@ class Configuration(object):
         handler.setLevel(logging.DEBUG)
         logging.getLogger("").addHandler(handler)
         logging.getLogger("analysis").addHandler(handler)
+        #logging.getLogger("alignment").addHandler(handler)
 
     def load(self, config_path):
         """We get the parser to construct the configuration"""
