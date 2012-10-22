@@ -20,7 +20,7 @@ log = logging.getLogger("config")
 
 import os, fnmatch
 import cPickle as pickle
-import scheme, subset, partition, parser, util 
+import scheme, subset, partition, parser, util
 
 class ConfigurationError(util.PartitionFinderError):
     pass
@@ -100,8 +100,8 @@ class Configuration(object):
         #check that user didn't enter a file instead of a folder
         # if os.path.isfile(pth):
             # log.error("The second argument of the commandline currently points to a file, but it should point to the folder that contains the alignment and .cfg files, please check.")
-            # raise ConfigurationError            
-        
+            # raise ConfigurationError
+
         self.set_base_path(folder)
 
         # From now on we refer to relative paths
@@ -144,6 +144,7 @@ class Configuration(object):
         logging.getLogger("").addHandler(handler)
         logging.getLogger("analysis").addHandler(handler)
         logging.getLogger("subset").addHandler(handler)
+        #logging.getLogger("alignment").addHandler(handler)
 
     def load(self, config_path):
         """We get the parser to construct the configuration"""
@@ -152,7 +153,7 @@ class Configuration(object):
         self.config_path = config_path
         p = parser.Parser(self)
         p.parse_file(config_path)
-            
+
     def set_base_path(self, base_path):
         self.full_base_path = os.path.abspath(base_path)
         log.info("Setting working folder to: '%s'", self.full_base_path)
@@ -172,8 +173,8 @@ class Configuration(object):
         self.alignment = align
 
     def set_option(self, option, value):
-    
-        #make everything lowercase, this makes life easier for us    
+
+        #make everything lowercase, this makes life easier for us
         value = value.lower()
 
         if option not in self.options:
@@ -185,7 +186,7 @@ class Configuration(object):
         valid = [x.lower() for x in self.options[option]]
         if value not in valid:
             log.error("'%s' is not a valid option for '%s'" % (value, option))
-            log.info("The only valid options for '%s' are: %s" % 
+            log.info("The only valid options for '%s' are: %s" %
                      (option, "'%s'" %("', '".join(self.options[option]))))
             raise ConfigurationError
 
@@ -206,22 +207,22 @@ class Configuration(object):
                                                         self.user_tree)
             log.info("Looking for tree file '%s'...", self.user_tree_topology_path)
             util.check_file_exists(self.user_tree_topology_path)
-            
+
 
     def check_for_old_config(self):
         """Check whether the analysis dictated by cfg has been run before, and if the config has changed
         in any way that would make re-running it invalid"""
         #the important stuff in our analysis, that can't change if we want to re-use old subsets
         if self.user_tree is None:
-            topology = "" 
+            topology = ""
         else:
             topology = open(self.user_tree_topology_path).read()
 
-        cfg_list = [self.alignment, 
+        cfg_list = [self.alignment,
                     self.branchlengths,
                     self.partitions.partitions,
                     topology]
-    
+
         #we need to know if there's anything in the subsets folder
         subset_path = os.path.join(self.output_path, 'subsets')
         has_subsets = False
@@ -230,7 +231,7 @@ class Configuration(object):
                 if fnmatch.fnmatch(file, '*.bin'):
                     has_subsets=True
                     break
-    
+
         #we also need to know if there's an old conifg file saved
         cfg_dir = os.path.join(self.output_path, 'cfg')
         old_cfg_path = os.path.join(cfg_dir, 'oldcfg.bin')
@@ -238,7 +239,7 @@ class Configuration(object):
             has_config = True
         else:
             has_config = False
-    
+
         if has_subsets==False:
             #we have no subsets so can't screw anything up, just copy the new cfg file settings, overwrite anything else
             if not os.path.exists(cfg_dir):
@@ -248,7 +249,7 @@ class Configuration(object):
             pickle.dump(cfg_list, f, -1)
             f.close()
             return 0
-    
+
         else: #there are subsets
             if has_config==False:
                 log.error("There are subsets stored, but PartitionFinder can't determine where they are from")
@@ -261,12 +262,12 @@ class Configuration(object):
                 old_cfg = pickle.load(f)
                 f.close()
                 fail = []
-                
+
                 if not old_cfg[0]==cfg_list[0]:
                     fail.append("alignment")
                 if not old_cfg[1]==cfg_list[1]:
                     fail.append("branchlengths")
-                
+
                 old_parts = set([str(part) for part in old_cfg[2]])
                 new_parts = set([str(part) for part in cfg_list[2]])
                 if len(old_parts.difference(new_parts))>0:
@@ -274,7 +275,7 @@ class Configuration(object):
 
                 if not old_cfg[3]==cfg_list[3]:
                     fail.append("user_tree_topology")
-                
+
                 if len(fail)>0:
                     log.error("There are subsets stored, but PartitionFinder has detected that these were run using a different .cfg setup")
                     log.error("The following settings in the new .cfg file are incompatible with the previous analysis: %s" %(', '.join(fail)))
@@ -282,4 +283,4 @@ class Configuration(object):
                     log.info("To run this analysis without deleting the previous analysis, please place your alignment and .cfg in a new folder and try again")
                     raise ConfigurationError
 
-    
+

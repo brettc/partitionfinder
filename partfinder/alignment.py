@@ -216,6 +216,7 @@ class SubsetAlignment(Alignment):
 
         #let's do a basic check to make sure that the specified sites aren't > alignment length
         site_max = max(subset.columns)
+        log.debug("Max site in data_blocks: %d; max site in alignment: %d" %(site_max, source.sequence_len))
         if site_max>source.sequence_len:
             log.error("Site %d is specified in [data_blocks], but the alignment only has %d sites. Please check." %(site_max, source.sequence_len)) 
             raise AlignmentError
