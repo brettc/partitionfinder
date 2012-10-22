@@ -220,12 +220,13 @@ def make_output_path(sub_path, model):
     return stats_path, tree_path
 
 class PhymlResult(object):
-    def __init__(self, lnl, seconds):
+    def __init__(self, lnl, tree_size, seconds):
         self.lnl = lnl
+        self.tree_size = tree_size
         self.seconds = seconds
 
     def __str__(self):
-        return "PhymlResult(lnl:%s, secs:%s)" % (self.lnl, self.seconds) 
+        return "PhymlResult(lnl:%s, tree_size:%s, secs:%s)" % (self.lnl, self.tree_size, self.seconds) 
 
 class Parser(object):
     def __init__(self):
@@ -235,12 +236,16 @@ class Parser(object):
         OB = Suppress("(")
         CB = Suppress(")")
         LNL_LABEL = Literal("Log-likelihood:")
+        TREE_SIZE_LABEL = Literal("Tree size:")
         TIME_LABEL = Literal("Time used:")
         HMS = Word(nums + "hms") # A bit rough...
+        
 
         lnl = (LNL_LABEL + FLOAT("lnl"))
+        tree_size = (TREE_SIZE_LABEL + FLOAT("tree_size"))
         time = (TIME_LABEL + HMS("time") + OB + INTEGER("seconds") + Suppress("seconds") + CB)
 
+        
         # Shorthand...
         def nextbit(label, val):
             return Suppress(SkipTo(label)) + val
@@ -248,6 +253,7 @@ class Parser(object):
         # Just look for these things
         self.root_parser = \
                 nextbit(LNL_LABEL, lnl) +\
+                nextbit(TREE_SIZE_LABEL, tree_size) +\
                 nextbit(TIME_LABEL, time)
 
     def parse(self, text):
@@ -258,7 +264,12 @@ class Parser(object):
             log.error(str(p))
             raise PhymlError
 
-        return PhymlResult(lnl=tokens.lnl, seconds=tokens.seconds)
+        log.debug("Parsed LNL:  %s" %tokens.lnl)
+        log.debug("Parsed RATE: %s" %tokens.tree_size)
+        log.debug("Parsed TIME: %s" %tokens.time)
+
+
+        return PhymlResult(lnl=tokens.lnl, tree_size=tokens.tree_size, seconds=tokens.seconds)
 
 # Stateless, so safe for use across threads. HMMMM, REALLY?
 the_parser = Parser()
