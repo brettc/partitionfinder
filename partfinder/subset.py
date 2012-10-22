@@ -16,7 +16,8 @@
 #agree with those licences and conditions as well.
 
 import logging
-log = logging.getLogger("subset")
+log = logging.getLogger("analysis")
+
 import os
 import weakref
 
@@ -125,7 +126,7 @@ class Subset(object):
     def add_model_result(self, model, result):
         result.model = model
         result.params = phyml_models.get_num_params(model)
-
+    
         K = float(result.params)
         n = float(len(self.columnset))
         lnL = float(result.lnl)
@@ -146,7 +147,10 @@ class Subset(object):
         result.bic  = (-2.0*lnL) + (K * logarithm(n))
         result.aicc = (-2.0*lnL) + ((2.0*K)*(n/(n-K-1.0)))
 
-        log.debug("Adding model to subset. Model: %s, params %d" %(model, K))
+        #this is the rate per site of the model - used in some clustering analyses
+        result.site_rate = float(result.tree_size)/n
+
+        log.debug("Adding model to subset. Model: %s, params %d, site_rate %f" %(model, K, result.site_rate))
 
         if model in self.results:
             log.error("Can't add model result %s, it already exists in %s",
@@ -174,7 +178,8 @@ class Subset(object):
                 self.best_info_score = info_score
                 self.best_model = result.model
                 self.best_params = result.params
-        log.debug("Model Selection. best model: %s, params: %d" %(self.best_model, self.best_params))
+                self.best_site_rate = result.site_rate
+        log.debug("Model Selection. best model: %s, params: %d, site_rate: %f" %(self.best_model, self.best_params, self.best_site_rate))
 
     # These are the fields that get stored for quick loading
     _cache_fields = "alignment_path results".split()
