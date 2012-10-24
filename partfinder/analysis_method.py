@@ -22,6 +22,71 @@ class UserAnalysis(Analysis):
             log.error("Search set to 'user', but no user schemes detected in .cfg file. Please check.")
             raise AnalysisError
 
+class ClusteringAnalysis(Analysis):
+    """This analysis uses model parameters to guess at similar partitions, then just joins them together
+        this is much less accurate than other methods, but a LOT quicker - it runs in order
+        N time (where N is the number of initial datablocks), whereas the greedy algorithm is
+        still N squared.
+    """
+    
+    def do_analysis(self):
+        models = self.cfg.models
+        model_selection = self.cfg.model_selection
+        partnum = len(self.cfg.partitions)
+
+        #start with the scheme with all subsets separate
+        #analyse that scheme
+        #clear any schemes that are currently loaded
+        # TODO Not sure we need this...
+        self.cfg.schemes.clear_schemes()        
+                
+        #start with the most partitioned scheme
+        start_description = range(len(self.cfg.partitions))
+        start_scheme = scheme.create_scheme(self.cfg, 1, start_description)
+        log.info("Analysing starting scheme (scheme %s)" % start_scheme.name)
+        result = self.analyse_scheme(start_scheme, models)
+        
+        def get_score(my_result):
+            #TODO: this is bad. Should use self.cfg.model_selection, or write
+            #a new model_selection for scheme.py
+            if model_selection=="aic":
+                score=my_result.aic
+            elif model_selection=="aicc":
+                score=my_result.aicc
+            elif model_selection=="bic":
+                score=my_result.bic
+            else:
+                log.error("Unrecognised model_selection variable '%s', please check" %(score))
+                raise AnalysisError
+            return score
+
+        best_result = result
+        best_score  = get_score(result)
+                         
+        step = 1
+        cur_s = 2
+
+        #now we try out all clusterings of the first scheme, to see if we can find a better one
+        while True:
+            log.info("***Greedy algorithm step %d***" % step)
+                                        
+            #calculate the subsets which are most similar
+            #e.g. combined rank ordering of euclidean distances
+            #could combine average site-rates, q matrices, and frequencies
+            diffs = 
+            for s in result.subsets:
+                
+
+
+            #lump together the two most similar subsets
+            
+            #define new scheme based on that lumping
+            #analyse that scheme
+            
+        #now pick the best scheme from the N schemes we've analysed
+        
+        #report results
+                
 class AllAnalysis(Analysis):
 
     def do_analysis(self):
