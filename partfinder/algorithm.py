@@ -74,4 +74,48 @@ def lumpings(scheme):
 
 	return lumpings
 
+def euclidean_distance(list1, list2):
+	dists = [abs(list1[i]-list2[i]) for i in range(len(list1))]
+	return sum(dists)
+
+
+def getLevels(cluster, levs):
+	"""
+	Returns the levels of the cluster as list.
+	"""
+	levs.append(cluster.level())
+	print levs
+
+	left  = cluster.items()[0]
+	right = cluster.items()[1]
+	if isinstance(left, Cluster):
+		first = getLevels(left, levs)
+	else:
+		first = left
+	if isinstance(right, Cluster):
+		second = getLevels(right, levs)
+	else:
+		second = right
+	return levs
+
+def levels_to_scheme(levels, namedict):
+	"""
+	take the return from Cluster.getlevel
+	and return it as a PF scheme description
+	"""
+
+	levels = str(levels)
+	
+	for key in namedict.keys():
+		old = str(namedict[key])
+		new = key
+		levels = levels.replace(old, new)
+		
+	levels = levels.replace ("], [", ") (")
+	levels = levels.replace ("[", "(")
+	levels = levels.replace ("]", ")")
+	levels = levels.replace ("))", ")")
+	levels = levels.replace ("((", "(")
+	
+	return levels
 
