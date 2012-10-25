@@ -181,6 +181,15 @@ class Subset(object):
                 self.best_site_rate = result.site_rate
         log.debug("Model Selection. best model: %s, params: %d, site_rate: %f" %(self.best_model, self.best_params, self.best_site_rate))
 
+    def get_param_values(self):
+        param_values =[]
+        
+        #add any parameters you want to this list
+        param_values.append(self.best_site_rate)
+        
+        return param_values
+        
+
     # These are the fields that get stored for quick loading
     _cache_fields = "alignment_path results".split()
     def write_cache(self, path):
