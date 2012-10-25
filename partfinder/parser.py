@@ -61,7 +61,7 @@ class Parser(object):
         self.options = {
             'branchlengths': ['linked', 'unlinked'],
             'model_selection': ['AIC', 'AICc', 'BIC'],
-            'search': ['all', 'user', 'greedy']
+            'search': ['all', 'user', 'greedy', 'clustering']
             }
 
     def init_grammar(self):

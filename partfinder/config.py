@@ -32,7 +32,7 @@ class Configuration(object):
     options = {
         'branchlengths': ['linked', 'unlinked'],
         'model_selection': ['aic', 'aicc', 'bic'],
-        'search': ['all', 'user', 'greedy']
+        'search': ['all', 'user', 'greedy', 'clustering']
         }
 
     def __init__(self, datatype="DNA"):
