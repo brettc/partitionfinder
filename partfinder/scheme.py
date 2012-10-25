@@ -17,6 +17,8 @@
 
 import logging
 log = logging.getLogger("scheme")
+from cluster import *
+from algorithm import *
 
 from math import log as logarithm
 
@@ -139,7 +141,49 @@ class Scheme(object):
         ss = ', '.join([str(s) for s in self.subsets])
         return "Scheme(%s, %s)" % (self.name, ss)
 
+    def get_clustering(self, cfg, method, scheme_name):
+        """Ask a scheme which two subsets are most similar
+        we return a scheme that has the closest subsets joined together
+        """
+        import subset
+    
+        #first we get a dictionary of subset parameters, keyed by subset name
+        param_dict = {}
+        for s in self.subsets:
+            param_dict[s.full_name] = s.get_param_values()
 
+        if method=='hierarchical':                
+            #perform hierarchical clustering with means of the parameters
+            cl_H = HierarchicalClustering(param_dict.values(), euclidean_distance)
+            cl_H.setLinkageMethod("uclus")
+            cl_H.cluster()
+            
+            #now we get all the levels and order them
+            d = cl_H.data[0]
+            levs = getLevels(d, [])
+            levs.sort()
+        
+            #and now we use the first level to get the two most similar subsets
+            newscheme_description = levels_to_scheme(cl_H.getlevel(levs[0]), param_dict)
+
+        print "yo"
+        print newscheme_description
+        created_subsets = []
+        for subset_names in newscheme_description:
+            #some names look like this "Gene1_pos1-Gene2_pos2", so we need to extract the part names
+            partition_names = []
+            for x in subset_names:            
+                [partition_names.append(y) for y in x.split('-')]
+            print partition_names
+            sub = subset.Subset(*tuple([cfg.partitions.parts_by_name[i] for i in partition_names]))            
+            print sub
+            created_subsets.append(sub)
+    
+        scheme = (Scheme(cfg, str(scheme_name), *tuple(created_subsets)))
+        print scheme
+        return scheme
+        
+        
 class SchemeSet(object):
     """All the schemes added, and also a list of all unique subsets"""
     def __init__(self):
@@ -191,15 +235,24 @@ def create_scheme(cfg, scheme_name, scheme_description):
     for sub_index, grouping in enumerate(scheme_description):
         insub = subs.setdefault(grouping, [])
         insub.append(sub_index)
+        
+    print scheme_description
+    print subs
+    print cfg.partitions.parts_by_number
+    print cfg.partitions.parts_by_name
+    
     # We now have what we need to create a subset. Each entry will have a
     # set of values which are the index for the partition
     created_subsets = []
     for sub_indexes in subs.values():
         sub = subset.Subset(*tuple([cfg.partitions[i] for i in sub_indexes]))
+        print sub
         created_subsets.append(sub)
 
     new_scheme = Scheme(cfg, str(scheme_name), *tuple(created_subsets))
-		
+	
+    print new_scheme
+	
     return new_scheme
 
 def model_to_scheme(model, scheme_name, cfg):
@@ -260,3 +313,4 @@ def generate_all_schemes(cfg):
         scheme_name += 1
 		
     return scheme_list
+
