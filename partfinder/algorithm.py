@@ -15,6 +15,8 @@
 #own licenses and conditions, using PartitionFinder implies that you
 #agree with those licences and conditions as well.
 
+from cluster import *
+
 def k_subsets_i(n, k):
     '''
 	from http://code.activestate.com/recipes/500268-all-k-subsets-from-an-n-set/
@@ -99,23 +101,18 @@ def getLevels(cluster, levs):
 	return levs
 
 def levels_to_scheme(levels, namedict):
-	"""
-	take the return from Cluster.getlevel
-	and return it as a PF scheme description
-	"""
+    """
+    take the return from Cluster.getlevel
+    and return it as a list of partition names description
+    """
 
-	levels = str(levels)
+    levels = str(levels)
 	
-	for key in namedict.keys():
-		old = str(namedict[key])
-		new = key
-		levels = levels.replace(old, new)
-		
-	levels = levels.replace ("], [", ") (")
-	levels = levels.replace ("[", "(")
-	levels = levels.replace ("]", ")")
-	levels = levels.replace ("))", ")")
-	levels = levels.replace ("((", "(")
+    for key in namedict.keys():
+        old = str(namedict[key])
+        new = '"%s"' %key
+        levels = levels.replace(old, new)
 	
-	return levels
+    levels = eval(levels)		
+    return levels
 
