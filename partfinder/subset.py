@@ -148,7 +148,7 @@ class Subset(object):
         result.aicc = (-2.0*lnL) + ((2.0*K)*(n/(n-K-1.0)))
 
         #this is the rate per site of the model - used in some clustering analyses
-        result.site_rate = float(result.tree_size)/n
+        result.site_rate = float(result.tree_size)
 
         log.debug("Adding model to subset. Model: %s, params %d, site_rate %f" %(model, K, result.site_rate))
 
