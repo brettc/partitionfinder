@@ -292,14 +292,13 @@ spp4     CTCGAGGTGAAAAATGGTGATGCT------CGTCTGGTGCTGGAAGTTCAGCAGCAGCTGGGTGGTGGCGT
     tmp = tempfile.mkdtemp()
     pth = os.path.join(tmp, 'test.phy')
     alignment.write(pth)
-    tree_path = make_topology(pth, "DNA")
+    tree_path = make_tree(pth)
     log.info("Tree is %s:", open(tree_path).read())
 
     for model in phyml_models.get_all_models():
         log.info("Analysing using model %s:" % model)
-        analyse(model, pth, tree_path, "linked")
-        stats_pth, tree_pth = make_output_path(pth, model)
-        output = open(stats_pth, 'rb').read()
+        out_pth = analyse(model, pth, tree_path)
+        output = open(out_pth, 'rb').read()
         res = parse(output)
         log.info("Result is %s", res)
 
