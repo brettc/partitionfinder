@@ -90,7 +90,7 @@ def main(name, version, datatype):
         action="store_true", dest="show_python_exceptions",
         help="If errors occur, print the python exceptions")
     parser.add_option(
-        "--save-phlyofiles",
+        "--save-phylofiles",
         action="store_true", dest="save_phylofiles",
         help="save all of the phyml or raxml output. This can take a lot of space(!)")
     parser.add_option(
