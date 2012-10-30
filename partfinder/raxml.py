@@ -190,12 +190,13 @@ def make_output_path(alignment_path, model):
     return stats_path, tree_path
 
 class raxmlResult(object):
-    def __init__(self, lnl, seconds):
+    def __init__(self, lnl, tree_size, seconds):
         self.lnl = lnl
         self.seconds = seconds
+        self.tree_size = tree_size
 
     def __str__(self):
-        return "RAxMLResult(lnl:%s, secs:%s)" % (self.lnl, self.seconds)
+        return "raxmlResult(lnl:%s, tree_size:%s, secs:%s)" % (self.lnl, self.tree_size, self.seconds)
 
 class Parser(object):
     def __init__(self):
@@ -211,10 +212,11 @@ class Parser(object):
 
         LNL_LABEL = (LNL_LABEL_1|LNL_LABEL_2)
         TIME_LABEL = (TIME_LABEL_1|TIME_LABEL_2)
-
+        TREE_SIZE_LABEL = Literal("Tree-Length:")
 
         lnl = (LNL_LABEL + FLOAT("lnl"))
         seconds = (TIME_LABEL + FLOAT("seconds"))
+        tree_size = (TREE_SIZE_LABEL + FLOAT("tree_size"))
 
         # Shorthand...
         def nextbit(label, val):
@@ -222,8 +224,9 @@ class Parser(object):
 
         # Just look for these things
         self.root_parser = \
+                nextbit(TIME_LABEL, seconds) +\
                 nextbit(LNL_LABEL, lnl) +\
-                nextbit(TIME_LABEL, seconds)
+                nextbit(TREE_SIZE_LABEL, tree_size)
 
     def parse(self, text):
         log.debug("Parsing raxml output...")
@@ -233,7 +236,12 @@ class Parser(object):
             log.error(str(p))
             raise RaxmlError
 
-        return raxmlResult(lnl=tokens.lnl, seconds=tokens.seconds)
+        log.debug("Parsed LNL:      %s" %tokens.lnl)
+        log.debug("Parsed TREESIZE: %s" %tokens.tree_size)
+        log.debug("Parsed TIME:     %s" %tokens.seconds)
+            
+
+        return raxmlResult(lnl=tokens.lnl, tree_size=tokens.tree_size, seconds=tokens.seconds)
 
 # Stateless, so safe for use across threads. HMMMM, REALLY?
 the_parser = Parser()
