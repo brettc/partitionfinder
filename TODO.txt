@@ -8,6 +8,11 @@ TODO
 * add --additional_cmd_line option so that we can pass e.g. precision controllers to PhyML and RAxML
   and we could also then use the RAxML Pthreads version, and tell it how many processors to use.
   helpful for massive datasets on desktops I suspect.
+* when we fail to load output from RAxML, we need to go and delete ALL files that contain the 
+  run_id in question. Right now we're not doing this properly so running stuff again is failing...
+* if we're not saving phylofiles, we need to do a better job deleting RAxML files more generally, right now 
+  stuff is stacking up in the phyml folder. Best way to do that is as above, and maybe we should just add a function
+  into phyml.py and raxml.py, something like delete_analysis_files(run_ID). That way we can keep things in check.
 
 DONE
 
