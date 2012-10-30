@@ -3,7 +3,11 @@ TODO
 * merge phyml_models.py and raxml_models.py into one, have a 'model' class, make models
    know to which lists they belong, and let them return their own command lines when asked
 * change phyml folder to phylofiles folder
-* fix model definitions...
+* add --raxml to manual, include all the model definitions
+* add 'clustering' search option to the manual
+* add --additional_cmd_line option so that we can pass e.g. precision controllers to PhyML and RAxML
+  and we could also then use the RAxML Pthreads version, and tell it how many processors to use.
+  helpful for massive datasets on desktops I suspect.
 
 DONE
 
