@@ -23,13 +23,13 @@ log = logging.getLogger("analysis")
 import os, shutil
 
 from alignment import Alignment, SubsetAlignment
-import phyml
+import phyml, phyml_models
+import raxml, raxml_models
 import threadpool
 import scheme
 import subset
 import util
 import results
-from phyml_models import get_model_difficulty
 
 from util import PartitionFinderError
 class AnalysisError(PartitionFinderError):
@@ -39,16 +39,32 @@ class Analysis(object):
     """Performs the analysis and collects the results"""
     def __init__(self, cfg, rpt, 
                  force_restart=False, 
-                 save_phyml=False,
+                 save_phylofiles=False,
+                 phylogeny_program = 'phyml',
                  threads=-1):
         cfg.validate()
 
         self.cfg = cfg
         self.rpt = rpt
         self.threads = threads
-        self.save_phyml = save_phyml
+        self.save_phylofiles = save_phylofiles
         self.results = results.AnalysisResults()
+    
 
+        #TODO this is very ugly, it would liek to be prettier
+        if phylogeny_program=='phyml' or phylogeny_program==-1:
+            self.processor = phyml
+            self.models = phyml_models
+            self.get_model_difficulty = phyml_models.get_model_difficulty
+        elif phylogeny_program=='raxml':
+            self.processor = raxml
+            self.models = raxml_models
+            self.get_model_difficulty = raxml_models.get_model_difficulty
+        else:
+            log.error("Unrecognised option %s for phylogeny program, only PhyML and RAxML are "
+                      "currently supported" % phylogeny_program)
+            raise AnalysisError
+            
         log.info("Beginning Analysis")
         if force_restart:
             # Remove everything
@@ -131,7 +147,7 @@ class Analysis(object):
         self.alignment_path = os.path.join(self.cfg.start_tree_path, 'source.phy')
 
         # Now check for the tree
-        tree_path = phyml.make_tree_path(self.filtered_alignment_path)
+        tree_path = self.processor.make_tree_path(self.filtered_alignment_path)
         if not os.path.exists(tree_path):
             # If we have a user tree, then use that, otherwise, create a topology
             if user_path != None and user_path != "":
@@ -139,15 +155,12 @@ class Analysis(object):
                 log.info("Using user supplied topology at %s", user_path)
                 topology_path = os.path.join(self.cfg.start_tree_path,
                                              'user_topology.phy')
-                phyml.dupfile(user_path, topology_path)
+                self.processor.dupfile(user_path, topology_path)
             else:
-                topology_path = phyml.make_topology(self.filtered_alignment_path, self.cfg.datatype)
+                topology_path = self.processor.make_topology(self.filtered_alignment_path, self.cfg.datatype)
 
             # Now estimate branch lengths
-            if self.cfg.datatype == "DNA":
-                tree_path = phyml.make_branch_lengths(self.filtered_alignment_path, topology_path)
-            elif self.cfg.datatype == "protein":
-                tree_path = phyml.make_branch_lengths_protein(self.filtered_alignment_path, topology_path)
+            tree_path = self.processor.make_branch_lengths(self.filtered_alignment_path, topology_path, self.cfg.datatype)
                 
         self.tree_path = tree_path
         log.info("Starting tree with branch lengths is here: %s", self.tree_path) 
@@ -235,7 +248,7 @@ class Analysis(object):
         #for efficiency, we rank the models by their difficulty - most difficult first
         difficulty = []        
         for m in models_to_do:
-            difficulty.append(get_model_difficulty(m))
+            difficulty.append(self.get_model_difficulty(m))
         
         #hat tip to http://scienceoss.com/sort-one-list-by-another-list/
         difficulty_and_m = zip(difficulty, models_to_do)
@@ -245,7 +258,7 @@ class Analysis(object):
         log.debug("About to analyse these models, in this order: %s", sorted_models_to_do)
         for m in sorted_models_to_do:
             #a_path, out_path = phyml.make_analysis_path(self.cfg.phyml_path, sub.name, m)
-            tasks.append((phyml.analyse, 
+            tasks.append((self.processor.analyse, 
                           (m, sub_path, self.tree_path, self.cfg.branchlengths)))
 
         if self.threads == 1:
@@ -276,25 +289,28 @@ class Analysis(object):
         models_done = []
         for m in list(models_to_do):
             # sub.alignment_path
-            stats_path, tree_path = phyml.make_output_path(sub.alignment_path, m)
+            stats_path, tree_path = self.processor.make_output_path(sub.alignment_path, m)
             if os.path.exists(stats_path):
                 sub_output = open(stats_path, 'rb').read()
                 # Annotate with the parameters of the model
                 try:
-                    result = phyml.parse(sub_output)
-                    sub.add_model_result(m, result)
+                    result = self.processor.parse(sub_output)
+                    sub.add_model_result(m, result, self.models)
                     # Remove the current model from remaining ones
                     models_to_do.remove(m)
                     
                     # Just used for below
                     models_done.append(m)
-                    if self.save_phyml:
+                    if self.save_phylofiles:
                         pass
                     else:
-                        os.remove(stats_path)
-                        os.remove(tree_path)
+                        #we have the ifs because raxml doesn't output a treefile in some cases
+                        if os.path.isfile(stats_path):
+                            os.remove(stats_path)
+                        if os.path.isfile(tree_path):
+                            os.remove(tree_path)
 
-                except phyml.PhymlError:
+                except self.processor.PhylogenyProgramError:
                     log.warning("Failed loading parse output from %s."
                               "Output maybe corrupted. I'll run it again.",
                               stats_path)

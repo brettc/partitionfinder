@@ -35,7 +35,7 @@ class Configuration(object):
         'search': ['all', 'user', 'greedy', 'clustering']
         }
 
-    def __init__(self, datatype="DNA"):
+    def __init__(self, datatype="DNA", phylogeny_program='phyml'):
         self.partitions = partition.PartitionSet()
         self.schemes = scheme.SchemeSet()
 
@@ -49,6 +49,13 @@ class Configuration(object):
 
         log.info("Setting datatype to '%s'", datatype)
         self.datatype = datatype
+
+        if phylogeny_program != "phyml" and phylogeny_program != "raxml":
+            log.error("Phylogeny program must be 'phyml' or 'raxml'")
+            raise ConfigurationError
+
+        log.info("Setting phylogeny program to '%s'", phylogeny_program)
+        self.phylogeny_program = phylogeny_program
 
 
         # Set the defaults into the class. These can be reset by calling
@@ -144,7 +151,7 @@ class Configuration(object):
         logging.getLogger("").addHandler(handler)
         logging.getLogger("analysis").addHandler(handler)
         logging.getLogger("subset").addHandler(handler)
-        #logging.getLogger("alignment").addHandler(handler)
+        logging.getLogger("alignment").addHandler(handler)
 
     def load(self, config_path):
         """We get the parser to construct the configuration"""
@@ -221,6 +228,7 @@ class Configuration(object):
         cfg_list = [self.alignment,
                     self.branchlengths,
                     self.partitions.partitions,
+                    self.phylogeny_program,
                     topology]
 
         #we need to know if there's anything in the subsets folder
@@ -263,6 +271,15 @@ class Configuration(object):
                 f.close()
                 fail = []
 
+                if len(old_cfg) != len(cfg_list):
+                    log.error("Your old configuration doesn't match with your new one")
+                    log.error("The most common cause of this error is trying to run a half-finished analysis"
+                              " but switching PartitionFinder versions half way through")
+                    log.error("The solution is to either go back to the same version of PartitionFinder"
+                              " you used for the initial analysis, or to re-run the analysis using the "
+                              "--force-restart option at the command line. Note that this will delete "
+                              "all previous analyses in the '/analysis' folder")
+
                 if not old_cfg[0]==cfg_list[0]:
                     fail.append("alignment")
                 if not old_cfg[1]==cfg_list[1]:
@@ -274,6 +291,9 @@ class Configuration(object):
                     fail.append("[data_blocks]")
 
                 if not old_cfg[3]==cfg_list[3]:
+                    fail.append("phylogeny_program (the --raxml commandline option)")
+
+                if not old_cfg[4]==cfg_list[4]:
                     fail.append("user_tree_topology")
 
                 if len(fail)>0:

@@ -71,7 +71,7 @@ def memoize(f):
     return memf
 
 @memoize
-def get_all_models():
+def get_all_dna_models():
     '''
     Return a list of all implemented _base_models
     '''

@@ -37,11 +37,11 @@ class SchemeResult(object):
 
         log.debug("Calculating number of parameters in scheme:")
         log.debug("Total parameters from subset models: %d" %(sum_subset_k))
-        
+
         if branchlengths == 'linked': #linked brlens - only one extra parameter per subset
             self.sum_k = sum_subset_k + (self.nsubs-1) + ((2*nseq)-3) #number of parameters in a scheme
             log.debug("Total parameters from brlens: %d" %((2*nseq) -3))
-            log.debug("Parameters from subset multipliers: %d" %(self.nsubs-1))        
+            log.debug("Parameters from subset multipliers: %d" %(self.nsubs-1))
 
         elif branchlengths == 'unlinked': #unlinked brlens - every subset has its own set of brlens
             self.sum_k = sum_subset_k + (self.nsubs*((2*nseq)-3)) #number of parameters in a scheme
@@ -51,35 +51,35 @@ class SchemeResult(object):
             # WTF?
             log.error("Unknown option for branchlengths: %s", branchlengths)
             raise AnalysisError
-        
+
         log.debug("Grand total parameters: %d" %(self.sum_k))
-        
+
         self.lnl = sum([s.best_lnl for s in sch])
         self.nsites = sum([len(s.columnset) for s in sch])
 
         K = float(self.sum_k)
         n = float(self.nsites)
-        lnL = float(self.lnl)		
+        lnL = float(self.lnl)
 
         log.debug("n: %d\tK: %d" %(n, K))
-   
+
         #here we put in a catch for small subsets, where n<K+2
         #if this happens, the AICc actually starts rewarding very small datasets, which is wrong
         #a simple but crude catch for this is just to never allow n to go below k+2
-        if n<(K+2): 
+        if n<(K+2):
             log.warning("Scheme '%s' has a very small"
                         " number of sites (%d) compared to the number of parameters"
                         " in the models that make up the subsets"
                         " This may give misleading AICc results, so please check carefully"
                         " if you are using the AICc for your analyses."
-                        " The results for this scheme are in the following file:" 
+                        " The results for this scheme are in the following file:"
                         " /analysis/schemes/%s.txt\n" % (sch.name, n, sch.name))
-            n = K+2 
+            n = K+2
 
         self.aic  = (-2.0*lnL) + (2.0*K)
         self.bic  = (-2.0*lnL) + (K * logarithm(n))
         self.aicc = (-2.0*lnL) + ((2.0*K)*(n/(n-K-1.0)))
-        
+
     def __repr__(self):
         return "SchemeResult<aic:%f, aicc:%f, bic:%f>" % (self.aic, self.aicc,
                                                           self.bic)
@@ -109,9 +109,9 @@ class Scheme(object):
 
         self.part_subsets = frozenset(part_subsets)
 
-        # Report the errors 
+        # Report the errors
         if duplicates:
-            log.error("Scheme '%s' contains duplicate partitions: %s", 
+            log.error("Scheme '%s' contains duplicate partitions: %s",
                       name, ', '.join(duplicates))
             raise SchemeError
 
@@ -122,14 +122,14 @@ class Scheme(object):
         # Do a set-difference to see what is missing...
         missing = pset.partitions - partitions
         if missing:
-            log.error("Scheme '%s' is missing partitions: %s", 
+            log.error("Scheme '%s' is missing partitions: %s",
                       name, ', '.join([str(p) for p in missing]))
             raise SchemeError
 
         # This locks down whether new partitions can be created.
         if not cfg.partitions.finalised:
             cfg.partitions.finalise()
-        
+
         # Now add to all_schemes -- more possibility of errors, see below
         cfg.schemes.add_scheme(self)
         log.debug("Created %s", self)
@@ -146,23 +146,23 @@ class Scheme(object):
         we return a scheme that has the closest subsets joined together
         """
         import subset
-    
+
         #first we get a dictionary of subset parameters, keyed by subset name
         param_dict = {}
         for s in self.subsets:
             param_dict[s.full_name] = s.get_param_values()
 
-        if method=='hierarchical':                
+        if method=='hierarchical':
             #perform hierarchical clustering with means of the parameters
             cl_H = HierarchicalClustering(param_dict.values(), euclidean_distance)
             cl_H.setLinkageMethod("uclus")
             cl_H.cluster()
-            
+
             #now we get all the levels and order them
             d = cl_H.data[0]
             levs = getLevels(d, [])
             levs.sort()
-        
+
             #and now we use the first level to get the two most similar subsets
             newscheme_description = levels_to_scheme(cl_H.getlevel(levs[0]), param_dict)
 
@@ -172,18 +172,18 @@ class Scheme(object):
         for subset_names in newscheme_description:
             #some names look like this "Gene1_pos1-Gene2_pos2", so we need to extract the part names
             partition_names = []
-            for x in subset_names:            
+            for x in subset_names:
                 [partition_names.append(y) for y in x.split('-')]
             print partition_names
-            sub = subset.Subset(*tuple([cfg.partitions.parts_by_name[i] for i in partition_names]))            
+            sub = subset.Subset(*tuple([cfg.partitions.parts_by_name[i] for i in partition_names]))
             print sub
             created_subsets.append(sub)
-    
+
         scheme = (Scheme(cfg, str(scheme_name), *tuple(created_subsets)))
         print scheme
         return scheme
-        
-        
+
+
 class SchemeSet(object):
     """All the schemes added, and also a list of all unique subsets"""
     def __init__(self):
@@ -221,7 +221,7 @@ def create_scheme(cfg, scheme_name, scheme_description):
     """Generate a single scheme given a list of numbers e.g. [0,1,2,3,4,5,6,7]"""
     import subset
     import submodels
-    
+
     partnum = len(cfg.partitions) #total number of partitions defined by user
 
     #check that the correct number of items are in the list
@@ -235,12 +235,12 @@ def create_scheme(cfg, scheme_name, scheme_description):
     for sub_index, grouping in enumerate(scheme_description):
         insub = subs.setdefault(grouping, [])
         insub.append(sub_index)
-        
+
     print scheme_description
     print subs
     print cfg.partitions.parts_by_number
     print cfg.partitions.parts_by_name
-    
+
     # We now have what we need to create a subset. Each entry will have a
     # set of values which are the index for the partition
     created_subsets = []
@@ -250,15 +250,15 @@ def create_scheme(cfg, scheme_name, scheme_description):
         created_subsets.append(sub)
 
     new_scheme = Scheme(cfg, str(scheme_name), *tuple(created_subsets))
-	
+
     print new_scheme
-	
+
     return new_scheme
 
 def model_to_scheme(model, scheme_name, cfg):
 	"""Turn a model definition e.g. [0, 1, 2, 3, 4] into a scheme"""
 	import subset
-	
+
 	subs = {}
 	# We use the numbers returned to group the different subsets
 	for sub_index, grouping in enumerate(model):
@@ -272,7 +272,7 @@ def model_to_scheme(model, scheme_name, cfg):
 		created_subsets.append(sub)
 
 	scheme = (Scheme(cfg, str(scheme_name), *tuple(created_subsets)))
-	#log.info("Created scheme %d of %d" %(scheme_name, len(all_schemes)))	
+	#log.info("Created scheme %d of %d" %(scheme_name, len(all_schemes)))
 	return scheme
 
 def generate_all_schemes(cfg):
@@ -286,7 +286,7 @@ def generate_all_schemes(cfg):
     # if len(all_schemes) > 0:
         # log.error("Cannot generate schemes if some already exist!")
         # raise SchemeError
-    
+
     partnum = len(cfg.partitions) #total number of partitions defined by user
 
     # Now generate the pattern for this many partitions
@@ -311,6 +311,5 @@ def generate_all_schemes(cfg):
         #log.info("Created scheme %d of %d" %(scheme_name, len(all_schemes)))
 
         scheme_name += 1
-		
-    return scheme_list
 
+    return scheme_list

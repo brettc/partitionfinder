@@ -37,7 +37,7 @@ class AlignmentError(PartitionFinderError):
 
 class AlignmentParser(object):
     """Parses an alignment and returns species sequence tuples"""
-    
+
     # I think this covers it...
     BASES = Word(alphas + "?.-")
 
@@ -51,7 +51,7 @@ class AlignmentParser(object):
 
     def phylip_parser(self):
 
-        INTEGER = Word(nums) 
+        INTEGER = Word(nums)
         INTEGER.setParseAction(lambda x: int(x[0]))
 
         header = INTEGER("species_count") + INTEGER("sequence_length") +\
@@ -59,7 +59,7 @@ class AlignmentParser(object):
         header.setParseAction(self.set_header)
 
         sequence_name = Word(
-            alphas + nums + "!#$%&\'*+-./;<=>?@[\\]^_`{|}~", 
+            alphas + nums + "!#$%&\'*+-./;<=>?@[\\]^_`{|}~",
             max=100)
 
         # Take a copy and disallow line breaks in the bases
@@ -107,7 +107,7 @@ class AlignmentParser(object):
             log.error("A common cause of this error is having whitespace"
             ", i.e. spaces or tabs, in the species names. Please check this and remove"
             " all whitespace from species names, or replace them with e.g. underscores")
-                        
+
             raise AlignmentError
 
         # Check that all the sequences are equal length
@@ -130,7 +130,7 @@ class AlignmentParser(object):
 
         if self.species_count is not None:
             if len(self.sequences) != self.species_count:
-                log.error("Bad Alignment file: species count in header does not match" 
+                log.error("Bad Alignment file: species count in header does not match"
                 " number of sequences in file, please check")
                 raise AlignmentError
 
@@ -156,12 +156,12 @@ class Alignment(object):
         """
         species = {}
         sequence_len = None
-        for spec, seq in defs: 
+        for spec, seq in defs:
             # log.debug("Found Sequence for %s: %s...", spec, seq[:20])
             if spec in species:
                 log.error("Repeated species name '%s' is repeated "
                           "in alignment", spec)
-                raise AlignmentError 
+                raise AlignmentError
 
             # Assign it
             species[spec] = seq
@@ -173,7 +173,7 @@ class Alignment(object):
                     log.error("Sequence length of %s "
                               "differs from previous sequences", spec)
                     raise AlignmentError
-        log.debug("Found %d species with sequence length %d", 
+        log.debug("Found %d species with sequence length %d",
                   len(species), sequence_len)
 
         # Overwrite these
@@ -215,10 +215,10 @@ class SubsetAlignment(Alignment):
         Alignment.__init__(self)
 
         #let's do a basic check to make sure that the specified sites aren't > alignment length
-        site_max = max(subset.columns)+1
+        site_max = max(subset.columns)
         log.debug("Max site in data_blocks: %d; max site in alignment: %d" %(site_max, source.sequence_len))
         if site_max>source.sequence_len:
-            log.error("Site %d is specified in [data_blocks], but the alignment only has %d sites. Please check." %(site_max, source.sequence_len)) 
+            log.error("Site %d is specified in [data_blocks], but the alignment only has %d sites. Please check." %(site_max, source.sequence_len))
             raise AlignmentError
 
         # Pull out the columns we need

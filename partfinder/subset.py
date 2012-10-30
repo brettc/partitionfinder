@@ -16,8 +16,7 @@
 #agree with those licences and conditions as well.
 
 import logging
-log = logging.getLogger("analysis")
-
+log = logging.getLogger("subset")
 import os
 import weakref
 
@@ -29,7 +28,7 @@ from hashlib import md5
 import cPickle as pickle
 
 import alignment
-import phyml_models
+import phyml_models, raxml_models
 
 from math import log as logarithm
 
@@ -69,7 +68,7 @@ class Subset(object):
                 tempparts.add(p)
 
             obj.partitions = cacheid
-            
+
             # a list of columns in the subset
             obj.columns = []
             obj.columnset = set()
@@ -123,25 +122,25 @@ class Subset(object):
     def __iter__(self):
         return iter(self.partitions)
 
-    def add_model_result(self, model, result):
+    def add_model_result(self, model, result, models):
         result.model = model
-        result.params = phyml_models.get_num_params(model)
-    
+        result.params = models.get_num_params(model)
+
         K = float(result.params)
         n = float(len(self.columnset))
         lnL = float(result.lnl)
         #here we put in a catch for small subsets, where n<K+2
         #if this happens, the AICc actually starts rewarding very small datasets, which is wrong
         #a simple but crude catch for this is just to never allow n to go below k+2
-        if n<(K+2): 
+        if n<(K+2):
             log.warning("The subset containing the following data_blocks: %s, has a very small"
                         " number of sites (%d) compared to the number of parameters"
                         " in the model being estimated (the %s model which has %d parameters)."
                         " This may give misleading AICc results, so please check carefully"
                         " if you are using the AICc for your analyses."
-                        " The model selection results for this subset are in the following file:" 
+                        " The model selection results for this subset are in the following file:"
                         " /analysis/subsets/%s.txt\n" % (self, n, model, K, self.name))
-            n = K+2 
+            n = K+2
 
         result.aic  = (-2.0*lnL) + (2.0*K)
         result.bic  = (-2.0*lnL) + (K * logarithm(n))
@@ -170,9 +169,9 @@ class Subset(object):
             elif method=="BIC" or method=="bic":
                 info_score = result.bic
             else:
-                log.error("Model selection option %s not recognised, please check", method)
+                log.error("Model selection option %s not recognised, please check" % method)
                 raise SubsetError
-		
+
             if self.best_info_score is None or info_score < self.best_info_score:
                 self.best_lnl = result.lnl
                 self.best_info_score = info_score
@@ -183,12 +182,12 @@ class Subset(object):
 
     def get_param_values(self):
         param_values =[]
-        
+
         #add any parameters you want to this list
         param_values.append(self.best_site_rate)
-        
+
         return param_values
-        
+
 
     # These are the fields that get stored for quick loading
     _cache_fields = "alignment_path results".split()

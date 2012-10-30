@@ -24,13 +24,16 @@ import os
 class PartitionFinderError(Exception):
     pass
 
+class PhylogenyProgramError(PartitionFinderError):
+    pass
+
 def check_file_exists(pth):
     if not os.path.exists(pth) or not os.path.isfile(pth):
         if pth.count("partition_finder.cfg")>0:
             log.error("Failed to find configuration file: '%s'. "
             "For PartitionFinder to run, there must be a file called 'partition_finder.cfg' "
             "located in the same folder as your alignment. Please check and try again.", pth)
-            raise PartitionFinderError			
+            raise PartitionFinderError
         else:
             log.error("Failed to find file: '%s'. Please check and try again.", pth)
             raise PartitionFinderError

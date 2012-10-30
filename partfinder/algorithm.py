@@ -72,7 +72,7 @@ def lumpings(scheme):
 		#now replace all the instance of one number in lump with the other in sub
 		while lump.count(sub[1])>0:
 			lump[lump.index(sub[1])] = sub[0]
-		lumpings.append(lump)	
+		lumpings.append(lump)
 
 	return lumpings
 
@@ -107,12 +107,12 @@ def levels_to_scheme(levels, namedict):
     """
 
     levels = str(levels)
-	
+
     for key in namedict.keys():
         old = str(namedict[key])
         new = '"%s"' %key
         levels = levels.replace(old, new)
-	
-    levels = eval(levels)		
+
+    levels = eval(levels)
     return levels
 
