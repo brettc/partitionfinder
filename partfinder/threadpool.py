@@ -113,7 +113,7 @@ class Thread(threading.Thread):
                 break
             try:
                 cmd(*args)
-            except PhymlError:
+            except PhylogenyProgramError:
                 # Catch the ones we know about, the error should already have
                 # been reported. Stop operation though.
                 break
