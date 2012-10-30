@@ -169,7 +169,7 @@ def make_branch_lengths(alignment_path, topology_path, datatype):
     log.info("Branchlength estimation finished")
 
     # Now return the path of the final tree alignment
-    return output_path
+    return tree_path
 
 def make_branch_lengths_protein(alignment_path, topology_path):
     # Now we re-estimate branchlengths using the LG model on the (unpartitioned) dataset
@@ -227,12 +227,13 @@ def make_output_path(aln_path, model):
     return stats_path, tree_path
 
 class PhymlResult(object):
-    def __init__(self, lnl, seconds):
+    def __init__(self, lnl, tree_size, seconds):
         self.lnl = lnl
         self.seconds = seconds
+        self.tree_size = tree_size
 
     def __str__(self):
-        return "PhymlResult(lnl:%s, secs:%s)" % (self.lnl, self.seconds)
+        return "PhymlResult(lnl:%s, tree_size:%s, secs:%s)" % (self.lnl, self.tree_size, self.seconds)
 
 class Parser(object):
     def __init__(self):
@@ -261,16 +262,16 @@ class Parser(object):
                 nextbit(TIME_LABEL, time)
 
     def parse(self, text):
-        # log.info("Parsing phyml output...")
+        log.debug("Parsing phyml output...")
         try:
             tokens = self.root_parser.parseString(text)
         except ParseException, p:
             log.error(str(p))
             raise PhymlError
 
-        log.debug("Parsed LNL:  %s" %tokens.lnl)
-        log.debug("Parsed RATE: %s" %tokens.tree_size)
-        log.debug("Parsed TIME: %s" %tokens.time)
+        log.debug("Parsed LNL:      %s" %tokens.lnl)
+        log.debug("Parsed TREESIZE: %s" %tokens.tree_size)
+        log.debug("Parsed TIME:     %s" %tokens.time)
 
 
         return PhymlResult(lnl=tokens.lnl, tree_size=tokens.tree_size, seconds=tokens.seconds)
