@@ -114,8 +114,9 @@ def make_topology(alignment_path, datatype):
     command = ''.join([command, " -w '%s'" % os.path.abspath(aln_dir)])
 
     run_raxml(command)
-    output_path = make_tree_path(alignment_path)
-    return output_path
+    dir, aln = os.path.split(alignment_path)
+    tree_path = os.path.join(dir, "RAxML_parsimonyTree.MPTREE")
+    return tree_path
 
 def make_branch_lengths(alignment_path, topology_path, datatype):
     #Now we re-estimate branchlengths using a GTR+G model on the (unpartitioned) dataset
@@ -177,7 +178,7 @@ def raxml_analysis_ID(alignment_path, model):
 
 def make_tree_path(alignment_path):
     dir, aln = os.path.split(alignment_path)
-    tree_path = os.path.join(dir, "RAxML_parsimonyTree.MPTREE")
+    tree_path = os.path.join(dir, "RAxML_parsimonyTree.BLTREE")
     return tree_path
 
 def make_output_path(alignment_path, model):
