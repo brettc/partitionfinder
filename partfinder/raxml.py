@@ -124,6 +124,7 @@ def make_branch_lengths(alignment_path, topology_path, datatype):
     tree_path = os.path.join(dir_path, 'topology_tree.phy')
     log.debug("Copying %s to %s", topology_path, tree_path)
     dupfile(topology_path, tree_path)
+    os.remove(topology_path) #saves headaches later...
 
     if datatype=="DNA":
         log.info("Estimating GTR+G branch lengths on tree using RAxML")
@@ -178,7 +179,7 @@ def raxml_analysis_ID(alignment_path, model):
 
 def make_tree_path(alignment_path):
     dir, aln = os.path.split(alignment_path)
-    tree_path = os.path.join(dir, "RAxML_parsimonyTree.BLTREE")
+    tree_path = os.path.join(dir, "RAxML_result.BLTREE")
     return tree_path
 
 def make_output_path(alignment_path, model):

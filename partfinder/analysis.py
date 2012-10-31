@@ -157,6 +157,7 @@ class Analysis(object):
                                              'user_topology.phy')
                 self.processor.dupfile(user_path, topology_path)
             else:
+                log.debug("didn't find tree at %s, making a new one" %tree_path)
                 topology_path = self.processor.make_topology(self.filtered_alignment_path, self.cfg.datatype)
 
             # Now estimate branch lengths
