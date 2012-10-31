@@ -20,7 +20,7 @@
 import logging
 log = logging.getLogger("analysis")
 
-import subprocess, shlex, os, shutil, sys
+import subprocess, shlex, os, shutil, sys, fnmatch
 
 from pyparsing import (
     Word, Literal, nums, Suppress, ParseException,
@@ -188,6 +188,17 @@ def make_output_path(alignment_path, model):
     tree_fname = "RAxML_result.%s" % (analysis_ID)
     tree_path = os.path.join(dir, tree_fname)
     return stats_path, tree_path
+
+def remove_files(aln_path, model):
+    '''remove all files from the alignment directory that are produced by raxml'''
+    dir, file = os.path.split(aln_path)
+    analysis_ID = raxml_analysis_ID(aln_path, model)
+    dir = os.path.abspath(dir)
+    fnames = os.listdir(dir)
+    fs = fnmatch.filter(fnames, '*%s*' %analysis_ID) 
+    [os.remove(os.path.join(dir,f)) for f in fs]
+
+
 
 class raxmlResult(object):
     def __init__(self, lnl, tree_size, seconds):

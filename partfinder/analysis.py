@@ -20,7 +20,7 @@
 import logging
 log = logging.getLogger("analysis")
 
-import os, shutil
+import os, shutil, fnmatch
 
 from alignment import Alignment, SubsetAlignment
 import phyml, phyml_models
@@ -283,6 +283,10 @@ class Analysis(object):
         self.rpt.write_subset_summary(sub)
         # We also need to update this
         sub.write_cache(subset_cache_path)
+        
+        #once we've done all the work, we can remove all files that match that subset...
+        util.remove_runID_files(sub.alignment_path)
+
 
     def parse_results(self, sub, models_to_do):
         """Read in the results and parse them"""
@@ -290,6 +294,7 @@ class Analysis(object):
         for m in list(models_to_do):
             # sub.alignment_path
             stats_path, tree_path = self.processor.make_output_path(sub.alignment_path, m)
+
             if os.path.exists(stats_path):
                 sub_output = open(stats_path, 'rb').read()
                 # Annotate with the parameters of the model
@@ -304,17 +309,16 @@ class Analysis(object):
                     if self.save_phylofiles:
                         pass
                     else:
-                        #we have the ifs because raxml doesn't output a treefile in some cases
-                        if os.path.isfile(stats_path):
-                            os.remove(stats_path)
-                        if os.path.isfile(tree_path):
-                            os.remove(tree_path)
-
+                        #we remove all files that have the specified RUN ID
+                        #this is the safest way to proceed
+                        self.processor.remove_files(sub.alignment_path, m)
+                                                                        
                 except self.processor.PhylogenyProgramError:
                     log.warning("Failed loading parse output from %s."
                               "Output maybe corrupted. I'll run it again.",
                               stats_path)
-
+                    self.processor.remove_files(sub.alignment_path, m)
+        
         if models_done:
             log.debug("Loaded analysis for %s, models %s", sub, ", ".join(models_done))
 

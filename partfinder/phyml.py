@@ -226,6 +226,13 @@ def make_output_path(aln_path, model):
     tree_path = "%s.phy_phyml_tree_%s.txt" % (pth, model)
     return stats_path, tree_path
 
+def remove_files(aln_path, model):
+    '''remove all files from the alignment directory that are produced by phyml'''
+    fnames = make_output_path(aln_path, model)
+    [os.remove(f) for f in fnames]
+
+
+
 class PhymlResult(object):
     def __init__(self, lnl, tree_size, seconds):
         self.lnl = lnl
