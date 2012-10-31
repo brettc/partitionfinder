@@ -286,7 +286,10 @@ class Analysis(object):
         sub.write_cache(subset_cache_path)
         
         #once we've done all the work, we can remove all files that match that subset...
-        util.remove_runID_files(sub.alignment_path)
+        if self.save_phylofiles:
+            pass
+        else:
+            util.remove_runID_files(sub.alignment_path)
 
 
     def parse_results(self, sub, models_to_do):

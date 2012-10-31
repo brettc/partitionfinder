@@ -166,8 +166,9 @@ def analyse(model, alignment_path, tree_path, branchlengths):
     analysis_ID = raxml_analysis_ID(alignment_path, model)
 
     #force raxml to write to the dir with the alignment in it
+    #-e 1.0 sets the precision to 1 lnL unit. This is all that's required here, and helps with speed.
     aln_dir, fname = os.path.split(alignment_path)
-    command = " %s -s '%s' -t '%s' %s -n %s -w '%s' " % (
+    command = " %s -s '%s' -t '%s' %s -n %s -w '%s' -e 1.0" % (
         bl, alignment_path, tree_path, model_params, analysis_ID, os.path.abspath(aln_dir))
     run_raxml(command)
 
