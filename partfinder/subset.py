@@ -273,7 +273,7 @@ class Subset(object):
                 log.warning("Failed loading parse output from %s."
                             "Output maybe corrupted. I'll run it again.",
                             pth)
-                self.cfg.processor.remove_files(self.alignment_path, model)
+                cfg.processor.remove_files(self.alignment_path, model)
 
             # But if we're prepared, then we've just run this. And we're
             # screwed
