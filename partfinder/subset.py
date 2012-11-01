@@ -36,12 +36,15 @@ FRESH, PREPARED, DONE = range(3)
 class SubsetError(PartitionFinderError):
     pass
 
+def count_subsets():
+    return len(Subset._cache)
 
 class Subset(object):
     """A Subset of Partitions
     """
     # TODO: changes this to AllSubsets?
     _cache = weakref.WeakValueDictionary()
+
 
     def __new__(cls, *parts):
         """Return the SAME subset if the partitions are identical. This is
@@ -207,12 +210,14 @@ class Subset(object):
 
         self.models_to_process = []
         self.status = DONE
+        cfg.progress.subset_done(self)
         return True
 
     def prepare(self, cfg, alignment):
         """Get everything ready for running the analysis
         """
         # cfg.progress.update_subsets(self)
+        cfg.progress.subset_begin(self)
 
         # Load the cached results
         self.load_results(cfg)

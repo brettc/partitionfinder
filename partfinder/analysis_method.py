@@ -4,21 +4,27 @@ log = logging.getLogger("analysis_method")
 import scheme
 import algorithm
 import submodels
+import subset
 from analysis import Analysis, AnalysisError
 
 
 class UserAnalysis(Analysis):
 
     def do_analysis(self):
-        """Process everything when search=user"""
+        log.info("Performing User analysis")
         current_schemes = [s for s in self.cfg.schemes]
-        self.total_scheme_num = len(current_schemes)
-        if self.total_scheme_num > 0:
+        scheme_count = len(current_schemes)
+        subset_count = subset.count_subsets()
+
+        self.cfg.progress.begin(scheme_count, subset_count)
+        if scheme_count > 0:
             for s in current_schemes:
                 self.analyse_scheme(s)
         else:
             log.error("Search set to 'user', but no user schemes detected in .cfg file. Please check.")
             raise AnalysisError
+
+        self.cfg.progress.end()
 
 
 class ClusteringAnalysis(Analysis):
@@ -32,12 +38,14 @@ class ClusteringAnalysis(Analysis):
         log.info("Performing clustering analysis")
 
         partnum = len(self.cfg.partitions)
-        self.total_subset_num = 2 * partnum - 1
-        self.total_scheme_num = partnum
+        subset_count = 2 * partnum - 1
+        scheme_count = partnum
+        self.cfg.progress.begin(scheme_count, subset_count)
 
-        #start with the scheme with all subsets separate
-        #analyse that scheme
-        #clear any schemes that are currently loaded
+        # Start with the scheme with all subsets separate
+        # Analyse that scheme
+
+        # Clear any schemes that are currently loaded
         # TODO Not sure we need this...
         self.cfg.schemes.clear_schemes()
 
@@ -70,27 +78,32 @@ class ClusteringAnalysis(Analysis):
             else:
                 start_scheme = clustered_scheme
 
+        self.cfg.progress.end()
+
 
 class AllAnalysis(Analysis):
 
     def do_analysis(self):
+        log.info("Performing complete analysis")
         partnum = len(self.cfg.partitions)
 
-        self.total_scheme_num = submodels.count_all_schemes(partnum)
+        scheme_count = submodels.count_all_schemes(partnum)
+        subset_count = submodels.count_all_subsets(partnum)
         log.info("Analysing all possible schemes for %d starting partitions",
                  partnum)
         log.info("This will result in %s schemes being created",
-                 self.total_scheme_num)
-        self.total_subset_num = submodels.count_all_subsets(partnum)
-        log.info("PartitionFinder will have to analyse %d subsets to complete this analysis" % (self.total_subset_num))
-        if self.total_subset_num > 10000:
-            log.warning("%d is a lot of subsets, this might take a long time to analyse", self.total_subset_num)
+                 scheme_count)
+        self.cfg.progress.begin(scheme_count, subset_count)
+
+        log.info("PartitionFinder will have to analyse %d subsets to complete this analysis", subset_count)
+        if subset_count > 10000:
+            log.warning("%d is a lot of subsets, this might take a long time to analyse", subset_count)
             log.warning("Perhaps consider using a different search scheme instead (see Manual)")
 
-        #clear any schemes that are currently loaded
+        # Clear any schemes that are currently loaded
         self.cfg.schemes.clear_schemes()
 
-        #iterate over submodels, which we can turn into schemes afterwards in the loop
+        # Iterate over submodels, which we can turn into schemes afterwards in the loop
         model_iterator = submodels.submodel_iterator([], 1, partnum)
 
         scheme_name = 1
@@ -108,15 +121,14 @@ class GreedyAnalysis(Analysis):
         model_selection = self.cfg.model_selection
         partnum = len(self.cfg.partitions)
 
-        self.total_scheme_num = submodels.count_greedy_schemes(partnum)
-        log.info("This will result in a maximum of %s schemes being created",
-                 self.total_scheme_num)
+        scheme_count = submodels.count_greedy_schemes(partnum)
+        subset_count = submodels.count_greedy_subsets(partnum)
+        log.info("This will result in a maximum of %s schemes being created", scheme_count)
+        log.info("PartitionFinder will have to analyse a maximum of %d subsets of sites to complete this analysis", subset_count)
+        self.cfg.progress.begin(scheme_count, subset_count)
 
-        self.total_subset_num = submodels.count_greedy_subsets(partnum)
-        log.info("PartitionFinder will have to analyse a maximum of %d subsets of sites to complete this analysis" % (self.total_subset_num))
-
-        if self.total_subset_num > 10000:
-            log.warning("%d is a lot of subsets, this might take a long time to analyse", self.total_subset_num)
+        if subset_count > 10000:
+            log.warning("%d is a lot of subsets, this might take a long time to analyse", subset_count)
             log.warning("Perhaps consider using a different search scheme instead (see Manual)")
 
         #clear any schemes that are currently loaded
@@ -133,7 +145,7 @@ class GreedyAnalysis(Analysis):
             try:
                 return getattr(my_result, model_selection)
             except AttributeError:
-                log.error("Unrecognised model_selection variable '%s', please check" % (score))
+                log.error("Unrecognised model_selection variable '%s', please check", model_selection)
                 raise AnalysisError
 
         best_result = result

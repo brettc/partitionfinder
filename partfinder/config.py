@@ -25,6 +25,7 @@ import scheme
 import partition
 import parser
 import util
+import progress
 
 
 class ConfigurationError(util.PartitionFinderError):
@@ -45,6 +46,7 @@ class Configuration(object):
         self.partitions = partition.PartitionSet()
         self.schemes = scheme.SchemeSet()
         self.save_phylofiles = save_phylofiles
+        self.progress = progress.NoProgress(self)
 
         self.base_path = '.'
         self.alignment = None

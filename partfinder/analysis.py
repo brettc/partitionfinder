@@ -15,8 +15,6 @@
 #own licenses and conditions, using PartitionFinder implies that you
 #agree with those licences and conditions as well.
 
-"""This is where everything comes together, and we do the analysis"""
-
 import logging
 log = logging.getLogger("analysis")
 
@@ -41,9 +39,21 @@ class Analysis(object):
         cfg.validate()
         self.cfg = cfg
         self.threads = threads
+
         self.results = results.AnalysisResults()
 
         log.info("Beginning Analysis")
+        self.process_restart(force_restart)
+
+        # Check for old analyses to see if we can use the old data
+        self.cfg.check_for_old_config()
+
+        # Make some folders for the analysis
+        self.cfg.make_output_folders()
+        self.make_alignment(cfg.alignment_path)
+        self.make_tree(cfg.user_tree_topology_path)
+
+    def process_restart(self, force_restart):
         if force_restart:
             # Remove everything
             if os.path.exists(self.cfg.output_path):
@@ -57,20 +67,6 @@ class Analysis(object):
                          "recalculated from existing subset data)",
                          self.cfg.schemes_path)
                 shutil.rmtree(self.cfg.schemes_path)
-
-        #check for old analyses to see if we can use the old data
-        self.cfg.check_for_old_config()
-
-        # Make some folders for the analysis
-        self.cfg.make_output_folders()
-        self.make_alignment(cfg.alignment_path)
-
-        self.make_tree(cfg.user_tree_topology_path)
-        self.subsets_analysed_set = set()  # a counter for user info
-        self.subsets_analysed = 0  # a counter for user info
-        self.total_subset_num = None
-        self.schemes_analysed = 0  # a counter for user info
-        self.total_scheme_num = None
 
     def analyse(self):
         self.do_analysis()
@@ -149,7 +145,7 @@ class Analysis(object):
         self.tree_path = tree_path
         log.info("Starting tree with branch lengths is here: %s", self.tree_path)
 
-    def make_tasks_for_sub(self, tasks, sub):
+    def add_tasks_for_sub(self, tasks, sub):
         for m in sub.models_to_process:
             tasks.append((self.cfg.processor.analyse,
                           (m, sub.alignment_path, self.tree_path, self.cfg.branchlengths)))
@@ -159,18 +155,19 @@ class Analysis(object):
             func(*args)
 
     def run_models_threaded(self, tasks):
+        if not tasks:
+            return
         pool = threadpool.Pool(tasks, self.threads)
         pool.join()
 
     def analyse_scheme(self, sch):
-        self.schemes_analysed = self.schemes_analysed + 1
-        log.info("Analysing scheme %d/%d" % (self.schemes_analysed, self.total_scheme_num))
+        self.cfg.progress.next_scheme()
 
         # Prepare by reading everything in first
         tasks = []
         for sub in sch:
             sub.prepare(self.cfg, self.alignment)
-            self.make_tasks_for_sub(tasks, sub)
+            self.add_tasks_for_sub(tasks, sub)
 
         # Now do the analysis
         if self.threads == 1:

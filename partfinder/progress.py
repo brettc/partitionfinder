@@ -18,25 +18,56 @@
 import logging
 log = logging.getLogger("progress")
 
+
 class Progress(object):
     def __init__(self, cfg):
         self.cfg = cfg
         self.cfg.progress = self
 
+    def begin(self, scheme_count, subset_count):
+        pass
+
+    def next_scheme(self):
+        pass
+
+    def subset_begin(self, sub):
+        pass
+
+    def subset_done(self, sub):
+        pass
+
+    def end(self):
+        pass
+
+class NoProgress(Progress):
+    pass
+
 class TextProgress(Progress):
 
-    def update_subsets(self, sub):
-        # Keep people informed about what's going on
-        log.info("Analysing subset %s", sub)
+    def begin(self, scheme_count, subset_count):
+        self.scheme_count = scheme_count
+        self.subset_count = subset_count
+        self.schemes_analysed = 0
+        self.subsets_analysed = 0
 
-    def blarg(self):
-        if self.total_subset_num is None:
-            self.obj = len(sub._cache)
-        old_num_analysed = self.subsets_analysed
-        self.subsets_analysed_set.add(sub.name)
-        self.subsets_analysed = len(self.subsets_analysed_set)
-        if self.subsets_analysed > old_num_analysed: # We've just analysed a subset we haven't seen yet
-            percent_done = float(self.subsets_analysed)*100.0/float(self.total_subset_num)
-            log.info("Analysing subset %d/%d: %.2f%s done" %
-                     (self.subsets_analysed,self.total_subset_num,
-                      percent_done, r"%"))
+    def next_scheme(self):
+        self.schemes_analysed += 1
+        log.info("Analysing scheme %d/%d", self.schemes_analysed,
+                 self.scheme_count)
+
+    def subset_begin(self, sub):
+        pass
+        # log.info("Begin analysing subset %d/%d",
+                 # self.subsets_analysed, self.subset_count)
+
+    def subset_done(self, sub):
+        self.subsets_analysed += 1
+        log.info("Finished analysing subset %d/%d",
+                 self.subsets_analysed, self.subset_count)
+        # percent_done = float(self.subsets_analysed)*100.0/float(self.total_subset_num)
+        # log.info("Analysing subset %d/%d: %.2f%s done" %
+                     # (self.subsets_analysed,self.total_subset_num,
+                      # percent_done, r"%"))
+
+    def end(self):
+        pass
