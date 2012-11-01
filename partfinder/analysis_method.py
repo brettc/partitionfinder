@@ -7,22 +7,6 @@ import submodels
 from analysis import Analysis, AnalysisError
 
 
-def get_score(my_result, model_selection):
-    #TODO: this is bad. Should use self.cfg.model_selection, or write
-    #a new model_selection for scheme.py
-    if model_selection == "aic":
-        score = my_result.aic
-    elif model_selection == "aicc":
-        score = my_result.aicc
-    elif model_selection == "bic":
-        score = my_result.bic
-    else:
-        log.error("Unrecognised model_selection variable '%s', please check" %
-                  (score))
-        raise AnalysisError
-    return score
-
-
 class UserAnalysis(Analysis):
 
     def do_analysis(self):
@@ -146,18 +130,11 @@ class GreedyAnalysis(Analysis):
         result = self.analyse_scheme(start_scheme)
 
         def get_score(my_result):
-            #TODO: this is bad. Should use self.cfg.model_selection, or write
-            #a new model_selection for scheme.py
-            if model_selection == "aic":
-                score = my_result.aic
-            elif model_selection == "aicc":
-                score = my_result.aicc
-            elif model_selection == "bic":
-                score = my_result.bic
-            else:
+            try:
+                return getattr(my_result, model_selection)
+            except AttributeError:
                 log.error("Unrecognised model_selection variable '%s', please check" % (score))
                 raise AnalysisError
-            return score
 
         best_result = result
         best_score = get_score(result)
