@@ -222,7 +222,7 @@ class Parser(object):
         LNL_LABEL_1 = Literal("Final GAMMA  likelihood:")
         LNL_LABEL_2 = Literal("Likelihood:")
         TIME_LABEL_1 = Literal("Overall Time for Tree Evaluation")
-        TIME_LABEL_2 = Literal("Time for branch length scaler and remaining model parameters optimization:")
+        TIME_LABEL_2 = Literal("Overall Time for scaler and model parameter optimisation")
 
         LNL_LABEL = (LNL_LABEL_1|LNL_LABEL_2)
         TIME_LABEL = (TIME_LABEL_1|TIME_LABEL_2)
