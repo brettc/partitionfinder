@@ -210,8 +210,8 @@ class GreedyAnalysis(Analysis):
     def report(self):
         txt = "Best scheme according to Greedy algorithm, analysed with %s"
         best = [(txt % self.cfg.model_selection, self.best_result)]
-        self.rpt.write_best_schemes(best)
-        self.rpt.write_all_schemes(self.results)
+        self.cfg.reporter.write_best_schemes(best)
+        self.cfg.reporter.write_all_schemes(self.results)
 
 
 def choose_method(search):

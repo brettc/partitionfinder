@@ -212,7 +212,7 @@ class Subset(object):
     def prepare(self, cfg, alignment):
         """Get everything ready for running the analysis
         """
-        cfg.progress.update_subsets(self)
+        # cfg.progress.update_subsets(self)
 
         # Load the cached results
         self.load_results(cfg)

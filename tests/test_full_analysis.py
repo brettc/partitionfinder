@@ -36,8 +36,8 @@ def load_cfg_and_run(pth, compare=True, fails=False):
         cfg = config.Configuration(dt)
         cfg.load_base_path(pth)
         method = analysis_method.choose_method(cfg.search)
-        rpt = reporter.TextReporter(cfg)
-        meth = method(cfg, rpt, force_restart=False, threads=-1)
+        reporter.TextReporter(cfg)
+        meth = method(cfg, force_restart=False, threads=-1)
         results = meth.analyse()
         if compare:
             results.compare(cfg)
@@ -161,7 +161,7 @@ def test_rerun07():
 def test_rerun08():
     load_rerun(path_from_function())
 
-# FAILS 
+# FAILS
 @attr('rerun', 'fails')
 @raises(config.ConfigurationError)
 def test_rerun09():
