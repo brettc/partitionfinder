@@ -26,71 +26,72 @@ from hashlib import md5
 # from zlib import compress
 
 import cPickle as pickle
-
-import alignment
-import phyml_models, raxml_models
-
 from math import log as logarithm
+from alignment import Alignment, SubsetAlignment
+from util import PartitionFinderError, remove_runID_files
 
-from util import PartitionFinderError
+FRESH, PREPARED, DONE = range(3)
+
+
 class SubsetError(PartitionFinderError):
     pass
+
 
 class Subset(object):
     """A Subset of Partitions
     """
-
     # TODO: changes this to AllSubsets?
     _cache = weakref.WeakValueDictionary()
 
-    # Return the SAME subset if the partitions are identical
-    # This is basically a pythonized factory
-    # See here: http://codesnipers.com/?q=python-flyweights
     def __new__(cls, *parts):
+        """Return the SAME subset if the partitions are identical. This is
+        basically a pythonized factory. See here:
+        http://codesnipers.com/?q=python-flyweights
+        """
+
         cacheid = frozenset(parts)
         obj = Subset._cache.get(cacheid, None)
         if not obj:
             obj = object.__new__(cls)
             Subset._cache[cacheid] = obj
-
-            # Error checking....
-            tempparts = set()
-            for p in parts:
-                if p.partition_set is None:
-                    log.error("You cannot add a Partition to a Subset until "
-                              "the Partition belongs to a PartitionSet")
-                    raise SubsetError
-
-                if p in tempparts:
-                    log.error("%s is duplicated in a Subset", p)
-                    raise SubsetError
-
-                tempparts.add(p)
-
-            obj.partitions = cacheid
-
-            # a list of columns in the subset
-            obj.columns = []
-            obj.columnset = set()
-            for p in parts:
-                obj.columns += p.columns
-                obj.columnset |= p.columnset
-            obj.columns.sort()
-
-            obj.results = {}
-            obj.best_info_score = None #e.g. AIC, BIC, AICc
-            obj.best_model = None
-            obj.best_params = None
-            obj.best_lnl = None
-            obj.alignment_path = None
-            log.debug("Created %s", obj)
-        # else:
-            # log.debug("Reused %s", obj)
+            obj.init(cacheid, *parts)
 
         return obj
 
-    # def __init__(self, *parts):
-        # Everything is relegated to above...
+    def init(self, cacheid, *parts):
+        # Error checking....
+        self.status = FRESH
+
+        tempparts = set()
+        for p in parts:
+            if p.partition_set is None:
+                log.error("You cannot add a Partition to a Subset until "
+                          "the Partition belongs to a PartitionSet")
+                raise SubsetError
+
+            if p in tempparts:
+                log.error("%s is duplicated in a Subset", p)
+                raise SubsetError
+
+            tempparts.add(p)
+
+        self.partitions = cacheid
+
+        # a list of columns in the subset
+        self.columns = []
+        self.columnset = set()
+        for p in parts:
+            self.columns += p.columns
+            self.columnset |= p.columnset
+        self.columns.sort()
+
+        self.results = {}
+        self.best_info_score = None  # e.g. AIC, BIC, AICc
+        self.best_model = None
+        self.best_params = None
+        self.best_lnl = None
+        self.alignment_path = None
+        log.debug("Created %s", self)
 
     def __str__(self):
         return "(%s)" % ", ".join([str(p.name) for p in self.partitions])
@@ -122,9 +123,9 @@ class Subset(object):
     def __iter__(self):
         return iter(self.partitions)
 
-    def add_model_result(self, model, result, models):
+    def add_result(self, cfg, model, result):
         result.model = model
-        result.params = models.get_num_params(model)
+        result.params = cfg.processor.models.get_num_params(model)
 
         K = float(result.params)
         n = float(len(self.columnset))
@@ -132,7 +133,7 @@ class Subset(object):
         #here we put in a catch for small subsets, where n<K+2
         #if this happens, the AICc actually starts rewarding very small datasets, which is wrong
         #a simple but crude catch for this is just to never allow n to go below k+2
-        if n<(K+2):
+        if n < (K + 2):
             log.warning("The subset containing the following data_blocks: %s, has a very small"
                         " number of sites (%d) compared to the number of parameters"
                         " in the model being estimated (the %s model which has %d parameters)."
@@ -140,36 +141,37 @@ class Subset(object):
                         " if you are using the AICc for your analyses."
                         " The model selection results for this subset are in the following file:"
                         " /analysis/subsets/%s.txt\n" % (self, n, model, K, self.name))
-            n = K+2
+            n = K + 2
 
-        result.aic  = (-2.0*lnL) + (2.0*K)
-        result.bic  = (-2.0*lnL) + (K * logarithm(n))
-        result.aicc = (-2.0*lnL) + ((2.0*K)*(n/(n-K-1.0)))
+        result.aic = (-2.0 * lnL) + (2.0 * K)
+        result.bic = (-2.0 * lnL) + (K * logarithm(n))
+        result.aicc = (-2.0 * lnL) + ((2.0 * K) * (n / (n - K - 1.0)))
 
         #this is the rate per site of the model - used in some clustering analyses
         result.site_rate = float(result.tree_size)
 
-        log.debug("Adding model to subset. Model: %s, params %d, site_rate %f" %(model, K, result.site_rate))
+        log.debug("Adding model to subset. Model: %s, params %d, site_rate %f" % (model, K, result.site_rate))
 
         if model in self.results:
             log.error("Can't add model result %s, it already exists in %s",
-                    model, self)
+                      model, self)
         self.results[model] = result
 
-    def model_selection(self, method, models):
-        #model selection is done after we've added all the models
-        self.best_info_score = None #reset this before model selection
+    def model_selection(self, cfg):
+        # Model selection is done after we've added all the models
+        # Note: we may have more models than we want if there is old data lying
+        # around
+        self.best_info_score = None  # Reset this before model selection
+        meth = cfg.model_selection.lower()
 
-        for model in models:
-            result=self.results[model]
-            if method=="AIC" or method=="aic":
-                info_score = result.aic
-            elif method=="AICc" or method=="AICC" or method=="aicc":
-                info_score = result.aicc
-            elif method=="BIC" or method=="bic":
-                info_score = result.bic
-            else:
-                log.error("Model selection option %s not recognised, please check" % method)
+        for model in cfg.models:
+            result = self.results[model]
+            try:
+                info_score = getattr(result, meth)
+            except AttributeError:
+                log.error(
+                    "Model selection option %s not recognised, "
+                    "please check" % cfg.model_selection)
                 raise SubsetError
 
             if self.best_info_score is None or info_score < self.best_info_score:
@@ -178,19 +180,128 @@ class Subset(object):
                 self.best_model = result.model
                 self.best_params = result.params
                 self.best_site_rate = result.site_rate
-        log.debug("Model Selection. best model: %s, params: %d, site_rate: %f" %(self.best_model, self.best_params, self.best_site_rate))
+        log.debug("Model Selection. best model: %s, params: %d, site_rate: %f" % (self.best_model, self.best_params, self.best_site_rate))
 
     def get_param_values(self):
-        param_values =[]
+        param_values = []
 
         #add any parameters you want to this list
         param_values.append(self.best_site_rate)
 
         return param_values
 
+    def are_we_done_yet(self, cfg):
+        if self.models_not_done:
+            return False
+
+        cfg.reporter.write_subset_summary(self)
+        self.save_results(cfg)
+        self.model_selection(cfg)
+        self.status = DONE
+        if not cfg.save_phylofiles:
+            remove_runID_files(self.alignment_path)
+        return True
+
+    def prepare(self, cfg, alignment):
+        """Get everything ready for running the analysis
+        """
+        cfg.progress.update_subsets(self)
+
+        # Load the cached results
+        self.load_results(cfg)
+
+        # First, see if we've already got the results loaded. Then we can
+        # shortcut all the other checks
+        models_done = set(self.results.keys())
+        self.models_not_done = cfg.models - models_done
+        if self.are_we_done_yet(cfg):
+            return
+
+        # Make an Alignment from the source, using this subset
+        self.make_alignment(cfg, alignment)
+
+        # Try and read in some previous analyses
+        self.parse_results(cfg)
+        if self.are_we_done_yet(cfg):
+            return
+
+        self.models_to_process = list(self.models_not_done)
+        # Now order them by difficulty
+        self.models_to_process.sort(
+            key=cfg.processor.models.get_model_difficulty,
+            reverse=True)
+
+        self.status = PREPARED
+
+    def parse_results(self, cfg):
+        """Read in the results and parse them"""
+        for m in list(self.models_not_done):
+            stats_path, tree_path = cfg.processor.make_output_path(
+                self.alignment_path, m)
+
+            if os.path.exists(stats_path):
+                sub_output = open(stats_path, 'rb').read()
+                self.parse_model_result(cfg, m, sub_output, stats_path)
+
+    def parse_model_result(self, cfg, model, output, pth):
+        try:
+            result = cfg.processor.parse(output)
+            self.add_result(cfg, model, result)
+            # Remove the current model from remaining ones
+            self.models_not_done.remove(model)
+
+            # Just used for below
+            if not cfg.save_phylofiles:
+                # We remove all files that have the specified RUN ID
+                cfg.processor.remove_files(self.alignment_path, model)
+
+        except cfg.processor.PhylogenyProgramError:
+            log.warning("Failed loading parse output from %s."
+                        "Output maybe corrupted. I'll run it again.",
+                        pth)
+            self.cfg.processor.remove_files(self.alignment_path, model)
+
+    def make_alignment(self, cfg, alignment):
+        # Make an Alignment from the source, using this subset
+        sub_alignment = SubsetAlignment(alignment, self)
+        sub_path = os.path.join(cfg.phyml_path, self.name + '.phy')
+        # Add it into the sub, so we keep it around
+        self.alignment_path = sub_path
+
+        # Maybe it is there already?
+        if os.path.exists(sub_path):
+            log.debug("Found existing alignment file %s", sub_path)
+            old_align = Alignment()
+            old_align.read(sub_path)
+
+            # It had better be the same!
+            if not old_align.same_as(sub_alignment):
+                log.error(
+                    "It looks like you have changed one or more of the "
+                    "data_blocks in the configuration file, "
+                    "so the new subset alignments "
+                    "don't match the ones stored for this analysis. "
+                    "You'll need to run the program with --force-restart")
+                raise SubsetError
+        else:
+            # We need to write it
+            sub_alignment.write(sub_path)
+
+    def get_subset_cache_path(self, cfg):
+        return os.path.join(cfg.subsets_path, self.name + '.bin')
+
+    def load_results(self, cfg):
+        # We might have already saved a bunch of results, try there first
+        if not self.results:
+            log.debug("Reading in cached data from the subsets file")
+            self.read_cache(self.get_subset_cache_path(cfg))
+
+    def save_results(self, cfg):
+        self.write_cache(self.get_subset_cache_path(cfg))
 
     # These are the fields that get stored for quick loading
     _cache_fields = "alignment_path results".split()
+
     def write_cache(self, path):
         """Write out the results we've collected to a binary file"""
         f = open(path, 'wb')

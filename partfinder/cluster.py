@@ -32,7 +32,7 @@ def flatten(L):
 
 def median(numbers):
    """Return the median of the list of numbers.
-   
+
    found at: http://mail.python.org/pipermail/python-list/2004-December/253517.html"""
    # Sort the list and take the middle element.
    n = len(numbers)
@@ -129,8 +129,8 @@ def printmatrix(list):
    # print data
    format =  " %%%is |" % maxlen
    format = "|" + format*colcount
-   for row in list:
-      print format % tuple(row)
+   # for row in list:
+      # print format % tuple(row)
 
 def magnitude(a):
    "calculates the magnitude of a vecor"
@@ -670,7 +670,7 @@ class KMeansClustering:
 
       # It makes no sense to ask for more clusters than data-items available
       if n > self.__initial_length:
-         raise ClusteringError( """Unable to generate more clusters than items 
+         raise ClusteringError( """Unable to generate more clusters than items
 available. You supplied %d items, and asked for %d clusters.""" %
                (self.__initial_length, n) )
 

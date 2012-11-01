@@ -27,7 +27,7 @@ from pyparsing import (
     SkipTo,
     )
 
-from phyml_models import get_model_commandline
+import phyml_models as models
 
 _binary_name = 'phyml'
 if sys.platform == 'win32':
@@ -176,7 +176,7 @@ def analyse(model, alignment_path, tree_path, branchlengths):
 
     # Move it to a new name to stop phyml stomping on different model analyses
     # dupfile(alignment_path, analysis_path)
-    model_params = get_model_commandline(model)
+    model_params = models.get_model_commandline(model)
 
     if branchlengths == 'linked':
         #constrain all branchlengths to be equal

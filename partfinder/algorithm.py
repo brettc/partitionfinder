@@ -86,7 +86,6 @@ def getLevels(cluster, levs):
 	Returns the levels of the cluster as list.
 	"""
 	levs.append(cluster.level())
-	print levs
 
 	left  = cluster.items()[0]
 	right = cluster.items()[1]

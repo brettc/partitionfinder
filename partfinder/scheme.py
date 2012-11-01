@@ -166,21 +166,21 @@ class Scheme(object):
             #and now we use the first level to get the two most similar subsets
             newscheme_description = levels_to_scheme(cl_H.getlevel(levs[0]), param_dict)
 
-        print "yo"
-        print newscheme_description
+        # print "yo"
+        # print newscheme_description
         created_subsets = []
         for subset_names in newscheme_description:
             #some names look like this "Gene1_pos1-Gene2_pos2", so we need to extract the part names
             partition_names = []
             for x in subset_names:
                 [partition_names.append(y) for y in x.split('-')]
-            print partition_names
+            # print partition_names
             sub = subset.Subset(*tuple([cfg.partitions.parts_by_name[i] for i in partition_names]))
-            print sub
+            # print sub
             created_subsets.append(sub)
 
         scheme = (Scheme(cfg, str(scheme_name), *tuple(created_subsets)))
-        print scheme
+        # print scheme
         return scheme
 
 
@@ -236,22 +236,22 @@ def create_scheme(cfg, scheme_name, scheme_description):
         insub = subs.setdefault(grouping, [])
         insub.append(sub_index)
 
-    print scheme_description
-    print subs
-    print cfg.partitions.parts_by_number
-    print cfg.partitions.parts_by_name
+    # print scheme_description
+    # print subs
+    # print cfg.partitions.parts_by_number
+    # print cfg.partitions.parts_by_name
 
     # We now have what we need to create a subset. Each entry will have a
     # set of values which are the index for the partition
     created_subsets = []
     for sub_indexes in subs.values():
         sub = subset.Subset(*tuple([cfg.partitions[i] for i in sub_indexes]))
-        print sub
+        # print sub
         created_subsets.append(sub)
 
     new_scheme = Scheme(cfg, str(scheme_name), *tuple(created_subsets))
 
-    print new_scheme
+    # print new_scheme
 
     return new_scheme
 

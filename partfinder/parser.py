@@ -190,8 +190,7 @@ class Parser(object):
                 pass
             log.info("Setting 'models' to '%s'", modsgroup)
 
-
-        self.cfg.models = []
+        self.cfg.models = set()
         for m in modlist:
             if m not in total_mods:
                 raise ParserError(
@@ -204,12 +203,10 @@ class Parser(object):
             if m in all_protein_mods:
                 prot_mods = prot_mods + 1
 
-            self.cfg.models.append(m)
+            self.cfg.models.add(m)
 
         log.info("Setting 'models' to a list containing: %s",
                   ", ".join(self.cfg.models))
-
-
 
         #check datatype against the model list that we've got a sensible model list
         if DNA_mods>0 and prot_mods==0 and self.cfg.datatype=="DNA":

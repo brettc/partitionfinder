@@ -27,13 +27,11 @@ class UserAnalysis(Analysis):
 
     def do_analysis(self):
         """Process everything when search=user"""
-        models = self.cfg.models
-
         current_schemes = [s for s in self.cfg.schemes]
         self.total_scheme_num = len(current_schemes)
         if self.total_scheme_num > 0:
             for s in current_schemes:
-                self.analyse_scheme(s, models)
+                self.analyse_scheme(s)
         else:
             log.error("Search set to 'user', but no user schemes detected in .cfg file. Please check.")
             raise AnalysisError
@@ -49,7 +47,6 @@ class ClusteringAnalysis(Analysis):
     def do_analysis(self):
         log.info("Performing clustering analysis")
 
-        models = self.cfg.models
         partnum = len(self.cfg.partitions)
         self.total_subset_num = 2 * partnum - 1
         self.total_scheme_num = partnum
@@ -64,7 +61,7 @@ class ClusteringAnalysis(Analysis):
         start_description = range(len(self.cfg.partitions))
         start_scheme = scheme.create_scheme(self.cfg, 1, start_description)
         log.info("Analysing starting scheme (scheme %s)" % start_scheme.name)
-        self.analyse_scheme(start_scheme, models)
+        self.analyse_scheme(start_scheme)
 
         cur_s = 2
 
@@ -81,7 +78,7 @@ class ClusteringAnalysis(Analysis):
 
             #now analyse that new scheme
             cur_s += 1
-            self.analyse_scheme(clustered_scheme, models)
+            self.analyse_scheme(clustered_scheme)
 
             #stop when we've anlaysed the scheme with all subsets combined
             if len(set(clustered_scheme.subsets)) == 1:  # then it's the scheme with everything together
@@ -93,7 +90,6 @@ class ClusteringAnalysis(Analysis):
 class AllAnalysis(Analysis):
 
     def do_analysis(self):
-        models = self.cfg.models
         partnum = len(self.cfg.partitions)
 
         self.total_scheme_num = submodels.count_all_schemes(partnum)
@@ -117,7 +113,7 @@ class AllAnalysis(Analysis):
         for m in model_iterator:
             s = scheme.model_to_scheme(m, scheme_name, self.cfg)
             scheme_name = scheme_name + 1
-            self.analyse_scheme(s, models)
+            self.analyse_scheme(s)
 
 
 class GreedyAnalysis(Analysis):
@@ -125,7 +121,6 @@ class GreedyAnalysis(Analysis):
     def do_analysis(self):
         '''A greedy algorithm for heuristic partitioning searches'''
         log.info("Performing greedy analysis")
-        models = self.cfg.models
         model_selection = self.cfg.model_selection
         partnum = len(self.cfg.partitions)
 
@@ -148,7 +143,7 @@ class GreedyAnalysis(Analysis):
         start_description = range(len(self.cfg.partitions))
         start_scheme = scheme.create_scheme(self.cfg, 1, start_description)
         log.info("Analysing starting scheme (scheme %s)" % start_scheme.name)
-        result = self.analyse_scheme(start_scheme, models)
+        result = self.analyse_scheme(start_scheme)
 
         def get_score(my_result):
             #TODO: this is bad. Should use self.cfg.model_selection, or write
@@ -187,7 +182,7 @@ class GreedyAnalysis(Analysis):
                 lumped_scheme = scheme.create_scheme(
                     self.cfg, cur_s, lumped_description)
                 cur_s += 1
-                result = self.analyse_scheme(lumped_scheme, models)
+                result = self.analyse_scheme(lumped_scheme)
                 new_score = get_score(result)
 
                 if best_lumping_score is None or new_score < best_lumping_score:

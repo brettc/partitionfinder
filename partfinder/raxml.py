@@ -27,7 +27,7 @@ from pyparsing import (
     SkipTo,
     )
 
-from raxml_models import get_model_commandline
+import raxml_models as models
 
 _binary_name = 'raxml'
 if sys.platform == 'win32':
@@ -149,7 +149,7 @@ def analyse(model, alignment_path, tree_path, branchlengths):
 
     # Move it to a new name to stop raxml stomping on different model analyses
     # dupfile(alignment_path, analysis_path)
-    model_params = get_model_commandline(model)
+    model_params = models.get_model_commandline(model)
 
     if branchlengths == 'linked':
         #constrain all branchlengths to be equal
@@ -198,7 +198,7 @@ def remove_files(aln_path, model):
     analysis_ID = raxml_analysis_ID(aln_path, model)
     dir = os.path.abspath(dir)
     fnames = os.listdir(dir)
-    fs = fnmatch.filter(fnames, '*%s*' %analysis_ID) 
+    fs = fnmatch.filter(fnames, '*%s*' %analysis_ID)
     [os.remove(os.path.join(dir,f)) for f in fs]
 
 
@@ -253,7 +253,7 @@ class Parser(object):
         log.debug("Parsed LNL:      %s" %tokens.lnl)
         log.debug("Parsed TREESIZE: %s" %tokens.tree_size)
         log.debug("Parsed TIME:     %s" %tokens.seconds)
-            
+
 
         return raxmlResult(lnl=tokens.lnl, tree_size=tokens.tree_size, seconds=tokens.seconds)
 

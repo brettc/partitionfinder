@@ -19,7 +19,7 @@ import logging, os, sys
 
 logging.basicConfig(
     format='%(levelname)-8s | %(asctime)s | %(message)s',
-    # format='%(levelname)s:%(message)s', 
+    # format='%(levelname)s:%(message)s',
     level=logging.INFO
 )
 
@@ -31,14 +31,14 @@ logging.basicConfig(
 
 log = logging.getLogger("main")
 from optparse import OptionParser
-import config, analysis_method, util, parser, reporter
+import config, analysis_method, util, parser, reporter, progress
 
 def main(name, version, datatype):
     log.info("------------- %s %s -----------------", name, version)
     usage = """usage: python %prog [options] <foldername>
 
-    PartitionFinder and PartitionFinderProtein are designed to discover optimal 
-    partitioning schemes for nucleotide and amino acid sequence alignments. 
+    PartitionFinder and PartitionFinderProtein are designed to discover optimal
+    partitioning schemes for nucleotide and amino acid sequence alignments.
     They are also useful for finding the best model of sequence evolution for datasets.
 
     The Input: <foldername>: the full path to a folder containing:
@@ -50,7 +50,7 @@ def main(name, version, datatype):
     'analysis' This file contains information on the best
     partitioning scheme, and the best model for each partiiton
 
-    Usage Examples: 
+    Usage Examples:
         >python %prog example
         Analyse what is in the 'example' sub-folder in the current folder.
 
@@ -80,7 +80,7 @@ def main(name, version, datatype):
         action="store_true", dest="force_restart",
         help="delete all previous output and start afresh (!)")
     parser.add_option(
-        "-p", "--processes", 
+        "-p", "--processes",
         type="int", dest="processes", default=-1, metavar="N",
         help="Number of concurrent processes to use."
         " Use -1 to match the number of cpus on the machine."
@@ -109,8 +109,8 @@ def main(name, version, datatype):
         help="Use RAxML (rather than PhyML) to do the analysis. See the manual"
         )
 
-    
-    
+
+
     options, args = parser.parse_args()
 
     #default to phyml
@@ -130,7 +130,7 @@ def main(name, version, datatype):
         parser.print_help()
         return 2
 
-    #before we start, let's check the python version is above 2.7 but lower than 3.0    
+    #before we start, let's check the python version is above 2.7 but lower than 3.0
     python_version = float("%d.%d" %(sys.version_info[0], sys.version_info[1]))
 
     log.info("You have Python version %.1f" %python_version)
@@ -147,9 +147,11 @@ def main(name, version, datatype):
 
     # Load, using the first argument as the folder
     try:
-        cfg = config.Configuration(datatype, options.phylogeny_program)
+        cfg = config.Configuration(datatype, options.phylogeny_program, options.save_phylofiles)
+        # Set up the progress callback
+        p = progress.TextProgress(cfg)
         cfg.load_base_path(args[0])
-                
+
         if options.check_only:
             log.info("Exiting without processing (because of the -c/--check-only option ...")
         else:
@@ -162,11 +164,9 @@ def main(name, version, datatype):
 
             # Now try processing everything....
             method = analysis_method.choose_method(cfg.search)
-            rpt = reporter.TextReporter(cfg)
-            anal = method(cfg, rpt, 
-                          options.force_restart, 
-                          options.save_phylofiles,
-                          options.phylogeny_program,
+            reporter.TextReporter(cfg)
+            anal = method(cfg,
+                          options.force_restart,
                           options.processes)
             results = anal.analyse()
 
@@ -174,7 +174,7 @@ def main(name, version, datatype):
                 results.dump(cfg)
             elif options.compare_results:
                 results.compare(cfg)
-            
+
         # Successful exit
         log.info("Processing complete.")
 

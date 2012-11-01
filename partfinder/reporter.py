@@ -27,6 +27,7 @@ subset_template = "%-15s | %-15s | %-15s | %-15s | %-15s\n"
 class TextReporter(object):
     def __init__(self, config):
         self.cfg = config
+        self.cfg.reporter = self
 
     def write_subset_summary(self, sub):
         pth = os.path.join(self.cfg.subsets_path, sub.name + '.txt')
@@ -67,9 +68,9 @@ class TextReporter(object):
         output.write(scheme_subset_template % (
             "Subset", "Best Model", "Subset Partitions", "Subset Sites",  "Alignment"))
         number = 1
-        
+
         pf_scheme_description = [] #a way to print out the scheme in PF format
-        
+
         for sub in sorted_subsets:
             desc = {}
             names= []
@@ -80,7 +81,7 @@ class TextReporter(object):
 
             #pretty print the sites in the scheme
             desc_starts = desc.keys()
-            desc_starts.sort()            
+            desc_starts.sort()
             parts = []
             for key in desc_starts:
                 part = desc[key]
@@ -90,12 +91,12 @@ class TextReporter(object):
                     text = "%s-%s\\%s" % tuple(part)
                 parts.append(text)
             parts = ', '.join(parts)
-            	
+
             names.sort()
             names = ', '.join(names)
 
             pf_scheme_description.append("(%s)" %names)
-			
+
             output.write(scheme_subset_template % (
                 number, sub.best_model, names, parts, sub.alignment_path))
             number += 1
@@ -103,7 +104,7 @@ class TextReporter(object):
         pf_scheme_description = " ".join(pf_scheme_description)
         output.write("\n\nScheme Description in PartitionFinder format\n")
         output.write("Scheme_%s = %s;" % (result.scheme.name, pf_scheme_description))
-            
+
     def write_raxml(self, result, output, sorted_subsets):
         """Print out partition definitions in RaxML-like format, might be
         useful to some people
@@ -120,7 +121,7 @@ class TextReporter(object):
 
             #pretty print the sites in the scheme
             desc_starts = desc.keys()
-            desc_starts.sort()            
+            desc_starts.sort()
             parts = []
             for key in desc_starts:
                 part = desc[key]
