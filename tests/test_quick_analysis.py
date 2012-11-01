@@ -1,5 +1,6 @@
 from basetest import *
 import os, shutil
+from nose.plugins.attrib import attr
 
 from partfinder import config, analysis_method, reporter
 
@@ -19,6 +20,7 @@ def load_cfg_and_run(name):
         shutil.rmtree(cfg.full_output_path)
         cfg.reset()
 
+@attr('quick')
 def test_all_analyses():
     analysis_dirs = os.listdir(QUICK_PATH)
     for f in analysis_dirs:
