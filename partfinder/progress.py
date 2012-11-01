@@ -56,9 +56,9 @@ class TextProgress(Progress):
                  self.scheme_count)
 
     def subset_begin(self, sub):
+        log.info("Begin analysing subset %d/%d",
+                 self.subsets_analysed, self.subset_count)
         pass
-        # log.info("Begin analysing subset %d/%d",
-                 # self.subsets_analysed, self.subset_count)
 
     def subset_done(self, sub):
         self.subsets_analysed += 1
