@@ -190,16 +190,23 @@ class Subset(object):
 
         return param_values
 
-    def are_we_done_yet(self, cfg):
+    def finalise(self, cfg):
         if self.models_not_done:
             return False
 
+        # We might already have done everything
+        if self.status == DONE:
+            return True
+
+        # Do all the final cleanup
         cfg.reporter.write_subset_summary(self)
         self.save_results(cfg)
         self.model_selection(cfg)
-        self.status = DONE
         if not cfg.save_phylofiles:
             remove_runID_files(self.alignment_path)
+
+        self.models_to_process = []
+        self.status = DONE
         return True
 
     def prepare(self, cfg, alignment):
@@ -214,7 +221,7 @@ class Subset(object):
         # shortcut all the other checks
         models_done = set(self.results.keys())
         self.models_not_done = cfg.models - models_done
-        if self.are_we_done_yet(cfg):
+        if self.finalise(cfg):
             return
 
         # Make an Alignment from the source, using this subset
@@ -222,7 +229,7 @@ class Subset(object):
 
         # Try and read in some previous analyses
         self.parse_results(cfg)
-        if self.are_we_done_yet(cfg):
+        if self.finalise(cfg):
             return
 
         self.models_to_process = list(self.models_not_done)
@@ -256,10 +263,19 @@ class Subset(object):
                 cfg.processor.remove_files(self.alignment_path, model)
 
         except cfg.processor.PhylogenyProgramError:
-            log.warning("Failed loading parse output from %s."
-                        "Output maybe corrupted. I'll run it again.",
-                        pth)
-            self.cfg.processor.remove_files(self.alignment_path, model)
+            # If we're loading old files, this is fine
+            if self.status == FRESH:
+                log.warning("Failed loading parse output from %s."
+                            "Output maybe corrupted. I'll run it again.",
+                            pth)
+                self.cfg.processor.remove_files(self.alignment_path, model)
+
+            # But if we're prepared, then we've just run this. And we're
+            # screwed
+            log.error(
+                "Failed to run models %s; not sure why",
+                ", ".join(list(self.models_to_do)))
+            raise
 
     def make_alignment(self, cfg, alignment):
         # Make an Alignment from the source, using this subset

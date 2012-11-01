@@ -27,7 +27,6 @@ from alignment import Alignment, SubsetAlignment
 import threadpool
 import scheme
 import subset
-import util
 import results
 from util import PartitionFinderError
 
@@ -38,14 +37,10 @@ class AnalysisError(PartitionFinderError):
 
 class Analysis(object):
     """Performs the analysis and collects the results"""
-    def __init__(self, cfg,
-                 force_restart=False,
-                 save_phylofiles=False,
-                 threads=-1):
+    def __init__(self, cfg, force_restart=False, threads=-1):
         cfg.validate()
         self.cfg = cfg
         self.threads = threads
-        self.save_phylofiles = save_phylofiles
         self.results = results.AnalysisResults()
 
         log.info("Beginning Analysis")
@@ -152,34 +147,7 @@ class Analysis(object):
             tree_path = self.cfg.processor.make_branch_lengths(self.filtered_alignment_path, topology_path, self.cfg.datatype)
 
         self.tree_path = tree_path
-        log.info(
-            "Starting tree with branch lengths is here: %s", self.tree_path)
-
-    def analyse_subset(self, sub):
-        """Analyse the subset using the models given. This is the core place
-        where everything comes together. The results are placed into
-        subset.result"""
-
-        sub.prepare(self.cfg, self.alignment)
-        if sub.status == subset.DONE:
-            return
-
-        tasks = []
-        self.make_tasks_for_sub(tasks, sub)
-
-        if self.threads == 1:
-            self.run_models_concurrent(tasks)
-        else:
-            self.run_models_threaded(tasks)
-
-        # Now parse the models we've just done
-        sub.parse_results(self.cfg)
-        if sub.are_we_done_yet(self.cfg):
-            return
-
-        log.error("Failed to run models %s; not sure why",
-                      ", ".join(list(models_to_do)))
-        raise AnalysisError
+        log.info("Starting tree with branch lengths is here: %s", self.tree_path)
 
     def make_tasks_for_sub(self, tasks, sub):
         for m in sub.models_to_process:
@@ -196,15 +164,30 @@ class Analysis(object):
 
     def analyse_scheme(self, sch):
         self.schemes_analysed = self.schemes_analysed + 1
-        log.info("Analysing scheme %d/%d" % (self.schemes_analysed,
-                 self.total_scheme_num))
+        log.info("Analysing scheme %d/%d" % (self.schemes_analysed, self.total_scheme_num))
+
+        # Prepare by reading everything in first
+        tasks = []
         for sub in sch:
-            self.analyse_subset(sub)
+            sub.prepare(self.cfg, self.alignment)
+            self.make_tasks_for_sub(tasks, sub)
+
+        # Now do the analysis
+        if self.threads == 1:
+            self.run_models_concurrent(tasks)
+        else:
+            self.run_models_threaded(tasks)
+
+        # Now see if we're done
+        for sub in sch:
+            sub.parse_results(self.cfg)
+            if not sub.finalise(self.cfg):
+                log.error("Failed to run models %s; not sure why", ", ".join(list(sub.models_to_do)))
+                raise AnalysisError
 
         # AIC needs the number of sequences
         number_of_seq = len(self.alignment.species)
-        result = scheme.SchemeResult(
-            sch, number_of_seq, self.cfg.branchlengths)
+        result = scheme.SchemeResult(sch, number_of_seq, self.cfg.branchlengths)
         self.results.add_scheme_result(result)
 
         # TODO: should put all paths into config. Then reporter should decide
