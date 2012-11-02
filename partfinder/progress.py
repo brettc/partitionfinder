@@ -39,8 +39,10 @@ class Progress(object):
     def end(self):
         pass
 
+
 class NoProgress(Progress):
     pass
+
 
 class TextProgress(Progress):
 
@@ -56,18 +58,12 @@ class TextProgress(Progress):
                  self.scheme_count)
 
     def subset_begin(self, sub):
-        log.info("Begin analysing subset %d/%d",
-                 self.subsets_analysed, self.subset_count)
-        pass
+        log.info("Begin analysing subset %s", sub)
 
     def subset_done(self, sub):
         self.subsets_analysed += 1
-        log.info("Finished analysing subset %d/%d",
-                 self.subsets_analysed, self.subset_count)
-        # percent_done = float(self.subsets_analysed)*100.0/float(self.total_subset_num)
-        # log.info("Analysing subset %d/%d: %.2f%s done" %
-                     # (self.subsets_analysed,self.total_subset_num,
-                      # percent_done, r"%"))
+        percent_done = float(self.subsets_analysed) * 100.0 / float(self.subset_count)
+        log.info("Finished analysing subset %s, now %.2f done", sub, percent_done)
 
     def end(self):
         pass
