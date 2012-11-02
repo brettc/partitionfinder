@@ -36,15 +36,16 @@ FRESH, PREPARED, DONE = range(3)
 class SubsetError(PartitionFinderError):
     pass
 
+
 def count_subsets():
     return len(Subset._cache)
+
 
 class Subset(object):
     """A Subset of Partitions
     """
     # TODO: changes this to AllSubsets?
     _cache = weakref.WeakValueDictionary()
-
 
     def __new__(cls, *parts):
         """Return the SAME subset if the partitions are identical. This is
