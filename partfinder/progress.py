@@ -58,8 +58,9 @@ class TextProgress(Progress):
                  self.scheme_count)
 
     def subset_begin(self, sub):
-        log.info("Begin analysing subset %s", sub)
-
+        #log.info("Begin analysing subset %s", sub)
+        pass 
+        
     def subset_done(self, sub):
         self.subsets_analysed += 1
         percent_done = float(self.subsets_analysed) * 100.0 / float(self.subset_count)
