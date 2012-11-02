@@ -279,7 +279,7 @@ class Subset(object):
             # screwed
             log.error(
                 "Failed to run models %s; not sure why",
-                ", ".join(list(self.models_to_do)))
+                ", ".join(list(self.models_not_done)))
             raise
 
     def make_alignment(self, cfg, alignment):
