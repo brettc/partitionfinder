@@ -247,7 +247,7 @@ class Parser(object):
         try:
             tokens = self.root_parser.parseString(text)
         except ParseException, p:
-            log.error(str(p))
+            log.debug(str(p))
             raise RaxmlError
 
         log.debug("Parsed LNL:      %s" %tokens.lnl)
