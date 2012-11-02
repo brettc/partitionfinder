@@ -275,13 +275,13 @@ class Subset(object):
                             "Output maybe corrupted. I'll run it again.",
                             pth)
                 cfg.processor.remove_files(self.alignment_path, model)
-
-            # But if we're prepared, then we've just run this. And we're
-            # screwed
-            log.error(
-                "Failed to run models %s; not sure why",
-                ", ".join(list(self.models_not_done)))
-            raise
+            else:
+                # But if we're prepared, then we've just run this. And we're
+                # screwed
+                log.error(
+                    "Failed to run models %s; not sure why",
+                    ", ".join(list(self.models_not_done)))
+                raise AnalysisError
 
     def make_alignment(self, cfg, alignment):
         # Make an Alignment from the source, using this subset
