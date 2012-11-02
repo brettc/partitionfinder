@@ -281,7 +281,7 @@ class Subset(object):
                 log.error(
                     "Failed to run models %s; not sure why",
                     ", ".join(list(self.models_not_done)))
-                raise AnalysisError
+                raise
 
     def make_alignment(self, cfg, alignment):
         # Make an Alignment from the source, using this subset
