@@ -178,6 +178,19 @@ def get_model_difficulty(modelstring):
 
     return total
 
+def get_raxml_protein_modelstring(modelstring):
+    """Start with a model like this: LG+I+G+F, return a model in raxml format like this:
+    ILGF. This is only used for printing out RAxML partition files"""
+    elements = modelstring.split("+")
+    model_name = elements[0]
+    extras = elements[1:]
+
+    raxmlstring = model_name
+    if "F" in extras:
+        raxmlstring = ''.join([raxmlstring, "F"])
+    
+    return raxmlstring
+
 if __name__ == "__main__":
     print "  ",
     print "Name".ljust(15),

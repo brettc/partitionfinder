@@ -109,9 +109,11 @@ class TextReporter(object):
         """Print out partition definitions in RaxML-like format, might be
         useful to some people
         """
+        from raxml_models import get_raxml_protein_modelstring 
         output.write("\n\nRaxML-style partition definitions\n")
         number = 1
         for sub in sorted_subsets:
+            
             desc = {}
             names= []
             for part in sub:
@@ -131,7 +133,15 @@ class TextReporter(object):
                     text = "%s-%s\\%s" % tuple(part)
                 parts.append(text)
             parts = ', '.join(parts)
-            line = "DNA, p%s = %s\n" %(number, parts)
+            
+            if self.cfg.datatype == "DNA":
+                model = "DNA"
+            elif self.cfg.datatype == "protein":
+                model = get_raxml_protein_modelstring(sub.best_model)
+            else:
+                model = "" #this is a copout
+            
+            line = "%s, p%s = %s\n" %(model, number, parts)
             output.write(line)
 
             number += 1
