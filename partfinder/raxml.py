@@ -128,12 +128,12 @@ def make_branch_lengths(alignment_path, topology_path, datatype):
 
     if datatype=="DNA":
         log.info("Estimating GTR+G branch lengths on tree using RAxML")
-        command = "-f e -s '%s' -t '%s' -m GTRGAMMA -n BLTREE -w '%s'" % (
+        command = "-f e -s '%s' -t '%s' -m GTRGAMMA -n BLTREE -w '%s' -e 1.0" % (
             alignment_path, tree_path, os.path.abspath(dir_path))
         run_raxml(command)
     if datatype=="protein":
         log.info("Estimating LG+G branch lengths on tree using RAxML")
-        command = "-f e -s '%s' -t '%s' -m PROTGAMMALG -n BLTREE -w '%s'" % (
+        command = "-f e -s '%s' -t '%s' -m PROTGAMMALG -n BLTREE -w '%s' -e 1.0" % (
             alignment_path, tree_path, os.path.abspath(dir_path))
         run_raxml(command)
 
