@@ -31,10 +31,11 @@ logging.basicConfig(
 
 log = logging.getLogger("main")
 from optparse import OptionParser
-import config, analysis_method, util, parser, reporter, progress
+import config, analysis_method, util, parser, reporter, progress, time
 
 def main(name, version, datatype):
     log.info("------------- %s %s -----------------", name, version)
+    time.clock() #start the clock ticking
     usage = """usage: python %prog [options] <foldername>
 
     PartitionFinder and PartitionFinderProtein are designed to discover optimal
@@ -186,6 +187,7 @@ def main(name, version, datatype):
                 results.compare(cfg)
 
         # Successful exit
+        log.info("Total processing time: %s seconds" %time.clock())
         log.info("Processing complete.")
 
         return 0
