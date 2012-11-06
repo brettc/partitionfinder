@@ -64,7 +64,7 @@ class TextProgress(Progress):
     def subset_done(self, sub):
         self.subsets_analysed += 1
         percent_done = (float(self.subsets_analysed) * 100.0) / float(self.subset_count)
-        log.info("Finished subset %d/%d, %.2f done", self.subsets_analysed, self.subset_count, percent_done)
+        log.info("Finished subset %d/%d, %.2f percent done", self.subsets_analysed, self.subset_count, percent_done)
 
     def end(self):
         pass

@@ -171,7 +171,7 @@ def make_branch_lengths(alignment_path, topology_path, datatype):
     return tree_path
 
 
-def analyse(model, alignment_path, tree_path, branchlengths):
+def analyse(model, alignment_path, tree_path, branchlengths, cmdline_extras):
     """Do the analysis -- this will overwrite stuff!"""
 
     # Move it to a new name to stop phyml stomping on different model analyses
@@ -189,8 +189,23 @@ def analyse(model, alignment_path, tree_path, branchlengths):
         log.error("Unknown option for branchlengths: %s", branchlengths)
         raise PhymlError
 
-    command = "--run_id %s -b 0 -i '%s' -u '%s' %s %s" % (
-        model, alignment_path, tree_path, model_params, bl)
+    if cmdline_extras.count("--min_diff_lk_global")>0:
+        #then the user has specified a particular accuracy:
+        accuracy_global = ""
+    else:
+        #we specify a default accuracy of 1 lnL unit
+        accuracy_global = " --min_diff_lk_global 1.0 "
+
+    if cmdline_extras.count("--min_diff_lk_local")>0:
+        #then the user has specified a particular accuracy:
+        accuracy_local = ""
+    else:
+        #we specify a default accuracy of 1 lnL unit
+        accuracy_local = " --min_diff_lk_local 1.0 "
+
+    command = "--run_id %s -b 0 -i '%s' -u '%s' %s %s %s %s %s" % (
+        model, alignment_path, tree_path, model_params, bl, cmdline_extras,
+        accuracy_global, accuracy_local)
     run_phyml(command)
 
     # Now get rid of this -- we have the original elsewhere
@@ -224,7 +239,7 @@ class PhymlResult(object):
         return "PhymlResult(lnl:%s, tree_size:%s, secs:%s)" % (self.lnl, self.tree_size, self.seconds)
 
 class Parser(object):
-    def __init__(self):
+    def __init__(self, datatype):
         FLOAT = Word(nums + '.-').setParseAction(lambda x: float(x[0]))
         INTEGER = Word(nums + '-').setParseAction(lambda x: int(x[0]))
 
@@ -264,10 +279,9 @@ class Parser(object):
 
         return PhymlResult(lnl=tokens.lnl, tree_size=tokens.tree_size, seconds=tokens.seconds)
 
-# Stateless, so safe for use across threads. HMMMM, REALLY?
-the_parser = Parser()
 
-def parse(text):
+def parse(text, datatype):
+    the_parser = Parser(datatype)
     return the_parser.parse(text)
 
 if __name__ == '__main__':

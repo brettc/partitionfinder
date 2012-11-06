@@ -105,16 +105,25 @@ def main(name, version, datatype):
         "This is only of use for testing purposes.")
     parser.add_option(
         "--raxml",
-        action="store_true", dest="use_raxml",
+        action="store_true", dest="raxml",
         help="Use RAxML (rather than PhyML) to do the analysis. See the manual"
         )
-
+    parser.add_option(
+        "--cmdline_extras",
+        type="str", dest="cmdline_extras", default="", metavar="N",
+        help="Add additional commands to the phyml or raxml commandlines that PF uses."
+        "This can be useful e.g. if you want to change the accuracy of lnL calculations"
+        " ('-e' option in raxml), or use multi-threaded versions of raxml that require"
+        " you to specify the number of threads you will let raxml use ('-T' option in "
+        "raxml. E.g. you might specify this: --cmndline_extras ' -e 2.0 -T 10 '"
+        " N.B. MAKE SURE YOU PUT YOUR EXTRAS IN QUOTES"
+        )
 
 
     options, args = parser.parse_args()
 
     #default to phyml
-    if options.use_raxml==1:
+    if options.raxml==1:
         options.phylogeny_program = 'raxml'
     else:
         options.phylogeny_program = 'phyml'
@@ -147,7 +156,8 @@ def main(name, version, datatype):
 
     # Load, using the first argument as the folder
     try:
-        cfg = config.Configuration(datatype, options.phylogeny_program, options.save_phylofiles)
+        cfg = config.Configuration(datatype, options.phylogeny_program, 
+            options.save_phylofiles, options.cmdline_extras)
         # Set up the progress callback
         p = progress.TextProgress(cfg)
         cfg.load_base_path(args[0])

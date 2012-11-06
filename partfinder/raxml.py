@@ -144,7 +144,7 @@ def make_branch_lengths(alignment_path, topology_path, datatype):
     # Now return the path of the final tree with branch lengths
     return tree_path
 
-def analyse(model, alignment_path, tree_path, branchlengths):
+def analyse(model, alignment_path, tree_path, branchlengths, cmdline_extras):
     """Do the analysis -- this will overwrite stuff!"""
 
     # Move it to a new name to stop raxml stomping on different model analyses
@@ -162,14 +162,21 @@ def analyse(model, alignment_path, tree_path, branchlengths):
         log.error("Unknown option for branchlengths: %s", branchlengths)
         raise RaxmlError
 
+    if cmdline_extras.count("-e")>0:
+        #then the user has specified a particular accuracy:
+        accuracy = ""
+    else:
+        #we specify a default accuracy of 1 lnL unit
+        accuracy = " -e 1.0 "
+
     #raxml doesn't append alignment names automatically, like PhyML, let's do that here
     analysis_ID = raxml_analysis_ID(alignment_path, model)
 
     #force raxml to write to the dir with the alignment in it
     #-e 1.0 sets the precision to 1 lnL unit. This is all that's required here, and helps with speed.
     aln_dir, fname = os.path.split(alignment_path)
-    command = " %s -s '%s' -t '%s' %s -n %s -w '%s' -e 10.0" % (
-        bl, alignment_path, tree_path, model_params, analysis_ID, os.path.abspath(aln_dir))
+    command = " %s -s '%s' -t '%s' %s -n %s -w '%s' %s %s" % (
+        bl, alignment_path, tree_path, model_params, analysis_ID, os.path.abspath(aln_dir), cmdline_extras, accuracy)
     run_raxml(command)
 
 def raxml_analysis_ID(alignment_path, model):
@@ -213,7 +220,7 @@ class raxmlResult(object):
         return "raxmlResult(lnl:%s, tree_size:%s, secs:%s)" % (self.lnl, self.tree_size, self.seconds)
 
 class Parser(object):
-    def __init__(self):
+    def __init__(self, datatype):
         FLOAT = Word(nums + '.-').setParseAction(lambda x: float(x[0]))
         INTEGER = Word(nums + '-').setParseAction(lambda x: int(x[0]))
 
@@ -231,7 +238,16 @@ class Parser(object):
         lnl = (LNL_LABEL + FLOAT("lnl"))
         seconds = (TIME_LABEL + FLOAT("seconds"))
         tree_size = (TREE_SIZE_LABEL + FLOAT("tree_size"))
-
+        
+        #amino acid and base frequencies (that space next to the 'N' is supposed to be there) 
+        if datatype=="protein":
+            freqs = ["A", "R", "N ", "D", "C", "Q", "E", "G", "H", "I", "L", "K", "M", "F", "P", "S", "T", "W", "Y", "V"]
+        elif datatype=="dna":
+            freqs = ["A", "C", "T", "G"]
+        else:
+            log.error("Unknown datatype '%s', please check" % datatype)
+            raise RaxmlError
+        
         # Shorthand...
         def nextbit(label, val):
             return Suppress(SkipTo(label)) + val
@@ -241,6 +257,7 @@ class Parser(object):
                 nextbit(TIME_LABEL, seconds) +\
                 nextbit(LNL_LABEL, lnl) +\
                 nextbit(TREE_SIZE_LABEL, tree_size)
+                    
 
     def parse(self, text):
         log.debug("Parsing raxml output...")
@@ -257,10 +274,8 @@ class Parser(object):
 
         return raxmlResult(lnl=tokens.lnl, tree_size=tokens.tree_size, seconds=tokens.seconds)
 
-# Stateless, so safe for use across threads. HMMMM, REALLY?
-the_parser = Parser()
-
-def parse(text):
+def parse(text, datatype):
+    the_parser = Parser(datatype)
     return the_parser.parse(text)
 
 if __name__ == '__main__':

@@ -42,11 +42,13 @@ class Configuration(object):
         'search': ['all', 'user', 'greedy', 'clustering']
     }
 
-    def __init__(self, datatype="DNA", phylogeny_program='phyml', save_phylofiles=False):
+    def __init__(self, datatype="DNA", phylogeny_program='phyml', 
+        save_phylofiles=False, cmdline_extras = ""):
         self.partitions = partition.PartitionSet()
         self.schemes = scheme.SchemeSet()
         self.save_phylofiles = save_phylofiles
         self.progress = progress.NoProgress(self)
+        self.cmdline_extras = cmdline_extras
 
         self.base_path = '.'
         self.alignment = None

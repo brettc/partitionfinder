@@ -258,7 +258,7 @@ class Subset(object):
 
     def parse_model_result(self, cfg, model, output, pth):
         try:
-            result = cfg.processor.parse(output)
+            result = cfg.processor.parse(output, cfg.datatype)
             self.add_result(cfg, model, result)
             # Remove the current model from remaining ones
             self.models_not_done.remove(model)

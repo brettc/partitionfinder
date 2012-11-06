@@ -181,10 +181,10 @@ class Parser(object):
                 modlist = set(phyml_models.get_beast_models())
                 DNA_mods = DNA_mods + 1
             elif modsgroup.lower() == "raxml":
-                modlist = phyml_models.get_raxml_models()
+                modlist = set(phyml_models.get_raxml_models())
                 DNA_mods = DNA_mods + 1
             elif modsgroup.lower() == "all_protein":
-                modlist = self.phylo_models.get_all_protein_models()
+                modlist = set(self.phylo_models.get_all_protein_models())
                 prot_mods = prot_mods + 1
             else:
                 pass

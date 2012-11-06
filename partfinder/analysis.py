@@ -148,7 +148,8 @@ class Analysis(object):
     def add_tasks_for_sub(self, tasks, sub):
         for m in sub.models_to_process:
             tasks.append((self.cfg.processor.analyse,
-                          (m, sub.alignment_path, self.tree_path, self.cfg.branchlengths)))
+                          (m, sub.alignment_path, self.tree_path, 
+                          self.cfg.branchlengths, self.cfg.cmdline_extras)))
 
     def run_models_concurrent(self, tasks):
         for func, args in tasks:
