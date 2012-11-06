@@ -242,7 +242,7 @@ class Parser(object):
         #amino acid and base frequencies (that space next to the 'N' is supposed to be there) 
         if datatype=="protein":
             freqs = ["A", "R", "N ", "D", "C", "Q", "E", "G", "H", "I", "L", "K", "M", "F", "P", "S", "T", "W", "Y", "V"]
-        elif datatype=="dna":
+        elif datatype=="DNA":
             freqs = ["A", "C", "T", "G"]
         else:
             log.error("Unknown datatype '%s', please check" % datatype)
