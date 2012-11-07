@@ -17,31 +17,37 @@
 
 import logging
 log = logging.getLogger("util")
-import os, fnmatch
+import os
+import fnmatch
 
 
 # Base error class
 class PartitionFinderError(Exception):
     pass
 
+
 class PhylogenyProgramError(PartitionFinderError):
     pass
 
+
 def check_file_exists(pth):
     if not os.path.exists(pth) or not os.path.isfile(pth):
-        if pth.count("partition_finder.cfg")>0:
+        if pth.count("partition_finder.cfg") > 0:
             log.error("Failed to find configuration file: '%s'. "
-            "For PartitionFinder to run, there must be a file called 'partition_finder.cfg' "
-            "located in the same folder as your alignment. Please check and try again.", pth)
+                      "For PartitionFinder to run, there must be a file called 'partition_finder.cfg' "
+                      "located in the same folder as your alignment. Please check and try again.", pth)
             raise PartitionFinderError
         else:
-            log.error("Failed to find file: '%s'. Please check and try again.", pth)
+            log.error(
+                "Failed to find file: '%s'. Please check and try again.", pth)
             raise PartitionFinderError
+
 
 def check_folder_exists(pth):
     if not os.path.exists(pth) or not os.path.isdir(pth):
         log.error("No such folder: '%s'", pth)
         raise PartitionFinderError
+
 
 def get_root_install_path():
     pth = os.path.abspath(__file__)
@@ -50,21 +56,29 @@ def get_root_install_path():
     pth, not_used = os.path.split(pth)
     return pth
 
+
 def make_dir(pth):
     if os.path.exists(pth):
         if not os.path.isdir(pth):
             log.error("Cannot create folder '%s'", pth)
-            raise AnalysisError
+            raise PartitionFinderError
     else:
         os.mkdir(pth)
+
 
 def remove_runID_files(aln_pth):
     """remove all files that match a particular run_ID. Useful for cleaning out directories
     but ONLY after a whole analysis of a subset is completely finished, be careful!"""
-    dir, file = os.path.split(aln_pth)
-    run_ID =  os.path.splitext(file)[0]
-    dir = os.path.abspath(dir)
-    fnames = os.listdir(dir)
-    fs = fnmatch.filter(fnames, '*%s*' %run_ID) 
-    [os.remove(os.path.join(dir,f)) for f in fs]
-    
+    head, tail = os.path.split(aln_pth)
+    run_ID = os.path.splitext(tail)[0]
+    head = os.path.abspath(head)
+    fnames = os.listdir(head)
+    fs = fnmatch.filter(fnames, '*%s*' % run_ID)
+    for f in fs:
+        try:
+            os.remove(os.path.join(head, f))
+        except OSError:
+            # Don't complain if you can't delete them
+            # (This is here because we sometimes try and delete things twice in
+            # the threading).
+            pass

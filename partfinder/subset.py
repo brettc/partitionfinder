@@ -249,14 +249,17 @@ class Subset(object):
     def parse_results(self, cfg):
         """Read in the results and parse them"""
         for m in list(self.models_not_done):
-            stats_path, tree_path = cfg.processor.make_output_path(
-                self.alignment_path, m)
+            self.parse_model_result(cfg, m)
 
-            if os.path.exists(stats_path):
-                sub_output = open(stats_path, 'rb').read()
-                self.parse_model_result(cfg, m, sub_output, stats_path)
+    def parse_model_result(self, cfg, model):
+        pth, tree_path = cfg.processor.make_output_path(
+            self.alignment_path, model)
 
-    def parse_model_result(self, cfg, model, output, pth):
+        if not os.path.exists(pth):
+            # If it ain't there, we can't do it
+            return
+
+        output = open(pth, 'rb').read()
         try:
             result = cfg.processor.parse(output, cfg.datatype)
             self.add_result(cfg, model, result)

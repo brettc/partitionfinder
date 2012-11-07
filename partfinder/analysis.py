@@ -26,6 +26,7 @@ import threadpool
 import scheme
 import subset
 import results
+import threading
 from util import PartitionFinderError
 
 
@@ -52,6 +53,9 @@ class Analysis(object):
         self.cfg.make_output_folders()
         self.make_alignment(cfg.alignment_path)
         self.make_tree(cfg.user_tree_topology_path)
+
+        # We need this to block the threads for critical stuff
+        self.lock = threading.Condition(threading.Lock())
 
     def process_restart(self, force_restart):
         if force_restart:
@@ -145,17 +149,35 @@ class Analysis(object):
         self.tree_path = tree_path
         log.info("Starting tree with branch lengths is here: %s", self.tree_path)
 
+    def run_task(self, m, sub):
+        # This bit should run in parallel (forking the processor)
+        self.cfg.processor.analyse(
+            m,
+            sub.alignment_path,
+            self.tree_path,
+            self.cfg.branchlengths,
+            self.cfg.cmdline_extras
+        )
+
+        # Not entirely sure that WE NEED to block here, but it is safer to do
+        # It shouldn't hold things up toooo long...
+        self.lock.acquire()
+        try:
+            sub.parse_model_result(self.cfg, m)
+            # Try finalising, then the result will get written out earlier...
+            sub.finalise(self.cfg)
+        finally:
+            self.lock.release()
+
     def add_tasks_for_sub(self, tasks, sub):
         for m in sub.models_to_process:
-            tasks.append((self.cfg.processor.analyse,
-                          (m, sub.alignment_path, self.tree_path, 
-                          self.cfg.branchlengths, self.cfg.cmdline_extras)))
+            tasks.append((self.run_task, (m, sub)))
 
-    def run_models_concurrent(self, tasks):
+    def run_concurrent(self, tasks):
         for func, args in tasks:
             func(*args)
 
-    def run_models_threaded(self, tasks):
+    def run_threaded(self, tasks):
         if not tasks:
             return
         pool = threadpool.Pool(tasks, self.threads)
@@ -172,13 +194,14 @@ class Analysis(object):
 
         # Now do the analysis
         if self.threads == 1:
-            self.run_models_concurrent(tasks)
+            self.run_concurrent(tasks)
         else:
-            self.run_models_threaded(tasks)
+            self.run_threaded(tasks)
 
         # Now see if we're done
         for sub in sch:
-            sub.parse_results(self.cfg)
+            # ALL subsets should already be finalised in the task. We just
+            # check again here
             if not sub.finalise(self.cfg):
                 log.error("Failed to run models %s; not sure why", ", ".join(list(sub.models_to_do)))
                 raise AnalysisError
