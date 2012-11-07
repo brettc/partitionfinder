@@ -18,12 +18,19 @@
 import logging
 log = logging.getLogger("config")
 
-import os, fnmatch
+import os
+import fnmatch
 import cPickle as pickle
-import scheme, subset, partition, parser, util 
+import scheme
+import partition
+import parser
+import util
+import progress
+
 
 class ConfigurationError(util.PartitionFinderError):
     pass
+
 
 class Configuration(object):
     """This holds the user configuration info"""
@@ -32,12 +39,16 @@ class Configuration(object):
     options = {
         'branchlengths': ['linked', 'unlinked'],
         'model_selection': ['aic', 'aicc', 'bic'],
-        'search': ['all', 'user', 'greedy']
-        }
+        'search': ['all', 'user', 'greedy', 'clustering']
+    }
 
-    def __init__(self, datatype="DNA"):
+    def __init__(self, datatype="DNA", phylogeny_program='phyml',
+        save_phylofiles=False, cmdline_extras = ""):
         self.partitions = partition.PartitionSet()
         self.schemes = scheme.SchemeSet()
+        self.save_phylofiles = save_phylofiles
+        self.progress = progress.NoProgress(self)
+        self.cmdline_extras = cmdline_extras
 
         self.base_path = '.'
         self.alignment = None
@@ -50,6 +61,15 @@ class Configuration(object):
         log.info("Setting datatype to '%s'", datatype)
         self.datatype = datatype
 
+        if phylogeny_program != "phyml" and phylogeny_program != "raxml":
+            log.error("Phylogeny program must be 'phyml' or 'raxml'")
+            raise ConfigurationError
+
+        # Import the right processor
+        self.processor = __import__(phylogeny_program.lower(), globals())
+
+        log.info("Setting phylogeny program to '%s'", phylogeny_program)
+        self.phylogeny_program = phylogeny_program
 
         # Set the defaults into the class. These can be reset by calling
         # set_option(...)
@@ -87,7 +107,6 @@ class Configuration(object):
 
         raise ConfigurationError
 
-
     def load_base_path(self, pth):
         """Load using a base path folder"""
         # Allow for user and environment variables
@@ -100,8 +119,8 @@ class Configuration(object):
         #check that user didn't enter a file instead of a folder
         # if os.path.isfile(pth):
             # log.error("The second argument of the commandline currently points to a file, but it should point to the folder that contains the alignment and .cfg files, please check.")
-            # raise ConfigurationError            
-        
+            # raise ConfigurationError
+
         self.set_base_path(folder)
 
         # From now on we refer to relative paths
@@ -122,7 +141,7 @@ class Configuration(object):
         # Separate the naming and construction of folders
         new_path = os.path.join(self.output_path, name)
         self._output_folders.append(new_path)
-        setattr(self, name+"_path", new_path)
+        setattr(self, name + "_path", new_path)
 
     def make_output_folders(self):
         util.make_dir(self.output_path)
@@ -143,7 +162,8 @@ class Configuration(object):
         handler.setLevel(logging.DEBUG)
         logging.getLogger("").addHandler(handler)
         logging.getLogger("analysis").addHandler(handler)
-        #logging.getLogger("alignment").addHandler(handler)
+        # logging.getLogger("subset").addHandler(handler)
+        logging.getLogger("alignment").addHandler(handler)
 
     def load(self, config_path):
         """We get the parser to construct the configuration"""
@@ -152,7 +172,7 @@ class Configuration(object):
         self.config_path = config_path
         p = parser.Parser(self)
         p.parse_file(config_path)
-            
+
     def set_base_path(self, base_path):
         self.full_base_path = os.path.abspath(base_path)
         log.info("Setting working folder to: '%s'", self.full_base_path)
@@ -172,8 +192,8 @@ class Configuration(object):
         self.alignment = align
 
     def set_option(self, option, value):
-    
-        #make everything lowercase, this makes life easier for us    
+
+        #make everything lowercase, this makes life easier for us
         value = value.lower()
 
         if option not in self.options:
@@ -185,8 +205,8 @@ class Configuration(object):
         valid = [x.lower() for x in self.options[option]]
         if value not in valid:
             log.error("'%s' is not a valid option for '%s'" % (value, option))
-            log.info("The only valid options for '%s' are: %s" % 
-                     (option, "'%s'" %("', '".join(self.options[option]))))
+            log.info("The only valid options for '%s' are: %s" %
+                     (option, "'%s'" % ("', '".join(self.options[option]))))
             raise ConfigurationError
 
         log.info("Setting '%s' to '%s'", option, value)
@@ -204,33 +224,34 @@ class Configuration(object):
         else:
             self.user_tree_topology_path = os.path.join(self.base_path,
                                                         self.user_tree)
-            log.info("Looking for tree file '%s'...", self.user_tree_topology_path)
+            log.info(
+                "Looking for tree file '%s'...", self.user_tree_topology_path)
             util.check_file_exists(self.user_tree_topology_path)
-            
 
     def check_for_old_config(self):
         """Check whether the analysis dictated by cfg has been run before, and if the config has changed
         in any way that would make re-running it invalid"""
         #the important stuff in our analysis, that can't change if we want to re-use old subsets
         if self.user_tree is None:
-            topology = "" 
+            topology = ""
         else:
             topology = open(self.user_tree_topology_path).read()
 
-        cfg_list = [self.alignment, 
+        cfg_list = [self.alignment,
                     self.branchlengths,
                     self.partitions.partitions,
+                    self.phylogeny_program,
                     topology]
-    
+
         #we need to know if there's anything in the subsets folder
         subset_path = os.path.join(self.output_path, 'subsets')
         has_subsets = False
         if os.path.exists(subset_path):
             for file in os.listdir(subset_path):
                 if fnmatch.fnmatch(file, '*.bin'):
-                    has_subsets=True
+                    has_subsets = True
                     break
-    
+
         #we also need to know if there's an old conifg file saved
         cfg_dir = os.path.join(self.output_path, 'cfg')
         old_cfg_path = os.path.join(cfg_dir, 'oldcfg.bin')
@@ -238,8 +259,8 @@ class Configuration(object):
             has_config = True
         else:
             has_config = False
-    
-        if has_subsets==False:
+
+        if has_subsets == False:
             #we have no subsets so can't screw anything up, just copy the new cfg file settings, overwrite anything else
             if not os.path.exists(cfg_dir):
                 os.makedirs(cfg_dir)
@@ -248,9 +269,9 @@ class Configuration(object):
             pickle.dump(cfg_list, f, -1)
             f.close()
             return 0
-    
-        else: #there are subsets
-            if has_config==False:
+
+        else:  # there are subsets
+            if has_config == False:
                 log.error("There are subsets stored, but PartitionFinder can't determine where they are from")
                 log.info("Please re-run the analysis using the '--force-restart' option at the command line")
                 log.warning("This will delete all of the analyses in the '/analysis' folder")
@@ -261,25 +282,36 @@ class Configuration(object):
                 old_cfg = pickle.load(f)
                 f.close()
                 fail = []
-                
-                if not old_cfg[0]==cfg_list[0]:
+
+                if len(old_cfg) != len(cfg_list):
+                    log.error("Your old configuration doesn't match with your new one")
+                    log.error("The most common cause of this error is trying to run a half-finished analysis"
+                              " but switching PartitionFinder versions half way through")
+                    log.error("The solution is to either go back to the same version of PartitionFinder"
+                              " you used for the initial analysis, or to re-run the analysis using the "
+                              "--force-restart option at the command line. Note that this will delete "
+                              "all previous analyses in the '/analysis' folder")
+
+                if not old_cfg[0] == cfg_list[0]:
                     fail.append("alignment")
-                if not old_cfg[1]==cfg_list[1]:
+                if not old_cfg[1] == cfg_list[1]:
                     fail.append("branchlengths")
-                
+
                 old_parts = set([str(part) for part in old_cfg[2]])
                 new_parts = set([str(part) for part in cfg_list[2]])
-                if len(old_parts.difference(new_parts))>0:
+                if len(old_parts.difference(new_parts)) > 0:
                     fail.append("[data_blocks]")
 
-                if not old_cfg[3]==cfg_list[3]:
+                if not old_cfg[3] == cfg_list[3]:
+                    fail.append(
+                        "phylogeny_program (the --raxml commandline option)")
+
+                if not old_cfg[4] == cfg_list[4]:
                     fail.append("user_tree_topology")
-                
-                if len(fail)>0:
+
+                if len(fail) > 0:
                     log.error("There are subsets stored, but PartitionFinder has detected that these were run using a different .cfg setup")
-                    log.error("The following settings in the new .cfg file are incompatible with the previous analysis: %s" %(', '.join(fail)))
+                    log.error("The following settings in the new .cfg file are incompatible with the previous analysis: %s" % (', '.join(fail)))
                     log.info("To run this analysis and overwrite previous output, re-run the analysis using '--force-restart' option")
                     log.info("To run this analysis without deleting the previous analysis, please place your alignment and .cfg in a new folder and try again")
                     raise ConfigurationError
-
-    

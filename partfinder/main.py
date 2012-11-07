@@ -19,7 +19,7 @@ import logging, os, sys
 
 logging.basicConfig(
     format='%(levelname)-8s | %(asctime)s | %(message)s',
-    # format='%(levelname)s:%(message)s', 
+    # format='%(levelname)s:%(message)s',
     level=logging.INFO
 )
 
@@ -31,14 +31,15 @@ logging.basicConfig(
 
 log = logging.getLogger("main")
 from optparse import OptionParser
-import config, analysis_method, util, parser, reporter
+import config, analysis_method, util, parser, reporter, progress, datetime
 
 def main(name, version, datatype):
     log.info("------------- %s %s -----------------", name, version)
+    start_time = datetime.datetime.now().replace(microsecond=0) #start the clock ticking
     usage = """usage: python %prog [options] <foldername>
 
-    PartitionFinder and PartitionFinderProtein are designed to discover optimal 
-    partitioning schemes for nucleotide and amino acid sequence alignments. 
+    PartitionFinder and PartitionFinderProtein are designed to discover optimal
+    partitioning schemes for nucleotide and amino acid sequence alignments.
     They are also useful for finding the best model of sequence evolution for datasets.
 
     The Input: <foldername>: the full path to a folder containing:
@@ -50,7 +51,7 @@ def main(name, version, datatype):
     'analysis' This file contains information on the best
     partitioning scheme, and the best model for each partiiton
 
-    Usage Examples: 
+    Usage Examples:
         >python %prog example
         Analyse what is in the 'example' sub-folder in the current folder.
 
@@ -80,7 +81,7 @@ def main(name, version, datatype):
         action="store_true", dest="force_restart",
         help="delete all previous output and start afresh (!)")
     parser.add_option(
-        "-p", "--processes", 
+        "-p", "--processes",
         type="int", dest="processes", default=-1, metavar="N",
         help="Number of concurrent processes to use."
         " Use -1 to match the number of cpus on the machine."
@@ -90,9 +91,9 @@ def main(name, version, datatype):
         action="store_true", dest="show_python_exceptions",
         help="If errors occur, print the python exceptions")
     parser.add_option(
-        "--save-phyml",
-        action="store_true", dest="save_phyml",
-        help="save all of the phyml output. This can take a lot of space(!)")
+        "--save-phylofiles",
+        action="store_true", dest="save_phylofiles",
+        help="save all of the phyml or raxml output. This can take a lot of space(!)")
     parser.add_option(
         "--dump-results",
         action="store_true", dest="dump_results",
@@ -103,8 +104,30 @@ def main(name, version, datatype):
         action="store_true", dest="compare_results",
         help="Compare the results to previously dumped binary results. "
         "This is only of use for testing purposes.")
-    
+    parser.add_option(
+        "--raxml",
+        action="store_true", dest="raxml",
+        help="Use RAxML (rather than PhyML) to do the analysis. See the manual"
+        )
+    parser.add_option(
+        "--cmdline_extras",
+        type="str", dest="cmdline_extras", default="", metavar="N",
+        help="Add additional commands to the phyml or raxml commandlines that PF uses."
+        "This can be useful e.g. if you want to change the accuracy of lnL calculations"
+        " ('-e' option in raxml), or use multi-threaded versions of raxml that require"
+        " you to specify the number of threads you will let raxml use ('-T' option in "
+        "raxml. E.g. you might specify this: --cmndline_extras ' -e 2.0 -T 10 '"
+        " N.B. MAKE SURE YOU PUT YOUR EXTRAS IN QUOTES"
+        )
+
+
     options, args = parser.parse_args()
+
+    #default to phyml
+    if options.raxml==1:
+        options.phylogeny_program = 'raxml'
+    else:
+        options.phylogeny_program = 'phyml'
 
     # Error checking
     if options.dump_results and options.compare_results:
@@ -117,7 +140,7 @@ def main(name, version, datatype):
         parser.print_help()
         return 2
 
-    #before we start, let's check the python version is above 2.7 but lower than 3.0    
+    #before we start, let's check the python version is above 2.7 but lower than 3.0
     python_version = float("%d.%d" %(sys.version_info[0], sys.version_info[1]))
 
     log.info("You have Python version %.1f" %python_version)
@@ -134,9 +157,12 @@ def main(name, version, datatype):
 
     # Load, using the first argument as the folder
     try:
-        cfg = config.Configuration(datatype)
+        cfg = config.Configuration(datatype, options.phylogeny_program, 
+            options.save_phylofiles, options.cmdline_extras)
+        # Set up the progress callback
+        p = progress.TextProgress(cfg)
         cfg.load_base_path(args[0])
-                
+
         if options.check_only:
             log.info("Exiting without processing (because of the -c/--check-only option ...")
         else:
@@ -149,10 +175,9 @@ def main(name, version, datatype):
 
             # Now try processing everything....
             method = analysis_method.choose_method(cfg.search)
-            rpt = reporter.TextReporter(cfg)
-            anal = method(cfg, rpt, 
-                          options.force_restart, 
-                          options.save_phyml,
+            reporter.TextReporter(cfg)
+            anal = method(cfg,
+                          options.force_restart,
                           options.processes)
             results = anal.analyse()
 
@@ -160,8 +185,12 @@ def main(name, version, datatype):
                 results.dump(cfg)
             elif options.compare_results:
                 results.compare(cfg)
-            
+
         # Successful exit
+        end_time = datetime.datetime.now().replace(microsecond=0)
+        processing_time = end_time - start_time
+
+        log.info("Total processing time: %s (h:m:s)" % processing_time)
         log.info("Processing complete.")
 
         return 0

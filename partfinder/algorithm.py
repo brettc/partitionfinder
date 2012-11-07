@@ -15,6 +15,8 @@
 #own licenses and conditions, using PartitionFinder implies that you
 #agree with those licences and conditions as well.
 
+from cluster import *
+
 def k_subsets_i(n, k):
     '''
 	from http://code.activestate.com/recipes/500268-all-k-subsets-from-an-n-set/
@@ -70,8 +72,46 @@ def lumpings(scheme):
 		#now replace all the instance of one number in lump with the other in sub
 		while lump.count(sub[1])>0:
 			lump[lump.index(sub[1])] = sub[0]
-		lumpings.append(lump)	
+		lumpings.append(lump)
 
 	return lumpings
 
+def euclidean_distance(list1, list2):
+	dists = [abs(list1[i]-list2[i]) for i in range(len(list1))]
+	return sum(dists)
+
+
+def getLevels(cluster, levs):
+	"""
+	Returns the levels of the cluster as list.
+	"""
+	levs.append(cluster.level())
+
+	left  = cluster.items()[0]
+	right = cluster.items()[1]
+	if isinstance(left, Cluster):
+		first = getLevels(left, levs)
+	else:
+		first = left
+	if isinstance(right, Cluster):
+		second = getLevels(right, levs)
+	else:
+		second = right
+	return levs
+
+def levels_to_scheme(levels, namedict):
+    """
+    take the return from Cluster.getlevel
+    and return it as a list of partition names description
+    """
+
+    levels = str(levels)
+
+    for key in namedict.keys():
+        old = str(namedict[key])
+        new = '"%s"' %key
+        levels = levels.replace(old, new)
+
+    levels = eval(levels)
+    return levels
 

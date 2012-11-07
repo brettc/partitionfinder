@@ -26,7 +26,7 @@ from time import sleep
 import sys, os
 
 # Catch these exceptions
-from phyml import PhymlError
+from util import PhylogenyProgramError
 
 # Taken from the multiprocessing library
 def cpu_count():
@@ -67,7 +67,7 @@ class Pool(object):
         if numtasks == 0:
             log.warning("You did not give any tasks to do...")
             self.more_tasks = False
-            return 
+            return
 
         if numthreads <= 1:
             numthreads = _cpus
@@ -90,7 +90,7 @@ class Pool(object):
                 return self.tasks.pop(0)
         finally:
             self.task_lock.release()
-    
+
     def join(self):
         # TODO: I don't think we need this bit....
         # Wait till all tasks have been taken
@@ -104,7 +104,7 @@ class Thread(threading.Thread):
     def __init__(self, pool):
         threading.Thread.__init__(self)
         self.pool = pool
-        
+
     def run(self):
         while 1:
             cmd, args = self.pool.next_task()
@@ -113,7 +113,7 @@ class Thread(threading.Thread):
                 break
             try:
                 cmd(*args)
-            except PhymlError:
+            except PhylogenyProgramError:
                 # Catch the ones we know about, the error should already have
                 # been reported. Stop operation though.
                 break

@@ -26,7 +26,7 @@ from pyparsing import (
 # debugging
 # ParserElement.verbose_stacktrace = True
 
-import partition, scheme, subset, phyml_models, config
+import partition, scheme, subset, phyml_models, raxml_models, config
 from util import PartitionFinderError
 
 # Only used internally
@@ -57,12 +57,7 @@ class Parser(object):
         self.subsets = []
         self.init_grammar()
         self.ignore_schemes = False
-        # provide useful error messages when parsing settings with limited options 
-        self.options = {
-            'branchlengths': ['linked', 'unlinked'],
-            'model_selection': ['AIC', 'AICc', 'BIC'],
-            'search': ['all', 'user', 'greedy']
-            }
+        # provide useful error messages when parsing settings with limited options
 
     def init_grammar(self):
         """Set up the parsing classes
@@ -95,8 +90,10 @@ class Parser(object):
         modellist = delimitedList(MODELNAME)
         modeldef = Keyword("models") + EQUALS + Group(
             (
-            CaselessKeyword("all") | CaselessKeyword("mrbayes") | CaselessKeyword("raxml") | CaselessKeyword("beast") | CaselessKeyword("all_protein")
-            )("predefined") | 
+            CaselessKeyword("all") | CaselessKeyword("mrbayes") | CaselessKeyword("raxml") | 
+            CaselessKeyword("beast") | CaselessKeyword("all_protein") | 
+            CaselessKeyword("all_protein_gamma") | CaselessKeyword("all_protein_gammaI") 
+            )("predefined") |
             Group(modellist)("userlist")) + SEMICOLON
         modeldef.setParseAction(self.set_models)
 
@@ -139,7 +136,7 @@ class Parser(object):
 
         # We've defined the grammar for each section. Here we just put it all together
         self.config_parser = (topsection + partsection + schemesection + stringEnd)
-        
+
     def set_alignment(self, text, loc, tokens):
         value = tokens[1]
         self.cfg.set_alignment_file(value)
@@ -157,54 +154,77 @@ class Parser(object):
         except config.ConfigurationError:
             raise ParserError(text, loc, "Invalid option in .cfg file")
 
-        
+
     def set_models(self, text, loc, tokens):
-        all_mods            = set(phyml_models.get_all_models())
-        all_protein_mods    = set(phyml_models.get_all_protein_models())
-        total_mods          = all_mods.union(all_protein_mods)
+        if self.cfg.phylogeny_program == "phyml":
+            self.phylo_models = phyml_models
+        elif self.cfg.phylogeny_program =="raxml":
+            self.phylo_models = raxml_models
+
+        all_dna_mods        = set(self.phylo_models.get_all_dna_models())
+        all_protein_mods    = set(self.phylo_models.get_all_protein_models())
+        total_mods          = all_dna_mods.union(all_protein_mods)
+
         mods = tokens[1]
         DNA_mods  = 0
         prot_mods = 0
         if mods.userlist:
-            self.cfg.models = []
-            # It is a list of models
-            for m in mods.userlist:
-                
-                if m not in total_mods:
-                    raise ParserError(
-                        text, loc, "'%s' is not a valid model" % m)
-                
-                if m in all_mods:
-                    DNA_mods  = DNA_mods + 1
-                if m in all_protein_mods:
-                    prot_mods = prot_mods + 1                    
-                
-                self.cfg.models.append(m)
-            log.info("Setting 'models' to a userlist containing: %s", 
-                      ", ".join(self.cfg.models))
-            
+            modlist = mods.userlist
+            log.info("Setting 'models' to a user-specified list")
         else:
             modsgroup = mods.predefined
             if modsgroup.lower() == "all":
-                self.cfg.models = list(all_mods)
+                modlist = list(all_dna_mods)
                 DNA_mods = DNA_mods + 1
             elif modsgroup.lower() == "mrbayes":
-                mrbayes_mods = set(phyml_models.get_mrbayes_models())
-                self.cfg.models = list(mrbayes_mods)
+                modlist = set(phyml_models.get_mrbayes_models())
                 DNA_mods = DNA_mods + 1
             elif modsgroup.lower() == "beast":
-                beast_mods = set(phyml_models.get_beast_models())
-                self.cfg.models = list(beast_mods)
+                modlist = set(phyml_models.get_beast_models())
                 DNA_mods = DNA_mods + 1
             elif modsgroup.lower() == "raxml":
-                self.cfg.models = phyml_models.get_raxml_models()
+                modlist = set(phyml_models.get_raxml_models())
                 DNA_mods = DNA_mods + 1
             elif modsgroup.lower() == "all_protein":
-                self.cfg.models = phyml_models.get_all_protein_models()
+                modlist = set(self.phylo_models.get_all_protein_models())
                 prot_mods = prot_mods + 1
+            elif modsgroup.lower() == "all_protein_gamma":
+                if self.cfg.phylogeny_program=="raxml":
+                    modlist = set(raxml_models.get_protein_models_gamma())
+                    prot_mods = prot_mods + 1
+                else:
+                    log.error("The models option 'all_protein_gamma' is only available with raxml"
+                        ", (the --raxml commandline option). Please check and try again")
+                    raise ParserError
+            elif modsgroup.lower() == "all_protein_gammaI":
+                if self.cfg.phylogeny_program=="raxml":
+                    modlist = set(raxml_models.get_protein_models_gammaI())
+                    prot_mods = prot_mods + 1
+                else:
+                    log.error("The models option 'all_protein_gammaI' is only available with raxml"
+                        ", (the --raxml commandline option). Please check and try again")
+                    raise ParserError
             else:
                 pass
             log.info("Setting 'models' to '%s'", modsgroup)
+
+        self.cfg.models = set()
+        for m in modlist:
+            if m not in total_mods:
+                raise ParserError(
+                    text, loc, "'%s' is not a valid model for phylogeny "
+                               "program %s. Please check the lists of valid models in the"
+                               " manual and try again" %(m, self.cfg.phylogeny_program))
+
+            if m in all_dna_mods:
+                DNA_mods  = DNA_mods + 1
+            if m in all_protein_mods:
+                prot_mods = prot_mods + 1
+
+            self.cfg.models.add(m)
+
+        log.info("Setting 'models' to a list containing: %s",
+                  ", ".join(self.cfg.models))
 
         #check datatype against the model list that we've got a sensible model list
         if DNA_mods>0 and prot_mods==0 and self.cfg.datatype=="DNA":
@@ -213,27 +233,27 @@ class Parser(object):
             log.info("Setting datatype to 'protein'")
         elif DNA_mods==0 and prot_mods>0 and self.cfg.datatype=="DNA":
             raise ParserError(
-                text, loc, "The models list contains only models of amino acid change." 
+                text, loc, "The models list contains only models of amino acid change."
                 " PartitionFinder.py only works with nucleotide models (like the GTR model)."
                 " If you're analysing an amino acid dataset, please use PartitionFinderProtein,"
                 " which you can download here: www.robertlanfear.com/partitionfinder."
                 " The models line in the .cfg file is")
         elif DNA_mods>0 and prot_mods==0 and self.cfg.datatype=="protein":
             raise ParserError(
-                text, loc, "The models list contains only models of nucelotide change." 
+                text, loc, "The models list contains only models of nucelotide change."
                 " PartitionFinderProtein.py only works with amino acid models (like the WAG model)."
                 " If you're analysing a nucelotide dataset, please use PartitionFinder.py,"
                 " which you can download here: www.robertlanfear.com/partitionfinder"
                 " The models line in the .cfg file is")
-        else: #we've got a mixture of models.            
+        else: #we've got a mixture of models.
             raise ParserError(
-                text, loc, "The models list contains a mixture of protein and nucelotide models." 
+                text, loc, "The models list contains a mixture of protein and nucelotide models."
                 " If you're analysing a nucelotide dataset, please use PartitionFinder."
                 " If you're analysing an amino acid dataset, please use PartitionFinderProtein."
                 " You can download both of these programs from here: www.robertlanfear.com/partitionfinder"
                 " The models line in the .cfg file is")
 
-        
+
     def define_range(self, part):
         """Turn the 1, 2 or 3 tokens into integers, supplying a default if needed"""
         fromc = int(part.start)
@@ -271,13 +291,13 @@ class Parser(object):
             self.subsets.append(subset.Subset(*tuple(parts)))
         except subset.SubsetError:
             raise ParserError(text, loc, "Error creating subset...")
-    
+
     def define_schema(self, text, loc, scheme_def):
         try:
             # Clear out the subsets as we need to reuse it
             subs = tuple(self.subsets)
             self.subsets = []
-            
+
             if self.ignore_schemes == False:
                 scheme.Scheme(self.cfg, scheme_def.name, *subs)
 
@@ -311,7 +331,7 @@ class Parser(object):
             if missing:
                 log.info("It looks like the '%s' option might be missing or in the wrong place" %(missing))
                 log.info("Or perhaps something is wrong in the lines just before the '%s' option" %(missing))
-                log.info("Please double check the .cfg file and try again")                
+                log.info("Please double check the .cfg file and try again")
             else:
                 log.info("The line causing the problem is this: '%s'" %(p.line))
                 log.info("Please check that line, and make sure it appears in the right place in the .cfg file.")

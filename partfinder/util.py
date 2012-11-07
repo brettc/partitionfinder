@@ -17,11 +17,14 @@
 
 import logging
 log = logging.getLogger("util")
-import os
+import os, fnmatch
 
 
 # Base error class
 class PartitionFinderError(Exception):
+    pass
+
+class PhylogenyProgramError(PartitionFinderError):
     pass
 
 def check_file_exists(pth):
@@ -30,7 +33,7 @@ def check_file_exists(pth):
             log.error("Failed to find configuration file: '%s'. "
             "For PartitionFinder to run, there must be a file called 'partition_finder.cfg' "
             "located in the same folder as your alignment. Please check and try again.", pth)
-            raise PartitionFinderError			
+            raise PartitionFinderError
         else:
             log.error("Failed to find file: '%s'. Please check and try again.", pth)
             raise PartitionFinderError
@@ -54,3 +57,14 @@ def make_dir(pth):
             raise AnalysisError
     else:
         os.mkdir(pth)
+
+def remove_runID_files(aln_pth):
+    """remove all files that match a particular run_ID. Useful for cleaning out directories
+    but ONLY after a whole analysis of a subset is completely finished, be careful!"""
+    dir, file = os.path.split(aln_pth)
+    run_ID =  os.path.splitext(file)[0]
+    dir = os.path.abspath(dir)
+    fnames = os.listdir(dir)
+    fs = fnmatch.filter(fnames, '*%s*' %run_ID) 
+    [os.remove(os.path.join(dir,f)) for f in fs]
+    
