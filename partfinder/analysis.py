@@ -137,10 +137,10 @@ class Analysis(object):
                 log.debug(
                     "didn't find tree at %s, making a new one" % tree_path)
                 topology_path = self.cfg.processor.make_topology(
-                    self.filtered_alignment_path, self.cfg.datatype)
+                    self.filtered_alignment_path, self.cfg.datatype, self.cfg.cmdline_extras)
 
             # Now estimate branch lengths
-            tree_path = self.cfg.processor.make_branch_lengths(self.filtered_alignment_path, topology_path, self.cfg.datatype)
+            tree_path = self.cfg.processor.make_branch_lengths(self.filtered_alignment_path, topology_path, self.cfg.datatype, self.cfg.cmdline_extras)
 
         self.tree_path = tree_path
         log.info("Starting tree with branch lengths is here: %s", self.tree_path)

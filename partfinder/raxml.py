@@ -96,15 +96,17 @@ def dupfile(src, dst):
         log.error("Cannot link/copy file %s to %s", src, dst)
         raise RaxmlError
 
-def make_topology(alignment_path, datatype):
+def make_topology(alignment_path, datatype, cmdline_extras):
     '''Make a MP tree to start the analysis'''
     log.info("Making MP tree for %s", alignment_path)
+    
+    cmdline_extras = check_defaults(cmdline_extras)
 
     # First get the MP topology like this (-p is a hard-coded random number seed):
     if datatype=="DNA":
-        command = "-y -s '%s' -m GTRGAMMA -n MPTREE -p 123456789" % (alignment_path)
+        command = "-y -s '%s' -m GTRGAMMA -n MPTREE -p 123456789 %s" % (alignment_path, cmdline_extras)
     elif datatype=="protein":
-        command = "-y -s '%s' -m PROTGAMMALG -n MPTREE -p 123456789" % (alignment_path)
+        command = "-y -s '%s' -m PROTGAMMALG -n MPTREE -p 123456789 %s" % (alignment_path, cmdline_extras)
     else:
         log.error("Unrecognised datatype: '%s'" % (datatype))
         raise(RaxmlError)
@@ -118,8 +120,9 @@ def make_topology(alignment_path, datatype):
     tree_path = os.path.join(dir, "RAxML_parsimonyTree.MPTREE")
     return tree_path
 
-def make_branch_lengths(alignment_path, topology_path, datatype):
+def make_branch_lengths(alignment_path, topology_path, datatype, cmdline_extras):
     #Now we re-estimate branchlengths using a GTR+G model on the (unpartitioned) dataset
+    cmdline_extras = check_defaults(cmdline_extras)
     dir_path, fname = os.path.split(topology_path)
     tree_path = os.path.join(dir_path, 'topology_tree.phy')
     log.debug("Copying %s to %s", topology_path, tree_path)
@@ -128,13 +131,13 @@ def make_branch_lengths(alignment_path, topology_path, datatype):
 
     if datatype=="DNA":
         log.info("Estimating GTR+G branch lengths on tree using RAxML")
-        command = "-f e -s '%s' -t '%s' -m GTRGAMMA -n BLTREE -w '%s' -e 1.0" % (
-            alignment_path, tree_path, os.path.abspath(dir_path))
+        command = "-f e -s '%s' -t '%s' -m GTRGAMMA -n BLTREE -w '%s' %s" % (
+            alignment_path, tree_path, os.path.abspath(dir_path), cmdline_extras)
         run_raxml(command)
     if datatype=="protein":
         log.info("Estimating LG+G branch lengths on tree using RAxML")
-        command = "-f e -s '%s' -t '%s' -m PROTGAMMALG -n BLTREE -w '%s' -e 1.0" % (
-            alignment_path, tree_path, os.path.abspath(dir_path))
+        command = "-f e -s '%s' -t '%s' -m PROTGAMMALG -n BLTREE -w '%s' %s" % (
+            alignment_path, tree_path, os.path.abspath(dir_path), cmdline_extras)
         run_raxml(command)
 
     dir, aln = os.path.split(alignment_path)
@@ -143,6 +146,26 @@ def make_branch_lengths(alignment_path, topology_path, datatype):
 
     # Now return the path of the final tree with branch lengths
     return tree_path
+
+def check_defaults(cmdline_extras):
+    """We use some sensible defaults, but allow users to override them with extra cmdline options"""
+    if cmdline_extras.count("-e")>0:
+        #then the user has specified a particular accuracy:
+        accuracy = ""
+    else:
+        #we specify a default accuracy of 1 lnL unit
+        accuracy = " -e 1.0 "
+    
+    #we set this incase people are using the PThreads version of RAxML
+    if cmdline_extras.count("-T")>0:
+        num_threads = ""
+    else:
+        num_threads = " -T 1 "
+    
+    #we'll put spaces at the start and end too, just in case...    
+    cmdline_extras = ''.join([" ", cmdline_extras, accuracy, num_threads, " "])
+
+    return cmdline_extras    
 
 def analyse(model, alignment_path, tree_path, branchlengths, cmdline_extras):
     """Do the analysis -- this will overwrite stuff!"""
@@ -162,21 +185,16 @@ def analyse(model, alignment_path, tree_path, branchlengths, cmdline_extras):
         log.error("Unknown option for branchlengths: %s", branchlengths)
         raise RaxmlError
 
-    if cmdline_extras.count("-e")>0:
-        #then the user has specified a particular accuracy:
-        accuracy = ""
-    else:
-        #we specify a default accuracy of 1 lnL unit
-        accuracy = " -e 1.0 "
-
+    cmdline_extras = check_defaults(cmdline_extras)
+    
     #raxml doesn't append alignment names automatically, like PhyML, let's do that here
     analysis_ID = raxml_analysis_ID(alignment_path, model)
 
     #force raxml to write to the dir with the alignment in it
     #-e 1.0 sets the precision to 1 lnL unit. This is all that's required here, and helps with speed.
     aln_dir, fname = os.path.split(alignment_path)
-    command = " %s -s '%s' -t '%s' %s -n %s -w '%s' %s %s" % (
-        bl, alignment_path, tree_path, model_params, analysis_ID, os.path.abspath(aln_dir), cmdline_extras, accuracy)
+    command = " %s -s '%s' -t '%s' %s -n %s -w '%s' %s" % (
+        bl, alignment_path, tree_path, model_params, analysis_ID, os.path.abspath(aln_dir), cmdline_extras)
     run_raxml(command)
 
 def raxml_analysis_ID(alignment_path, model):
