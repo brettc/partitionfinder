@@ -20,12 +20,16 @@
 import logging
 log = logging.getLogger("analysis")
 
-import subprocess, shlex, os, shutil, sys
+import subprocess
+import shlex
+import os
+import shutil
+import sys
 
 from pyparsing import (
     Word, Literal, nums, Suppress, ParseException,
     SkipTo,
-    )
+)
 
 import phyml_models as models
 
@@ -34,6 +38,8 @@ if sys.platform == 'win32':
     _binary_name += ".exe"
 
 from util import PhylogenyProgramError
+
+
 class PhymlError(PhylogenyProgramError):
     pass
 
@@ -54,6 +60,7 @@ class PhymlError(PhylogenyProgramError):
     # newpth = os.path.join(cfg.base_path, _binary_name)
     # if os.path.exists(newpth):
         # os.remove(newpth)
+
 
 def find_program():
     """Locate the binary ..."""
@@ -85,13 +92,15 @@ def find_program():
         # raise PhymlError
 
 _phyml_binary = None
+
+
 def run_phyml(command):
     global _phyml_binary
     if _phyml_binary is None:
         _phyml_binary = find_program()
 
     #turn off any memory checking in PhyML - thanks Jess Thomas for pointing out this problem
-    command = "%s --no_memory_check" %(command)
+    command = "%s --no_memory_check" % (command)
 
     # Add in the command file
     log.debug("Running 'phyml %s'", command)
@@ -116,6 +125,7 @@ def run_phyml(command):
         log.error("%s", stderr)
         raise PhymlError
 
+
 def dupfile(src, dst):
     # Make a copy or a symlink so that we don't overwrite different model runs
     # of the same alignment
@@ -129,23 +139,26 @@ def dupfile(src, dst):
         log.error("Cannot link/copy file %s to %s", src, dst)
         raise PhymlError
 
+
 def make_topology(alignment_path, datatype, cmdline_extras):
-	'''Make a BioNJ tree to start the analysis'''
-	log.info("Making BioNJ tree for %s", alignment_path)
+    '''Make a BioNJ tree to start the analysis'''
+    log.info("Making BioNJ tree for %s", alignment_path)
     cmdline_extras = check_defaults(cmdline_extras)
 
-	# First get the BioNJ topology like this:
-	if datatype=="DNA":
-		command = "-i '%s' -o n -b 0 %s" % (alignment_path, cmdline_extras)
-	elif datatype=="protein":
-		command = "-i '%s' -o n -b 0 -d aa %s" % (alignment_path, cmdline_extras)
-	else:
-		log.error("Unrecognised datatype: '%s'" % (datatype))
-		raise(PhymlError)
+    # First get the BioNJ topology like this:
+    if datatype == "DNA":
+        command = "-i '%s' -o n -b 0 %s" % (alignment_path, cmdline_extras)
+    elif datatype == "protein":
+        command = "-i '%s' -o n -b 0 -d aa %s" % (
+            alignment_path, cmdline_extras)
+    else:
+        log.error("Unrecognised datatype: '%s'" % (datatype))
+        raise(PhymlError)
 
-	run_phyml(command)
-	output_path = make_tree_path(alignment_path)
-	return output_path
+    run_phyml(command)
+    output_path = make_tree_path(alignment_path)
+    return output_path
+
 
 def make_branch_lengths(alignment_path, topology_path, datatype, cmdline_extras):
     # Now we re-estimate branchlengths using a GTR+I+G model on the (unpartitioned) dataset
@@ -155,12 +168,12 @@ def make_branch_lengths(alignment_path, topology_path, datatype, cmdline_extras)
     log.debug("Copying %s to %s", topology_path, tree_path)
     dupfile(topology_path, tree_path)
 
-    if datatype=="DNA":
+    if datatype == "DNA":
         log.info("Estimating GTR+I+G branch lengths on tree")
         command = "-i '%s' -u '%s' -m GTR -c 4 -a e -v e -o lr -b 0 %s" % (
             alignment_path, tree_path, cmdline_extras)
         run_phyml(command)
-    if datatype=="protein":
+    if datatype == "protein":
         log.info("Estimating LG+F branch lengths on tree")
         command = "-i '%s' -u '%s' -m LG -c 1 -v 0 -f m -d aa -o lr -b 0 %s" % (
             alignment_path, tree_path, cmdline_extras)
@@ -172,23 +185,24 @@ def make_branch_lengths(alignment_path, topology_path, datatype, cmdline_extras)
     # Now return the path of the final tree alignment
     return tree_path
 
+
 def check_defaults(cmdline_extras):
     """We use some sensible defaults, but allow users to override them with extra cmdline options"""
 
-    if cmdline_extras.count("--min_diff_lk_global")>0:
+    if cmdline_extras.count("--min_diff_lk_global") > 0:
         accuracy_global = ""
     else:
         accuracy_global = " --min_diff_lk_global 0.01 "
-    if cmdline_extras.count("--min_diff_lk_local")>0:
+    if cmdline_extras.count("--min_diff_lk_local") > 0:
         accuracy_local = ""
     else:
         accuracy_local = " --min_diff_lk_local 0.01 "
-    
-    #we'll put spaces at the start and end too, just in case...    
-    cmdline_extras = ''.join([" ", cmdline_extras, accuracy_local, accuracy_global, " "])
 
-    return cmdline_extras    
+    #we'll put spaces at the start and end too, just in case...
+    cmdline_extras = ''.join(
+        [" ", cmdline_extras, accuracy_local, accuracy_global, " "])
 
+    return cmdline_extras
 
 
 def analyse(model, alignment_path, tree_path, branchlengths, cmdline_extras):
@@ -211,17 +225,18 @@ def analyse(model, alignment_path, tree_path, branchlengths, cmdline_extras):
 
     cmdline_extras = check_defaults(cmdline_extras)
 
-    command = "--run_id %s -b 0 -i '%s' -u '%s' %s %s %s %s %s" % (
-        model, alignment_path, tree_path, model_params, bl, cmdline_extras,
-        accuracy_global, accuracy_local)
+    command = "--run_id %s -b 0 -i '%s' -u '%s' %s %s %s " % (
+        model, alignment_path, tree_path, model_params, bl, cmdline_extras)
     run_phyml(command)
 
     # Now get rid of this -- we have the original elsewhere
     # os.remove(analysis_path)
 
+
 def make_tree_path(alignment_path):
     pth, ext = os.path.splitext(alignment_path)
     return pth + ".phy_phyml_tree.txt"
+
 
 def make_output_path(aln_path, model):
     # analyse_path = os.path.join(root_path, name + ".phy")
@@ -230,11 +245,11 @@ def make_output_path(aln_path, model):
     tree_path = "%s.phy_phyml_tree_%s.txt" % (pth, model)
     return stats_path, tree_path
 
+
 def remove_files(aln_path, model):
     '''remove all files from the alignment directory that are produced by phyml'''
     fnames = make_output_path(aln_path, model)
     [os.remove(f) for f in fnames]
-
 
 
 class PhymlResult(object):
@@ -246,6 +261,7 @@ class PhymlResult(object):
     def __str__(self):
         return "PhymlResult(lnl:%s, tree_size:%s, secs:%s)" % (self.lnl, self.tree_size, self.seconds)
 
+
 class Parser(object):
     def __init__(self, datatype):
         FLOAT = Word(nums + '.-').setParseAction(lambda x: float(x[0]))
@@ -256,11 +272,12 @@ class Parser(object):
         LNL_LABEL = Literal("Log-likelihood:")
         TREE_SIZE_LABEL = Literal("Tree size:")
         TIME_LABEL = Literal("Time used:")
-        HMS = Word(nums + "hms") # A bit rough...
+        HMS = Word(nums + "hms")  # A bit rough...
 
         lnl = (LNL_LABEL + FLOAT("lnl"))
         tree_size = (TREE_SIZE_LABEL + FLOAT("tree_size"))
-        time = (TIME_LABEL + HMS("time") + OB + INTEGER("seconds") + Suppress("seconds") + CB)
+        time = (TIME_LABEL + HMS(
+            "time") + OB + INTEGER("seconds") + Suppress("seconds") + CB)
 
         # Shorthand...
         def nextbit(label, val):
@@ -268,9 +285,9 @@ class Parser(object):
 
         # Just look for these things
         self.root_parser = \
-                nextbit(LNL_LABEL, lnl) +\
-                nextbit(TREE_SIZE_LABEL, tree_size) +\
-                nextbit(TIME_LABEL, time)
+            nextbit(LNL_LABEL, lnl) +\
+            nextbit(TREE_SIZE_LABEL, tree_size) +\
+            nextbit(TIME_LABEL, time)
 
     def parse(self, text):
         log.debug("Parsing phyml output...")
@@ -280,10 +297,9 @@ class Parser(object):
             log.error(str(p))
             raise PhymlError
 
-        log.debug("Parsed LNL:      %s" %tokens.lnl)
-        log.debug("Parsed TREESIZE: %s" %tokens.tree_size)
-        log.debug("Parsed TIME:     %s" %tokens.time)
-
+        log.debug("Parsed LNL:      %s" % tokens.lnl)
+        log.debug("Parsed TREESIZE: %s" % tokens.tree_size)
+        log.debug("Parsed TIME:     %s" % tokens.time)
 
         return PhymlResult(lnl=tokens.lnl, tree_size=tokens.tree_size, seconds=tokens.seconds)
 
@@ -294,7 +310,7 @@ def parse(text, datatype):
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.DEBUG)
-    import tempfile, os
+    import tempfile
     from alignment import TestAlignment
     import phyml_models
     alignment = TestAlignment("""
