@@ -90,7 +90,9 @@ class Parser(object):
         modellist = delimitedList(MODELNAME)
         modeldef = Keyword("models") + EQUALS + Group(
             (
-            CaselessKeyword("all") | CaselessKeyword("mrbayes") | CaselessKeyword("raxml") | CaselessKeyword("beast") | CaselessKeyword("all_protein")
+            CaselessKeyword("all") | CaselessKeyword("mrbayes") | CaselessKeyword("raxml") | 
+            CaselessKeyword("beast") | CaselessKeyword("all_protein") | 
+            CaselessKeyword("all_protein_gamma") | CaselessKeyword("all_protein_gammaI") 
             )("predefined") |
             Group(modellist)("userlist")) + SEMICOLON
         modeldef.setParseAction(self.set_models)
@@ -186,6 +188,22 @@ class Parser(object):
             elif modsgroup.lower() == "all_protein":
                 modlist = set(self.phylo_models.get_all_protein_models())
                 prot_mods = prot_mods + 1
+            elif modsgroup.lower() == "all_protein_gamma":
+                if self.cfg.phylogeny_program=="raxml":
+                    modlist = set(raxml_models.get_protein_models_gamma())
+                    prot_mods = prot_mods + 1
+                else:
+                    log.error("The models option 'all_protein_gamma' is only available with raxml"
+                        ", (the --raxml commandline option). Please check and try again")
+                    raise ParserError
+            elif modsgroup.lower() == "all_protein_gammaI":
+                if self.cfg.phylogeny_program=="raxml":
+                    modlist = set(raxml_models.get_protein_models_gammaI())
+                    prot_mods = prot_mods + 1
+                else:
+                    log.error("The models option 'all_protein_gammaI' is only available with raxml"
+                        ", (the --raxml commandline option). Please check and try again")
+                    raise ParserError
             else:
                 pass
             log.info("Setting 'models' to '%s'", modsgroup)
