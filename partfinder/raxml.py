@@ -160,7 +160,7 @@ def check_defaults(cmdline_extras):
     if cmdline_extras.count("-T")>0:
         num_threads = ""
     else:
-        num_threads = " -T 1 "
+        num_threads = " -T 2 " #raxml Pthreads forces T>1
     
     #we'll put spaces at the start and end too, just in case...    
     cmdline_extras = ''.join([" ", cmdline_extras, accuracy, num_threads, " "])
@@ -244,12 +244,9 @@ class Parser(object):
 
         OB = Suppress("(")
         CB = Suppress(")")
-        LNL_LABEL_1 = Literal("Final GAMMA  likelihood:")
-        LNL_LABEL_2 = Literal("Likelihood:")
-        TIME_LABEL_1 = Literal("Overall Time for Tree Evaluation")
-        TIME_LABEL_2 = Literal("Overall Time for scaler and model parameter optimisation")
-
-        LNL_LABEL = (LNL_LABEL_1|LNL_LABEL_2)
+        LNL_LABEL = Literal("Final GAMMA  likelihood:")
+        TIME_LABEL_1 = Literal("Overall Time for Tree Evaluation with branch length scalers:")
+        TIME_LABEL_2 = Literal("Overall Time for Tree Evaluation")
         TIME_LABEL = (TIME_LABEL_1|TIME_LABEL_2)
         TREE_SIZE_LABEL = Literal("Tree-Length:")
 
@@ -268,6 +265,7 @@ class Parser(object):
         
         # Shorthand...
         def nextbit(label, val):
+            print "EGGY:", val
             return Suppress(SkipTo(label)) + val
 
         # Just look for these things
@@ -275,7 +273,6 @@ class Parser(object):
                 nextbit(TIME_LABEL, seconds) +\
                 nextbit(LNL_LABEL, lnl) +\
                 nextbit(TREE_SIZE_LABEL, tree_size)
-                    
 
     def parse(self, text):
         log.debug("Parsing raxml output...")
