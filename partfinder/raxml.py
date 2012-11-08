@@ -265,7 +265,6 @@ class Parser(object):
         
         # Shorthand...
         def nextbit(label, val):
-            print "EGGY:", val
             return Suppress(SkipTo(label)) + val
 
         # Just look for these things
