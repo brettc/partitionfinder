@@ -162,8 +162,10 @@ def check_defaults(cmdline_extras):
     else:
         num_threads = " -T 2 " #raxml Pthreads forces T>1
     
+
+    #and we'll specify the -O option, so that the program doesn't exit if there are undetermined seqs.
     #we'll put spaces at the start and end too, just in case...    
-    cmdline_extras = ''.join([" ", cmdline_extras, accuracy, num_threads, " "])
+    cmdline_extras = ''.join([" ", cmdline_extras, accuracy, num_threads, "-O "])
 
     return cmdline_extras    
 
