@@ -209,11 +209,17 @@ class Analysis(object):
         # AIC needs the number of sequences
         number_of_seq = len(self.alignment.species)
         result = scheme.SchemeResult(sch, number_of_seq, self.cfg.branchlengths)
-        self.results.add_scheme_result(result)
+        if suppress_memory:
+            pass
+        else:
+            self.results.add_scheme_result(result)
 
         # TODO: should put all paths into config. Then reporter should decide
         # whether to create stuff
         fname = os.path.join(self.cfg.schemes_path, sch.name + '.txt')
-        self.cfg.reporter.write_scheme_summary(result, open(fname, 'w'))
+        if suppress_writing:
+            pass
+        else:
+            self.cfg.reporter.write_scheme_summary(result, open(fname, 'w'))
 
         return result
