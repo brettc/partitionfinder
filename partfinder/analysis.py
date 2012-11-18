@@ -183,7 +183,7 @@ class Analysis(object):
         pool = threadpool.Pool(tasks, self.threads)
         pool.join()
 
-    def analyse_scheme(self, sch):
+    def analyse_scheme(self, sch, suppress_writing=False, suppress_memory=False):
         self.cfg.progress.next_scheme()
 
         # Prepare by reading everything in first
