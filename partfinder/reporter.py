@@ -158,7 +158,7 @@ class TextReporter(object):
 
         log.info("Information on best schemes is here: %s", best_schemes_pth)
 
-    def write_all_schemes(self, results):
+    def write_all_schemes(self, results, info=None):
         all_schemes_pth = os.path.join(self.cfg.output_path, 'all_schemes.txt')
         f = open(all_schemes_pth, 'wb')
         f.write("Name\tlnL\t#params\t#sites\t#subsets\tAIC\tAICc\tBIC\n")
@@ -166,4 +166,7 @@ class TextReporter(object):
         for s in results.scheme_results:
             f.write("%s\t%.3f\t%d\t%d\t%d\t%.3f\t%.3f\t%.3f\n" % (
                 s.scheme.name,s.lnl,s.sum_k,s.nsites,s.nsubs,s.aic,s.aicc,s.bic))
-        log.info("Information on all schemes analysed is here: %s", all_schemes_pth)
+        if info:
+            log.info("%s %s" %(info, all_schemes_pth))
+        else:
+            log.info("Information on all schemes analysed is here: %s", all_schemes_pth)

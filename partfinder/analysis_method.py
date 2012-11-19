@@ -1,6 +1,7 @@
 import logging
 log = logging.getLogger("analysis_method")
 
+import os
 import scheme
 import algorithm
 import submodels
@@ -114,6 +115,7 @@ class AllAnalysis(Analysis):
 
 
 class GreedyAnalysis(Analysis):
+    
 
     def do_analysis(self):
         '''A greedy algorithm for heuristic partitioning searches'''
@@ -137,7 +139,7 @@ class GreedyAnalysis(Analysis):
 
         #start with the most partitioned scheme
         start_description = range(len(self.cfg.partitions))
-        start_scheme = scheme.create_scheme(self.cfg, 1, start_description)
+        start_scheme = scheme.create_scheme(self.cfg, "start_scheme"    , start_description)
         log.info("Analysing starting scheme (scheme %s)" % start_scheme.name)
         result = self.analyse_scheme(start_scheme)
 
@@ -171,18 +173,26 @@ class GreedyAnalysis(Analysis):
                 lumped_scheme = scheme.create_scheme(
                     self.cfg, cur_s, lumped_description)
                 cur_s += 1
-                result = self.analyse_scheme(lumped_scheme)
+                #this is just checking to see if a scheme is any good, if it is, we remember and write it later
+                result = self.analyse_scheme(lumped_scheme, suppress_writing=True, suppress_memory=True)
                 new_score = get_score(result)
 
                 if best_lumping_score is None or new_score < best_lumping_score:
                     best_lumping_score = new_score
                     best_lumping_result = result
                     best_lumping_desc = lumped_description
+                    best_scheme = lumped_scheme
 
             if best_lumping_score < best_score:
                 best_score = best_lumping_score
-                best_result = best_lumping_result
                 start_description = best_lumping_desc
+                best_scheme = lumped_scheme
+                best_result = best_lumping_result
+                #now we write out the result of the best scheme for each step...
+                fname = os.path.join(self.cfg.schemes_path, "step_%d" %step + '.txt')
+                self.cfg.reporter.write_scheme_summary(best_result, open(fname, 'w'))
+                self.results.add_scheme_result(best_result)
+
                 if len(set(best_lumping_desc)) == 1:  # then it's the scheme with everything equal, so quit
                     break
                 step += 1
@@ -200,7 +210,7 @@ class GreedyAnalysis(Analysis):
         txt = "Best scheme according to Greedy algorithm, analysed with %s"
         best = [(txt % self.cfg.model_selection, self.best_result)]
         self.cfg.reporter.write_best_schemes(best)
-        self.cfg.reporter.write_all_schemes(self.results)
+        self.cfg.reporter.write_all_schemes(self.results, info= "Information on the best scheme from each step of the greedy algorithm is here: ")
 
 
 def choose_method(search):

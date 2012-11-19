@@ -216,10 +216,10 @@ class Analysis(object):
 
         # TODO: should put all paths into config. Then reporter should decide
         # whether to create stuff
-        fname = os.path.join(self.cfg.schemes_path, sch.name + '.txt')
         if suppress_writing:
             pass
         else:
+            fname = os.path.join(self.cfg.schemes_path, sch.name + '.txt')
             self.cfg.reporter.write_scheme_summary(result, open(fname, 'w'))
 
         return result
