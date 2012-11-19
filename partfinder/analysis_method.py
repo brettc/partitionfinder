@@ -52,7 +52,7 @@ class ClusteringAnalysis(Analysis):
 
         # Start with the most partitioned scheme
         start_description = range(len(self.cfg.partitions))
-        start_scheme = scheme.create_scheme(self.cfg, 1, start_description)
+        start_scheme = scheme.create_scheme(self.cfg, "start_scheme", start_description)
         log.info("Analysing starting scheme (scheme %s)" % start_scheme.name)
         self.analyse_scheme(start_scheme)
 
@@ -67,7 +67,7 @@ class ClusteringAnalysis(Analysis):
             #e.g. combined rank ordering of euclidean distances
             #could combine average site-rates, q matrices, and frequencies
             clustered_scheme = start_scheme.get_clustering(
-                self.cfg, method='hierarchical', scheme_name=cur_s)
+                self.cfg, method='hierarchical', scheme_name="step_%d" %(cur_s-1))
 
             #now analyse that new scheme
             cur_s += 1
