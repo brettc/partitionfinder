@@ -129,8 +129,8 @@ def printmatrix(list):
    # print data
    format =  " %%%is |" % maxlen
    format = "|" + format*colcount
-   # for row in list:
-      # print format % tuple(row)
+   for row in list:
+      print format % tuple(row)
 
 def magnitude(a):
    "calculates the magnitude of a vecor"
