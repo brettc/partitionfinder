@@ -187,10 +187,12 @@ class Subset(object):
         log.debug("Model Selection. best model: %s, params: %d, site_rate: %f" % (self.best_model, self.best_params, self.best_site_rate))
 
     def get_param_values(self):
-        param_values = []
+        param_values = {}
 
-        #add any parameters you want to this list
-        param_values.append(self.best_site_rate)
+        param_values["rate"]  = self.best_site_rate
+        param_values["freqs"] = [0.20, 0.10, 0.30, 0.40]
+        param_values["model"] = [1, 4.0, 2.1, 0.03, 0.2, 4.5345]
+        
 
         return param_values
 
