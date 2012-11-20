@@ -7,6 +7,7 @@ import algorithm
 import submodels
 import subset
 from analysis import Analysis, AnalysisError
+from neighbour import get_nearest_neighbour_scheme
 
 
 class UserAnalysis(Analysis):
@@ -66,8 +67,9 @@ class ClusteringAnalysis(Analysis):
             #calculate the subsets which are most similar
             #e.g. combined rank ordering of euclidean distances
             #could combine average site-rates, q matrices, and frequencies
-            clustered_scheme = start_scheme.get_clustering(
-                self.cfg, method='hierarchical', scheme_name="step_%d" %(cur_s-1))
+            scheme_name ="step_%d" %(cur_s-1)
+            clustered_scheme = get_nearest_neighbour_scheme(
+                start_scheme, scheme_name, self.cfg, weights = {"rate": 1, "freqs": 1, "model": 1})
 
             #now analyse that new scheme
             cur_s += 1
