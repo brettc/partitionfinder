@@ -112,7 +112,7 @@ def get_closest_subsets(scheme, weights):
     return sub1, sub2
 
 def get_nearest_neighbour_scheme(
-        start_scheme, scheme_name, cfg, weights = {"rate": 1, "freqs": 1, "model": 1}):
+        start_scheme, scheme_name, cfg):
     """The idea here is to take a scheme, and perform some analyses to find a neighbouring
     scheme, where the neighbour has one less subset than the current scheme. 
     Really this is just progressive clustering, but specified to work well with PartitionFinder
@@ -125,8 +125,9 @@ def get_nearest_neighbour_scheme(
     import scheme
     
     #1. First we get the closest subsets, based on some weights
-    #   the weights are [tree_size, model_params, base_freqs]
-    sub1, sub2 = get_closest_subsets(start_scheme, weights)
+    #   cluster weights is a dictionary of weights, keyed by: rate, freqs, model
+    #   for the overall subset rate, the base/aminoacid frequencies, and the model parameters
+    sub1, sub2 = get_closest_subsets(start_scheme, cfg.cluster_weights)
 
     #2. Next we create a new subset that merges those two subsets
     newsub_parts = list(sub1.partitions) + list(sub2.partitions)
