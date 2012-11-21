@@ -20,4 +20,4 @@ from partfinder import main
 
 if __name__ == "__main__":
     # Well behaved unix programs exits with 0 on success...
-    sys.exit(main.main("PartitionFinderProtein", "v1.0.1", "protein"))
+    sys.exit(main.main("PartitionFinderProtein", "v1.1.0", "protein"))
