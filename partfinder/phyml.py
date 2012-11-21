@@ -1,4 +1,4 @@
-#Copyright (C) 2011 Robert Lanfear and Brett Calcott
+#Copyright (C) 2012 Robert Lanfear and Brett Calcott
 #
 #This program is free software: you can redistribute it and/or modify it
 #under the terms of the GNU General Public License as published by the
@@ -11,9 +11,9 @@
 #General Public License for more details. You should have received a copy
 #of the GNU General Public License along with this program.  If not, see
 #<http://www.gnu.org/licenses/>. PartitionFinder also includes the PhyML
-#program and the PyParsing library both of which are protected by their
-#own licenses and conditions, using PartitionFinder implies that you
-#agree with those licences and conditions as well.
+#program, the RAxML program, the PyParsing library, and the python-cluster library 
+#all of which are protected by their own licenses and conditions, using 
+#PartitionFinder implies that you agree with those licences and conditions as well.
 
 """Run phyml and parse the output"""
 
