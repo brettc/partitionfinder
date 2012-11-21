@@ -69,7 +69,7 @@ class ClusteringAnalysis(Analysis):
             #could combine average site-rates, q matrices, and frequencies
             scheme_name ="step_%d" %(cur_s-1)
             clustered_scheme = get_nearest_neighbour_scheme(
-                start_scheme, scheme_name, self.cfg, weights = {"rate": 1, "freqs": 1, "model": 1})
+                start_scheme, scheme_name, self.cfg)
 
             #now analyse that new scheme
             cur_s += 1
