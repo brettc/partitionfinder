@@ -26,6 +26,7 @@ import partition
 import parser
 import util
 import progress
+import numbers
 
 
 class ConfigurationError(util.PartitionFinderError):
@@ -43,7 +44,8 @@ class Configuration(object):
     }
 
     def __init__(self, datatype="DNA", phylogeny_program='phyml',
-        save_phylofiles=False, cmdline_extras = ""):
+        save_phylofiles=False, cmdline_extras = "", cluster_weights = None):
+
         self.partitions = partition.PartitionSet()
         self.schemes = scheme.SchemeSet()
         self.save_phylofiles = save_phylofiles
@@ -52,8 +54,9 @@ class Configuration(object):
 
         self.base_path = '.'
         self.alignment = None
-        self.user_tree = None
-
+        self.user_tree = None        
+        
+        ### Some basic checking of the setup, so that we don't hit too many problems later
         if datatype != "DNA" and datatype != "protein":
             log.error("datatype must be 'DNA' or 'protein'")
             raise ConfigurationError
@@ -70,6 +73,39 @@ class Configuration(object):
 
         log.info("Setting phylogeny program to '%s'", phylogeny_program)
         self.phylogeny_program = phylogeny_program
+
+        if cluster_weights==None:
+            #default to equal weights. TODO. This should change depending on results of our analyses
+            self.cluster_weights = {"rate": 1, "freqs": 1, "model": 1} 
+        else:
+            #TODO. Is there a more robust way to do this...
+            cluster_weights = cluster_weights.split(",")
+
+            #now we check that it's a list of exactly three numbers            
+            if len(cluster_weights)!=3:
+                log.error("Your --cluster_weights argument should have exactly 3"
+                    " items separated by commas, but it has %d. " 
+                    "Please check and try again" %len(cluster_weights))
+                raise ConfigurationError
+            final_weights = []
+            for thing in cluster_weights:
+                try:
+                    num = float(eval(thing))
+                    final_weights.append(num)
+                except:                
+                    log.error("Unable to understand your --cluster_weights argument."
+                        " It should look like this: --cluster_weights '1,2,3'. "
+                        "Please double check that you included quotes, "
+                        "and three numbers separated by commas. Then try again. "
+                        "The part that I coudln't understand is this: '%s'" %thing)
+                    raise ConfigurationError
+                    
+            log.info("Setting cluster_weights to: subset_rate = %.1f, freqs = %.1f, model = %.1f" %(final_weights[0], final_weights[1], final_weights[2]))
+            self.cluster_weights = {} 
+            self.cluster_weights["rate"] = final_weights[0]
+            self.cluster_weights["freqs"] = final_weights[1]
+            self.cluster_weights["model"] = final_weights[2]
+                
 
         # Set the defaults into the class. These can be reset by calling
         # set_option(...)
@@ -167,11 +203,11 @@ class Configuration(object):
 
     def load(self, config_path):
         """We get the parser to construct the configuration"""
-        log.info("------------------------ BEGINNING NEW RUN -------------------------------")
         log.info("Loading configuration at '%s'", config_path)
         self.config_path = config_path
         p = parser.Parser(self)
         p.parse_file(config_path)
+        log.info("------------------------ BEGINNING NEW RUN -------------------------------")
 
     def set_base_path(self, base_path):
         self.full_base_path = os.path.abspath(base_path)
@@ -207,6 +243,13 @@ class Configuration(object):
             log.error("'%s' is not a valid option for '%s'" % (value, option))
             log.info("The only valid options for '%s' are: %s" %
                      (option, "'%s'" % ("', '".join(self.options[option]))))
+            raise ConfigurationError
+
+        #TODO NOT the best place for this at all..., but it works
+        if option=="search" and value=="clustering" and self.phylogeny_program!='raxml':
+            log.error("The 'search = clustering' option is only availalbe when using raxml"
+                " (the --raxml commandline option). Please check and try again."
+                " See the manual for more details.")
             raise ConfigurationError
 
         log.info("Setting '%s' to '%s'", option, value)

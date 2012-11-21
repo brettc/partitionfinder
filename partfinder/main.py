@@ -117,7 +117,20 @@ def main(name, version, datatype):
         " ('-e' option in raxml), or use multi-threaded versions of raxml that require"
         " you to specify the number of threads you will let raxml use ('-T' option in "
         "raxml. E.g. you might specify this: --cmndline_extras ' -e 2.0 -T 10 '"
-        " N.B. MAKE SURE YOU PUT YOUR EXTRAS IN QUOTES"
+        " N.B. MAKE SURE YOU PUT YOUR EXTRAS IN QUOTES, and only use this command if you"
+        " really know what you're doing and are very familiar with raxml and" 
+        " PartitionFinder"
+        )
+    parser.add_option(
+        "--cluster_weights",
+        type="str", dest="cluster_weights", default=None, metavar="N",
+        help="Mainly for algorithm development. Only use it if you know what you're doing."
+        "A list of weights to use in the clustering algorithm. This list allows you "
+        "to assign different weigths to the overall rate for a subset, the base/amino acid "
+        "frequencies, and the model parameters. This will affect how subsets are "
+        "clustered together. For instance: --cluster_weights '1, 2, 5', would weight "
+        "the base freqeuncies 2x more than the overall rate, and the model parameters 5x "
+        "more."
         )
 
 
@@ -158,7 +171,7 @@ def main(name, version, datatype):
     # Load, using the first argument as the folder
     try:
         cfg = config.Configuration(datatype, options.phylogeny_program, 
-            options.save_phylofiles, options.cmdline_extras)
+            options.save_phylofiles, options.cmdline_extras, options.cluster_weights)
         # Set up the progress callback
         p = progress.TextProgress(cfg)
         cfg.load_base_path(args[0])
