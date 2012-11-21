@@ -236,5 +236,5 @@ class TestAlignment(Alignment):
     """Good for testing stuff"""
     def __init__(self, text):
         Alignment.__init__(self)
-        self.from_parser_output(the_parser.parse(text))
+        self.from_parser_output(parse(text))
 
