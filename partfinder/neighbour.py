@@ -1,4 +1,25 @@
-from cluster import minkowski_distance, genmatrix
+#Copyright (C) 2011 Robert Lanfear and Brett Calcott
+#
+#This program is free software: you can redistribute it and/or modify it
+#under the terms of the GNU General Public License as published by the
+#Free Software Foundation, either version 3 of the License, or (at your
+#option) any later version.
+#
+#This program is distributed in the hope that it will be useful, but
+#WITHOUT ANY WARRANTY; without even the implied warranty of
+#MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+#General Public License for more details. You should have received a copy
+#of the GNU General Public License along with this program.  If not, see
+#<http://www.gnu.org/licenses/>. PartitionFinder also includes the PhyML
+#program and the PyParsing library both of which are protected by their
+#own licenses and conditions, using PartitionFinder implies that you
+#agree with those licences and conditions as well.
+
+from cluster import minkowski_distance, genmatrix, printmatrix
+
+import logging
+log = logging.getLogger("cluster")
+
 
 def sum_matrices(mat1, mat2, mat3):
     """sum three matrices of the same size"""
@@ -49,32 +70,52 @@ def get_minmax(matrix):
 
     return mindistance, maxdistance
 
-def get_closest_pair(matrix, subsets):
-    """return the closest pair of subsets defined by a matrix 
+def get_closest(matrix, subsets):
+    """return the closest subsets defined by a distance matrix 
+    usually there will just be a pair that's closer than all other pairs
+    BUT, it's feasible (if unlikely) that >2 subsets are equally close.
+    This is possible if, e.g. all weights are zero. Then we just want to group all the 
+    equally close subsets...
+    
+    So, we return a list of all the closest subsets
     """
-
+    from random import randrange
+    
+    min_rows = set()
+    min_cols = []
     mindistance=None
     rowindex=0
     for row in matrix:
-        colindex = 0 # keep track of where we are in the matrix
+        colindex=0
         for cell in row:
-            #ignore anything on or below the diagonal
-            if (colindex > rowindex):
+            #ignore the diagonal
+            if (colindex != rowindex):
                 if (cell<mindistance or mindistance is None): 
                     mindistance=cell
-                    min_row = rowindex
-                    min_col = colindex
+                    min_rows = set([rowindex])
+                elif cell == mindistance:
+                    min_rows.add(rowindex)
             colindex += 1
         rowindex += 1
 
-    sub1 = subsets[min_row]
-    sub2 = subsets[min_col]
+    if len(min_rows)>2:
+        log.warning("%d subsets are equally closely related. "
+            "This is possible but unlikely if you have nonzero weights in the clustering"
+            " algorithm. Double check to make sure..." %len(min_rows))
 
-    return sub1, sub2
+    subs = []
+    subs_names = []
+    for index in min_rows:
+        subs.append(subsets[index])
+        subs_names.append(subsets[index].full_name)
+
+    log.info("Closest subsets: %s" %', '.join(subs_names))
+
+    return subs
 
 
 def get_closest_subsets(scheme, weights):
-    """Find the two closest subsets in a scheme
+    """Find the closest subsets in a scheme
     """
     #1. get the parameter lists for each subset
     subsets = [] #a list of subset names, so we know the order things appear in the list
@@ -105,11 +146,13 @@ def get_closest_subsets(scheme, weights):
     
     #4. sum the matrices
     distance_matrix = sum_matrices(rates_matrix, freqs_matrix, model_matrix)
+    #printmatrix(distance_matrix)
 
     #5. get the closest pair
-    sub1, sub2 = get_closest_pair(distance_matrix, subsets)
+    closest_subsets = get_closest(distance_matrix, subsets)
+    #print closest_subsets
     
-    return sub1, sub2
+    return closest_subsets
 
 def get_nearest_neighbour_scheme(
         start_scheme, scheme_name, cfg):
@@ -124,25 +167,28 @@ def get_nearest_neighbour_scheme(
     import subset
     import scheme
     
-    #1. First we get the closest subsets, based on some weights
+    #1. First we get the closest subsets, based on some weights. This will almost always
+    #   be two subsets, but it's generalised so that it could be all of them...
     #   cluster weights is a dictionary of weights, keyed by: rate, freqs, model
     #   for the overall subset rate, the base/aminoacid frequencies, and the model parameters
-    sub1, sub2 = get_closest_subsets(start_scheme, cfg.cluster_weights)
+    closest_subsets = get_closest_subsets(start_scheme, cfg.cluster_weights)
 
     #2. Next we create a new subset that merges those two subsets
-    newsub_parts = list(sub1.partitions) + list(sub2.partitions)
+    newsub_parts = []
+    for s in closest_subsets:
+        newsub_parts = newsub_parts + list(s.partitions)
     newsub = subset.Subset(*tuple(newsub_parts))
     
     #3. Then we define a new scheme with those merged subsets
-    subs = [s for s in start_scheme.subsets]
+    all_subs = [s for s in start_scheme.subsets]
 
     #pop out the two subsets we're going to join together
-    subs.remove(sub1)
-    subs.remove(sub2)
+    for s in closest_subsets:
+        all_subs.remove(s)
+    
+    all_subs.append(newsub)
 
-    subs.append(newsub)
-
-    scheme = (scheme.Scheme(cfg, str(scheme_name), *tuple(subs)))
+    scheme = (scheme.Scheme(cfg, str(scheme_name), *tuple(all_subs)))
 
     return scheme    
         
