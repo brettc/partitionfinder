@@ -1,0 +1,301 @@
+IMPORTANT WARNING: Alignment column 316 contains only undetermined values which will be treated as missing data
+IMPORTANT WARNING: Alignment column 317 contains only undetermined values which will be treated as missing data
+IMPORTANT WARNING: Alignment column 318 contains only undetermined values which will be treated as missing data
+IMPORTANT WARNING: Alignment column 319 contains only undetermined values which will be treated as missing data
+IMPORTANT WARNING: Alignment column 320 contains only undetermined values which will be treated as missing data
+IMPORTANT WARNING: Alignment column 321 contains only undetermined values which will be treated as missing data
+IMPORTANT WARNING: Alignment column 322 contains only undetermined values which will be treated as missing data
+IMPORTANT WARNING: Alignment column 323 contains only undetermined values which will be treated as missing data
+IMPORTANT WARNING: Alignment column 324 contains only undetermined values which will be treated as missing data
+IMPORTANT WARNING: Alignment column 325 contains only undetermined values which will be treated as missing data
+IMPORTANT WARNING: Alignment column 326 contains only undetermined values which will be treated as missing data
+IMPORTANT WARNING: Alignment column 327 contains only undetermined values which will be treated as missing data
+IMPORTANT WARNING: Alignment column 328 contains only undetermined values which will be treated as missing data
+IMPORTANT WARNING: Alignment column 329 contains only undetermined values which will be treated as missing data
+IMPORTANT WARNING: Alignment column 330 contains only undetermined values which will be treated as missing data
+IMPORTANT WARNING: Alignment column 331 contains only undetermined values which will be treated as missing data
+IMPORTANT WARNING: Alignment column 332 contains only undetermined values which will be treated as missing data
+IMPORTANT WARNING: Alignment column 333 contains only undetermined values which will be treated as missing data
+IMPORTANT WARNING: Alignment column 334 contains only undetermined values which will be treated as missing data
+IMPORTANT WARNING: Alignment column 335 contains only undetermined values which will be treated as missing data
+IMPORTANT WARNING: Alignment column 336 contains only undetermined values which will be treated as missing data
+IMPORTANT WARNING: Alignment column 472 contains only undetermined values which will be treated as missing data
+IMPORTANT WARNING: Alignment column 473 contains only undetermined values which will be treated as missing data
+IMPORTANT WARNING: Alignment column 474 contains only undetermined values which will be treated as missing data
+IMPORTANT WARNING: Alignment column 475 contains only undetermined values which will be treated as missing data
+IMPORTANT WARNING: Alignment column 476 contains only undetermined values which will be treated as missing data
+IMPORTANT WARNING: Alignment column 477 contains only undetermined values which will be treated as missing data
+
+IMPORTANT WARNING
+Found 27 columns that contain only undetermined values which will be treated as missing data.
+Normally these columns should be excluded from the analysis.
+
+An alignment file with undetermined columns removed has already
+been printed to file ./analysis/phyml/37ef7d6aa18a90886723b5bb7366b4c1.phy.reduced
+
+
+This is RAxML version 7.3.9 released by Alexandros Stamatakis on November 8 2012.
+
+With greatly appreciated code contributions by:
+Andre Aberer (HITS)
+Simon Berger (HITS)
+Nick Pattengale (Sandia)
+Wayne Pfeiffer (SDSC)
+Akifumi S. Tanabe (Univ. Tsukuba)
+
+
+Alignment has 71 distinct alignment patterns
+
+Proportion of gaps and completely undetermined characters in this alignment: 8.21%
+
+RAxML Branch length scaler and other model parameter optimization up to an accuracy of 1.000000 log likelihood units
+
+Using 1 distinct models/data partitions with individual per partition branch length optimization
+
+
+All free model parameters will be estimated by RAxML
+GAMMA model of rate heteorgeneity, ML estimate of alpha-parameter
+
+GAMMA Model parameters will be estimated up to an accuracy of 1.0000000000 Log Likelihood units
+
+Partition: 0
+Alignment Patterns: 71
+Name: No Name Provided
+DataType: AA
+Substitution Matrix: BLOSUM62
+Using empirical base frequencies
+
+
+
+
+RAxML was called as follows:
+
+/Users/Brett/Code/partitionfinder/programs/raxml -f B -s ./analysis/phyml/37ef7d6aa18a90886723b5bb7366b4c1.phy -t ./analysis/start_tree/RAxML_result.BLTREE -m PROTGAMMABLOSUM62F -n 37ef7d6aa18a90886723b5bb7366b4c1_BLOSUM62+G+F.txt -w /Users/Brett/Code/partitionfinder/examples/aminoacid/analysis/phyml -e 1.0 -T 2 -O 
+
+
+Likelihood: -1751.003114
+
+
+Overall Time for Tree Evaluation with branch length scalers: 0.019206
+Final GAMMA  likelihood: -1751.003114
+
+Number of free parameters for AIC-TEST(BR-LEN): 21
+Number of free parameters for AIC-TEST(NO-BR-LEN): 20
+
+
+Model Parameters of Partition 0, Name: No Name Provided, Type of Data: AA
+alpha: 2.387812
+Branch length scaler: 1.431846
+Tree-Length: 0.025301
+rate A <-> R: 0.885232
+rate A <-> N : 0.583975
+rate A <-> D: 0.653480
+rate A <-> C: 1.756525
+rate A <-> Q: 1.443370
+rate A <-> E: 1.408772
+rate A <-> G: 2.353130
+rate A <-> H: 0.861712
+rate A <-> I: 0.728959
+rate A <-> L: 0.962502
+rate A <-> K: 1.558261
+rate A <-> M: 1.508400
+rate A <-> F: 0.593087
+rate A <-> P: 1.411572
+rate A <-> S: 5.203533
+rate A <-> T: 2.080379
+rate A <-> W: 0.560453
+rate A <-> Y: 0.864077
+rate A <-> V: 2.632118
+rate R <-> N : 1.560962
+rate R <-> D: 0.602712
+rate R <-> C: 0.274099
+rate R <-> Q: 3.634374
+rate R <-> E: 1.636911
+rate R <-> G: 0.503815
+rate R <-> H: 1.751888
+rate R <-> I: 0.279164
+rate R <-> L: 0.749186
+rate R <-> K: 6.510130
+rate R <-> M: 1.183484
+rate R <-> F: 0.447127
+rate R <-> P: 0.539151
+rate R <-> S: 1.350824
+rate R <-> T: 1.100437
+rate R <-> W: 0.512982
+rate R <-> Y: 0.866857
+rate R <-> V: 0.527426
+rate N  <-> D: 3.825988
+rate N  <-> C: 0.478064
+rate N  <-> Q: 2.212767
+rate N  <-> E: 1.492436
+rate N  <-> G: 1.631254
+rate N  <-> H: 2.904894
+rate N  <-> I: 0.340499
+rate N  <-> L: 0.254923
+rate N  <-> K: 1.916708
+rate N  <-> M: 0.780142
+rate N  <-> F: 0.426935
+rate N  <-> P: 0.595400
+rate N  <-> S: 3.493934
+rate N  <-> T: 2.283699
+rate N  <-> W: 0.230373
+rate N  <-> Y: 0.647537
+rate N  <-> V: 0.376401
+rate D <-> C: 0.289751
+rate D <-> Q: 1.432831
+rate D <-> E: 4.525623
+rate D <-> G: 0.960646
+rate D <-> H: 0.936186
+rate D <-> I: 0.503566
+rate D <-> L: 0.262435
+rate D <-> K: 1.242141
+rate D <-> M: 0.267837
+rate D <-> F: 0.338951
+rate D <-> P: 0.879021
+rate D <-> S: 1.904216
+rate D <-> T: 1.123924
+rate D <-> W: 0.174865
+rate D <-> Y: 0.314518
+rate D <-> V: 0.310556
+rate C <-> Q: 0.396785
+rate C <-> E: 0.169335
+rate C <-> G: 0.503142
+rate C <-> H: 0.425968
+rate C <-> I: 0.932277
+rate C <-> L: 1.000792
+rate C <-> K: 0.342979
+rate C <-> M: 0.923609
+rate C <-> F: 0.530974
+rate C <-> P: 0.428315
+rate C <-> S: 1.440341
+rate C <-> T: 1.347273
+rate C <-> W: 0.634835
+rate C <-> Y: 0.565744
+rate C <-> V: 1.343087
+rate Q <-> E: 6.651860
+rate Q <-> G: 0.733708
+rate Q <-> H: 2.929967
+rate Q <-> I: 0.284176
+rate Q <-> L: 0.698687
+rate Q <-> K: 4.746576
+rate Q <-> M: 3.001617
+rate Q <-> F: 0.173676
+rate Q <-> P: 1.032949
+rate Q <-> S: 2.327849
+rate Q <-> T: 1.536941
+rate Q <-> W: 0.912739
+rate Q <-> Y: 1.153764
+rate Q <-> V: 0.638590
+rate E <-> G: 0.509610
+rate E <-> H: 1.957318
+rate E <-> I: 0.224797
+rate E <-> L: 0.448307
+rate E <-> K: 3.371609
+rate E <-> M: 0.668222
+rate E <-> F: 0.350595
+rate E <-> P: 1.114752
+rate E <-> S: 2.129364
+rate E <-> T: 1.288640
+rate E <-> W: 0.490428
+rate E <-> Y: 0.717915
+rate E <-> V: 0.630731
+rate G <-> H: 0.649506
+rate G <-> I: 0.227743
+rate G <-> L: 0.261941
+rate G <-> K: 0.904785
+rate G <-> M: 0.552749
+rate G <-> F: 0.442942
+rate G <-> P: 0.606468
+rate G <-> S: 1.815875
+rate G <-> T: 0.771714
+rate G <-> W: 0.611608
+rate G <-> Y: 0.370623
+rate G <-> V: 0.304795
+rate H <-> I: 0.304046
+rate H <-> L: 0.418767
+rate H <-> K: 1.230181
+rate H <-> M: 1.184228
+rate H <-> F: 0.859658
+rate H <-> P: 0.634044
+rate H <-> S: 1.343902
+rate H <-> T: 0.704305
+rate H <-> W: 0.362433
+rate H <-> Y: 5.075837
+rate H <-> V: 0.242493
+rate I <-> L: 4.681231
+rate I <-> K: 0.488693
+rate I <-> M: 4.048199
+rate I <-> F: 1.825540
+rate I <-> P: 0.467232
+rate I <-> S: 0.430163
+rate I <-> T: 1.418568
+rate I <-> W: 0.411444
+rate I <-> Y: 0.811634
+rate I <-> V: 10.000000
+rate L <-> K: 0.536067
+rate L <-> M: 7.255385
+rate L <-> F: 2.484215
+rate L <-> P: 0.450629
+rate L <-> S: 0.424658
+rate L <-> T: 1.101152
+rate L <-> W: 0.831915
+rate L <-> Y: 0.976012
+rate L <-> V: 2.684611
+rate K <-> M: 1.291003
+rate K <-> F: 0.321138
+rate K <-> P: 1.260110
+rate K <-> S: 2.108036
+rate K <-> T: 1.568696
+rate K <-> W: 0.399723
+rate K <-> Y: 0.863820
+rate K <-> V: 0.599312
+rate M <-> F: 2.134131
+rate M <-> P: 0.546358
+rate M <-> S: 1.105319
+rate M <-> T: 1.790877
+rate M <-> W: 1.068477
+rate M <-> Y: 1.144972
+rate M <-> V: 3.099014
+rate F <-> P: 0.281042
+rate F <-> S: 0.649709
+rate F <-> T: 0.587362
+rate F <-> W: 2.495627
+rate F <-> Y: 8.117650
+rate F <-> V: 1.008344
+rate P <-> S: 1.406583
+rate P <-> T: 1.209662
+rate P <-> W: 0.303440
+rate P <-> Y: 0.444433
+rate P <-> V: 0.597832
+rate S <-> T: 6.197853
+rate S <-> W: 0.466715
+rate S <-> Y: 0.958574
+rate S <-> V: 0.676054
+rate T <-> W: 0.617346
+rate T <-> Y: 0.963698
+rate T <-> V: 2.710680
+rate W <-> Y: 4.877884
+rate W <-> V: 0.320637
+rate Y <-> V: 1.203103
+
+freq pi(A): 0.046704
+freq pi(R): 0.017460
+freq pi(N ): 0.068093
+freq pi(D): 0.030991
+freq pi(C): 0.003492
+freq pi(Q): 0.021388
+freq pi(E): 0.027499
+freq pi(G): 0.064164
+freq pi(H): 0.027499
+freq pi(I): 0.131820
+freq pi(L): 0.121781
+freq pi(K): 0.019642
+freq pi(M): 0.061545
+freq pi(F): 0.073330
+freq pi(P): 0.035356
+freq pi(S): 0.102139
+freq pi(T): 0.048014
+freq pi(W): 0.025753
+freq pi(Y): 0.035356
+freq pi(V): 0.037975
+
