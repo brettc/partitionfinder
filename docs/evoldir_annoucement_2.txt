@@ -1,0 +1,25 @@
+Dear all,
+We're pleased to announce the release of PartitionFinder v1.1.0. 
+PartitionFinder is a program that allows for the combined selection
+of partitioning schemes and models of molecular evolution for DNA
+and amino acid datasets. 
+
+It is available here: 
+
+www.robertlanfear.com/partitionfinder
+
+Version 1.1.0 includes a number of major improvements:
+
+    * Support for very large datasets (100s of genes, 1000s of taxa)
+    * New, faster, algorithms for finding partitioning schemes
+    * Support for model selection using RAxML
+    * Output of the best partitioning scheme in RAxML format
+    
+We are actively working on the program, so please do get in touch if 
+you have questions, suggestions, or comments. Many of the 
+improvements in this version came from user suggestions, so we hope 
+that others will find them useful too.
+
+Yours,
+
+Rob Lanfear
