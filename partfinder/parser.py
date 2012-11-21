@@ -134,6 +134,8 @@ class Parser(object):
         schemesection = \
                 Suppress("[schemes]") + schemealgo + Optional(schemelist)
 
+        
+
         # We've defined the grammar for each section. Here we just put it all together
         self.config_parser = (topsection + partsection + schemesection + stringEnd)
 
@@ -223,7 +225,7 @@ class Parser(object):
 
             self.cfg.models.add(m)
 
-        log.info("Setting 'models' to a list containing: %s",
+        log.info("The models included in this analysis are: %s",
                   ", ".join(self.cfg.models))
 
         #check datatype against the model list that we've got a sensible model list
