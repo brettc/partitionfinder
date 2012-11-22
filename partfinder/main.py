@@ -126,7 +126,7 @@ def main(name, version, datatype):
         type="str", dest="cluster_weights", default=None, metavar="N",
         help="Mainly for algorithm development. Only use it if you know what you're doing."
         "A list of weights to use in the clustering algorithm. This list allows you "
-        "to assign different weigths to the overall rate for a subset, the base/amino acid "
+        "to assign different weights to the overall rate for a subset, the base/amino acid "
         "frequencies, and the model parameters. This will affect how subsets are "
         "clustered together. For instance: --cluster_weights '1, 2, 5', would weight "
         "the base freqeuncies 2x more than the overall rate, and the model parameters 5x "
