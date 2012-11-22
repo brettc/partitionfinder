@@ -109,7 +109,7 @@ def get_closest(matrix, subsets):
         subs.append(subsets[index])
         subs_names.append(subsets[index].full_name)
 
-    log.info("Closest subsets: %s" %', '.join(subs_names))
+    log.info("Joining subsets: %s" %', '.join(subs_names))
 
     return subs
 
