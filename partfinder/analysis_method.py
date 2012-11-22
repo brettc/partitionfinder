@@ -99,6 +99,7 @@ class ClusteringAnalysis(Analysis):
             else:
                 start_scheme = clustered_scheme
 
+
         self.cfg.progress.end()
 
 
