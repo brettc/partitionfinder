@@ -257,6 +257,8 @@ class PhymlResult(object):
         self.lnl = lnl
         self.seconds = seconds
         self.tree_size = tree_size
+        self.rates = {}
+        self.freqs = {}
 
     def __str__(self):
         return "PhymlResult(lnl:%s, tree_size:%s, secs:%s)" % (self.lnl, self.tree_size, self.seconds)
