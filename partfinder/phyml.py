@@ -18,7 +18,8 @@
 """Run phyml and parse the output"""
 
 import logging
-k
+log = logging.getLogger("phyml")
+
 import subprocess
 import shlex
 import os
