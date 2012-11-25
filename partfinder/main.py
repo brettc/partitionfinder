@@ -20,8 +20,7 @@ import os
 import sys
 
 logging.basicConfig(
-    format='%(levelname)-8s | %(asctime)s | %(message)s',
-    # format='%(levelname)s:%(message)s',
+    format="%(levelname)-8s | %(asctime)s | %(message)s",
     level=logging.INFO
 )
 
@@ -60,15 +59,22 @@ def set_debug_regions(regions):
         return
     valid_regions = set(get_debug_regions())
     regions = set(regions)
-    remove_me = set()
+    errors = set()
     for r in regions:
         if r not in valid_regions:
-            log.warning("%s is not a valid debug region", r)
-            remove_me.add(r)
+            log.error("'%s' is not a valid debug region", r)
+            errors.add(r)
 
-    regions -= remove_me
+    if errors:
+        raise util.PartitionFinderError
+
     for r in regions:
         logging.getLogger(r).setLevel(logging.DEBUG)
+
+    # Enhance the format
+    fmt = logging.Formatter("%(levelname)-8s | %(asctime)s | %(name)-10s | %(message)s")
+    logging.getLogger("").handlers[0].setFormatter(fmt)
+    level=logging.INFO
 
 
 def main(name, version, datatype):
@@ -177,7 +183,7 @@ def main(name, version, datatype):
         type='string',
         action='callback',
         dest='debug_output',
-        metavar="{REGION,REGION,...}",
+        metavar="REGION,REGION,...",
         callback=debug_arg_callback,
         help="(advanced option) Provide a list of debug regions to output extra "
         "information about what the program is doing."
@@ -186,8 +192,6 @@ def main(name, version, datatype):
     )
 
     options, args = parser.parse_args()
-
-    set_debug_regions(options.debug_output)
 
     #default to phyml
     if options.raxml == 1:
@@ -224,6 +228,7 @@ def main(name, version, datatype):
 
     # Load, using the first argument as the folder
     try:
+        set_debug_regions(options.debug_output)
         cfg = config.Configuration(datatype, options.phylogeny_program,
                                    options.save_phylofiles, options.cmdline_extras, options.cluster_weights)
         # Set up the progress callback
