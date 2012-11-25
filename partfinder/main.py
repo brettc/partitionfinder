@@ -11,11 +11,13 @@
 #General Public License for more details. You should have received a copy
 #of the GNU General Public License along with this program.  If not, see
 #<http://www.gnu.org/licenses/>. PartitionFinder also includes the PhyML
-#program, the RAxML program, the PyParsing library, and the python-cluster library 
-#all of which are protected by their own licenses and conditions, using 
+#program, the RAxML program, the PyParsing library, and the python-cluster library
+#all of which are protected by their own licenses and conditions, using
 #PartitionFinder implies that you agree with those licences and conditions as well.
 
-import logging, os, sys
+import logging
+import os
+import sys
 
 logging.basicConfig(
     format='%(levelname)-8s | %(asctime)s | %(message)s',
@@ -31,11 +33,49 @@ logging.basicConfig(
 
 log = logging.getLogger("main")
 from optparse import OptionParser
-import config, analysis_method, util, parser, reporter, progress, datetime
+
+# We import everything here as it forces all of debug regions to be loaded
+import config
+import analysis_method
+import util
+import reporter
+import progress
+import datetime
+import parser
+import raxml
+import phyml
+
+
+def debug_arg_callback(option, opt, value, parser):
+    setattr(parser.values, option.dest, value.split(','))
+
+
+def get_debug_regions():
+    mlogger = logging.Logger.manager
+    return mlogger.loggerDict.keys()
+
+
+def set_debug_regions(regions):
+    if regions is None:
+        return
+    valid_regions = set(get_debug_regions())
+    regions = set(regions)
+    remove_me = set()
+    for r in regions:
+        if r not in valid_regions:
+            log.warning("%s is not a valid debug region", r)
+            remove_me.add(r)
+
+    regions -= remove_me
+    for r in regions:
+        logging.getLogger(r).setLevel(logging.DEBUG)
+
 
 def main(name, version, datatype):
+    # logging.getLogger("raxml").setLevel(logging.DEBUG)
     log.info("------------- %s %s -----------------", name, version)
-    start_time = datetime.datetime.now().replace(microsecond=0) #start the clock ticking
+    start_time = datetime.datetime.now(
+    ).replace(microsecond=0)  # start the clock ticking
     usage = """usage: python %prog [options] <foldername>
 
     PartitionFinder and PartitionFinderProtein are designed to discover optimal
@@ -108,7 +148,7 @@ def main(name, version, datatype):
         "--raxml",
         action="store_true", dest="raxml",
         help="Use RAxML (rather than PhyML) to do the analysis. See the manual"
-        )
+    )
     parser.add_option(
         "--cmdline_extras",
         type="str", dest="cmdline_extras", default="", metavar="N",
@@ -118,9 +158,9 @@ def main(name, version, datatype):
         " you to specify the number of threads you will let raxml use ('-T' option in "
         "raxml. E.g. you might specify this: --cmndline_extras ' -e 2.0 -T 10 '"
         " N.B. MAKE SURE YOU PUT YOUR EXTRAS IN QUOTES, and only use this command if you"
-        " really know what you're doing and are very familiar with raxml and" 
+        " really know what you're doing and are very familiar with raxml and"
         " PartitionFinder"
-        )
+    )
     parser.add_option(
         "--cluster_weights",
         type="str", dest="cluster_weights", default=None, metavar="N",
@@ -131,13 +171,26 @@ def main(name, version, datatype):
         "clustered together. For instance: --cluster_weights '1, 2, 5', would weight "
         "the base freqeuncies 2x more than the overall rate, and the model parameters 5x "
         "more."
-        )
-
+    )
+    parser.add_option(
+        '--debug-output',
+        type='string',
+        action='callback',
+        dest='debug_output',
+        metavar="{REGION,REGION,...}",
+        callback=debug_arg_callback,
+        help="(advanced option) Provide a list of debug regions to output extra "
+        "information about what the program is doing."
+        " Possible regions are any of {%s}."
+        % ",".join(get_debug_regions())
+    )
 
     options, args = parser.parse_args()
 
+    set_debug_regions(options.debug_output)
+
     #default to phyml
-    if options.raxml==1:
+    if options.raxml == 1:
         options.phylogeny_program = 'raxml'
     else:
         options.phylogeny_program = 'phyml'
@@ -154,24 +207,25 @@ def main(name, version, datatype):
         return 2
 
     #before we start, let's check the python version is above 2.7 but lower than 3.0
-    python_version = float("%d.%d" %(sys.version_info[0], sys.version_info[1]))
+    python_version = float(
+        "%d.%d" % (sys.version_info[0], sys.version_info[1]))
 
-    log.info("You have Python version %.1f" %python_version)
+    log.info("You have Python version %.1f" % python_version)
 
-    if python_version<2.7:
+    if python_version < 2.7:
         log.error("Your Python version is %.1f, but this program requires Python 2.7. "
-        "Please upgrade to version 2.7 by visiting www.python.org/getit, or by following"
-        " the instructions in the PartitionFinder manual." % python_version)
+                  "Please upgrade to version 2.7 by visiting www.python.org/getit, or by following"
+                  " the instructions in the PartitionFinder manual." % python_version)
         return 0
 
-    if python_version>3.0:
+    if python_version > 3.0:
         log.warning("Your Python version is %.1f. This program was not built to run with "
-        "version 3 or higher. To guarantee success, please use Python 2.7.x" % python_version)
+                    "version 3 or higher. To guarantee success, please use Python 2.7.x" % python_version)
 
     # Load, using the first argument as the folder
     try:
-        cfg = config.Configuration(datatype, options.phylogeny_program, 
-            options.save_phylofiles, options.cmdline_extras, options.cluster_weights)
+        cfg = config.Configuration(datatype, options.phylogeny_program,
+                                   options.save_phylofiles, options.cmdline_extras, options.cluster_weights)
         # Set up the progress callback
         p = progress.TextProgress(cfg)
         cfg.load_base_path(args[0])
