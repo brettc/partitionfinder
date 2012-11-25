@@ -11,8 +11,8 @@
 #General Public License for more details. You should have received a copy
 #of the GNU General Public License along with this program.  If not, see
 #<http://www.gnu.org/licenses/>. PartitionFinder also includes the PhyML
-#program, the RAxML program, the PyParsing library, and the python-cluster library 
-#all of which are protected by their own licenses and conditions, using 
+#program, the RAxML program, the PyParsing library, and the python-cluster library
+#all of which are protected by their own licenses and conditions, using
 #PartitionFinder implies that you agree with those licences and conditions as well.
 
 import logging
@@ -54,8 +54,8 @@ class Configuration(object):
 
         self.base_path = '.'
         self.alignment = None
-        self.user_tree = None        
-        
+        self.user_tree = None
+
         ### Some basic checking of the setup, so that we don't hit too many problems later
         if datatype != "DNA" and datatype != "protein":
             log.error("datatype must be 'DNA' or 'protein'")
@@ -76,15 +76,15 @@ class Configuration(object):
 
         if cluster_weights==None:
             #default to equal weights. TODO. This should change depending on results of our analyses
-            self.cluster_weights = {"rate": 1, "freqs": 1, "model": 1} 
+            self.cluster_weights = {"rate": 1, "freqs": 1, "model": 1}
         else:
             #TODO. Is there a more robust way to do this...
             cluster_weights = cluster_weights.split(",")
 
-            #now we check that it's a list of exactly three numbers            
+            #now we check that it's a list of exactly three numbers
             if len(cluster_weights)!=3:
                 log.error("Your --cluster_weights argument should have exactly 3"
-                    " items separated by commas, but it has %d. " 
+                    " items separated by commas, but it has %d. "
                     "Please check and try again" %len(cluster_weights))
                 raise ConfigurationError
             final_weights = []
@@ -92,20 +92,20 @@ class Configuration(object):
                 try:
                     num = float(eval(thing))
                     final_weights.append(num)
-                except:                
+                except:
                     log.error("Unable to understand your --cluster_weights argument."
                         " It should look like this: --cluster_weights '1,2,3'. "
                         "Please double check that you included quotes, "
                         "and three numbers separated by commas. Then try again. "
                         "The part that I coudln't understand is this: '%s'" %thing)
                     raise ConfigurationError
-                    
+
             log.info("Setting cluster_weights to: subset_rate = %.1f, freqs = %.1f, model = %.1f" %(final_weights[0], final_weights[1], final_weights[2]))
-            self.cluster_weights = {} 
+            self.cluster_weights = {}
             self.cluster_weights["rate"] = final_weights[0]
             self.cluster_weights["freqs"] = final_weights[1]
             self.cluster_weights["model"] = final_weights[2]
-                
+
 
         # Set the defaults into the class. These can be reset by calling
         # set_option(...)
@@ -197,9 +197,6 @@ class Configuration(object):
         handler.setFormatter(formatter)
         handler.setLevel(logging.DEBUG)
         logging.getLogger("").addHandler(handler)
-        logging.getLogger("analysis").addHandler(handler)
-        # logging.getLogger("subset").addHandler(handler)
-        logging.getLogger("alignment").addHandler(handler)
 
     def load(self, config_path):
         """We get the parser to construct the configuration"""
