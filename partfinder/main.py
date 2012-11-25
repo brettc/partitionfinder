@@ -150,7 +150,7 @@ def main(name, version, datatype):
         help="Use RAxML (rather than PhyML) to do the analysis. See the manual"
     )
     parser.add_option(
-        "--cmdline_extras",
+        "--cmdline-extras",
         type="str", dest="cmdline_extras", default="", metavar="N",
         help="Add additional commands to the phyml or raxml commandlines that PF uses."
         "This can be useful e.g. if you want to change the accuracy of lnL calculations"
@@ -162,7 +162,7 @@ def main(name, version, datatype):
         " PartitionFinder"
     )
     parser.add_option(
-        "--cluster_weights",
+        "--cluster-weights",
         type="str", dest="cluster_weights", default=None, metavar="N",
         help="Mainly for algorithm development. Only use it if you know what you're doing."
         "A list of weights to use in the clustering algorithm. This list allows you "
