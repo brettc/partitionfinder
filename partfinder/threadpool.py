@@ -15,18 +15,17 @@
 #General Public License for more details. You should have received a copy
 #of the GNU General Public License along with this program.  If not, see
 #<http://www.gnu.org/licenses/>. PartitionFinder also includes the PhyML
-#program, the RAxML program, the PyParsing library, and the python-cluster library 
-#all of which are protected by their own licenses and conditions, using 
+#program, the RAxML program, the PyParsing library, and the python-cluster library
+#all of which are protected by their own licenses and conditions, using
 #PartitionFinder implies that you agree with those licences and conditions as well.
 
 import logging
 log = logging.getLogger("threadpool")
 import threading
 from time import sleep
-import sys, os
+import sys
+import os
 
-# Catch these exceptions
-from util import PhylogenyProgramError
 
 # Taken from the multiprocessing library
 def cpu_count():
@@ -55,6 +54,7 @@ def cpu_count():
 
 _cpus = cpu_count()
 
+
 class Pool(object):
     def __init__(self, tasks, numthreads=-1):
         """Initialize the thread pool with numthreads workers and all tasks"""
@@ -62,6 +62,7 @@ class Pool(object):
         self.tasks = tasks
         self.task_lock = threading.Condition(threading.Lock())
         self.threads = []
+        self.failed = False
 
         numtasks = len(tasks)
         if numtasks == 0:
@@ -91,6 +92,14 @@ class Pool(object):
         finally:
             self.task_lock.release()
 
+    def kill(self, e):
+        self.task_lock.acquire()
+        self.tasks = []
+        self.more_tasks = False
+        self.failed = True
+        self.exception = e
+        self.task_lock.release()
+
     def join(self):
         # TODO: I don't think we need this bit....
         # Wait till all tasks have been taken
@@ -99,6 +108,10 @@ class Pool(object):
         # ... now wait for them all to finish
         for t in self.threads:
             t.join()
+
+        if self.failed:
+            raise self.exception
+
 
 class Thread(threading.Thread):
     def __init__(self, pool):
@@ -113,9 +126,9 @@ class Thread(threading.Thread):
                 break
             try:
                 cmd(*args)
-            except PhylogenyProgramError:
-                # Catch the ones we know about, the error should already have
-                # been reported. Stop operation though.
+            except Exception as e:
+                # The error should already have been reported.
+                # Stop operation and kill the entire pool. Then reraise the
+                # error
+                self.pool.kill(e)
                 break
-
-
