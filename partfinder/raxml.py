@@ -328,7 +328,7 @@ class Parser(object):
         try:
             self.root_parser.parseString(text)
         except ParseException, p:
-            log.debug(str(p))
+            log.error(str(p))
             raise RaxmlError
 
         log.debug("Result is %s", self.result)
