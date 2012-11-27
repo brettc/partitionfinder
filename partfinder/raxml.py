@@ -172,11 +172,22 @@ def check_defaults(cmdline_extras):
         #we specify a default accuracy of 1 lnL unit
         accuracy = " -e 1.0 "
 
-    #we set this incase people are using the PThreads version of RAxML
+    #we set this in case people are using the PThreads version of RAxML
+    #note that this is intentionally set to give an error if people use Pthreads, because
+    #they will need to consider by hand what the optimal setting is. And, if we set it >1
+    #then we risk massively slowing things down because PF's default is to use all possible
+    #processors.
     if cmdline_extras.count("-T") > 0:
         num_threads = ""
+        log.warning("It looks like you're using a Pthreads version of RAxML. Be aware "
+        "that the default behaviour of PartitionFinder is to run one version of RAxML per "
+        "available processor. This might not be what you want with Pthreads - since the "
+        "minimum number of threads per RAxML run is 2 (i.e. -T 2). Make sure to limit the "
+        "total number of RAxML runs you start using the -p option in PartitionFinder. "
+        "See the manual for more info.")
+        
     else:
-        num_threads = " -T 2 "  # raxml Pthreads forces T>1
+        num_threads = " -T 1 "
 
     #and we'll specify the -O option, so that the program doesn't exit if there are undetermined seqs.
     #we'll put spaces at the start and end too, just in case...
