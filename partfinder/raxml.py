@@ -26,11 +26,10 @@ import os
 import shutil
 import sys
 import fnmatch
-import itertools
 
 from pyparsing import (
     Word, Literal, nums, Suppress, ParseException,
-    SkipTo, Each, OneOrMore, Group, Regex
+    SkipTo, OneOrMore, Regex
 )
 
 import raxml_models as models
