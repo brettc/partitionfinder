@@ -11,8 +11,8 @@
 #General Public License for more details. You should have received a copy
 #of the GNU General Public License along with this program.  If not, see
 #<http://www.gnu.org/licenses/>. PartitionFinder also includes the PhyML
-#program, the RAxML program, the PyParsing library, and the python-cluster library 
-#all of which are protected by their own licenses and conditions, using 
+#program, the RAxML program, the PyParsing library, and the python-cluster library
+#all of which are protected by their own licenses and conditions, using
 #PartitionFinder implies that you agree with those licences and conditions as well.
 
 """Run raxml and parse the output"""
@@ -278,7 +278,7 @@ class Parser(object):
         L = Word(letters, exact=1)
         COLON = Suppress(":")
 
-        LNL_LABEL = Literal("Final GAMMA  likelihood:")
+        LNL_LABEL = Regex("Final GAMMA.+:")
         TIME_LABEL = Regex("Overall Time.+:")
         TREE_SIZE_LABEL = Literal("Tree-Length:")
 
