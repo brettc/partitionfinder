@@ -13,3 +13,5 @@ programs/phyml_source/build/
 example/results.bin
 .DS_Store
 .ropeproject
+analysis
+RELEASE-VERSION
