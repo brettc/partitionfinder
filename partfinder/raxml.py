@@ -185,7 +185,7 @@ def check_defaults(cmdline_extras):
         "minimum number of threads per RAxML run is 2 (i.e. -T 2). Make sure to limit the "
         "total number of RAxML runs you start using the -p option in PartitionFinder. "
         "See the manual for more info.")
-        
+
     else:
         num_threads = " -T 1 "
 
@@ -288,8 +288,8 @@ class Parser(object):
         L = Word(letters, exact=1)
         COLON = Suppress(":")
 
-        LNL_LABEL = Regex("Final GAMMA.+:")
-        TIME_LABEL = Regex("Overall Time.+:")
+        LNL_LABEL = Regex("Final GAMMA.+:") | Literal("Likelihood:")
+        TIME_LABEL = Regex("Overall Time.+:") | Regex("Overall Time.+tion ")
         TREE_SIZE_LABEL = Literal("Tree-Length:")
 
         def labeled_float(label):
