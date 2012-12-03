@@ -16,7 +16,6 @@
 #PartitionFinder implies that you agree with those licences and conditions as well.
 
 import logging
-import os
 import sys
 
 logging.basicConfig(
@@ -59,15 +58,17 @@ def set_debug_regions(regions):
     if regions is None:
         return
     valid_regions = set(get_debug_regions())
-    regions = set(regions)
-    errors = set()
-    for r in regions:
-        if r not in valid_regions:
-            log.error("'%s' is not a valid debug region", r)
-            errors.add(r)
-
-    if errors:
-        raise util.PartitionFinderError
+    if 'all' in regions:
+        regions = valid_regions
+    else:
+        regions = set(regions)
+        errors = set()
+        for r in regions:
+            if r not in valid_regions:
+                log.error("'%s' is not a valid debug region", r)
+                errors.add(r)
+        if errors:
+            raise util.PartitionFinderError
 
     for r in regions:
         logging.getLogger(r).setLevel(logging.DEBUG)
@@ -75,7 +76,6 @@ def set_debug_regions(regions):
     # Enhance the format
     fmt = logging.Formatter("%(levelname)-8s | %(asctime)s | %(name)-10s | %(message)s")
     logging.getLogger("").handlers[0].setFormatter(fmt)
-    level=logging.INFO
 
 
 def main(name, datatype):
@@ -117,7 +117,7 @@ def main(name, datatype):
     parser.add_option(
         "-v", "--verbose",
         action="store_true", dest="verbose",
-        help="show verbose (debug) output")
+        help="show debug logging information (equivalent to --debug-out=all)")
     parser.add_option(
         "-c", "--check-only",
         action="store_true", dest="check_only",
@@ -187,7 +187,7 @@ def main(name, datatype):
         callback=debug_arg_callback,
         help="(advanced option) Provide a list of debug regions to output extra "
         "information about what the program is doing."
-        " Possible regions are any of {%s}."
+        " Possible regions are 'all' or any of {%s}."
         % ",".join(get_debug_regions())
     )
 
@@ -228,7 +228,10 @@ def main(name, datatype):
 
     # Load, using the first argument as the folder
     try:
-        set_debug_regions(options.debug_output)
+        if options.verbose:
+            set_debug_regions(['all'])
+        else:
+            set_debug_regions(options.debug_output)
         cfg = config.Configuration(datatype, options.phylogeny_program,
                                    options.save_phylofiles, options.cmdline_extras, options.cluster_weights)
         # Set up the progress callback
@@ -239,11 +242,6 @@ def main(name, datatype):
             log.info("Exiting without processing (because of the -c/--check-only option ...")
         else:
 
-            # For now, we just turn on debugging for the analysis section
-            # For finer grain, see the logging.cfg file
-            if options.verbose:
-                logging.getLogger('analysis').setLevel(logging.DEBUG)
-                logging.getLogger('analysis_method').setLevel(logging.DEBUG)
 
             # Now try processing everything....
             method = analysis_method.choose_method(cfg.search)
