@@ -11,8 +11,8 @@
 #General Public License for more details. You should have received a copy
 #of the GNU General Public License along with this program.  If not, see
 #<http://www.gnu.org/licenses/>. PartitionFinder also includes the PhyML
-#program, the RAxML program, the PyParsing library, and the python-cluster library 
-#all of which are protected by their own licenses and conditions, using 
+#program, the RAxML program, the PyParsing library, and the python-cluster library
+#all of which are protected by their own licenses and conditions, using
 #PartitionFinder implies that you agree with those licences and conditions as well.
 
 import sys
@@ -20,6 +20,6 @@ from partfinder import main
 
 if __name__ == "__main__":
     # Well behaved unix programs exits with 0 on success...
-    sys.exit(main.main("PartitionFinder", "v1.1.0", "DNA"))
+    sys.exit(main.main("PartitionFinder", "DNA"))
 
 

@@ -34,6 +34,7 @@ log = logging.getLogger("main")
 from optparse import OptionParser
 
 # We import everything here as it forces all of debug regions to be loaded
+import version
 import config
 import analysis_method
 import util
@@ -77,11 +78,10 @@ def set_debug_regions(regions):
     level=logging.INFO
 
 
-def main(name, version, datatype):
-    # logging.getLogger("raxml").setLevel(logging.DEBUG)
-    log.info("------------- %s %s -----------------", name, version)
-    start_time = datetime.datetime.now(
-    ).replace(microsecond=0)  # start the clock ticking
+def main(name, datatype):
+    v = version.get_git_version()
+    log.info("------------- %s %s -----------------", name, v)
+    start_time = datetime.datetime.now().replace(microsecond=0)  # start the clock ticking
     usage = """usage: python %prog [options] <foldername>
 
     PartitionFinder and PartitionFinderProtein are designed to discover optimal
