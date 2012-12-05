@@ -179,12 +179,6 @@ def check_defaults(cmdline_extras):
     #processors.
     if cmdline_extras.count("-T") > 0:
         num_threads = ""
-        log.warning("It looks like you're using a Pthreads version of RAxML. Be aware "
-        "that the default behaviour of PartitionFinder is to run one version of RAxML per "
-        "available processor. This might not be what you want with Pthreads - since the "
-        "minimum number of threads per RAxML run is 2 (i.e. -T 2). Make sure to limit the "
-        "total number of RAxML runs you start using the -p option in PartitionFinder. "
-        "See the manual for more info.")
 
     else:
         num_threads = " -T 1 "
