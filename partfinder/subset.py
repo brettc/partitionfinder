@@ -185,6 +185,7 @@ class Subset(object):
                 self.best_model = result.model
                 self.best_params = result.params
                 self.best_site_rate = result.site_rate
+                self.best_alpha = result.alpha
                 self.best_freqs = result.freqs
                 self.best_modelparams = result.rates
                 
@@ -194,6 +195,7 @@ class Subset(object):
         param_values = {}
 
         param_values["rate"]  = self.best_site_rate
+        param_values["alpha"]  = self.best_alpha
         
         #not sure if this sorting is necessary, but it's here in case it's needed
         #to make sure that freqs and model parameters are always in the same order
