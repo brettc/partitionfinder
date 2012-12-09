@@ -16,6 +16,8 @@
 #PartitionFinder implies that you agree with those licences and conditions as well.
 
 from cluster import minkowski_distance, genmatrix, printmatrix
+import subset
+import scheme
 
 import logging
 log = logging.getLogger("cluster")
@@ -88,15 +90,15 @@ def get_ranked_list(matrix, subsets):
         colindex=0
         for cell in row:
             #ignore the diagonal and sub-diagonal (it's a symmetrical matrix)
-            if (colindex >= rowindex):
+            if (colindex > rowindex):
                 #get any subs that we already know are that distance apart as a set
                 #default to empty set if it's a new distance                
-                subs = distances.setdefault(cell, ()) 
+                subs = distances.setdefault(cell, set()) 
                 #add subs that correspond to this cell
-                subs.add(subsets[rowindex], subset[colindex])
+                subs.add(subsets[rowindex]) 
+                subs.add(subsets[colindex])
             colindex += 1
         rowindex += 1
-
     
     ordered_subsets = []    
 
@@ -203,7 +205,7 @@ def get_closest_subsets(scheme, weights):
     return closest_subsets
 
 def get_ranked_clustered_schemes(
-    start_scheme, cfg):
+    start_scheme, name_prefix, cfg):
     """The idea here is to take a scheme, and perform some analyses to find out how the 
     subsets in that scheme cluster.
     
@@ -211,25 +213,28 @@ def get_ranked_clustered_schemes(
     clustering space
     """
     subsets = [] #a list of subset names, so we know the order things appear in the list
-    for s in scheme.subsets:
+    for s in start_scheme.subsets:
         subsets.append(s)
     
-    distance_matrix = get_disctance_matrix(scheme, cfg.cluster_weights)
+    distance_matrix = get_distance_matrix(start_scheme, cfg.cluster_weights)
     
     ranked_subset_groupings = get_ranked_list(distance_matrix, subsets)
-    
+        
     ranked_clustered_schemes = []
+    counter = 1
     for g in ranked_subset_groupings:
-        scheme = make_clustered_scheme(start_scheme, scheme_name, closest_subsets)
-        ranked_clustered_schemes.append(scheme)
+        scheme_name = "%s_%d" %(name_prefix, counter)
+        counter +=1
+        scheme_g = make_clustered_scheme(start_scheme, scheme_name, g, cfg)
+        ranked_clustered_schemes.append(scheme_g)
     
-    return scheme
+    return ranked_clustered_schemes
     
-def make_clustered_scheme(start_scheme, scheme_name, subsets_to_cluster):
+def make_clustered_scheme(start_scheme, scheme_name, subsets_to_cluster, cfg):
     
     #1. Create a new subset that merges the subsets_to_cluster
     newsub_parts = []
-    for s in closest_subsets:
+    for s in subsets_to_cluster:
         newsub_parts = newsub_parts + list(s.partitions)
     newsub = subset.Subset(*tuple(newsub_parts))
     
@@ -237,16 +242,16 @@ def make_clustered_scheme(start_scheme, scheme_name, subsets_to_cluster):
     all_subs = [s for s in start_scheme.subsets]
 
     #pop out the subsets we're going to join together
-    for s in closest_subsets:
+    for s in subsets_to_cluster:
         all_subs.remove(s)
     
     #and now we add back in our new subset...
     all_subs.append(newsub)
 
     #and finally create the clustered scheme
-    scheme = (scheme.Scheme(cfg, str(scheme_name), *tuple(all_subs)))
+    final_scheme = (scheme.Scheme(cfg, str(scheme_name), *tuple(all_subs)))
 
-    return scheme    
+    return final_scheme    
 
 
 
@@ -259,17 +264,14 @@ def get_nearest_neighbour_scheme(
     The weights argument allows us to assign different weights to different model parameters
     
     """
-        
-    import subset
-    import scheme
-    
+            
     #1. First we get the closest subsets, based on some weights. This will almost always
     #   be two subsets, but it's generalised so that it could be all of them...
     #   cluster weights is a dictionary of weights, keyed by: rate, freqs, model
     #   for the overall subset rate, the base/aminoacid frequencies, and the model parameters
     closest_subsets = get_closest_subsets(start_scheme, cfg.cluster_weights)
 
-    scheme = make_clustered_scheme(start_scheme, scheme_name, closest_subsets)
+    scheme = make_clustered_scheme(start_scheme, scheme_name, closest_subsets, cfg)
 
 
     return scheme    
