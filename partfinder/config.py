@@ -76,7 +76,7 @@ class Configuration(object):
 
         if cluster_weights==None:
             #default to equal weights. TODO. This should change depending on results of our analyses
-            self.cluster_weights = {"rate": 1, "freqs": 1, "model": 1}
+            self.cluster_weights = {"rate": 1, "freqs": 1, "model": 1, "alpha": 1}
         else:
             #TODO. Is there a more robust way to do this...
             cluster_weights = cluster_weights.split(",")
