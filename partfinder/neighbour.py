@@ -113,10 +113,7 @@ def get_closest(matrix, subsets):
 
     return subs
 
-
-def get_closest_subsets(scheme, weights):
-    """Find the closest subsets in a scheme
-    """
+def get_distance_matrix(scheme, weights):
     #1. get the parameter lists for each subset
     subsets = [] #a list of subset names, so we know the order things appear in the list
     rates = [] #tree length
@@ -147,12 +144,34 @@ def get_closest_subsets(scheme, weights):
     #4. sum the matrices
     distance_matrix = sum_matrices(rates_matrix, freqs_matrix, model_matrix)
     #printmatrix(distance_matrix)
+    
+    return distance_matrix
 
+def get_closest_subsets(scheme, weights):
+    """Find the closest subsets in a scheme
+    """
+    distance_matrix = get_distance_matrix(scheme, weights)
+
+    subsets = [] #a list of subset names, so we know the order things appear in the list
+    for s in scheme.subsets:
+        subsets.append(s)
+    
     #5. get the closest pair
     closest_subsets = get_closest(distance_matrix, subsets)
     #print closest_subsets
     
     return closest_subsets
+
+def get_ranked_clustered_schemes(
+    start_scheme, cfg):
+    """The idea here is to take a scheme, and perform some analyses to find out how the 
+    subsets in that scheme cluster.
+    
+    We then just return the list of schemes, ordered by closest to most distant in the 
+    clustering space
+    """
+    pass
+    
 
 def get_nearest_neighbour_scheme(
         start_scheme, scheme_name, cfg):
