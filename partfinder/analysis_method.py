@@ -278,28 +278,29 @@ class GreediestAnalysis(Analysis):
             #get a list of all possible lumpings of the best_scheme
             lumped_schemes = get_ranked_clustered_schemes(start_scheme, scheme_name_prefix, self.cfg)
 
-            for s in lumped_schemes:
-                print s
-
             #now analyse the lumped schemes
             for lumped_scheme in lumped_schemes:
+                no_improvement=0
                 #this is just checking to see if a scheme is any good, if it is, we remember and write it later
                 result = self.analyse_scheme(lumped_scheme, suppress_writing=True, suppress_memory=True)
                 new_score = get_score(result)
-                print "lumped: ", lumped_scheme
-                print result
 
                 #we keep the scheme, and write it, if it's better than the current score
                 if new_score<best_score:
+                    log.info("Found improved scheme with %s score: %.2f" %(model_selection, new_score))
                     best_score=new_score
                     fname = os.path.join(self.cfg.schemes_path, scheme_name_prefix + '.txt')
                     self.cfg.reporter.write_scheme_summary(result, open(fname, 'w'))
                     self.results.add_scheme_result(result)
                     break
+                else:
+                    no_improvement=1
 
 
             #stop when we've anlaysed the scheme with all subsets combined
             if len(set(lumped_scheme.subsets)) == 1:  # then it's the scheme with everything together
+                break
+            elif no_improvement==1:
                 break
             else:
                 start_scheme = lumped_scheme
@@ -316,7 +317,7 @@ def choose_method(search):
     elif search == 'greedy':
         method = GreedyAnalysis
     elif search == 'clustering':
-        method = ClusteringAnalysis
+        method = GreediestAnalysis
     elif search == 'greediest':
         method = GreediestAnalysis
     else:
