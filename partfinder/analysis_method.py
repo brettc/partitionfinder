@@ -25,7 +25,7 @@ import algorithm
 import submodels
 import subset
 from analysis import Analysis, AnalysisError
-from neighbour import get_nearest_neighbour_scheme
+from neighbour import get_nearest_neighbour_scheme, get_ranked_clustered_schemes
 
 
 class UserAnalysis(Analysis):
@@ -99,7 +99,6 @@ class ClusteringAnalysis(Analysis):
             else:
                 start_scheme = clustered_scheme
 
-
         self.cfg.progress.end()
 
 
@@ -136,8 +135,6 @@ class AllAnalysis(Analysis):
 
 
 class GreedyAnalysis(Analysis):
-
-
     def do_analysis(self):
         '''A greedy algorithm for heuristic partitioning searches'''
         log.info("Performing greedy analysis")
@@ -234,6 +231,83 @@ class GreedyAnalysis(Analysis):
         self.cfg.reporter.write_all_schemes(self.results, info= "Information on the best scheme from each step of the greedy algorithm is here: ")
 
 
+class GreediestAnalysis(Analysis):
+    def do_analysis(self):
+        '''A greediest algorithm for heuristic partitioning searches'''
+        log.info("Performing greediest analysis")
+        model_selection = self.cfg.model_selection
+        partnum = len(self.cfg.partitions)
+
+        scheme_count = submodels.count_greedy_schemes(partnum)
+        subset_count = submodels.count_greedy_subsets(partnum)
+        log.info("This will result in a maximum of %s schemes being created, probably a lot less", scheme_count)
+        log.info("PartitionFinder will have to analyse a maximum of %d subsets of sites to complete this analysis, probably a lot less", subset_count)
+        self.cfg.progress.begin(scheme_count, subset_count)
+
+        #clear any schemes that are currently loaded
+        # TODO Not sure we need this...
+        self.cfg.schemes.clear_schemes()
+
+        #start with the most partitioned scheme
+        start_description = range(len(self.cfg.partitions))
+        start_scheme = scheme.create_scheme(self.cfg, "start_scheme"    , start_description)
+        log.info("Analysing starting scheme (scheme %s)" % start_scheme.name)
+        result = self.analyse_scheme(start_scheme)
+
+        def get_score(my_result):
+            try:
+                return getattr(my_result, model_selection)
+            except AttributeError:
+                log.error("Unrecognised model_selection variable '%s', please check", model_selection)
+                raise AnalysisError
+
+        best_score = get_score(result)
+
+        step = 1
+        #now we try out all clusterings of the first scheme, to see if we can find a better one
+        while True:
+            log.info("***Greediest algorithm step %d of %d***" %
+                     (step, partnum - 1))
+
+            #calculate the subsets which are most similar
+            #e.g. combined rank ordering of euclidean distances
+            #could combine average site-rates, q matrices, and frequencies
+            scheme_name_prefix ="step_%d" %(step)
+            step += 1
+
+            #get a list of all possible lumpings of the best_scheme
+            lumped_schemes = get_ranked_clustered_schemes(start_scheme, scheme_name_prefix, self.cfg)
+
+            for s in lumped_schemes:
+                print s
+
+            #now analyse the lumped schemes
+            for lumped_scheme in lumped_schemes:
+                #this is just checking to see if a scheme is any good, if it is, we remember and write it later
+                result = self.analyse_scheme(lumped_scheme, suppress_writing=True, suppress_memory=True)
+                new_score = get_score(result)
+                print "lumped: ", lumped_scheme
+                print result
+
+                #we keep the scheme, and write it, if it's better than the current score
+                if new_score<best_score:
+                    best_score=new_score
+                    fname = os.path.join(self.cfg.schemes_path, scheme_name_prefix + '.txt')
+                    self.cfg.reporter.write_scheme_summary(result, open(fname, 'w'))
+                    self.results.add_scheme_result(result)
+                    break
+
+
+            #stop when we've anlaysed the scheme with all subsets combined
+            if len(set(lumped_scheme.subsets)) == 1:  # then it's the scheme with everything together
+                break
+            else:
+                start_scheme = lumped_scheme
+
+        self.cfg.progress.end()
+
+
+
 def choose_method(search):
     if search == 'all':
         method = AllAnalysis
@@ -243,6 +317,8 @@ def choose_method(search):
         method = GreedyAnalysis
     elif search == 'clustering':
         method = ClusteringAnalysis
+    elif search == 'greediest':
+        method = GreediestAnalysis
     else:
         log.error("Search algorithm '%s' is not yet implemented", search)
         raise AnalysisError
