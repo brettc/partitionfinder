@@ -177,7 +177,6 @@ def get_distance_matrix(scheme, weights):
     model_matrix = genmatrix(list=model, combinfunc=minkowski_distance, symmetric=True, diagonal=0)
     alpha_matrix = genmatrix(list=alpha, combinfunc=minkowski_distance, symmetric=True, diagonal=0)
 
-
     #3. Normalise and weight those euclidean distances,
     min, max = get_minmax(rates_matrix)
     rates_matrix = normalise_and_weight(rates_matrix, max, weights["rate"])

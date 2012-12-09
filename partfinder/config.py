@@ -82,9 +82,9 @@ class Configuration(object):
             cluster_weights = cluster_weights.split(",")
 
             #now we check that it's a list of exactly three numbers
-            if len(cluster_weights)!=3:
-                log.error("Your --cluster_weights argument should have exactly 3"
-                    " items separated by commas, but it has %d. "
+            if len(cluster_weights)!=4:
+                log.error("Your --cluster_weights argument should have exactly 4"
+                    " numbers separated by commas, but it has %d. "
                     "Please check and try again" %len(cluster_weights))
                 raise ConfigurationError
             final_weights = []
@@ -94,7 +94,7 @@ class Configuration(object):
                     final_weights.append(num)
                 except:
                     log.error("Unable to understand your --cluster_weights argument."
-                        " It should look like this: --cluster_weights '1,2,3'. "
+                        " It should look like this: --cluster_weights '1,2,3,6'. "
                         "Please double check that you included quotes, "
                         "and three numbers separated by commas. Then try again. "
                         "The part that I coudln't understand is this: '%s'" %thing)
@@ -105,6 +105,7 @@ class Configuration(object):
             self.cluster_weights["rate"] = final_weights[0]
             self.cluster_weights["freqs"] = final_weights[1]
             self.cluster_weights["model"] = final_weights[2]
+            self.cluster_weights["alpha"] = final_weights[3]
 
 
         # Set the defaults into the class. These can be reset by calling
