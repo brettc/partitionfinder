@@ -23,12 +23,12 @@ import logging
 log = logging.getLogger("cluster")
 
 
-def sum_matrices(mat1, mat2, mat3):
+def sum_matrices(mat1, mat2, mat3, mat4):
     """sum three matrices of the same size"""
     result = []
     rowindex=0
     for row in mat1:
-        result.append([sum(x) for x in zip(mat1[rowindex], mat2[rowindex], mat3[rowindex])] )
+        result.append([sum(x) for x in zip(mat1[rowindex], mat2[rowindex], mat3[rowindex], mat4[rowindex])] )
         rowindex += 1
     return result
 
@@ -161,6 +161,7 @@ def get_distance_matrix(scheme, weights):
     rates = [] #tree length
     freqs = [] #amino acid or base frequencies
     model = [] #model parameters e.g. A<->C
+    alpha = [] #alpha parameter of the gamma distribution of rates across sites
     
     for s in scheme.subsets:
         param_dict = s.get_param_values()
@@ -168,11 +169,13 @@ def get_distance_matrix(scheme, weights):
         rates.append([param_dict["rate"]])
         freqs.append(param_dict["freqs"])
         model.append(param_dict["model"])
-
+        alpha.append([param_dict["alpha"]])
+    
     #2. for each parameter we get a matrix of euclidean distances
     rates_matrix = genmatrix(list=rates, combinfunc=minkowski_distance, symmetric=True, diagonal=0)
     freqs_matrix = genmatrix(list=freqs, combinfunc=minkowski_distance, symmetric=True, diagonal=0)
     model_matrix = genmatrix(list=model, combinfunc=minkowski_distance, symmetric=True, diagonal=0)
+    alpha_matrix = genmatrix(list=alpha, combinfunc=minkowski_distance, symmetric=True, diagonal=0)
 
 
     #3. Normalise and weight those euclidean distances,
@@ -182,9 +185,11 @@ def get_distance_matrix(scheme, weights):
     freqs_matrix = normalise_and_weight(freqs_matrix, max, weights["freqs"])
     min, max = get_minmax(model_matrix)
     model_matrix = normalise_and_weight(model_matrix, max, weights["model"])
+    min, max = get_minmax(alpha_matrix)
+    alpha_matrix = normalise_and_weight(alpha_matrix, max, weights["alpha"])
     
     #4. sum the matrices
-    distance_matrix = sum_matrices(rates_matrix, freqs_matrix, model_matrix)
+    distance_matrix = sum_matrices(rates_matrix, freqs_matrix, model_matrix, alpha_matrix)
     #printmatrix(distance_matrix)
     
     return distance_matrix
