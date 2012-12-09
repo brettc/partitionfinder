@@ -262,8 +262,8 @@ class RaxmlResult(object):
         self.freqs = {}
 
     def __str__(self):
-        return "RaxmlResult(lnl:%s, tree_size:%s, secs:%s)" % (
-                self.lnl, self.tree_size, self.seconds)
+        return "RaxmlResult(lnl:%s, tree_size:%s, secs:%s, alphs:%s)" % (
+                self.lnl, self.tree_size, self.seconds, self.alpha)
 
 
 class Parser(object):
@@ -284,6 +284,7 @@ class Parser(object):
 
         LNL_LABEL = Regex("Final GAMMA.+:") | Literal("Likelihood:")
         TIME_LABEL = Regex("Overall Time.+:") | Regex("Overall Time.+tion ")
+        ALPHA_LABEL = Literal("alpha:")
         TREE_SIZE_LABEL = Literal("Tree-Length:")
 
         def labeled_float(label):
@@ -294,6 +295,9 @@ class Parser(object):
 
         seconds = labeled_float(TIME_LABEL)
         seconds.setParseAction(self.set_seconds)
+
+        alpha = labeled_float(ALPHA_LABEL)
+        alpha.setParseAction(self.set_alpha)
 
         tree_size = labeled_float(TREE_SIZE_LABEL)
         tree_size.setParseAction(self.set_tree_size)
@@ -307,7 +311,7 @@ class Parser(object):
         freqs = OneOrMore(freq)
 
         # Just look for these things
-        self.root_parser = seconds + lnl + tree_size + rates + freqs
+        self.root_parser = seconds + lnl + alpha + tree_size + rates + freqs
 
     def set_seconds(self, tokens):
         self.result.seconds = tokens[0]
@@ -317,6 +321,9 @@ class Parser(object):
 
     def set_tree_size(self, tokens):
         self.result.tree_size = tokens[0]
+
+    def set_alpha(self, tokens):
+        self.result.alpha = tokens[0]
 
     def set_rate(self, tokens):
         basefrom, baseto, rate = tokens
