@@ -40,7 +40,7 @@ class Configuration(object):
     options = {
         'branchlengths': ['linked', 'unlinked'],
         'model_selection': ['aic', 'aicc', 'bic'],
-        'search': ['all', 'user', 'greedy', 'clustering']
+        'search': ['all', 'user', 'greedy', 'clustering', 'greediest']
     }
 
     def __init__(self, datatype="DNA", phylogeny_program='phyml',
@@ -242,12 +242,20 @@ class Configuration(object):
                      (option, "'%s'" % ("', '".join(self.options[option]))))
             raise ConfigurationError
 
-        #TODO NOT the best place for this at all..., but it works
+        #TODO: not the best place for this at all..., but it works
         if option=="search" and value=="clustering" and self.phylogeny_program!='raxml':
             log.error("The 'search = clustering' option is only availalbe when using raxml"
                 " (the --raxml commandline option). Please check and try again."
                 " See the manual for more details.")
             raise ConfigurationError
+
+        #TODO: not the best place for this at all..., but it works
+        if option=="search" and value=="greediest" and self.phylogeny_program!='raxml':
+            log.error("The 'search = greediest' option is only availalbe when using raxml"
+                " (the --raxml commandline option). Please check and try again."
+                " See the manual for more details.")
+            raise ConfigurationError
+
 
         log.info("Setting '%s' to '%s'", option, value)
         setattr(self, option, value)
