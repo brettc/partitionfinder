@@ -25,7 +25,7 @@ import algorithm
 import submodels
 import subset
 from analysis import Analysis, AnalysisError
-from neighbour import get_nearest_neighbour_scheme, get_ranked_clustered_schemes
+import neighbour
 
 
 class UserAnalysis(Analysis):
@@ -86,7 +86,7 @@ class ClusteringAnalysis(Analysis):
             #e.g. combined rank ordering of euclidean distances
             #could combine average site-rates, q matrices, and frequencies
             scheme_name ="step_%d" %(cur_s-1)
-            clustered_scheme = get_nearest_neighbour_scheme(
+            clustered_scheme = neighbour.get_nearest_neighbour_scheme(
                 start_scheme, scheme_name, self.cfg)
 
             #now analyse that new scheme
@@ -272,14 +272,20 @@ class GreediestAnalysis(Analysis):
             #calculate the subsets which are most similar
             #e.g. combined rank ordering of euclidean distances
             #could combine average site-rates, q matrices, and frequencies
-            scheme_name_prefix ="step_%d" %(step)
+            name_prefix ="step_%d" %(step)
             step += 1
 
             #get a list of all possible lumpings of the best_scheme
-            lumped_schemes = get_ranked_clustered_schemes(start_scheme, scheme_name_prefix, self.cfg)
+            lumped_subsets = neighbour.get_ranked_clustered_subsets(start_scheme, name_prefix, self.cfg)
 
             #now analyse the lumped schemes
-            for lumped_scheme in lumped_schemes:
+            counter = 1
+            for subset_grouping in lumped_subsets:
+                #we make schemes on the fly to save memory
+                scheme_name = "%s_%d" %(name_prefix, counter)
+                counter +=1
+                lumped_scheme = neighbour.make_clustered_scheme(start_scheme, scheme_name, subset_grouping, self.cfg)
+                
                 no_improvement=0
                 #this is just checking to see if a scheme is any good, if it is, we remember and write it later
                 result = self.analyse_scheme(lumped_scheme, suppress_writing=True, suppress_memory=True)
@@ -289,7 +295,7 @@ class GreediestAnalysis(Analysis):
                 if new_score<best_score:
                     log.info("Found improved scheme with %s score: %.2f" %(model_selection, new_score))
                     best_score=new_score
-                    fname = os.path.join(self.cfg.schemes_path, scheme_name_prefix + '.txt')
+                    fname = os.path.join(self.cfg.schemes_path, name_prefix + '.txt')
                     self.cfg.reporter.write_scheme_summary(result, open(fname, 'w'))
                     self.results.add_scheme_result(result)
                     break

@@ -208,7 +208,7 @@ def get_closest_subsets(scheme, weights):
     
     return closest_subsets
 
-def get_ranked_clustered_schemes(
+def get_ranked_clustered_subsets(
     start_scheme, name_prefix, cfg):
     """The idea here is to take a scheme, and perform some analyses to find out how the 
     subsets in that scheme cluster.
@@ -223,16 +223,9 @@ def get_ranked_clustered_schemes(
     distance_matrix = get_distance_matrix(start_scheme, cfg.cluster_weights)
     
     ranked_subset_groupings = get_ranked_list(distance_matrix, subsets)
+
+    return ranked_subset_groupings
         
-    ranked_clustered_schemes = []
-    counter = 1
-    for g in ranked_subset_groupings:
-        scheme_name = "%s_%d" %(name_prefix, counter)
-        counter +=1
-        scheme_g = make_clustered_scheme(start_scheme, scheme_name, g, cfg)
-        ranked_clustered_schemes.append(scheme_g)
-    
-    return ranked_clustered_schemes
     
 def make_clustered_scheme(start_scheme, scheme_name, subsets_to_cluster, cfg):
     
