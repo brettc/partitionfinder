@@ -179,6 +179,24 @@ def main(name, datatype):
         "more, and the alpha parameter the same as the model rate"
     )
     parser.add_option(
+        "--greediest-schemes",
+        type="int", dest="greediest_schemes", default=None, metavar="N",
+        help="This defines how many improved schemes the greediest algorithm needs to see "
+        " before it will move on to the next step, see manual for more info. The default "
+        " is 1."
+    )
+    parser.add_option(
+        "--greediest-percent",
+        type="float", dest="greediest_percent", default=None, metavar="N",
+        help="This defines the proportion of possible schemes that the greediest algorithm "
+        "will consider before it stops looking. So, if you set greediest-schemes to 10, and "
+        "greediest-percent to 50, then the algorithm will stop searching for improvements "
+        "if it finds 10 improved schemes, or if it finds at least one scheme in the first "
+        "50% of possible schemes, whichever is sooner. If it finds no improved schemes in "
+        "the first 50% (or whatever you set greediest-percent to) it will keep looking and "
+        "accept the next improved scheme it finds. The default is 0%."
+    )
+    parser.add_option(
         '--debug-output',
         type='string',
         action='callback',
@@ -253,7 +271,10 @@ def main(name, datatype):
         else:
             set_debug_regions(options.debug_output)
         cfg = config.Configuration(datatype, options.phylogeny_program,
-                                   options.save_phylofiles, options.cmdline_extras, options.cluster_weights)
+                                   options.save_phylofiles, options.cmdline_extras, 
+                                   options.cluster_weights, 
+                                   options.greediest_schemes,
+                                   options.greediest_percent)
         # Set up the progress callback
         p = progress.TextProgress(cfg)
         cfg.load_base_path(args[0])

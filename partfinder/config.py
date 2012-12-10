@@ -44,13 +44,16 @@ class Configuration(object):
     }
 
     def __init__(self, datatype="DNA", phylogeny_program='phyml',
-        save_phylofiles=False, cmdline_extras = "", cluster_weights = None):
+        save_phylofiles=False, cmdline_extras = "", cluster_weights = None, 
+        greediest_schemes = 1, greediest_percent=1):
 
         self.partitions = partition.PartitionSet()
         self.schemes = scheme.SchemeSet()
         self.save_phylofiles = save_phylofiles
         self.progress = progress.NoProgress(self)
         self.cmdline_extras = cmdline_extras
+        self.greediest_schemes = greediest_schemes
+        self.greediest_percent = float(greediest_percent)
 
         self.base_path = '.'
         self.alignment = None
