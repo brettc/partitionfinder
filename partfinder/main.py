@@ -180,14 +180,14 @@ def main(name, datatype):
     )
     parser.add_option(
         "--greediest-schemes",
-        type="int", dest="greediest_schemes", default=None, metavar="N",
+        type="int", dest="greediest_schemes", default=1, metavar="N",
         help="This defines how many improved schemes the greediest algorithm needs to see "
         " before it will move on to the next step, see manual for more info. The default "
         " is 1."
     )
     parser.add_option(
         "--greediest-percent",
-        type="float", dest="greediest_percent", default=None, metavar="N",
+        type="float", dest="greediest_percent", default=0.0, metavar="N",
         help="This defines the proportion of possible schemes that the greediest algorithm "
         "will consider before it stops looking. So, if you set greediest-schemes to 10, and "
         "greediest-percent to 50, then the algorithm will stop searching for improvements "
