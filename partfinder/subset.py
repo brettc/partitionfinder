@@ -41,10 +41,13 @@ def count_subsets():
     return len(Subset._cache)
 
 
+def clear_subsets():
+    Subset._cache.clear()
+
 class Subset(object):
     """A Subset of Partitions
     """
-    # TODO: changes this to AllSubsets?
+    # TODO: Move this to the config -- once we have a global one
     _cache = weakref.WeakValueDictionary()
 
     def __new__(cls, *parts):
