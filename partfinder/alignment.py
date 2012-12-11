@@ -11,8 +11,8 @@
 #General Public License for more details. You should have received a copy
 #of the GNU General Public License along with this program.  If not, see
 #<http://www.gnu.org/licenses/>. PartitionFinder also includes the PhyML
-#program, the RAxML program, the PyParsing library, and the python-cluster library 
-#all of which are protected by their own licenses and conditions, using 
+#program, the RAxML program, the PyParsing library, and the python-cluster library
+#all of which are protected by their own licenses and conditions, using
 #PartitionFinder implies that you agree with those licences and conditions as well.
 
 """Loading, Saving, Parsing Alignment Files
@@ -148,7 +148,15 @@ class Alignment(object):
         return "Alignment(%s species, %s codons)" % self.species, self.sequence_len
 
     def same_as(self, other):
-        return self.sequence_len == other.sequence_len and self.species == other.species
+        if self.sequence_len != other.sequence_len:
+            log.warning("Alignments not the same, length differs %s: %s", self.sequence_len, other.sequence_len)
+            return False
+
+        if self.species != other.species:
+            log.warning("Alignments not the same, species differs %s: %s", self.species, other.species)
+            return False
+
+        return True
 
     def from_parser_output(self, defs):
         """A series of species / sequences tuples
