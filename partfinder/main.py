@@ -17,6 +17,7 @@
 
 import logging
 import sys
+import shlex
 
 logging.basicConfig(
     format="%(levelname)-8s | %(asctime)s | %(message)s",
@@ -43,6 +44,7 @@ import datetime
 import parser
 import raxml
 import phyml
+from partfinder import current
 
 
 def debug_arg_callback(option, opt, value, parser):
@@ -68,7 +70,7 @@ def set_debug_regions(regions):
                 log.error("'%s' is not a valid debug region", r)
                 errors.add(r)
         if errors:
-            raise util.PartitionFinderError
+            return errors
 
     for r in regions:
         logging.getLogger(r).setLevel(logging.DEBUG)
@@ -77,8 +79,10 @@ def set_debug_regions(regions):
     fmt = logging.Formatter("%(levelname)-8s | %(asctime)s | %(name)-10s | %(message)s")
     logging.getLogger("").handlers[0].setFormatter(fmt)
 
+    return None
 
-def parse_args(version):
+
+def parse_args(datatype, cmdargs=None):
     usage = """usage: python %prog [options] <foldername>
 
     PartitionFinder and PartitionFinderProtein are designed to discover optimal
@@ -110,8 +114,7 @@ def parse_args(version):
         Deletes any data produced by the previous runs (which is in
         ~/data/frogs/output) and starts afresh
     """
-    v = "%prog {}".format(version)
-    op = OptionParser(usage, version=v)
+    op = OptionParser(usage)
     op.add_option(
         "-v", "--verbose",
         action="store_true", dest="verbose",
@@ -207,10 +210,33 @@ def parse_args(version):
         % ",".join(get_debug_regions())
     )
 
-    options, args = op.parse_args()
+    if cmdargs is None:
+        options, args = op.parse_args()
+    else:
+        options, args = op.parse_args(cmdargs)
+
+    options.datatype = datatype
     # We should have one argument: the folder to read the configuration from
     if not args:
         op.print_help()
+    else:
+        check_options(op, options)
+
+    return options, args
+
+
+def check_options(op, options):
+    # Error checking
+    if options.dump_results and options.compare_results:
+        op.error("options --dump_results and --compare_results are mutually exclusive!")
+
+    if options.verbose:
+        set_debug_regions(['all'])
+    else:
+        errors = set_debug_regions(options.debug_output)
+        if errors is not None:
+            bad = ",".join(list(errors))
+            op.error("Invalid debug regions: %s" % bad)
 
     # Default to phyml
     if options.raxml == 1:
@@ -218,7 +244,22 @@ def parse_args(version):
     else:
         options.phylogeny_program = 'phyml'
 
-    return options, args
+    #A warning for people using the Pthreads version of RAxML
+    # if options.cmdline_extras.count("-T") > 0:
+        # log.warning("It looks like you're using a Pthreads version of RAxML. Be aware "
+        # "that the default behaviour of PartitionFinder is to run one version of RAxML per "
+        # "available processor. This might not be what you want with Pthreads - since the "
+        # "minimum number of threads per RAxML run is 2 (i.e. -T 2). Make sure to limit the "
+        # "total number of RAxML runs you start using the -p option in PartitionFinder. "
+        # "Specifically, the total number of processors you will use with the Pthreads "
+        # "version is the number you set via the -T option in --cmdline-extras, multiplied "
+        # "by the number of processors you set via the -p option in PartitionFinder. "
+        # "You should also be aware that the Pthreads version of RAxML has a rare but "
+        # "known bug on some platforms. This bug results in infinite liklelihood values "
+        # "if it happens on your dataset, PartitionFinder will give an error. In that case "
+        # "you should switch back to using a single-threaded version of RAxML, e.g. the "
+        # "SSE3 or AVX version."
+        # "See the manual for more info.")
 
 
 def check_python_version():
@@ -240,55 +281,26 @@ def check_python_version():
                     "version 3 or higher. To guarantee success, please use Python 2.7.x" % python_version)
 
 
-def main(name, datatype):
+def main(name, datatype, cmdargs=None):
     v = version.get_git_version()
-    options, args = parse_args(v)
+    options, args = parse_args(datatype, cmdargs)
     if not args:
         # Help has already been printed
         return 2
 
-    options.datatype = datatype
-
     log.info("------------- %s %s -----------------", name, v)
     start_time = datetime.datetime.now().replace(microsecond=0)  # start the clock ticking
-
-    #A warning for people using the Pthreads version of RAxML
-    if options.cmdline_extras.count("-T") > 0:
-        log.warning("It looks like you're using a Pthreads version of RAxML. Be aware "
-        "that the default behaviour of PartitionFinder is to run one version of RAxML per "
-        "available processor. This might not be what you want with Pthreads - since the "
-        "minimum number of threads per RAxML run is 2 (i.e. -T 2). Make sure to limit the "
-        "total number of RAxML runs you start using the -p option in PartitionFinder. "
-        "Specifically, the total number of processors you will use with the Pthreads "
-        "version is the number you set via the -T option in --cmdline-extras, multiplied "
-        "by the number of processors you set via the -p option in PartitionFinder. "
-        "You should also be aware that the Pthreads version of RAxML has a rare but "
-        "known bug on some platforms. This bug results in infinite liklelihood values "
-        "if it happens on your dataset, PartitionFinder will give an error. In that case "
-        "you should switch back to using a single-threaded version of RAxML, e.g. the "
-        "SSE3 or AVX version."
-        "See the manual for more info.")
-
-
-    # Error checking
-    if options.dump_results and options.compare_results:
-        log.error("You can't dump and compare results in one run!")
-        log.error("Please select just one of these")
-        return 1
 
     check_python_version()
 
     # Load, using the first argument as the folder
     try:
-        if options.verbose:
-            set_debug_regions(['all'])
-        else:
-            set_debug_regions(options.debug_output)
         cfg = config.Configuration(datatype, options.phylogeny_program,
                                    options.save_phylofiles, options.cmdline_extras,
                                    options.cluster_weights,
                                    options.greediest_schemes,
                                    options.greediest_percent)
+
         # Set up the progress callback
         progress.TextProgress(cfg)
         cfg.load_base_path(args[0])
@@ -320,10 +332,20 @@ def main(name, datatype):
 
     except util.PartitionFinderError:
         log.error("Failed to run. See previous errors.")
-        if options.show_python_exceptions:
+        # Reraise if we were called by call_main, or if the options is set
+        if options.show_python_exceptions or cmdargs is not None:
             raise
 
     except KeyboardInterrupt:
         log.error("User interrupted the Program")
 
+    finally:
+        # Make sure that we reset the configuration
+        cfg.reset()
+
     return 1
+
+
+def call_main(datatype, cmdline):
+    cmdargs = shlex.split(cmdline)
+    main("<main.py:call_main(%s)>" % datatype, datatype, cmdargs)
