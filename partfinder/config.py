@@ -26,7 +26,6 @@ import partition
 import parser
 import util
 import progress
-import numbers
 
 
 class ConfigurationError(util.PartitionFinderError):
@@ -44,8 +43,8 @@ class Configuration(object):
     }
 
     def __init__(self, datatype="DNA", phylogeny_program='phyml',
-        save_phylofiles=False, cmdline_extras = "", cluster_weights = None, 
-        greediest_schemes = 1, greediest_percent=1):
+                 save_phylofiles=False, cmdline_extras="", cluster_weights=None,
+                 greediest_schemes=1, greediest_percent=1):
 
         self.partitions = partition.PartitionSet()
         self.schemes = scheme.SchemeSet()
@@ -55,11 +54,13 @@ class Configuration(object):
         self.greediest_schemes = greediest_schemes
         self.greediest_percent = float(greediest_percent)
 
+        # Record this
         self.base_path = '.'
         self.alignment = None
         self.user_tree = None
 
-        ### Some basic checking of the setup, so that we don't hit too many problems later
+        # Some basic checking of the setup, so that we don't hit too many
+        # problems later
         if datatype != "DNA" and datatype != "protein":
             log.error("datatype must be 'DNA' or 'protein'")
             raise ConfigurationError
@@ -77,18 +78,22 @@ class Configuration(object):
         log.info("Setting phylogeny program to '%s'", phylogeny_program)
         self.phylogeny_program = phylogeny_program
 
-        if cluster_weights==None:
+        # Now find the phylogeny_program before we do any changing of dirs
+        self.find_programs()
+
+        if cluster_weights is None:
             #default to equal weights. TODO. This should change depending on results of our analyses
-            self.cluster_weights = {"rate": 1, "freqs": 1, "model": 1, "alpha": 1}
+            self.cluster_weights = {"rate": 1, "freqs": 1,
+                                    "model": 1, "alpha": 1}
         else:
             #TODO. Is there a more robust way to do this...
             cluster_weights = cluster_weights.split(",")
 
             #now we check that it's a list of exactly three numbers
-            if len(cluster_weights)!=4:
+            if len(cluster_weights) != 4:
                 log.error("Your --cluster_weights argument should have exactly 4"
-                    " numbers separated by commas, but it has %d. "
-                    "Please check and try again" %len(cluster_weights))
+                          " numbers separated by commas, but it has %d. "
+                          "Please check and try again" % len(cluster_weights))
                 raise ConfigurationError
             final_weights = []
             for thing in cluster_weights:
@@ -97,25 +102,35 @@ class Configuration(object):
                     final_weights.append(num)
                 except:
                     log.error("Unable to understand your --cluster_weights argument."
-                        " It should look like this: --cluster_weights '1,2,3,6'. "
-                        "Please double check that you included quotes, "
-                        "and three numbers separated by commas. Then try again. "
-                        "The part that I coudln't understand is this: '%s'" %thing)
+                              " It should look like this: --cluster_weights '1,2,3,6'. "
+                              "Please double check that you included quotes, "
+                              "and three numbers separated by commas. Then try again. "
+                              "The part that I coudln't understand is this: '%s'" % thing)
                     raise ConfigurationError
 
-            log.info("Setting cluster_weights to: subset_rate = %.1f, freqs = %.1f, model = %.1f" %(final_weights[0], final_weights[1], final_weights[2]))
+            log.info("Setting cluster_weights to: subset_rate = %.1f, freqs = %.1f, model = %.1f" % (final_weights[0], final_weights[1], final_weights[2]))
             self.cluster_weights = {}
             self.cluster_weights["rate"] = final_weights[0]
             self.cluster_weights["freqs"] = final_weights[1]
             self.cluster_weights["model"] = final_weights[2]
             self.cluster_weights["alpha"] = final_weights[3]
 
-
         # Set the defaults into the class. These can be reset by calling
         # set_option(...)
         for o, v in self.options.items():
             # Could call self.set_option here -- but it might confuse users
             setattr(self, o, v[0])
+
+    def find_programs(self):
+        pth = os.path.abspath(__file__)
+        # Split off the name and the directory...
+        pth, notused = os.path.split(pth)
+        pth, notused = os.path.split(pth)
+        pth = os.path.join(pth, "programs")
+        pth = os.path.normpath(pth)
+        self.program_path = pth
+        util.program_path = pth
+        log.info("Program path is here %s", self.program_path)
 
     def reset(self):
         # Only required in tests, when we keep changing folders
@@ -229,8 +244,7 @@ class Configuration(object):
         self.alignment = align
 
     def set_option(self, option, value):
-
-        #make everything lowercase, this makes life easier for us
+        # Make everything lowercase, this makes life easier for us
         value = value.lower()
 
         if option not in self.options:
@@ -247,19 +261,18 @@ class Configuration(object):
             raise ConfigurationError
 
         #TODO: not the best place for this at all..., but it works
-        if option=="search" and value=="clustering" and self.phylogeny_program!='raxml':
+        if option == "search" and value == "clustering" and self.phylogeny_program != 'raxml':
             log.error("The 'search = clustering' option is only availalbe when using raxml"
-                " (the --raxml commandline option). Please check and try again."
-                " See the manual for more details.")
+                      " (the --raxml commandline option). Please check and try again."
+                      " See the manual for more details.")
             raise ConfigurationError
 
         #TODO: not the best place for this at all..., but it works
-        if option=="search" and value=="greediest" and self.phylogeny_program!='raxml':
+        if option == "search" and value == "greediest" and self.phylogeny_program != 'raxml':
             log.error("The 'search = greediest' option is only availalbe when using raxml"
-                " (the --raxml commandline option). Please check and try again."
-                " See the manual for more details.")
+                      " (the --raxml commandline option). Please check and try again."
+                      " See the manual for more details.")
             raise ConfigurationError
-
 
         log.info("Setting '%s' to '%s'", option, value)
         setattr(self, option, value)
@@ -312,7 +325,7 @@ class Configuration(object):
         else:
             has_config = False
 
-        if has_subsets == False:
+        if not has_subsets:
             #we have no subsets so can't screw anything up, just copy the new cfg file settings, overwrite anything else
             if not os.path.exists(cfg_dir):
                 os.makedirs(cfg_dir)
@@ -323,7 +336,7 @@ class Configuration(object):
             return 0
 
         else:  # there are subsets
-            if has_config == False:
+            if not has_config:
                 log.error("There are subsets stored, but PartitionFinder can't determine where they are from")
                 log.info("Please re-run the analysis using the '--force-restart' option at the command line")
                 log.warning("This will delete all of the analyses in the '/analysis' folder")

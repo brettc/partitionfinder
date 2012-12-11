@@ -11,8 +11,8 @@
 #General Public License for more details. You should have received a copy
 #of the GNU General Public License along with this program.  If not, see
 #<http://www.gnu.org/licenses/>. PartitionFinder also includes the PhyML
-#program, the RAxML program, the PyParsing library, and the python-cluster library 
-#all of which are protected by their own licenses and conditions, using 
+#program, the RAxML program, the PyParsing library, and the python-cluster library
+#all of which are protected by their own licenses and conditions, using
 #PartitionFinder implies that you agree with those licences and conditions as well.
 
 import logging
@@ -161,7 +161,6 @@ class Subset(object):
                       model, self)
         self.results[model] = result
 
-
     def model_selection(self, cfg):
         # Model selection is done after we've added all the models
         # Note: we may have more models than we want if there is old data lying
@@ -188,25 +187,26 @@ class Subset(object):
                 self.best_alpha = result.alpha
                 self.best_freqs = result.freqs
                 self.best_modelparams = result.rates
-                
-        log.debug("Model Selection. best model: %s, params: %d, site_rate: %f" % (self.best_model, self.best_params, self.best_site_rate))
+
+        log.debug("Model Selection. best model: %s, params: %d, site_rate: %f"
+                  % (self.best_model, self.best_params, self.best_site_rate))
 
     def get_param_values(self):
         param_values = {}
 
-        param_values["rate"]  = self.best_site_rate
-        param_values["alpha"]  = self.best_alpha
-        
+        param_values["rate"] = self.best_site_rate
+        param_values["alpha"] = self.best_alpha
+
         #not sure if this sorting is necessary, but it's here in case it's needed
         #to make sure that freqs and model parameters are always in the same order
         #can't hurt... (i hope).
         keys_f = self.best_freqs.keys()
         keys_f.sort()
-        param_values["freqs"] = [self.best_freqs[key] for key in keys_f]        
+        param_values["freqs"] = [self.best_freqs[key] for key in keys_f]
 
         keys_m = self.best_modelparams.keys()
         keys_m.sort()
-        param_values["model"] = [self.best_modelparams[key] for key in keys_m]        
+        param_values["model"] = [self.best_modelparams[key] for key in keys_m]
 
         return param_values
 

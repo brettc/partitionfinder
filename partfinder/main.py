@@ -78,10 +78,7 @@ def set_debug_regions(regions):
     logging.getLogger("").handlers[0].setFormatter(fmt)
 
 
-def main(name, datatype):
-    v = version.get_git_version()
-    log.info("------------- %s %s -----------------", name, v)
-    start_time = datetime.datetime.now().replace(microsecond=0)  # start the clock ticking
+def parse_args(version):
     usage = """usage: python %prog [options] <foldername>
 
     PartitionFinder and PartitionFinderProtein are designed to discover optimal
@@ -113,49 +110,50 @@ def main(name, datatype):
         Deletes any data produced by the previous runs (which is in
         ~/data/frogs/output) and starts afresh
     """
-    parser = OptionParser(usage)
-    parser.add_option(
+    v = "%prog {}".format(version)
+    op = OptionParser(usage, version=v)
+    op.add_option(
         "-v", "--verbose",
         action="store_true", dest="verbose",
         help="show debug logging information (equivalent to --debug-out=all)")
-    parser.add_option(
+    op.add_option(
         "-c", "--check-only",
         action="store_true", dest="check_only",
         help="just check the configuration files, don't do any processing")
-    parser.add_option(
+    op.add_option(
         "--force-restart",
         action="store_true", dest="force_restart",
         help="delete all previous output and start afresh (!)")
-    parser.add_option(
+    op.add_option(
         "-p", "--processes",
         type="int", dest="processes", default=-1, metavar="N",
         help="Number of concurrent processes to use."
         " Use -1 to match the number of cpus on the machine."
         " The default is to use -1.")
-    parser.add_option(
+    op.add_option(
         "--show-python-exceptions",
         action="store_true", dest="show_python_exceptions",
         help="If errors occur, print the python exceptions")
-    parser.add_option(
+    op.add_option(
         "--save-phylofiles",
         action="store_true", dest="save_phylofiles",
         help="save all of the phyml or raxml output. This can take a lot of space(!)")
-    parser.add_option(
+    op.add_option(
         "--dump-results",
         action="store_true", dest="dump_results",
         help="Dump all results to a binary file. "
         "This is only of use for testing purposes.")
-    parser.add_option(
+    op.add_option(
         "--compare-results",
         action="store_true", dest="compare_results",
         help="Compare the results to previously dumped binary results. "
         "This is only of use for testing purposes.")
-    parser.add_option(
+    op.add_option(
         "--raxml",
         action="store_true", dest="raxml",
         help="Use RAxML (rather than PhyML) to do the analysis. See the manual"
     )
-    parser.add_option(
+    op.add_option(
         "--cmdline-extras",
         type="str", dest="cmdline_extras", default="", metavar="N",
         help="Add additional commands to the phyml or raxml commandlines that PF uses."
@@ -167,7 +165,7 @@ def main(name, datatype):
         " really know what you're doing and are very familiar with raxml and"
         " PartitionFinder"
     )
-    parser.add_option(
+    op.add_option(
         "--cluster-weights",
         type="str", dest="cluster_weights", default=None, metavar="N",
         help="Mainly for algorithm development. Only use it if you know what you're doing."
@@ -178,14 +176,14 @@ def main(name, datatype):
         "the base freqeuncies 2x more than the overall rate, the model parameters 5x "
         "more, and the alpha parameter the same as the model rate"
     )
-    parser.add_option(
+    op.add_option(
         "--greediest-schemes",
         type="int", dest="greediest_schemes", default=1, metavar="N",
         help="This defines how many improved schemes the greediest algorithm needs to see "
         " before it will move on to the next step, see manual for more info. The default "
         " is 1."
     )
-    parser.add_option(
+    op.add_option(
         "--greediest-percent",
         type="float", dest="greediest_percent", default=0.0, metavar="N",
         help="This defines the proportion of possible schemes that the greediest algorithm "
@@ -196,7 +194,7 @@ def main(name, datatype):
         "the first 50% (or whatever you set greediest-percent to) it will keep looking and "
         "accept the next improved scheme it finds. The default is 0%."
     )
-    parser.add_option(
+    op.add_option(
         '--debug-output',
         type='string',
         action='callback',
@@ -209,46 +207,23 @@ def main(name, datatype):
         % ",".join(get_debug_regions())
     )
 
-    options, args = parser.parse_args()
+    options, args = op.parse_args()
+    # We should have one argument: the folder to read the configuration from
+    if not args:
+        op.print_help()
 
-    #A warning for people using the Pthreads version of RAxML
-    if options.cmdline_extras.count("-T") > 0:
-        log.warning("It looks like you're using a Pthreads version of RAxML. Be aware "
-        "that the default behaviour of PartitionFinder is to run one version of RAxML per "
-        "available processor. This might not be what you want with Pthreads - since the "
-        "minimum number of threads per RAxML run is 2 (i.e. -T 2). Make sure to limit the "
-        "total number of RAxML runs you start using the -p option in PartitionFinder. "
-        "Specifically, the total number of processors you will use with the Pthreads "
-        "version is the number you set via the -T option in --cmdline-extras, multiplied "
-        "by the number of processors you set via the -p option in PartitionFinder. "
-        "You should also be aware that the Pthreads version of RAxML has a rare but "
-        "known bug on some platforms. This bug results in infinite liklelihood values "
-        "if it happens on your dataset, PartitionFinder will give an error. In that case "
-        "you should switch back to using a single-threaded version of RAxML, e.g. the "
-        "SSE3 or AVX version."       
-        "See the manual for more info.")
-    
-
-
-
-    #default to phyml
+    # Default to phyml
     if options.raxml == 1:
         options.phylogeny_program = 'raxml'
     else:
         options.phylogeny_program = 'phyml'
 
-    # Error checking
-    if options.dump_results and options.compare_results:
-        log.error("You can't dump and compare results in one run!")
-        log.error("Please select just one of these")
+    return options, args
 
-    # We should have one argument: the folder to read the configuration from
-    if not args:
-        # Otherwise exit, printing the help
-        parser.print_help()
-        return 2
 
-    #before we start, let's check the python version is above 2.7 but lower than 3.0
+def check_python_version():
+    """Check the python version is above 2.7 but lower than 3.0"""
+
     python_version = float(
         "%d.%d" % (sys.version_info[0], sys.version_info[1]))
 
@@ -264,6 +239,45 @@ def main(name, datatype):
         log.warning("Your Python version is %.1f. This program was not built to run with "
                     "version 3 or higher. To guarantee success, please use Python 2.7.x" % python_version)
 
+
+def main(name, datatype):
+    v = version.get_git_version()
+    options, args = parse_args(v)
+    if not args:
+        # Help has already been printed
+        return 2
+
+    options.datatype = datatype
+
+    log.info("------------- %s %s -----------------", name, v)
+    start_time = datetime.datetime.now().replace(microsecond=0)  # start the clock ticking
+
+    #A warning for people using the Pthreads version of RAxML
+    if options.cmdline_extras.count("-T") > 0:
+        log.warning("It looks like you're using a Pthreads version of RAxML. Be aware "
+        "that the default behaviour of PartitionFinder is to run one version of RAxML per "
+        "available processor. This might not be what you want with Pthreads - since the "
+        "minimum number of threads per RAxML run is 2 (i.e. -T 2). Make sure to limit the "
+        "total number of RAxML runs you start using the -p option in PartitionFinder. "
+        "Specifically, the total number of processors you will use with the Pthreads "
+        "version is the number you set via the -T option in --cmdline-extras, multiplied "
+        "by the number of processors you set via the -p option in PartitionFinder. "
+        "You should also be aware that the Pthreads version of RAxML has a rare but "
+        "known bug on some platforms. This bug results in infinite liklelihood values "
+        "if it happens on your dataset, PartitionFinder will give an error. In that case "
+        "you should switch back to using a single-threaded version of RAxML, e.g. the "
+        "SSE3 or AVX version."
+        "See the manual for more info.")
+
+
+    # Error checking
+    if options.dump_results and options.compare_results:
+        log.error("You can't dump and compare results in one run!")
+        log.error("Please select just one of these")
+        return 1
+
+    check_python_version()
+
     # Load, using the first argument as the folder
     try:
         if options.verbose:
@@ -271,19 +285,17 @@ def main(name, datatype):
         else:
             set_debug_regions(options.debug_output)
         cfg = config.Configuration(datatype, options.phylogeny_program,
-                                   options.save_phylofiles, options.cmdline_extras, 
-                                   options.cluster_weights, 
+                                   options.save_phylofiles, options.cmdline_extras,
+                                   options.cluster_weights,
                                    options.greediest_schemes,
                                    options.greediest_percent)
         # Set up the progress callback
-        p = progress.TextProgress(cfg)
+        progress.TextProgress(cfg)
         cfg.load_base_path(args[0])
 
         if options.check_only:
             log.info("Exiting without processing (because of the -c/--check-only option ...")
         else:
-
-
             # Now try processing everything....
             method = analysis_method.choose_method(cfg.search)
             reporter.TextReporter(cfg)

@@ -1,23 +1,24 @@
-#Copyright (C) 2012 Robert Lanfear and Brett Calcott
+# Copyright (C) 2012 Robert Lanfear and Brett Calcott
 #
-#This program is free software: you can redistribute it and/or modify it
-#under the terms of the GNU General Public License as published by the
-#Free Software Foundation, either version 3 of the License, or (at your
-#option) any later version.
+# This program is free software: you can redistribute it and/or modify it under
+# the terms of the GNU General Public License as published by the Free Software
+# Foundation, either version 3 of the License, or (at your option) any later
+# version.
 #
-#This program is distributed in the hope that it will be useful, but
-#WITHOUT ANY WARRANTY; without even the implied warranty of
-#MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-#General Public License for more details. You should have received a copy
-#of the GNU General Public License along with this program.  If not, see
-#<http://www.gnu.org/licenses/>. PartitionFinder also includes the PhyML
-#program, the RAxML program, the PyParsing library, and the python-cluster library 
-#all of which are protected by their own licenses and conditions, using 
-#PartitionFinder implies that you agree with those licences and conditions as well.
+# This program is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
+# details. You should have received a copy of the GNU General Public License
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
+# PartitionFinder also includes the PhyML program, the RAxML program, the
+# PyParsing library, and the python-cluster library all of which are protected
+# by their own licenses and conditions, using PartitionFinder implies that you
+# agree with those licences and conditions as well.
 
 import logging
 log = logging.getLogger("util")
 import os
+import sys
 import fnmatch
 
 
@@ -49,14 +50,6 @@ def check_folder_exists(pth):
         raise PartitionFinderError
 
 
-def get_root_install_path():
-    pth = os.path.abspath(__file__)
-    # Split off the name and the directory...
-    pth, not_used = os.path.split(pth)
-    pth, not_used = os.path.split(pth)
-    return pth
-
-
 def make_dir(pth):
     if os.path.exists(pth):
         if not os.path.isdir(pth):
@@ -82,3 +75,22 @@ def remove_runID_files(aln_pth):
             # (This is here because we sometimes try and delete things twice in
             # the threading).
             pass
+
+
+# def we_are_frozen():
+    # # All of the modules are built-in to the interpreter, e.g., by py2exe
+    # return hasattr(sys, "frozen")
+
+
+# def get_root_install_path():
+    # pth = os.path.abspath(__file__)
+    # # Split off the name and the directory...
+    # pth, not_used = os.path.split(pth)
+    # pth, not_used = os.path.split(pth)
+    # return pth
+
+# def module_path():
+    # encoding = sys.getfilesystemencoding()
+    # if we_are_frozen():
+        # return os.path.dirname(unicode(sys.executable, encoding))
+    # return os.path.abspath(os.path.dirname(unicode(__file__, encoding)))

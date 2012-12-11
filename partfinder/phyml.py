@@ -25,6 +25,7 @@ import shlex
 import os
 import shutil
 import sys
+import util
 
 from pyparsing import (
     Word, Literal, nums, Suppress, ParseException,
@@ -43,56 +44,19 @@ from util import PhylogenyProgramError
 class PhymlError(PhylogenyProgramError):
     pass
 
-# def init_phyml(cfg):
-    # global _phyml_binary
-    # pth = find_program()
-    # if sys.platform == 'win32':
-        # pth = relocate_binary(cfg, pth)
-    # _phyml_binary = pth
-
-# def relocate_binary(cfg, pth):
-    # """Relocate binary in windows cos it spits the dummy on long paths"""
-    # newpth = os.path.join(cfg.base_path, _binary_name)
-    # shutil.copy(pth, newpth)
-    # return newpth
-
-# def shutdown_phyml(cfg):
-    # newpth = os.path.join(cfg.base_path, _binary_name)
-    # if os.path.exists(newpth):
-        # os.remove(newpth)
-
-
 def find_program():
     """Locate the binary ..."""
-    pth = os.path.abspath(__file__)
+    pth = util.program_path
+    pth = os.path.join(pth, _binary_name)
 
-    # Split off the name and the directory...
-    pth, notused = os.path.split(pth)
-    pth, notused = os.path.split(pth)
-    pth = os.path.join(pth, "programs", _binary_name)
-    pth = os.path.normpath(pth)
-
-    log.debug("Checking for program %s", _binary_name)
+    log.debug("Checking for program %s in path %s", _binary_name, pth)
     if not os.path.exists(pth) or not os.path.isfile(pth):
         log.error("No such file: '%s'", pth)
         raise PhymlError
     log.debug("Found program %s at '%s'", _binary_name, pth)
     return pth
 
-# def alt_run_phyml(command):
-    # log.debug("Running command '%s'", command)
-
-    # # Note: We use shlex.split as it does a proper job of handling command
-    # # lines that are complex
-    # try:
-        # subprocess.check_call(shlex.split(command), shell=False)
-    #
-    # except subprocess.CalledProcessError:
-        # log.error("command '%s' failed to execute successfully", command)
-        # raise PhymlError
-
 _phyml_binary = None
-
 
 def run_phyml(command):
     global _phyml_binary
