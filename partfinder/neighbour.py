@@ -18,6 +18,7 @@
 from cluster import minkowski_distance, genmatrix, printmatrix
 import subset
 import scheme
+from algorithm import euclidean_distance 
 
 import logging
 log = logging.getLogger("cluster")
@@ -162,7 +163,8 @@ def get_distance_matrix(scheme, weights):
     freqs = [] #amino acid or base frequencies
     model = [] #model parameters e.g. A<->C
     alpha = [] #alpha parameter of the gamma distribution of rates across sites
-    
+        
+    log.info("1")
     for s in scheme.subsets:
         param_dict = s.get_param_values()
         subsets.append(s)
@@ -170,13 +172,15 @@ def get_distance_matrix(scheme, weights):
         freqs.append(param_dict["freqs"])
         model.append(param_dict["model"])
         alpha.append([param_dict["alpha"]])
-    
-    #2. for each parameter we get a matrix of euclidean distances
-    rates_matrix = genmatrix(list=rates, combinfunc=minkowski_distance, symmetric=True, diagonal=0)
-    freqs_matrix = genmatrix(list=freqs, combinfunc=minkowski_distance, symmetric=True, diagonal=0)
-    model_matrix = genmatrix(list=model, combinfunc=minkowski_distance, symmetric=True, diagonal=0)
-    alpha_matrix = genmatrix(list=alpha, combinfunc=minkowski_distance, symmetric=True, diagonal=0)
 
+    log.info("2")
+    #2. for each parameter we get a matrix of euclidean distances
+    rates_matrix = genmatrix(list=rates, combinfunc=euclidean_distance, symmetric=True, diagonal=0)
+    freqs_matrix = genmatrix(list=freqs, combinfunc=euclidean_distance, symmetric=True, diagonal=0)
+    model_matrix = genmatrix(list=model, combinfunc=euclidean_distance, symmetric=True, diagonal=0)
+    alpha_matrix = genmatrix(list=alpha, combinfunc=euclidean_distance, symmetric=True, diagonal=0)
+
+    log.info("3")
     #3. Normalise and weight those euclidean distances,
     min, max = get_minmax(rates_matrix)
     rates_matrix = normalise_and_weight(rates_matrix, max, weights["rate"])
@@ -187,10 +191,12 @@ def get_distance_matrix(scheme, weights):
     min, max = get_minmax(alpha_matrix)
     alpha_matrix = normalise_and_weight(alpha_matrix, max, weights["alpha"])
     
+    log.info("4")
     #4. sum the matrices
     distance_matrix = sum_matrices(rates_matrix, freqs_matrix, model_matrix, alpha_matrix)
-    #printmatrix(distance_matrix)
+    printmatrix(distance_matrix)
     
+    log.info("5")
     return distance_matrix
 
 def get_closest_subsets(scheme, weights):
