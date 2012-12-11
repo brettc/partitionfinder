@@ -23,6 +23,7 @@ import fnmatch
 import cPickle as pickle
 import scheme
 import partition
+import subset
 import parser
 import util
 import progress
@@ -46,8 +47,11 @@ class Configuration(object):
                  save_phylofiles=False, cmdline_extras="", cluster_weights=None,
                  greediest_schemes=1, greediest_percent=1):
 
+        log.info("Configuring Parameters -------------")
         self.partitions = partition.PartitionSet()
-        self.schemes = scheme.SchemeSet()
+        # Only required if user adds them
+        self.user_schemes = scheme.SchemeSet()
+
         self.save_phylofiles = save_phylofiles
         self.progress = progress.NoProgress(self)
         self.cmdline_extras = cmdline_extras
@@ -129,13 +133,16 @@ class Configuration(object):
         pth = os.path.join(pth, "programs")
         pth = os.path.normpath(pth)
         self.program_path = pth
+
+        # TODO This is bullshit---Need to make the config global
         util.program_path = pth
         log.info("Program path is here %s", self.program_path)
 
     def reset(self):
-        # Only required in tests, when we keep changing folders
-        if hasattr(self, 'old_cwd'):
-            os.chdir(self.old_cwd)
+        log.debug("Returning to original path: %s", self.old_cwd)
+        os.chdir(self.old_cwd)
+        log.debug("Cleaning out all subsets (There are %d)...", subset.count_subsets())
+        subset.clear_subsets()
 
     def find_config_file(self, pth):
         """Try and get the base folder and config file from the path"""
@@ -157,7 +164,7 @@ class Configuration(object):
             if fnmatch.fnmatch(filename, '*.cfg'):
                 return folder, filename
 
-        log.error("Cannot find a configuration file"
+        log.error("Cannot find a configuration file in "
                   "working folder '%s'", folder)
 
         raise ConfigurationError
@@ -232,7 +239,7 @@ class Configuration(object):
         # Now make our working folder this folder. All of our other paths will
         # be relative to this
         self.old_cwd = os.getcwd()
-        os.chdir(base_path)
+        os.chdir(self.full_base_path)
 
         # Our base path is now this
         self.base_path = '.'
@@ -297,6 +304,7 @@ class Configuration(object):
         """Check whether the analysis dictated by cfg has been run before, and if the config has changed
         in any way that would make re-running it invalid"""
         #the important stuff in our analysis, that can't change if we want to re-use old subsets
+        log.info("Checking previously run configuration data...")
         if self.user_tree is None:
             topology = ""
         else:
@@ -358,6 +366,7 @@ class Configuration(object):
                               "all previous analyses in the '/analysis' folder")
 
                 if not old_cfg[0] == cfg_list[0]:
+                    log.error("Old Alignment %s not equal to new alignment %s", old_cfg[0], cfg_list[0])
                     fail.append("alignment")
                 if not old_cfg[1] == cfg_list[1]:
                     fail.append("branchlengths")

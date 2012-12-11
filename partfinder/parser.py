@@ -11,8 +11,8 @@
 #General Public License for more details. You should have received a copy
 #of the GNU General Public License along with this program.  If not, see
 #<http://www.gnu.org/licenses/>. PartitionFinder also includes the PhyML
-#program, the RAxML program, the PyParsing library, and the python-cluster library 
-#all of which are protected by their own licenses and conditions, using 
+#program, the RAxML program, the PyParsing library, and the python-cluster library
+#all of which are protected by their own licenses and conditions, using
 #PartitionFinder implies that you agree with those licences and conditions as well.
 
 import logging
@@ -90,9 +90,9 @@ class Parser(object):
         modellist = delimitedList(MODELNAME)
         modeldef = Keyword("models") + EQUALS + Group(
             (
-            CaselessKeyword("all") | CaselessKeyword("mrbayes") | CaselessKeyword("raxml") | 
-            CaselessKeyword("beast") | CaselessKeyword("all_protein") | 
-            CaselessKeyword("all_protein_gamma") | CaselessKeyword("all_protein_gammaI") 
+            CaselessKeyword("all") | CaselessKeyword("mrbayes") | CaselessKeyword("raxml") |
+            CaselessKeyword("beast") | CaselessKeyword("all_protein") |
+            CaselessKeyword("all_protein_gamma") | CaselessKeyword("all_protein_gammaI")
             )("predefined") |
             Group(modellist)("userlist")) + SEMICOLON
         modeldef.setParseAction(self.set_models)
@@ -134,7 +134,7 @@ class Parser(object):
         schemesection = \
                 Suppress("[schemes]") + schemealgo + Optional(schemelist)
 
-        
+
 
         # We've defined the grammar for each section. Here we just put it all together
         self.config_parser = (topsection + partsection + schemesection + stringEnd)
@@ -301,7 +301,8 @@ class Parser(object):
             self.subsets = []
 
             if self.ignore_schemes == False:
-                scheme.Scheme(self.cfg, scheme_def.name, *subs)
+                sch = scheme.Scheme(self.cfg, scheme_def.name, *subs)
+                self.config.user_schemes.add_scheme(sch)
 
         except (scheme.SchemeError, subset.SubsetError):
             raise ParserError(text, loc, "Error in '%s' can be found" %

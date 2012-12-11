@@ -62,13 +62,6 @@ class ClusteringAnalysis(Analysis):
         scheme_count = partnum
         self.cfg.progress.begin(scheme_count, subset_count)
 
-        # Start with the scheme with all subsets separate
-        # Analyse that scheme
-
-        # Clear any schemes that are currently loaded
-        # TODO Not sure we need this...
-        self.cfg.schemes.clear_schemes()
-
         # Start with the most partitioned scheme
         start_description = range(len(self.cfg.partitions))
         start_scheme = scheme.create_scheme(self.cfg, "start_scheme", start_description)
@@ -121,9 +114,6 @@ class AllAnalysis(Analysis):
             log.warning("%d is a lot of subsets, this might take a long time to analyse", subset_count)
             log.warning("Perhaps consider using a different search scheme instead (see Manual)")
 
-        # Clear any schemes that are currently loaded
-        self.cfg.schemes.clear_schemes()
-
         # Iterate over submodels, which we can turn into schemes afterwards in the loop
         model_iterator = submodels.submodel_iterator([], 1, partnum)
 
@@ -150,10 +140,6 @@ class GreedyAnalysis(Analysis):
         if subset_count > 10000:
             log.warning("%d is a lot of subsets, this might take a long time to analyse", subset_count)
             log.warning("Perhaps consider using a different search scheme instead (see Manual)")
-
-        #clear any schemes that are currently loaded
-        # TODO Not sure we need this...
-        self.cfg.schemes.clear_schemes()
 
         #start with the most partitioned scheme
         start_description = range(len(self.cfg.partitions))
@@ -247,10 +233,6 @@ class GreediestAnalysis(Analysis):
         log.info("PartitionFinder will have to analyse a maximum of %d subsets of sites to complete this analysis, probably a lot less", subset_count)
         self.cfg.progress.begin(scheme_count, subset_count)
 
-        #clear any schemes that are currently loaded
-        # TODO Not sure we need this...
-        self.cfg.schemes.clear_schemes()
-
         #start with the most partitioned scheme
         start_description = range(len(self.cfg.partitions))
         start_scheme = scheme.create_scheme(self.cfg, "start_scheme"    , start_description)
@@ -284,7 +266,7 @@ class GreediestAnalysis(Analysis):
             #set the scheme counter to run by algorithm step
             self.cfg.progress.schemes_analysed = 0
             self.cfg.progress.scheme_count = len(lumped_subsets)
-            
+
 
             #now analyse the lumped schemes
             counter = 1
@@ -296,26 +278,26 @@ class GreediestAnalysis(Analysis):
                 scheme_name = "%s_%d" %(name_prefix, counter)
                 counter +=1
                 lumped_scheme = neighbour.make_clustered_scheme(start_scheme, scheme_name, subset_grouping, self.cfg)
-                
+
                 no_improvement=0
                 #this is just checking to see if a scheme is any good, if it is, we remember and write it later
                 result = self.analyse_scheme(lumped_scheme, suppress_writing=True, suppress_memory=True)
                 new_score = get_score(result)
-                
+
                 diff = new_score-best_score
                 log.info("%s difference: %.2f" %(model_selection, diff))
-                
+
                 lumpings_done += 1
-        
+
                 #we keep the scheme, and write it, if it's 10 units better than the current score
                 if new_score<(best_score-10):
                     log.info("Found improved scheme with %s score: %.2f" %(model_selection, new_score))
                     improvements[new_score] = result
-                    
+
 
                     #stopping conditions - we stop if we've found N better subsets...
                     if len(improvements) >= int(self.cfg.greediest_schemes) or \
-                       lumpings_done == len(lumped_subsets):                        
+                       lumpings_done == len(lumped_subsets):
                         best_score = min(improvements.keys())
                         best_result = improvements[best_score]
                         log.info("Found %d improved schemes, reached greediest-schemes "
@@ -333,13 +315,13 @@ class GreediestAnalysis(Analysis):
                     #it's an improvement, but not a big one...
                     log.info("Found minor improvement with %s score: %.2f" %(model_selection, new_score))
                     minor_improvements[new_score] = result
-                
-                #...or if we've done at least 20% of the possible subsets and we've found an improvement        
+
+                #...or if we've done at least 20% of the possible subsets and we've found an improvement
                 if (float(lumpings_done)/float(len(lumped_subsets)) > self.cfg.greediest_percent*0.01) and ((len(improvements)+len(minor_improvements))>=1):
                     all_improvements = dict(improvements.items() + minor_improvements.items())
                     best_score = min(all_improvements.keys())
                     best_result = all_improvements[best_score]
-                    log.info("Analysed %.1f percent of the schemes for this step and found %d schemes " 
+                    log.info("Analysed %.1f percent of the schemes for this step and found %d schemes "
                              "that improve %s score, reached greediest-percent cutoff "
                              "condition" %(self.cfg.greediest_percent, len(improvements), model_selection))
                     log.info("Accepting scheme with %s score: %.2f" %(model_selection, best_score))
@@ -347,13 +329,13 @@ class GreediestAnalysis(Analysis):
                     fobj = open(fname, 'w')
                     self.cfg.reporter.write_scheme_summary(best_result, fobj)
                     fobj.close()
-                    
+
                     self.results.add_scheme_result(best_result)
                     self.cfg.progress.subsets_analysed = self.cfg.progress.subsets_analysed + len(start_scheme.subsets)
                     break
 
 
-                #...otherwise, we just keep looking        
+                #...otherwise, we just keep looking
                 else:
                     no_improvement=1
 
@@ -376,7 +358,6 @@ class GreediestAnalysis(Analysis):
         best = [(txt % self.cfg.model_selection, self.best_result)]
         self.cfg.reporter.write_best_schemes(best)
         self.cfg.reporter.write_all_schemes(self.results, info= "Information on the best scheme from each step of the greedy algorithm is here: ")
-
 
 
 def choose_method(search):
