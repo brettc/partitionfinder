@@ -23,36 +23,24 @@ import logging
 log = logging.getLogger("threadpool")
 import threading
 from time import sleep
-import sys
-import os
+import multiprocessing
+
+_cpus = None
 
 
-# Taken from the multiprocessing library
-def cpu_count():
-    if sys.platform == 'win32':
-        try:
-            num = int(os.environ['NUMBER_OF_PROCESSORS'])
-        except (ValueError, KeyError):
-            num = 0
-    elif sys.platform == 'darwin':
-        try:
-            num = int(os.popen('sysctl -n hw.ncpu').read())
-        except ValueError:
-            num = 0
-    else:
-        try:
-            num = os.sysconf('SC_NPROCESSORS_ONLN')
-        except (ValueError, OSError, AttributeError):
-            num = 0
+def get_cpu_count():
+    global _cpus
+    if _cpus is not None:
+        return _cpus
 
-    if num > 1:
-        log.info("You appear to have %s cpus", num)
-        return num
-    # This will have to do
-    log.info("I cannot detect any more than one processor...")
-    return 1
+    try:
+        _cpus = multiprocessing.cpu_count()
+    except:
+        _cpus = 1
+        log.info("I cannot detect the number of processors...")
 
-_cpus = cpu_count()
+    log.info("Found %s cpus", _cpus)
+    return _cpus
 
 
 class Pool(object):
@@ -71,7 +59,7 @@ class Pool(object):
             return
 
         if numthreads <= 1:
-            numthreads = _cpus
+            numthreads = get_cpu_count()
         if numtasks < numthreads:
             numthreads = numtasks
 
