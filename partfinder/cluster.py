@@ -93,11 +93,9 @@ def genmatrix(list, combinfunc, symmetric=False, diagonal=None):
                     Default: None
    """
    matrix = []
-   row_index = 0
-   for item in list:
+   for row_index, item in enumerate(list):
       row = []
-      col_index = 0
-      for item2 in list:
+      for col_index, item2 in enumerate(list):
          if diagonal is not None and col_index == row_index:
             # if this is a cell on the diagonal
             row.append(diagonal)
@@ -107,9 +105,7 @@ def genmatrix(list, combinfunc, symmetric=False, diagonal=None):
          else:
             # if this cell is not on the diagonal
             row.append(combinfunc(item, item2))
-         col_index += 1
       matrix.append(row)
-      row_index += 1
    return matrix
 
 def printmatrix(list):
