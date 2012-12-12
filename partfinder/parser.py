@@ -26,10 +26,17 @@ from pyparsing import (
 # debugging
 # ParserElement.verbose_stacktrace = True
 
-import partition, scheme, subset, phyml_models, raxml_models, config
+import partition
+import scheme
+import subset
+import phyml_models
+import raxml_models
+import config
 from util import PartitionFinderError
 
 # Only used internally
+
+
 class ParserError(Exception):
     """Used for our own parsing problems"""
     def __init__(self, text, loc, msg):
@@ -40,6 +47,7 @@ class ParserError(Exception):
 
     def format_message(self):
         return "%s at line:%s, column:%s" % (self.msg, self.lineno, self.col)
+
 
 class Parser(object):
     """Parse configuration files
@@ -80,7 +88,7 @@ class Parser(object):
         treedef.setParseAction(self.set_user_tree)
 
         def simple_option(name):
-            opt = Keyword(name) + EQUALS + Word(alphas+nums) + SEMICOLON
+            opt = Keyword(name) + EQUALS + Word(alphas + nums) + SEMICOLON
             opt.setParseAction(self.set_simple_option)
             return opt
 
@@ -90,34 +98,37 @@ class Parser(object):
         modellist = delimitedList(MODELNAME)
         modeldef = Keyword("models") + EQUALS + Group(
             (
-            CaselessKeyword("all") | CaselessKeyword("mrbayes") | CaselessKeyword("raxml") |
-            CaselessKeyword("beast") | CaselessKeyword("all_protein") |
-            CaselessKeyword("all_protein_gamma") | CaselessKeyword("all_protein_gammaI")
+                CaselessKeyword("all") | CaselessKeyword("mrbayes") | CaselessKeyword("raxml") |
+                CaselessKeyword("beast") | CaselessKeyword("all_protein") |
+                CaselessKeyword(
+                    "all_protein_gamma") | CaselessKeyword("all_protein_gammaI")
             )("predefined") |
             Group(modellist)("userlist")) + SEMICOLON
         modeldef.setParseAction(self.set_models)
 
         modseldef = simple_option("model_selection")
-        topsection = alignmentdef + Optional(treedef) + branchdef + modeldef + modseldef
+        topsection = alignmentdef + Optional(treedef) + branchdef + \
+            modeldef + modseldef
 
         # Partition Parsing
         column = Word(nums)
         partname = Word(alphas + '_-' + nums)
         partdef = column("start") +\
-                Optional(DASH + column("end")) +\
-                Optional(BACKSLASH + column("step"))
+            Optional(DASH + column("end")) +\
+            Optional(BACKSLASH + column("step"))
 
         partdef.setParseAction(self.define_range)
         partdeflist = Group(OneOrMore(Group(partdef)))
         partition = Optional("charset") + partname("name") + \
-                            EQUALS + partdeflist("parts") + SEMICOLON
+            EQUALS + partdeflist("parts") + SEMICOLON
         partition.setParseAction(self.define_partition)
         partlist = OneOrMore(Group(partition))
         partsection = Suppress("[data_blocks]") + partlist
 
         # Scheme Parsing
         schemename = Word(alphas + '_-' + nums)
-        partnameref = partname.copy() # Make a copy, cos we set a different action on it
+        partnameref = partname.copy(
+        )  # Make a copy, cos we set a different action on it
         partnameref.setParseAction(self.check_part_exists)
 
         subset = Group(OPENB + delimitedList(partnameref("name")) + CLOSEB)
@@ -125,19 +136,18 @@ class Parser(object):
 
         scheme = Group(OneOrMore(subset))
         schemedef = schemename("name") + \
-                            EQUALS + scheme("scheme") + SEMICOLON
+            EQUALS + scheme("scheme") + SEMICOLON
         schemedef.setParseAction(self.define_schema)
 
         schemelist = OneOrMore(Group(schemedef))
 
         schemealgo = simple_option("search")
         schemesection = \
-                Suppress("[schemes]") + schemealgo + Optional(schemelist)
-
-
+            Suppress("[schemes]") + schemealgo + Optional(schemelist)
 
         # We've defined the grammar for each section. Here we just put it all together
-        self.config_parser = (topsection + partsection + schemesection + stringEnd)
+        self.config_parser = (
+            topsection + partsection + schemesection + stringEnd)
 
     def set_alignment(self, text, loc, tokens):
         value = tokens[1]
@@ -156,19 +166,18 @@ class Parser(object):
         except config.ConfigurationError:
             raise ParserError(text, loc, "Invalid option in .cfg file")
 
-
     def set_models(self, text, loc, tokens):
         if self.cfg.phylogeny_program == "phyml":
             self.phylo_models = phyml_models
-        elif self.cfg.phylogeny_program =="raxml":
+        elif self.cfg.phylogeny_program == "raxml":
             self.phylo_models = raxml_models
 
-        all_dna_mods        = set(self.phylo_models.get_all_dna_models())
-        all_protein_mods    = set(self.phylo_models.get_all_protein_models())
-        total_mods          = all_dna_mods.union(all_protein_mods)
+        all_dna_mods = set(self.phylo_models.get_all_dna_models())
+        all_protein_mods = set(self.phylo_models.get_all_protein_models())
+        total_mods = all_dna_mods.union(all_protein_mods)
 
         mods = tokens[1]
-        DNA_mods  = 0
+        DNA_mods = 0
         prot_mods = 0
         if mods.userlist:
             modlist = mods.userlist
@@ -191,20 +200,20 @@ class Parser(object):
                 modlist = set(self.phylo_models.get_all_protein_models())
                 prot_mods = prot_mods + 1
             elif modsgroup.lower() == "all_protein_gamma":
-                if self.cfg.phylogeny_program=="raxml":
+                if self.cfg.phylogeny_program == "raxml":
                     modlist = set(raxml_models.get_protein_models_gamma())
                     prot_mods = prot_mods + 1
                 else:
                     log.error("The models option 'all_protein_gamma' is only available with raxml"
-                        ", (the --raxml commandline option). Please check and try again")
+                              ", (the --raxml commandline option). Please check and try again")
                     raise ParserError
             elif modsgroup.lower() == "all_protein_gammaI":
-                if self.cfg.phylogeny_program=="raxml":
+                if self.cfg.phylogeny_program == "raxml":
                     modlist = set(raxml_models.get_protein_models_gammaI())
                     prot_mods = prot_mods + 1
                 else:
                     log.error("The models option 'all_protein_gammaI' is only available with raxml"
-                        ", (the --raxml commandline option). Please check and try again")
+                              ", (the --raxml commandline option). Please check and try again")
                     raise ParserError
             else:
                 pass
@@ -216,45 +225,44 @@ class Parser(object):
                 raise ParserError(
                     text, loc, "'%s' is not a valid model for phylogeny "
                                "program %s. Please check the lists of valid models in the"
-                               " manual and try again" %(m, self.cfg.phylogeny_program))
+                               " manual and try again" % (m, self.cfg.phylogeny_program))
 
             if m in all_dna_mods:
-                DNA_mods  = DNA_mods + 1
+                DNA_mods = DNA_mods + 1
             if m in all_protein_mods:
                 prot_mods = prot_mods + 1
 
             self.cfg.models.add(m)
 
         log.info("The models included in this analysis are: %s",
-                  ", ".join(self.cfg.models))
+                 ", ".join(self.cfg.models))
 
         #check datatype against the model list that we've got a sensible model list
-        if DNA_mods>0 and prot_mods==0 and self.cfg.datatype=="DNA":
+        if DNA_mods > 0 and prot_mods == 0 and self.cfg.datatype == "DNA":
             log.info("Setting datatype to 'DNA'")
-        elif DNA_mods==0 and prot_mods>0 and self.cfg.datatype=="protein":
+        elif DNA_mods == 0 and prot_mods > 0 and self.cfg.datatype == "protein":
             log.info("Setting datatype to 'protein'")
-        elif DNA_mods==0 and prot_mods>0 and self.cfg.datatype=="DNA":
+        elif DNA_mods == 0 and prot_mods > 0 and self.cfg.datatype == "DNA":
             raise ParserError(
                 text, loc, "The models list contains only models of amino acid change."
                 " PartitionFinder.py only works with nucleotide models (like the GTR model)."
                 " If you're analysing an amino acid dataset, please use PartitionFinderProtein,"
                 " which you can download here: www.robertlanfear.com/partitionfinder."
                 " The models line in the .cfg file is")
-        elif DNA_mods>0 and prot_mods==0 and self.cfg.datatype=="protein":
+        elif DNA_mods > 0 and prot_mods == 0 and self.cfg.datatype == "protein":
             raise ParserError(
                 text, loc, "The models list contains only models of nucelotide change."
                 " PartitionFinderProtein.py only works with amino acid models (like the WAG model)."
                 " If you're analysing a nucelotide dataset, please use PartitionFinder.py,"
                 " which you can download here: www.robertlanfear.com/partitionfinder"
                 " The models line in the .cfg file is")
-        else: #we've got a mixture of models.
+        else:  # we've got a mixture of models.
             raise ParserError(
                 text, loc, "The models list contains a mixture of protein and nucelotide models."
                 " If you're analysing a nucelotide dataset, please use PartitionFinder."
                 " If you're analysing an amino acid dataset, please use PartitionFinderProtein."
                 " You can download both of these programs from here: www.robertlanfear.com/partitionfinder"
                 " The models line in the .cfg file is")
-
 
     def define_range(self, part):
         """Turn the 1, 2 or 3 tokens into integers, supplying a default if needed"""
@@ -275,14 +283,16 @@ class Parser(object):
         """We have everything we need here to make a partition"""
         try:
             # Creation adds it to set
-            p = partition.Partition(self.cfg, part_def.name, *tuple(part_def.parts))
+            p = partition.Partition(
+                self.cfg, part_def.name, *tuple(part_def.parts))
         except partition.PartitionError:
-            raise ParserError(text, loc, "Error in '%s' can be found" % part_def.name)
+            raise ParserError(
+                text, loc, "Error in '%s' can be found" % part_def.name)
 
     def check_part_exists(self, text, loc, partref):
         if partref.name not in self.cfg.partitions:
             raise ParserError(text, loc, "Partition %s not defined" %
-                                     partref.name)
+                              partref.name)
 
     def define_subset(self, text, loc, subset_def):
         try:
@@ -306,7 +316,7 @@ class Parser(object):
 
         except (scheme.SchemeError, subset.SubsetError):
             raise ParserError(text, loc, "Error in '%s' can be found" %
-                                     scheme_def.name)
+                              scheme_def.name)
 
     def parse_file(self, fname):
         #this just reads in the config file into 's'
@@ -316,7 +326,8 @@ class Parser(object):
     def parse_configuration(self, s):
         #parse the config cfg
         try:
-            self.result = self.config_parser.ignore(pythonStyleComment).parseString(s)
+            self.result = self.config_parser.ignore(
+                pythonStyleComment).parseString(s)
         except ParserError, p:
             log.error(p.format_message())
             raise PartitionFinderError
@@ -325,20 +336,20 @@ class Parser(object):
             log.error(p)
 
             #let's see if there was something missing fro the input file
-            expectations = ["models", "search", "[schemes]", "[data_blocks]", "model_selection", "branchlengths", "alignment"]
+            expectations = ["models", "search", "[schemes]", "[data_blocks]",
+                            "model_selection", "branchlengths", "alignment"]
             missing = None
             for e in expectations:
                 if p.msg.count(e):
                     missing = e
 
             if missing:
-                log.info("It looks like the '%s' option might be missing or in the wrong place" %(missing))
-                log.info("Or perhaps something is wrong in the lines just before the '%s' option" %(missing))
+                log.info("It looks like the '%s' option might be missing or in the wrong place" % (missing))
+                log.info("Or perhaps something is wrong in the lines just before the '%s' option" % (missing))
                 log.info("Please double check the .cfg file and try again")
             else:
-                log.info("The line causing the problem is this: '%s'" %(p.line))
+                log.info(
+                    "The line causing the problem is this: '%s'" % (p.line))
                 log.info("Please check that line, and make sure it appears in the right place in the .cfg file.")
                 log.info("If it looks OK, try double-checking the semi-colons on other lines in the .cfg file")
             raise PartitionFinderError
-
-
