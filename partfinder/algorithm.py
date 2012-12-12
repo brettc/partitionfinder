@@ -16,6 +16,8 @@
 #PartitionFinder implies that you agree with those licences and conditions as well.
 
 from cluster import *
+from math import sqrt
+from itertools import izip
 
 def k_subsets_i(n, k):
     '''
@@ -76,9 +78,13 @@ def lumpings(scheme):
 
 	return lumpings
 
-def euclidean_distance(list1, list2):
-	dists = [abs(list1[i]-list2[i]) for i in range(len(list1))]
-	return sum(dists)
+def euclidean_distance(x, y):
+    sum=0
+    for xval, yval in izip(x, y):
+        sum += (xval - yval)**2
+    dist = sqrt(sum)
+    return dist
+
 
 
 def getLevels(cluster, levs):
