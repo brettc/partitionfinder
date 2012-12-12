@@ -1,1 +1,1 @@
-nosetests -v -A 'not slow'
+py.test -v -k "not full"
