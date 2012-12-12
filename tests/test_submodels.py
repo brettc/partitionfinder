@@ -1,5 +1,4 @@
-from basetest import *
-from partfinder.submodels import get_submodels, count_all_schemes 
+from partfinder.submodels import get_submodels, count_all_schemes
 
 def test_consistency():
     known_results = [
@@ -26,6 +25,3 @@ def test_scheme_lengths():
     assert count_all_schemes(1) == 1
     assert count_all_schemes(5) == 52
     assert count_all_schemes(10) == 115975
-
-if __name__ == '__main__':
-    nose.runmodule()

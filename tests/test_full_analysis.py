@@ -37,7 +37,7 @@ def load_cfg_and_run(pth, compare=True, fails=False):
         cfg.load_base_path(pth)
         method = analysis_method.choose_method(cfg.search)
         reporter.TextReporter(cfg)
-        meth = method(cfg, force_restart=False, threads=-1)
+        meth = method(cfg, force_restart=True, threads=-1)
         results = meth.analyse()
         if compare:
             results.compare(cfg)
@@ -64,166 +64,166 @@ def load_rerun(pth, fails=False):
 # DNA -----------------------------------
 
 @attr('slow', 'DNA')
-def test_DNA1():
+def xxxx_test_DNA1():
     load_cfg_and_run(path_from_function())
 
 @attr('slow', 'DNA')
-def test_DNA2():
+def xxxx_test_DNA2():
     load_cfg_and_run(path_from_function())
 
 @attr('slow', 'DNA')
-def test_DNA3():
+def xxxx_test_DNA3():
     load_cfg_and_run(path_from_function())
 
 @attr('slow', 'DNA')
-def test_DNA4():
+def xxxx_test_DNA4():
     load_cfg_and_run(path_from_function())
 
 @attr('slow', 'DNA')
-def test_DNA5():
+def xxxx_test_DNA5():
     load_cfg_and_run(path_from_function())
 
 @attr('slow', 'DNA')
-def test_DNA6():
+def xxxx_test_DNA6():
     load_cfg_and_run(path_from_function())
 
 @attr('slow', 'DNA')
-def test_DNA7():
+def xxxx_test_DNA7():
     load_cfg_and_run(path_from_function())
 
 @attr('slow', 'DNA')
-def test_DNA8():
+def xxxx_test_DNA8():
     load_cfg_and_run(path_from_function())
 
 # Protein -----------------------------------
 @attr('slow', 'prot', 'ug')
-def test_prot1():
+def xxxx_test_prot1():
     load_cfg_and_run(path_from_function())
 
 @attr('slow', 'prot')
-def test_prot2():
+def xxxx_test_prot2():
     load_cfg_and_run(path_from_function())
 
 @attr('slow', 'prot')
-def test_prot3():
+def xxxx_test_prot3():
     load_cfg_and_run(path_from_function())
 
 @attr('slow', 'prot')
-def test_prot4():
+def xxxx_test_prot4():
     load_cfg_and_run(path_from_function())
 
 @attr('prot')
-def test_prot5():
+def xxxx_test_prot5():
     load_cfg_and_run(path_from_function())
 
 @attr('slow', 'prot')
-def test_prot6():
+def xxxx_test_prot6():
     load_cfg_and_run(path_from_function())
 
 @attr('slow', 'prot')
-def test_prot7():
+def xxxx_test_prot7():
     load_cfg_and_run(path_from_function())
 
 @attr('slow', 'prot')
-def test_prot8():
+def xxxx_test_prot8():
     load_cfg_and_run(path_from_function())
 
 # Re-running ------------------------------
 @attr('rerun')
-def test_rerun01():
+def xxxx_test_rerun01():
     load_rerun(path_from_function())
 
 @attr('rerun')
-def test_rerun02():
+def xxxx_test_rerun02():
     load_rerun(path_from_function())
 
 @attr('rerun')
-def test_rerun03():
+def xxxx_test_rerun03():
     load_rerun(path_from_function())
 
 @attr('rerun')
-def test_rerun04():
+def xxxx_test_rerun04():
     load_rerun(path_from_function())
 
 @attr('rerun')
-def test_rerun05():
+def xxxx_test_rerun05():
     load_rerun(path_from_function())
 
 @attr('rerun', 'slow')
-def test_rerun06():
+def xxxx_test_rerun06():
     load_rerun(path_from_function())
 
 @attr('rerun', 'slow')
-def test_rerun07():
+def xxxx_test_rerun07():
     load_rerun(path_from_function())
 
 @attr('rerun')
-def test_rerun08():
+def xxxx_test_rerun08():
     load_rerun(path_from_function())
 
 # FAILS
 @attr('rerun', 'fails')
 @raises(config.ConfigurationError)
-def test_rerun09():
+def xxxx_test_rerun09():
     load_rerun(path_from_function(), fails=True)
 
 @attr('rerun', 'fails')
 @raises(config.ConfigurationError)
-def test_rerun10():
+def xxxx_test_rerun10():
     load_rerun(path_from_function(), fails=True)
 
 @attr('rerun', 'fails')
 @raises(config.ConfigurationError)
-def test_rerun11():
+def xxxx_test_rerun11():
     load_rerun(path_from_function(), fails=True)
 
 @attr('rerun', 'fails')
 @raises(config.ConfigurationError)
-def test_rerun12():
+def xxxx_test_rerun12():
     load_rerun(path_from_function(), fails=True)
 
 @attr('rerun', 'fails')
 @raises(config.ConfigurationError)
-def test_rerun13():
+def xxxx_test_rerun13():
     load_rerun(path_from_function(), fails=True)
 
 @attr('rerun', 'fails')
 @raises(analysis.AnalysisError)
-def test_rerun14():
+def xxxx_test_rerun14():
     load_rerun(path_from_function(), fails=True)
 
 @attr('rerun', 'fails')
 @raises(analysis.AnalysisError)
-def test_rerun15():
+def xxxx_test_rerun15():
     load_rerun(path_from_function(), fails=True)
 
 @attr('rerun', 'fails')
 @raises(config.ConfigurationError)
-def test_rerun16():
+def xxxx_test_rerun16():
     load_rerun(path_from_function(), fails=True)
 
 @attr('rerun', 'slow')
-def test_rerun17():
+def xxxx_test_rerun17():
     load_rerun(path_from_function())
 
 @attr('rerun', 'fails')
 @raises(util.PartitionFinderError)
-def test_rerun18():
+def xxxx_test_rerun18():
     load_rerun(path_from_function(), fails=True)
 
 @attr('rerun', 'fails')
 @raises(util.PartitionFinderError)
-def test_rerun19():
+def xxxx_test_rerun19():
     load_rerun(path_from_function(), fails=True)
 
 @attr('rerun', 'fails')
 @raises(util.PartitionFinderError)
-def test_rerun20():
+def xxxx_test_rerun20():
     load_rerun(path_from_function(), fails=True)
 
 @attr('rerun', 'fails')
 @raises(util.PartitionFinderError)
-def test_rerun21():
+def xxxx_test_rerun21():
     load_rerun(path_from_function(), fails=True)
 
 if __name__ == '__main__':

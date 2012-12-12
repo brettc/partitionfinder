@@ -1,6 +1,5 @@
-from basetest import *
-
 from partfinder import alignment
+
 
 def test_simple():
     test = """
@@ -12,6 +11,7 @@ spp4   actaactaaa
 spp5   acagacagaa
     """
     alignment.parse(test)
+
 
 def test_interleaved():
     test = """
@@ -35,6 +35,3 @@ actaactaaa
 acagacagaa
     """
     alignment.parse(test)
-
-if __name__ == '__main__':
-    nose.runmodule()

@@ -1,20 +1,26 @@
-from basetest import nose, MISC_PATH
 import os
+import tempfile
+
 from partfinder import raxml
-import tempfile, os
 from partfinder.alignment import TestAlignment
 from partfinder import raxml_models
+
+
+HERE = os.path.abspath(os.path.dirname(__file__))
+MISC_PATH = os.path.join(HERE, 'misc')
 
 
 def test_parse_nucleotide():
     pth = os.path.join(MISC_PATH, 'raxml_nucleotide.output')
     p = raxml.Parser('DNA')
-    result = p.parse(open(pth).read())
+    p.parse(open(pth).read())
+
 
 def test_parse_aminoacid():
     pth = os.path.join(MISC_PATH, 'raxml_aminoacid.output')
     p = raxml.Parser('protein')
-    result = p.parse(open(pth).read())
+    p.parse(open(pth).read())
+
 
 def NOT_WORKING_parsing():
 
@@ -70,7 +76,3 @@ ZD99S305  SLMLLISSSIVENGAGTGWTVYPPLSSNIAHSGSSVDLAIFSLHLAGISSILGAINFITTIINMKVNNLF
         log.info("Result is %s", res)
 
     shutil.rmtree(tmp)
-
-
-if __name__ == '__main__':
-    nose.runmodule(argv=['nosetest', '-s'])

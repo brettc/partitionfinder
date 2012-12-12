@@ -1,10 +1,9 @@
-from basetest import *
 from partfinder.partition import Partition
 from partfinder.subset import Subset
 from partfinder.config import Configuration
 
-def test_identity():
 
+def test_identity():
     c = Configuration()
     pa = Partition(c, 'a', (1, 10, 3))
     pb = Partition(c, 'b', (2, 10, 3))
@@ -19,6 +18,3 @@ def test_identity():
     assert s1 is s2
     assert s1 is s4
     assert s1 is not s3
-
-if __name__ == '__main__':
-    nose.runmodule()
