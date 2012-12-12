@@ -302,7 +302,7 @@ class Parser(object):
 
             if self.ignore_schemes == False:
                 sch = scheme.Scheme(self.cfg, scheme_def.name, *subs)
-                self.config.user_schemes.add_scheme(sch)
+                self.cfg.user_schemes.add_scheme(sch)
 
         except (scheme.SchemeError, subset.SubsetError):
             raise ParserError(text, loc, "Error in '%s' can be found" %

@@ -32,7 +32,7 @@ class UserAnalysis(Analysis):
 
     def do_analysis(self):
         log.info("Performing User analysis")
-        current_schemes = [s for s in self.cfg.schemes]
+        current_schemes = [s for s in self.cfg.user_schemes]
         scheme_count = len(current_schemes)
         subset_count = subset.count_subsets()
 
