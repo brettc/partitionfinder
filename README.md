@@ -23,10 +23,10 @@ is in the /docs folder.
 
 * For PartitionFinderProtein just substitute 'PartitionFinderProtein' for 'PartitionFinder' below
 
-1.	Open Terminal (on a Mac) or Command Prompt (on Windows) and cd to the directory with PartitionFinder in it
-2.	Run PartitionFinder by typing at the command prompt:
+1.  Open Terminal (on a Mac) or Command Prompt (on Windows) and cd to the directory with PartitionFinder in it
+2.  Run PartitionFinder by typing at the command prompt:
 
-	python PartitionFinder.py example
+    python PartitionFinder.py example
 
 This will run the included example analysis for PartitionFinder. More generally, the command line for PartitionFinder looks like this:
 
