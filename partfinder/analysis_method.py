@@ -397,7 +397,7 @@ class GreediestAnalysis(Analysis):
                 if (float(lumpings_done)/float(len(lumped_subsets)) >= self.cfg.greediest_percent*0.01) and (lumpings_done>self.cfg.greediest_schemes):
                     #if we have any improvements, then we use the best one
                     if (len(all_improvements)>=1):
-                        log.info("Analysed %.1f percent of the schemes for this step and found only %d schemes " 
+                        log.info("Analysed %.1f percent of the schemes for this step and found %d schemes " 
                                  "that improve %s score by >10 units, reached greediest-percent cutoff "
                                  "condition" %(self.cfg.greediest_percent, major_improvements, model_selection))
     
@@ -432,7 +432,7 @@ class GreediestAnalysis(Analysis):
             elif no_improvements==1:
                 log.info("Analysed %.1f percent of the schemes for this step and found no schemes " 
                          "that improve %s score by any amount, terminating greediest algorithm" 
-                         %(self.cfg.greediest_percent, major_improvements, model_selection))
+                         %(self.cfg.greediest_percent, model_selection))
                 break
             else:
                 start_scheme = best_lumped_scheme
