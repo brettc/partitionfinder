@@ -45,7 +45,7 @@ class Configuration(object):
 
     def __init__(self, datatype="DNA", phylogeny_program='phyml',
         save_phylofiles=False, cmdline_extras = "", cluster_weights = None, 
-        greediest_schemes = 1, greediest_percent=1):
+        greediest_schemes = 1, greediest_percent=100):
 
         self.partitions = partition.PartitionSet()
         self.schemes = scheme.SchemeSet()
