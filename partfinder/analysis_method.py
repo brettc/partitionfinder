@@ -250,7 +250,6 @@ class GreediestAnalysis(Analysis):
         
         '''
         log.info("Performing greediest analysis")
-        major_improvement_size=0.0 #we could add this as a cmdline option later
 
         model_selection = self.cfg.model_selection
         partnum = len(self.cfg.partitions)
@@ -346,12 +345,10 @@ class GreediestAnalysis(Analysis):
             
             #now analyse the lumped schemes
             lumpings_done = 0
-            major_improvements = 0
             for subset_grouping in lumped_subsets:
   
                 scheme_name = "%s_%d" %(name_prefix, (lumpings_done+1))
                 lumped_scheme = neighbour.make_clustered_scheme(start_scheme, scheme_name, subset_grouping, self.cfg)
-                
                 
                 result = self.analyse_scheme(lumped_scheme, suppress_writing=True, suppress_memory=True)
                 new_score = get_score(result)
@@ -363,30 +360,23 @@ class GreediestAnalysis(Analysis):
                     #it's an improvement
                     log.info("Found improved score with delta %s: %.2f" %(model_selection, new_score-best_score))
                     add_result(all_improvements, result, scheme_name) #add it to the all_improvements dictionary
-                    if new_score<(best_score-major_improvement_size):
-                        major_improvements += 1
                     
-                #Stopping condition 1 - we found N major improvements...
-                if major_improvements >= int(self.cfg.greediest_schemes):
-                    if major_improvement_size>0.0:
-                        log.info("Found %d schemes that improve the %s score by >%.1f units, reached greediest-schemes "
-                                 "cutoff condition." %(major_improvements, model_selection, major_improvement_size))
-                    else:
-                        log.info("Found %d schemes that improve the %s score, reached greediest-schemes "
-                                 "cutoff condition." %(major_improvements, model_selection))
+                #Stopping condition 1 - we found N improvements...
+                if len(all_improvements) >= int(self.cfg.greediest_schemes):
+                    log.info("Found %d schemes that improve the %s score, reached greediest-schemes "
+                             "cutoff condition." %(len(all_improvements), model_selection))
 
                     #now we find out which is the best lumping we know of for this step
                     all_improvements, best_lumping, best_name = process_best_scheme(all_improvements, lumped_subsets)
                     print "best name: ", best_name
                                         
                     if best_lumping==None:
-                        #we SHOULD be able to find one, since we've had major improvements!
+                        #we SHOULD be able to find one, since we've had improvements!
                         log.error("Something has gone wrong with the greediest algorithm")
                         raise AnalysisError
                     
                     #now we check if that scheme already exists
                     if best_name in schemes_this_step:
-                        print "EGGER"
                         best_lumped_scheme = schemes_this_step[best_name][0]
                         best_result = schemes_this_step[best_name][1]
                         write_this_scheme(name_prefix, best_result)
@@ -394,17 +384,17 @@ class GreediestAnalysis(Analysis):
                         log.error("Something has gone wrong with the greediest algorithm")
                         raise AnalysisError
                     
-                    log.info("Best scheme has %s difference: %.2f, and %d subsets" %(model_selection, get_score(best_result)-best_score, len(best_result.scheme.subsets)))
+                        log.info("Best scheme has %s: %.2f, %s difference: %.2f, and %d subsets" %(model_selection, get_score(best_result), model_selection, get_score(best_result)-best_score, len(best_result.scheme.subsets)))
                     #now we move on
                     break
                 
                 #Stopping condition 2 - we got to greediest_percent way through...
-                if (float(lumpings_done)/float(len(lumped_subsets)) >= self.cfg.greediest_percent*0.01) and (lumpings_done>self.cfg.greediest_schemes):
+                if (float(lumpings_done)/float(len(lumped_subsets)) >= self.cfg.greediest_percent*0.01):
                     #if we have any improvements, then we use the best one
                     if (len(all_improvements)>=1):
                         log.info("Analysed %.1f percent of the schemes for this step and found %d schemes " 
                                  "that improve %s score, reached greediest-percent cutoff "
-                                 "condition" %(self.cfg.greediest_percent, major_improvements, model_selection))
+                                 "condition" %(self.cfg.greediest_percent, len(all_improvements), model_selection))
     
                         #now we find out which is the best lumping we know of for this step
                         all_improvements, best_lumping, best_name = process_best_scheme(all_improvements, lumped_subsets)
@@ -423,7 +413,7 @@ class GreediestAnalysis(Analysis):
                             log.error("Something has gone wrong with the greediest algorithm")
                             raise AnalysisError
                                                 
-                        log.info("Best scheme has %s difference: %.2f, and %d subsets" %(model_selection, get_score(best_result)-best_score, len(best_result.scheme.subsets)))
+                        log.info("Best scheme has %s: %.2f, %s difference: %.2f, and %d subsets" %(model_selection, get_score(best_result), model_selection, get_score(best_result)-best_score, len(best_result.scheme.subsets)))
                         #now we move on
                         break
                     else: #we have no improvements
