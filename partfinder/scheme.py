@@ -11,7 +11,7 @@
 #General Public License for more details. You should have received a copy
 #of the GNU General Public License along with this program.  If not, see
 #<http://www.gnu.org/licenses/>. PartitionFinder also includes the PhyML
-#program, the RAxML program, the PyParsing library, and the python-cluster library 
+#program, the RAxML program, and the PyParsing library, 
 #all of which are protected by their own licenses and conditions, using 
 #PartitionFinder implies that you agree with those licences and conditions as well.
 
