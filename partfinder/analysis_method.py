@@ -314,7 +314,6 @@ class GreediestAnalysis(Analysis):
             fname = os.path.join(self.cfg.schemes_path, name_prefix + '.txt')
             fobj = open(fname, 'wb')
             self.cfg.reporter.write_scheme_summary(best_result, fobj)
-            log.info("Scheme %s written to %s" %(best_result, fname))
             self.results.add_scheme_result(best_result)
             #before we break, let's update the counters as if we'd analysed all those schemes and subsets
             self.cfg.progress.subsets_analysed = self.cfg.progress.subsets_analysed + len(start_scheme.subsets)
@@ -368,7 +367,6 @@ class GreediestAnalysis(Analysis):
 
                     #now we find out which is the best lumping we know of for this step
                     all_improvements, best_lumping, best_name = process_best_scheme(all_improvements, lumped_subsets)
-                    print "best name: ", best_name
                                         
                     if best_lumping==None:
                         #we SHOULD be able to find one, since we've had improvements!
@@ -380,11 +378,11 @@ class GreediestAnalysis(Analysis):
                         best_lumped_scheme = schemes_this_step[best_name][0]
                         best_result = schemes_this_step[best_name][1]
                         write_this_scheme(name_prefix, best_result)
+                        log.info("Best scheme was number %s. It has %s: %.2f, %s difference: %.2f, and %d subsets." %(best_name.split('_')[-1], model_selection, get_score(best_result), model_selection, get_score(best_result)-best_score, len(best_result.scheme.subsets)))
                     else:
                         log.error("Something has gone wrong with the greediest algorithm")
                         raise AnalysisError
                     
-                        log.info("Best scheme has %s: %.2f, %s difference: %.2f, and %d subsets" %(model_selection, get_score(best_result), model_selection, get_score(best_result)-best_score, len(best_result.scheme.subsets)))
                     #now we move on
                     break
                 
@@ -398,22 +396,20 @@ class GreediestAnalysis(Analysis):
     
                         #now we find out which is the best lumping we know of for this step
                         all_improvements, best_lumping, best_name = process_best_scheme(all_improvements, lumped_subsets)
-                        print "best name: ", best_name
 
                         if best_lumping==None:
                             #we SHOULD be able to find one, since we've had >1 improvement!
                             log.error("Something has gone wrong with the greediest algorithm")
                             raise AnalysisError
                         if best_name in schemes_this_step:
-                            print "EGGER2"
                             best_lumped_scheme = schemes_this_step[best_name][0]
                             best_result = schemes_this_step[best_name][1]
                             write_this_scheme(name_prefix, best_result)
+                            log.info("Best scheme was number %s. It has %s: %.2f, %s difference: %.2f, and %d subsets." %(best_name.split('_')[-1], model_selection, get_score(best_result), model_selection, get_score(best_result)-best_score, len(best_result.scheme.subsets)))
                         else:
                             log.error("Something has gone wrong with the greediest algorithm")
                             raise AnalysisError
                                                 
-                        log.info("Best scheme has %s: %.2f, %s difference: %.2f, and %d subsets" %(model_selection, get_score(best_result), model_selection, get_score(best_result)-best_score, len(best_result.scheme.subsets)))
                         #now we move on
                         break
                     else: #we have no improvements
