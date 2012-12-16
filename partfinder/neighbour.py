@@ -15,7 +15,6 @@
 #all of which are protected by their own licenses and conditions, using 
 #PartitionFinder implies that you agree with those licences and conditions as well.
 
-from cluster import minkowski_distance, genmatrix, printmatrix
 import subset
 import scheme
 from algorithm import euclidean_distance 
@@ -23,55 +22,6 @@ from algorithm import euclidean_distance
 import logging
 log = logging.getLogger("cluster")
 
-
-def sum_matrices(mat1, mat2, mat3, mat4):
-    """sum three matrices of the same size"""
-    result = []
-    rowindex=0
-    for row in mat1:
-        result.append([sum(x) for x in zip(mat1[rowindex], mat2[rowindex], mat3[rowindex], mat4[rowindex])] )
-        rowindex += 1
-    return result
-
-def normalise_and_weight(matrix, normaliser, weight):
-    """normalise and weight a 2D matrix (list of lists) using the passed value"""
-    
-    if normaliser==0:
-        #then our matrix must have had a maximum distance of zero anyway, indicating that 
-        #everything is already identical (e.g. same amino acid model)
-        #in this case we don't need to do any work, because these distances won't count
-        #when we sum the matrices anyway, so just return without worrying
-        return matrix
-        
-    rowindex=0
-    for row in matrix:
-        colindex = 0 # keep track of where we are in the matrix
-        for cell in row:
-            matrix[rowindex][colindex] = cell*float(weight)/float(normaliser)
-            colindex += 1
-        rowindex += 1
-
-    return matrix
-    
-    
-def get_minmax(matrix):
-    """return the min and max distances in a 2D list
-    """
-
-    maxdistance=None    
-    mindistance=None
-    rowindex=0
-    for row in matrix:
-        colindex = 0 # keep track of where we are in the matrix
-        for cell in row:
-            #ignore anything on or below the diagonal
-            if (colindex > rowindex):
-                if (cell<mindistance or mindistance is None): mindistance=cell
-                if (cell>maxdistance or maxdistance is None): maxdistance=cell
-            colindex += 1
-        rowindex += 1
-
-    return mindistance, maxdistance
 
 def get_ranked_list(final_distances):
     """return the closest subsets defined by a distance matrix 
@@ -104,51 +54,6 @@ def get_ranked_list(final_distances):
         ordered_subsets.append(list(distances[d]))
 
     return ordered_subsets
-
-
-
-def get_closest(matrix, subsets):
-    """return the closest subsets defined by a distance matrix 
-    usually there will just be a pair that's closer than all other pairs
-    BUT, it's feasible (if unlikely) that >2 subsets are equally close.
-    This is possible if, e.g. all weights are zero. Then we just want to group all the 
-    equally close subsets...
-    
-    So, we return a list of all the closest subsets
-    """
-    from random import randrange
-    
-    min_rows = set()
-    min_cols = []
-    mindistance=None
-    rowindex=0
-    for row in matrix:
-        colindex=0
-        for cell in row:
-            #ignore the diagonal
-            if (colindex != rowindex):
-                if (cell<mindistance or mindistance is None): 
-                    mindistance=cell
-                    min_rows = set([rowindex])
-                elif cell == mindistance:
-                    min_rows.add(rowindex)
-            colindex += 1
-        rowindex += 1
-
-    if len(min_rows)>2:
-        log.warning("%d subsets are equally closely related. "
-            "This is possible but unlikely if you have nonzero weights in the clustering"
-            " algorithm. Double check to make sure..." %len(min_rows))
-
-    subs = []
-    subs_names = []
-    for index in min_rows:
-        subs.append(subsets[index])
-        subs_names.append(subsets[index].full_name)
-
-    log.info("Joining subsets: %s" %', '.join(subs_names))
-
-    return subs
 
 def get_pairwise_dists(subsets, rates, freqs, model, alpha, weights):
     
@@ -245,7 +150,7 @@ def get_distance_matrix(start_scheme, weights):
         model.append(param_dict["model"])
         alpha.append([param_dict["alpha"]])
 
-    #2. get pairwise euclidean distances, and minmax values, for all parameters
+    #get pairwise euclidean distances, and minmax values, for all parameters
     final_dists, closest_pairs = get_pairwise_dists(subsets, rates, freqs, model, alpha, weights)
 
     return final_dists, closest_pairs
