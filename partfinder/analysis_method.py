@@ -326,7 +326,6 @@ class GreediestAnalysis(Analysis):
         step = 1
         #now we try out all clusterings of the first scheme, to see if we can find a better one
         no_improvements=0
-        all_distances = {} #a dict of all calculated distances, to save time recalculating euclidean distances
         while True:
             if no_improvements==1:
                 break
@@ -339,8 +338,7 @@ class GreediestAnalysis(Analysis):
             step += 1
             
             #get a list of all possible lumpings of the best_scheme, ordered according to the clustering weights
-            lumped_subsets, all_distances = neighbour.get_ranked_clustered_subsets(start_scheme, name_prefix, self.cfg, all_distances)
-
+            lumped_subsets = neighbour.get_ranked_clustered_subsets(start_scheme, name_prefix, self.cfg)
 
             #set the scheme counter to run by algorithm step
             self.cfg.progress.schemes_analysed = 0

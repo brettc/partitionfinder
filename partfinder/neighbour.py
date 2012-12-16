@@ -150,7 +150,7 @@ def get_closest(matrix, subsets):
 
     return subs
 
-def get_pairwise_dists(subsets, rates, freqs, model, alpha, weights, all_distances=None):
+def get_pairwise_dists(subsets, rates, freqs, model, alpha, weights):
     
     import itertools
     #set up all pairwise combinations as iterators
@@ -171,26 +171,15 @@ def get_pairwise_dists(subsets, rates, freqs, model, alpha, weights, all_distanc
         subset_pair = pair[0]
         subset_pairs.append(subset_pair)
         
-        #check if we've already done this pairing before...        
-        old_result = all_distances.setdefault(subset_pair, None)
-        
-        if old_result != None:
-            r_dists.append(old_result[0])
-            f_dists.append(old_result[1])
-            m_dists.append(old_result[2])
-            a_dists.append(old_result[3])
-        else:
-            r_dist = euclidean_distance(pair[1][0], pair[1][1])
-            f_dist = euclidean_distance(pair[2][0], pair[2][1])
-            m_dist = euclidean_distance(pair[3][0], pair[3][1])
-            a_dist = euclidean_distance(pair[4][0], pair[4][1])
-        
-            r_dists.append(r_dist)
-            f_dists.append(f_dist)
-            m_dists.append(m_dist)
-            a_dists.append(a_dist)
-        
-            all_distances[subset_pair] = [r_dist, f_dist, m_dist, a_dist]
+        r_dist = euclidean_distance(pair[1][0], pair[1][1])
+        f_dist = euclidean_distance(pair[2][0], pair[2][1])
+        m_dist = euclidean_distance(pair[3][0], pair[3][1])
+        a_dist = euclidean_distance(pair[4][0], pair[4][1])
+    
+        r_dists.append(r_dist)
+        f_dists.append(f_dist)
+        m_dists.append(m_dist)
+        a_dists.append(a_dist)
         
         #print pair
 
@@ -238,9 +227,9 @@ def get_pairwise_dists(subsets, rates, freqs, model, alpha, weights, all_distanc
         
         #print final_dists[pair[4]]
     
-    return final_dists, closest_pairs, all_distances
+    return final_dists, closest_pairs
 
-def get_distance_matrix(start_scheme, weights, all_distances=None):
+def get_distance_matrix(start_scheme, weights):
     #1. get the parameter lists for each subset
     subsets = [] #a list of subset names, so we know the order things appear in the list
     rates = [] #tree length
@@ -257,9 +246,9 @@ def get_distance_matrix(start_scheme, weights, all_distances=None):
         alpha.append([param_dict["alpha"]])
 
     #2. get pairwise euclidean distances, and minmax values, for all parameters
-    final_dists, closest_pairs, all_distances = get_pairwise_dists(subsets, rates, freqs, model, alpha, weights, all_distances)
+    final_dists, closest_pairs = get_pairwise_dists(subsets, rates, freqs, model, alpha, weights)
 
-    return final_dists, closest_pairs, all_distances
+    return final_dists, closest_pairs
 
 def get_closest_subsets(start_scheme, weights):
     """Find the closest subsets in a scheme
@@ -269,17 +258,17 @@ def get_closest_subsets(start_scheme, weights):
     return closest_pairs
 
 def get_ranked_clustered_subsets(
-    start_scheme, name_prefix, cfg, all_distances):
+    start_scheme, name_prefix, cfg):
     """The idea here is to take a scheme, and perform some analyses to find out how the 
     subsets in that scheme cluster.
     
     We then just return the list of schemes, ordered by closest to most distant in the 
     clustering space
     """
-    final_dists, closest_pairs, all_distances = get_distance_matrix(start_scheme, cfg.cluster_weights, all_distances)
+    final_dists, closest_pairs = get_distance_matrix(start_scheme, cfg.cluster_weights)
 
     ranked_subset_groupings = get_ranked_list(final_dists)
-    return ranked_subset_groupings, all_distances
+    return ranked_subset_groupings
         
     
 def make_clustered_scheme(start_scheme, scheme_name, subsets_to_cluster, cfg):
