@@ -17,7 +17,6 @@
 
 import logging
 log = logging.getLogger("scheme")
-from cluster import *
 from algorithm import *
 
 from math import log as logarithm
