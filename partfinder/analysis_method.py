@@ -277,46 +277,31 @@ class GreediestAnalysis(Analysis):
                 log.error("Unrecognised model_selection variable '%s', please check", model_selection)
                 raise AnalysisError
         
-        def add_result(all_results, this_result, this_name):
-            this_score = get_score(this_result)
-            results_with_this_score = all_improvements.setdefault(this_score, [])
-            results_with_this_score.append((this_result, subset_grouping, this_name))
-            all_improvements[this_score] = results_with_this_score
             
-        def process_best_scheme(all_improvements, lumped_subsets):
+        def process_best_scheme(all_improvements, best_score):
             #find the best score we can possibly find
             scores = list(all_improvements.keys())
-            scores.sort()
+
+            new_best_score = min(scores)
+            best_improvements = (all_improvements[new_best_score])
             
-            #now we iterate through the scores, and pick the best one that corresponds to any of our subset_groupings 
-            for score in scores:
-                for r in all_improvements[score]: #it's a list of potentially >1 (result, subset_grouping) key
-                    for s in lumped_subsets:
-                        if r[1]==s: #we have a subset grouping that matches...
-                            best_result = r[0]
-                            best_lumping = r[1]
-                            best_name = r[2]
-
-                            #now we remove that lumping from the all_improvements dictionary
-                            all_lumps = all_improvements[score]
-                            all_lumps.remove(r) 
-                            if len(all_lumps)==0:
-                                del all_improvements[score]
-                            else:
-                                all_improvements[score] = all_lumps
-                            return all_improvements, best_lumping, best_name
-
-
-            #if we got to here, then there's no best result
-            return all_improvements, None, None
+            #in case there are >1, we just pick the first one
+            r = best_improvements[0]
+            best_result = r[0]
+            best_lumping = r[1]
+            best_name = r[2]
+            best_lumped_scheme = r[3]
+            
+            write_this_scheme(name_prefix, best_result)
+            log.info("Best scheme was number %s. It has %s: %.2f, %s difference: %.2f, and %d subsets." %(best_name.split('_')[-1], model_selection, new_best_score, model_selection, new_best_score-best_score, len(best_result.scheme.subsets)))
+            
+            return best_lumped_scheme, best_result
 
         def write_this_scheme(name_prefix, best_result):
             fname = os.path.join(self.cfg.schemes_path, name_prefix + '.txt')
             fobj = open(fname, 'wb')
             self.cfg.reporter.write_scheme_summary(best_result, fobj)
             self.results.add_scheme_result(best_result)
-            #before we break, let's update the counters as if we'd analysed all those schemes and subsets
-            self.cfg.progress.subsets_analysed = self.cfg.progress.subsets_analysed + len(start_scheme.subsets)
 
 
         best_score = get_score(result)
@@ -324,14 +309,15 @@ class GreediestAnalysis(Analysis):
         step = 1
         #now we try out all clusterings of the first scheme, to see if we can find a better one
         no_improvements=0
+        subset_counter = 1 #start by remembering that we analysed the starting scheme
         while True:
             if no_improvements==1:
                 break
             log.info("***Greediest algorithm step %d of %d***" %
                      (step, partnum - 1))
 
+
             all_improvements = {}
-            schemes_this_step = {}
             name_prefix ="step_%d" %(step)
             step += 1
             
@@ -352,39 +338,24 @@ class GreediestAnalysis(Analysis):
                 result = self.analyse_scheme(lumped_scheme, suppress_writing=True, suppress_memory=True)
                 new_score = get_score(result)
 
-                schemes_this_step[scheme_name] = (lumped_scheme, result)
                 lumpings_done += 1
         
                 if new_score<best_score:
                     #it's an improvement
                     log.info("Found improved score with delta %s: %.2f" %(model_selection, new_score-best_score))
-                    add_result(all_improvements, result, scheme_name) #add it to the all_improvements dictionary
+                    #careful here - there might (might!) be >1 scheme with the same score...
+                    results_with_this_score = all_improvements.setdefault(new_score, [])
+                    results_with_this_score.append((result, subset_grouping, scheme_name, lumped_scheme))
+                    all_improvements[new_score] = results_with_this_score
                     
                 #Stopping condition 1 - we found N improvements...
-                if len(all_improvements) >= int(self.cfg.greediest_schemes):
-                    log.info("Found %d schemes that improve the %s score, reached greediest-schemes "
-                             "cutoff condition." %(len(all_improvements), model_selection))
-
-                    #now we find out which is the best lumping we know of for this step
-                    all_improvements, best_lumping, best_name = process_best_scheme(all_improvements, lumped_subsets)
-                                        
-                    if best_lumping==None:
-                        #we SHOULD be able to find one, since we've had improvements!
-                        log.error("Something has gone wrong with the greediest algorithm")
-                        raise AnalysisError
-                    
-                    #now we check if that scheme already exists
-                    if best_name in schemes_this_step:
-                        best_lumped_scheme = schemes_this_step[best_name][0]
-                        best_result = schemes_this_step[best_name][1]
-                        write_this_scheme(name_prefix, best_result)
-                        log.info("Best scheme was number %s. It has %s: %.2f, %s difference: %.2f, and %d subsets." %(best_name.split('_')[-1], model_selection, get_score(best_result), model_selection, get_score(best_result)-best_score, len(best_result.scheme.subsets)))
-                    else:
-                        log.error("Something has gone wrong with the greediest algorithm")
-                        raise AnalysisError
-                    
-                    #now we move on
-                    break
+                #if len(all_improvements) >= int(self.cfg.greediest_schemes):
+                #   log.info("Found %d schemes that improve the %s score, reached greediest-schemes "
+                #             "cutoff condition." %(len(all_improvements), model_selection))
+                #
+                #   #now we find out which is the best lumping we know of for this step
+                #   best_lumped_scheme, best_result = process_best_scheme(all_improvements, best_score)
+                #   break
                 
                 #Stopping condition 2 - we got to greediest_percent way through...
                 if (float(lumpings_done)/float(len(lumped_subsets)) >= self.cfg.greediest_percent*0.01):
@@ -395,29 +366,14 @@ class GreediestAnalysis(Analysis):
                                  "condition" %(self.cfg.greediest_percent, len(all_improvements), model_selection))
     
                         #now we find out which is the best lumping we know of for this step
-                        all_improvements, best_lumping, best_name = process_best_scheme(all_improvements, lumped_subsets)
-
-                        if best_lumping==None:
-                            #we SHOULD be able to find one, since we've had >1 improvement!
-                            log.error("Something has gone wrong with the greediest algorithm")
-                            raise AnalysisError
-                        if best_name in schemes_this_step:
-                            best_lumped_scheme = schemes_this_step[best_name][0]
-                            best_result = schemes_this_step[best_name][1]
-                            write_this_scheme(name_prefix, best_result)
-                            log.info("Best scheme was number %s. It has %s: %.2f, %s difference: %.2f, and %d subsets." %(best_name.split('_')[-1], model_selection, get_score(best_result), model_selection, get_score(best_result)-best_score, len(best_result.scheme.subsets)))
-                        else:
-                            log.error("Something has gone wrong with the greediest algorithm")
-                            raise AnalysisError
-                                                
-                        #now we move on
+                        best_lumped_scheme, best_result = process_best_scheme(all_improvements, best_score)
                         break
+
                     else: #we have no improvements
                         no_improvements=1
                         break
 
-
-            #stop when we've anlaysed the scheme with all subsets combined
+            #stop when we've anlaysed the scheme with all subsets combined, or if we can't find an improvement
             if len(set(lumped_scheme.subsets)) == 1:  # then it's the scheme with everything together
                 break
             elif no_improvements==1:
@@ -426,8 +382,15 @@ class GreediestAnalysis(Analysis):
                          %(self.cfg.greediest_percent, model_selection))
                 break
             else:
+                if step==2:
+                    subset_counter = subset_counter + submodels.a_choose_b(len(start_scheme.subsets), 2)
+                else:
+                    subset_counter = subset_counter + len(start_scheme.subsets)
+                #before we loop, let's update the counter as if we'd analysed all the subsets
+                self.cfg.progress.subsets_analysed = subset_counter
                 start_scheme = best_lumped_scheme
                 best_score = get_score(best_result)
+
 
         log.info("Greediest algorithm finished after %d steps" % step)
         log.info("Best scoring scheme is scheme %s, with %s score of %.3f"
@@ -439,7 +402,7 @@ class GreediestAnalysis(Analysis):
         txt = "Best scheme according to Greediest algorithm, analysed with %s"
         best = [(txt % self.cfg.model_selection, self.best_result)]
         self.cfg.reporter.write_best_schemes(best)
-        self.cfg.reporter.write_all_schemes(self.results, info= "Information on the best scheme from each step of the greedy algorithm is here: ")
+        self.cfg.reporter.write_all_schemes(self.results, info= "Information on the best scheme from each step of the Greediest algorithm is here: ")
 
 
 
