@@ -34,7 +34,7 @@ def get_ranked_list(final_distances):
     """
     
     #let's make a dict keyed by the distance in the matrix, using setdefault to 
-    #add things, in case there are subsets with identical distances
+    #add things, in case there are subsets with identical pairwise distances
     distances = {}
     for pair in final_distances:
         d = final_distances[pair]
@@ -42,9 +42,11 @@ def get_ranked_list(final_distances):
         #get any subs that we already know are that distance apart as a set
         #default to empty set if it's a new distance                
         subs = distances.setdefault(d, set()) 
+
         #add subs that correspond to this cell
         subs.add(pair[0])
         subs.add(pair[1])
+        
     
     ordered_subsets = []    
     unique_distances = list(distances.keys())
@@ -126,12 +128,12 @@ def get_pairwise_dists(subsets, rates, freqs, model, alpha, weights):
         #check to see if this is the closest        
         if (total_dist<mindist or mindist is None): 
             mindist = total_dist
-            closest_pairs = pair[4]
+            closest_pairs = pair[4] #pair[4] is the tuple of two subsets
         elif total_dist == mindist:
-            closest_pairs.append(pair[4])
-        
-        #print final_dists[pair[4]]
-    
+            #we want a tuple with all of the subsets that are equally close
+            #with no replicates, so we use tuple(set())            
+            closest_pairs = tuple(set(closest_pairs + (pair[4])))
+            
     return final_dists, closest_pairs
 
 def get_distance_matrix(start_scheme, weights):
@@ -180,6 +182,9 @@ def make_clustered_scheme(start_scheme, scheme_name, subsets_to_cluster, cfg):
     
     #1. Create a new subset that merges the subsets_to_cluster
     newsub_parts = []
+    
+    log.info("Clustering %d subsets" %len(subsets_to_cluster)) 
+    
     for s in subsets_to_cluster:
         newsub_parts = newsub_parts + list(s.partitions)
     newsub = subset.Subset(*tuple(newsub_parts))
