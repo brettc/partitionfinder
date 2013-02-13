@@ -305,6 +305,7 @@ class GreediestAnalysis(Analysis):
 
 
         best_score = get_score(result)
+        best_result = result
 
         step = 1
         #now we try out all clusterings of the first scheme, to see if we can find a better one
