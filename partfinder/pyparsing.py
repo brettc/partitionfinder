@@ -23,8 +23,7 @@
 #
 #from __future__ import generators
 
-__doc__ = \
-"""
+__doc__ = """
 pyparsing module - Classes and methods to define and execute parsing grammars
 
 The pyparsing module is an alternative approach to creating and executing simple grammars,
@@ -197,8 +196,7 @@ class ParseBaseException(Exception):
             raise AttributeError(aname)
 
     def __str__( self ):
-        return "%s (at char %d), (line:%d, col:%d)" % \
-                ( self.msg, self.loc, self.lineno, self.column )
+        return "%s (at char %d), (line:%d, col:%d)" %                 ( self.msg, self.loc, self.lineno, self.column )
     def __repr__( self ):
         return _ustr(self)
     def markInputline( self, markerString = ">!<" ):
@@ -212,8 +210,7 @@ class ParseBaseException(Exception):
                                 markerString, line_str[line_column:]])
         return line_str.strip()
     def __dir__(self):
-        return "loc msg pstr parserElement lineno col line " \
-               "markInputLine __str__ __repr__".split()
+        return "loc msg pstr parserElement lineno col line "                "markInputLine __str__ __repr__".split()
 
 class ParseException(ParseBaseException):
     """exception thrown when parse expressions don't match class;
@@ -606,10 +603,7 @@ class ParseResults(object):
 
     def __setstate__(self,state):
         self.__toklist = state[0]
-        self.__tokdict, \
-        par, \
-        inAccumNames, \
-        self.__name = state[1]
+        self.__tokdict,         par,         inAccumNames,         self.__name = state[1]
         self.__accumNames = {}
         self.__accumNames.update(inAccumNames)
         if par is not None:
@@ -1719,12 +1713,10 @@ class Word(Token):
             if self.bodyCharsOrig == self.initCharsOrig:
                 self.reString = "[%s]+" % _escapeRegexRangeChars(self.initCharsOrig)
             elif len(self.bodyCharsOrig) == 1:
-                self.reString = "%s[%s]*" % \
-                                      (re.escape(self.initCharsOrig),
+                self.reString = "%s[%s]*" %                                       (re.escape(self.initCharsOrig),
                                       _escapeRegexRangeChars(self.bodyCharsOrig),)
             else:
-                self.reString = "[%s][%s]*" % \
-                                      (_escapeRegexRangeChars(self.initCharsOrig),
+                self.reString = "[%s][%s]*" %                                       (_escapeRegexRangeChars(self.initCharsOrig),
                                       _escapeRegexRangeChars(self.bodyCharsOrig),)
             if self.asKeyword:
                 self.reString = r"\b"+self.reString+r"\b"
@@ -1828,8 +1820,7 @@ class Regex(Token):
 
         elif isinstance(pattern, Regex.compiledREtype):
             self.re = pattern
-            self.pattern = \
-            self.reString = str(pattern)
+            self.pattern =             self.reString = str(pattern)
             self.flags = flags
             
         else:
@@ -1909,14 +1900,12 @@ class QuotedString(Token):
 
         if multiline:
             self.flags = re.MULTILINE | re.DOTALL
-            self.pattern = r'%s(?:[^%s%s]' % \
-                ( re.escape(self.quoteChar),
+            self.pattern = r'%s(?:[^%s%s]' %                 ( re.escape(self.quoteChar),
                   _escapeRegexRangeChars(self.endQuoteChar[0]),
                   (escChar is not None and _escapeRegexRangeChars(escChar) or '') )
         else:
             self.flags = 0
-            self.pattern = r'%s(?:[^%s\n\r%s]' % \
-                ( re.escape(self.quoteChar),
+            self.pattern = r'%s(?:[^%s\n\r%s]' %                 ( re.escape(self.quoteChar),
                   _escapeRegexRangeChars(self.endQuoteChar[0]),
                   (escChar is not None and _escapeRegexRangeChars(escChar) or '') )
         if len(self.endQuoteChar) > 1:
@@ -2029,8 +2018,7 @@ class CharsNotIn(Token):
         loc += 1
         notchars = self.notChars
         maxlen = min( start+self.maxLen, len(instring) )
-        while loc < maxlen and \
-              (instring[loc] not in notchars):
+        while loc < maxlen and               (instring[loc] not in notchars):
             loc += 1
 
         if loc - start < self.minLen:
@@ -3480,16 +3468,11 @@ def _makeTags(tagStr, xml):
     tagAttrName = Word(alphas,alphanums+"_-:")
     if (xml):
         tagAttrValue = dblQuotedString.copy().setParseAction( removeQuotes )
-        openTag = Suppress("<") + tagStr("tag") + \
-                Dict(ZeroOrMore(Group( tagAttrName + Suppress("=") + tagAttrValue ))) + \
-                Optional("/",default=[False]).setResultsName("empty").setParseAction(lambda s,l,t:t[0]=='/') + Suppress(">")
+        openTag = Suppress("<") + tagStr("tag") +                 Dict(ZeroOrMore(Group( tagAttrName + Suppress("=") + tagAttrValue ))) +                 Optional("/",default=[False]).setResultsName("empty").setParseAction(lambda s,l,t:t[0]=='/') + Suppress(">")
     else:
         printablesLessRAbrack = "".join( [ c for c in printables if c not in ">" ] )
         tagAttrValue = quotedString.copy().setParseAction( removeQuotes ) | Word(printablesLessRAbrack)
-        openTag = Suppress("<") + tagStr + \
-                Dict(ZeroOrMore(Group( tagAttrName.setParseAction(downcaseTokens) + \
-                Optional( Suppress("=") + tagAttrValue ) ))) + \
-                Optional("/",default=[False]).setResultsName("empty").setParseAction(lambda s,l,t:t[0]=='/') + Suppress(">")
+        openTag = Suppress("<") + tagStr +                 Dict(ZeroOrMore(Group( tagAttrName.setParseAction(downcaseTokens) +                 Optional( Suppress("=") + tagAttrValue ) ))) +                 Optional("/",default=[False]).setResultsName("empty").setParseAction(lambda s,l,t:t[0]=='/') + Suppress(">")
     closeTag = Combine(_L("</") + tagStr + ">")
 
     openTag = openTag.setResultsName("start"+"".join(resname.replace(":"," ").title().split())).setName("<%s>" % tagStr)
@@ -3583,8 +3566,7 @@ def operatorPrecedence( baseExpr, opList ):
                 else:
                     matchExpr = FollowedBy(lastExpr+lastExpr) + Group( lastExpr + OneOrMore(lastExpr) )
             elif arity == 3:
-                matchExpr = FollowedBy(lastExpr + opExpr1 + lastExpr + opExpr2 + lastExpr) + \
-                            Group( lastExpr + opExpr1 + lastExpr + opExpr2 + lastExpr )
+                matchExpr = FollowedBy(lastExpr + opExpr1 + lastExpr + opExpr2 + lastExpr) +                             Group( lastExpr + opExpr1 + lastExpr + opExpr2 + lastExpr )
             else:
                 raise ValueError("operator must be unary (1), binary (2), or ternary (3)")
         elif rightLeftAssoc == opAssoc.RIGHT:
@@ -3599,8 +3581,7 @@ def operatorPrecedence( baseExpr, opList ):
                 else:
                     matchExpr = FollowedBy(lastExpr + thisExpr) + Group( lastExpr + OneOrMore( thisExpr ) )
             elif arity == 3:
-                matchExpr = FollowedBy(lastExpr + opExpr1 + thisExpr + opExpr2 + thisExpr) + \
-                            Group( lastExpr + opExpr1 + thisExpr + opExpr2 + thisExpr )
+                matchExpr = FollowedBy(lastExpr + opExpr1 + thisExpr + opExpr2 + thisExpr) +                             Group( lastExpr + opExpr1 + thisExpr + opExpr2 + thisExpr )
             else:
                 raise ValueError("operator must be unary (1), binary (2), or ternary (3)")
         else:
@@ -3773,10 +3754,7 @@ if __name__ == "__main__":
     columnNameList = Group( delimitedList( columnName ) )#.setName("columns")
     tableName      = delimitedList( ident, ".", combine=True ).setParseAction( upcaseTokens )
     tableNameList  = Group( delimitedList( tableName ) )#.setName("tables")
-    simpleSQL      = ( selectToken + \
-                     ( '*' | columnNameList ).setResultsName( "columns" ) + \
-                     fromToken + \
-                     tableNameList.setResultsName( "tables" ) )
+    simpleSQL      = ( selectToken +                      ( '*' | columnNameList ).setResultsName( "columns" ) +                      fromToken +                      tableNameList.setResultsName( "tables" ) )
 
     test( "SELECT * from XYZZY, ABC" )
     test( "select * from SYS.XYZZY" )

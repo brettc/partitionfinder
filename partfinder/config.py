@@ -27,7 +27,8 @@ import subset
 import parser
 import util
 import progress
-
+import numbers
+import errno
 
 class ConfigurationError(util.PartitionFinderError):
     pass
@@ -44,8 +45,8 @@ class Configuration(object):
     }
 
     def __init__(self, datatype="DNA", phylogeny_program='phyml',
-                 save_phylofiles=False, cmdline_extras="", cluster_weights=None,
-                 greediest_schemes=1, greediest_percent=1):
+        save_phylofiles=False, cmdline_extras = "", cluster_weights = None,
+        greediest_schemes = 1, greediest_percent=100):
 
         log.info("Configuring Parameters -------------")
         self.partitions = partition.PartitionSet()
@@ -320,10 +321,14 @@ class Configuration(object):
         subset_path = os.path.join(self.output_path, 'subsets')
         has_subsets = False
         if os.path.exists(subset_path):
-            for file in os.listdir(subset_path):
-                if fnmatch.fnmatch(file, '*.bin'):
+            #EAFP: we try to delete the file then see if os.rmdir spits an error...
+            try:
+                os.rmdir(subset_path)
+            except OSError as ex:
+                if ex.errno == errno.ENOTEMPTY:
                     has_subsets = True
-                    break
+
+
 
         #we also need to know if there's an old conifg file saved
         cfg_dir = os.path.join(self.output_path, 'cfg')
