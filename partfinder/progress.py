@@ -11,8 +11,8 @@
 #General Public License for more details. You should have received a copy
 #of the GNU General Public License along with this program.  If not, see
 #<http://www.gnu.org/licenses/>. PartitionFinder also includes the PhyML
-#program, the RAxML program, and the PyParsing library, 
-#all of which are protected by their own licenses and conditions, using 
+#program, the RAxML program, and the PyParsing library,
+#all of which are protected by their own licenses and conditions, using
 #PartitionFinder implies that you agree with those licences and conditions as well.
 
 import logging
@@ -59,12 +59,12 @@ class TextProgress(Progress):
 
     def subset_begin(self, sub):
         #log.info("Begin analysing subset %s", sub)
-        pass 
-        
+        pass
+
     def subset_done(self, sub):
         self.subsets_analysed += 1
         percent_done = (float(self.subsets_analysed) * 100.0) / float(self.subset_count)
-        log.info("Finished subset %d/%d, %.2f percent done", self.subsets_analysed, self.subset_count, percent_done)
+        # log.info("Finished subset %d/%d, %.2f percent done", self.subsets_analysed, self.subset_count, percent_done)
 
     def end(self):
         pass

@@ -41,7 +41,7 @@ class Analysis(object):
         self.cfg = cfg
         self.threads = threads
 
-        self.results = results.AnalysisResults()
+        self.results = results.AnalysisResults(self.cfg.model_selection)
 
         log.info("Beginning Analysis")
         self.process_restart(force_restart)
@@ -74,18 +74,19 @@ class Analysis(object):
 
     def analyse(self):
         self.do_analysis()
-        self.results.finalise()
+        # self.results.finalise()
         self.report()
         return self.results
 
     def report(self):
-        best = [
-            ("Best scheme according to AIC", self.results.best_aic),
-            ("Best scheme according to AICc", self.results.best_aicc),
-            ("Best scheme according to BIC", self.results.best_bic),
-        ]
-        self.cfg.reporter.write_best_schemes(best)
-        self.cfg.reporter.write_all_schemes(self.results)
+        pass
+        # best = [
+            # ("Best scheme according to AIC", self.results.best_aic),
+            # ("Best scheme according to AICc", self.results.best_aicc),
+            # ("Best scheme according to BIC", self.results.best_bic),
+        # ]
+        # self.cfg.reporter.write_best_schemes(best)
+        # self.cfg.reporter.write_all_schemes(self.results)
 
     def make_alignment(self, source_alignment_path):
         # Make the alignment
@@ -183,7 +184,8 @@ class Analysis(object):
         pool = threadpool.Pool(tasks, self.threads)
         pool.join()
 
-    def analyse_scheme(self, sch, suppress_writing=False, suppress_memory=False):
+    def analyse_scheme(self, sch):
+        # Progress
         self.cfg.progress.next_scheme()
 
         # Prepare by reading everything in first
@@ -208,18 +210,10 @@ class Analysis(object):
 
         # AIC needs the number of sequences
         number_of_seq = len(self.alignment.species)
-        result = scheme.SchemeResult(sch, number_of_seq, self.cfg.branchlengths)
-        if suppress_memory:
-            pass
-        else:
-            self.results.add_scheme_result(result)
+        result = scheme.SchemeResult(sch, number_of_seq, self.cfg.branchlengths, self.cfg.model_selection)
+        self.results.add_scheme_result(result)
 
-        # TODO: should put all paths into config. Then reporter should decide
-        # whether to create stuff
-        if suppress_writing:
-            pass
-        else:
-            fname = os.path.join(self.cfg.schemes_path, sch.name + '.txt')
-            self.cfg.reporter.write_scheme_summary(result, open(fname, 'w'))
+        fname = os.path.join(self.cfg.schemes_path, sch.name + '.txt')
+        self.cfg.reporter.write_scheme_summary(result, open(fname, 'w'))
 
         return result

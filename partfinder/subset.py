@@ -38,11 +38,13 @@ class SubsetError(PartitionFinderError):
 
 
 def count_subsets():
-    return len(Subset._cache)
-
+    return 1
+    # return len(Subset._cache)
+    #
 
 def clear_subsets():
-    Subset._cache.clear()
+    pass
+    # Subset._cache.clear()
 
 class Subset(object):
     """A Subset of Partitions
@@ -58,11 +60,15 @@ class Subset(object):
 
         cacheid = frozenset(parts)
         obj = Subset._cache.get(cacheid, None)
+        # TODO Flush cache? USE MRU? functools.lrucache
         if not obj:
             obj = object.__new__(cls)
             Subset._cache[cacheid] = obj
             obj.init(cacheid, *parts)
 
+        # obj = object.__new__(cls)
+        # cacheid = frozenset(parts)
+        # obj.init(cacheid, *parts)
         return obj
 
     def init(self, cacheid, *parts):

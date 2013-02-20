@@ -11,8 +11,8 @@
 #General Public License for more details. You should have received a copy
 #of the GNU General Public License along with this program.  If not, see
 #<http://www.gnu.org/licenses/>. PartitionFinder also includes the PhyML
-#program, the RAxML program, and the PyParsing library, 
-#all of which are protected by their own licenses and conditions, using 
+#program, the RAxML program, and the PyParsing library,
+#all of which are protected by their own licenses and conditions, using
 #PartitionFinder implies that you agree with those licences and conditions as well.
 
 import logging
@@ -48,13 +48,13 @@ class TextReporter(object):
     # TODO. REMOVE 'write' from these. They could be output to a display
     def write_scheme_summary(self, result, output):
         self.write_scheme_header(result, output)
-        sorted_subsets = [sub for sub in result.scheme]
-        sorted_subsets.sort(key=lambda sub: min(sub.columns), reverse=False)
-        self.write_subsets(result, output, sorted_subsets)
-        self.write_raxml(result, output, sorted_subsets)
+        # sorted_subsets = [sub for sub in result.scheme]
+        # sorted_subsets.sort(key=lambda sub: min(sub.columns), reverse=False)
+        # self.write_subsets(result, output, sorted_subsets)
+        # self.write_raxml(result, output, sorted_subsets)
 
     def write_scheme_header(self, result, output):
-        output.write(scheme_header_template % ("Scheme Name", result.scheme.name))
+        output.write(scheme_header_template % ("Scheme Name", result.scheme_name))
         output.write(scheme_header_template % ("Scheme lnL", result.lnl))
         output.write(scheme_header_template % ("Scheme AIC", result.aic))
         output.write(scheme_header_template % ("Scheme AICc", result.aicc))
@@ -103,17 +103,17 @@ class TextReporter(object):
 
         pf_scheme_description = " ".join(pf_scheme_description)
         output.write("\n\nScheme Description in PartitionFinder format\n")
-        output.write("Scheme_%s = %s;" % (result.scheme.name, pf_scheme_description))
+        output.write("Scheme_%s = %s;" % (result.scheme_name, pf_scheme_description))
 
     def write_raxml(self, result, output, sorted_subsets):
         """Print out partition definitions in RaxML-like format, might be
         useful to some people
         """
-        from raxml_models import get_raxml_protein_modelstring 
+        from raxml_models import get_raxml_protein_modelstring
         output.write("\n\nRaxML-style partition definitions\n")
         number = 1
         for sub in sorted_subsets:
-            
+
             desc = {}
             names= []
             for part in sub:
@@ -133,14 +133,14 @@ class TextReporter(object):
                     text = "%s-%s\\%s" % tuple(part)
                 parts.append(text)
             parts = ', '.join(parts)
-            
+
             if self.cfg.datatype == "DNA":
                 model = "DNA"
             elif self.cfg.datatype == "protein":
                 model = get_raxml_protein_modelstring(sub.best_model)
             else:
                 model = "" #this is a copout
-            
+
             line = "%s, p%s = %s\n" %(model, number, parts)
             output.write(line)
 
@@ -165,7 +165,7 @@ class TextReporter(object):
         # This is in the default finalised order (should be BIC)
         for s in results.scheme_results:
             f.write("%s\t%.3f\t%d\t%d\t%d\t%.3f\t%.3f\t%.3f\n" % (
-                s.scheme.name,s.lnl,s.sum_k,s.nsites,s.nsubs,s.aic,s.aicc,s.bic))
+                s.scheme_name,s.lnl,s.sum_k,s.nsites,s.nsubs,s.aic,s.aicc,s.bic))
         if info:
             log.info("%s %s" %(info, all_schemes_pth))
         else:

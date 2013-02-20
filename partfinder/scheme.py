@@ -31,8 +31,10 @@ class SchemeError(PartitionFinderError):
 
 
 class SchemeResult(object):
-    def __init__(self, sch, nseq, branchlengths):
+    def __init__(self, sch, nseq, branchlengths, model_selection):
+        self.scheme_name = sch.name
         self.scheme = sch
+        self.model_selection = model_selection
 
         # Calculate AIC, BIC, AICc for each scheme.
         # How you do this depends on whether brlens are linked or not.
@@ -88,9 +90,16 @@ class SchemeResult(object):
         self.bic = (-2.0 * lnL) + (K * logarithm(n))
         self.aicc = (-2.0 * lnL) + ((2.0 * K) * (n / (n - K - 1.0)))
 
+    @property
+    def score(self):
+        try:
+            return getattr(self, self.model_selection)
+        except AttributeError:
+            log.error("Unrecognised model_selection variable '%s', please check", self.model_selection)
+            raise AnalysisError
+
     def __repr__(self):
-        return "SchemeResult<aic:%f, aicc:%f, bic:%f>" % (self.aic, self.aicc,
-                                                          self.bic)
+        return "SchemeResult<aic:%f, aicc:%f, bic:%f>" % (self.aic, self.aicc, self.bic)
 
 
 class Scheme(object):
@@ -210,6 +219,9 @@ def create_scheme(cfg, scheme_name, scheme_description):
 
     new_scheme = Scheme(cfg, str(scheme_name), *tuple(created_subsets))
 
+    # TODO : Hack for now...
+    new_scheme.description = scheme_description
+
     return new_scheme
 
 
@@ -260,7 +272,7 @@ def generate_all_schemes(cfg):
         scheme_list.append(
             Scheme(cfg, str(scheme_name), *tuple(created_subsets)))
 
-        log.debug("Created scheme %d of %d" %(scheme_name, len(all_schemes)))
+        log.debug("Created scheme %d of %d" % (scheme_name, len(all_schemes)))
 
         scheme_name += 1
 

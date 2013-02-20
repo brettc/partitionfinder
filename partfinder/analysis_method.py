@@ -64,21 +64,23 @@ class ClusteringAnalysis(Analysis):
 
         # Start with the most partitioned scheme
         start_description = range(len(self.cfg.partitions))
-        start_scheme = scheme.create_scheme(
-            self.cfg, "start_scheme", start_description)
+        start_scheme = scheme.create_scheme(self.cfg, "start_scheme", start_description)
+
+        # Analyse our first scheme
         log.info("Analysing starting scheme (scheme %s)" % start_scheme.name)
         self.analyse_scheme(start_scheme)
 
+        # Current scheme number
         cur_s = 2
 
-        #now we try out all clusterings of the first scheme, to see if we can find a better one
+        # Now we try out all clusterings of the first scheme, to see if we can
+        # find a better one
         while True:
-            log.info("***Clustering algorithm step %d of %d***" %
-                     (cur_s - 1, partnum - 1))
+            log.info("***Clustering algorithm step %d of %d***" % (cur_s - 1, partnum - 1))
 
-            #calculate the subsets which are most similar
-            #e.g. combined rank ordering of euclidean distances
-            #could combine average site-rates, q matrices, and frequencies
+            # Calculate the subsets which are most similar
+            # e.g. combined rank ordering of euclidean distances
+            # Could combine average site-rates, q matrices, and frequencies
             scheme_name = "step_%d" % (cur_s - 1)
             clustered_scheme = neighbour.get_nearest_neighbour_scheme(
                 start_scheme, scheme_name, self.cfg)
@@ -128,37 +130,27 @@ class AllAnalysis(Analysis):
 class GreedyAnalysis(Analysis):
     def do_analysis(self):
         '''A greedy algorithm for heuristic partitioning searches'''
-        log.info("Performing greedy analysis")
-        model_selection = self.cfg.model_selection
-        partnum = len(self.cfg.partitions)
 
+        log.info("Performing greedy analysis")
+
+        partnum = len(self.cfg.partitions)
         scheme_count = submodels.count_greedy_schemes(partnum)
         subset_count = submodels.count_greedy_subsets(partnum)
-        log.info("This will result in a maximum of %s schemes being created",
-                 scheme_count)
-        log.info("PartitionFinder will have to analyse a maximum of %d subsets of sites to complete this analysis", subset_count)
-        self.cfg.progress.begin(scheme_count, subset_count)
 
+        log.info("This will result in a maximum of %s schemes being created", scheme_count)
+        log.info("PartitionFinder will have to analyse a maximum of %d subsets of sites to complete this analysis", subset_count)
         if subset_count > 10000:
             log.warning("%d is a lot of subsets, this might take a long time to analyse", subset_count)
             log.warning("Perhaps consider using a different search scheme instead (see Manual)")
 
+        self.cfg.progress.begin(scheme_count, subset_count)
+
         # Start with the most partitioned scheme
         start_description = range(len(self.cfg.partitions))
-        start_scheme = scheme.create_scheme(
-            self.cfg, "start_scheme", start_description)
+        start_scheme = scheme.create_scheme(self.cfg, "start_scheme", start_description)
+
         log.info("Analysing starting scheme (scheme %s)" % start_scheme.name)
         result = self.analyse_scheme(start_scheme)
-
-        def get_score(my_result):
-            try:
-                return getattr(my_result, model_selection)
-            except AttributeError:
-                log.error("Unrecognised model_selection variable '%s', please check", model_selection)
-                raise AnalysisError
-
-        best_result = result
-        best_score = get_score(result)
 
         step = 1
         cur_s = 2
@@ -166,58 +158,52 @@ class GreedyAnalysis(Analysis):
         # Now we try out all lumpings of the current scheme, to see if we can
         # find a better one and if we do, we just keep going
         while True:
+            scheme.tracker.create_snapshot()
             log.info("***Greedy algorithm step %d***" % step)
 
             # Get a list of all possible lumpings of the best_scheme
             lumpings = algorithm.lumpings(start_description)
 
-            #we reset the counters as we go, for better user information
-            self.total_scheme_num = len(lumpings)
-            self.schemes_analysed = 0
-
-            best_lumping_score = None
+            # Save the current best score we have in results
+            old_best_score = self.results.best_score
             for lumped_description in lumpings:
-                lumped_scheme = scheme.create_scheme(
-                    self.cfg, cur_s, lumped_description)
+                lumped_scheme = scheme.create_scheme(self.cfg, cur_s, lumped_description)
                 cur_s += 1
                 #this is just checking to see if a scheme is any good, if it is, we remember and write it later
-                result = self.analyse_scheme(lumped_scheme, suppress_writing=True, suppress_memory=True)
-                new_score = get_score(result)
+                self.analyse_scheme(lumped_scheme)
 
-                if best_lumping_score is None or new_score < best_lumping_score:
-                    best_lumping_score = new_score
-                    best_lumping_result = result
-                    best_lumping_desc = lumped_description
-
-            if best_lumping_score < best_score:
-                best_score = best_lumping_score
-                start_description = best_lumping_desc
-                best_result = best_lumping_result
-                #now we write out the result of the best scheme for each step...
-                fname = os.path.join(
-                    self.cfg.schemes_path, "step_%d" % step + '.txt')
-                self.cfg.reporter.write_scheme_summary(
-                    best_result, open(fname, 'w'))
-                self.results.add_scheme_result(best_result)
-
-                if len(set(best_lumping_desc)) == 1:  # then it's the scheme with everything equal, so quit
-                    break
-                step += 1
-
-            else:
+            # Did we get any better?
+            if self.results.best_score == old_best_score:
                 break
 
-        log.info("Greedy algorithm finished after %d steps" % step)
-        log.info("Highest scoring scheme is scheme %s, with %s score of %.3f"
-                 % (best_result.scheme.name, model_selection, best_score))
+            # Let's look further
+            start_description = self.results.best_result.scheme.description
 
-        self.best_result = best_result
+            # TODO: write this out elsewhere, automatically
+            # fname = os.path.join(
+                # self.cfg.schemes_path, "step_%d" % step + '.txt')
+            # self.cfg.reporter.write_scheme_summary(
+                # best_result, open(fname, 'w'))
+
+            # then it's the scheme with everything equal, so quit
+            if len(set(start_description)) == 1:
+                break
+
+            step += 1
+
+
+        log.info("Greedy algorithm finished after %d steps" % step)
+        # log.info("Highest scoring scheme is scheme %s, with %s score of %.3f" %
+                 # (self.results.best_result.scheme.name,
+                  # model_selection,
+                  # self.results.best_score))
 
     def report(self):
-        txt = "Best scheme according to Greedy algorithm, analysed with %s"
-        best = [(txt % self.cfg.model_selection, self.best_result)]
-        self.cfg.reporter.write_best_schemes(best)
-        self.cfg.reporter.write_all_schemes(self.results, info="Information on the best scheme from each step of the greedy algorithm is here: ")
+        # txt = "Best scheme according to Greedy algorithm, analysed with %s"
+        # best = [(txt % self.cfg.model_selection, self.best_result)]
+        # self.cfg.reporter.write_best_schemes(best)
+        # self.cfg.reporter.write_all_schemes(self.results, info="Information on the best scheme from each step of the greedy algorithm is here: ")
+        pass
 
 
 class GreediestAnalysis(Analysis):
