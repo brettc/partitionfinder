@@ -11,16 +11,17 @@
 #General Public License for more details. You should have received a copy
 #of the GNU General Public License along with this program.  If not, see
 #<http://www.gnu.org/licenses/>. PartitionFinder also includes the PhyML
-#program, the RAxML program, and the PyParsing library, 
-#all of which are protected by their own licenses and conditions, using 
+#program, the RAxML program, and the PyParsing library,
+#all of which are protected by their own licenses and conditions, using
 #PartitionFinder implies that you agree with those licences and conditions as well.
 
 from math import sqrt
 from itertools import izip
 
+
 def k_subsets_i(n, k):
     '''
-	from http://code.activestate.com/recipes/500268-all-k-subsets-from-an-n-set/
+        from http://code.activestate.com/recipes/500268-all-k-subsets-from-an-n-set/
     Yield each subset of size k from the set of intergers 0 .. n - 1
     n -- an integer > 0
     k -- an integer > 0
@@ -45,9 +46,10 @@ def k_subsets_i(n, k):
         for s in k_subsets_i(n - 1, k):
             yield s
 
+
 def k_subsets(s, k):
     '''
-	from http://code.activestate.com/recipes/500268-all-k-subsets-from-an-n-set/
+        from http://code.activestate.com/recipes/500268-all-k-subsets-from-an-n-set/
     Yield all subsets of size k from set (or list) s
     s -- a set or list (any iterable will suffice)
     k -- an integer > 0
@@ -59,50 +61,51 @@ def k_subsets(s, k):
 
 
 def lumpings(scheme):
-	"""generate all possible lumpings of a given scheme, where a lumping involves joining two partitions together
-	scheme has to be a list of digits
-	"""
-	#get the numbers involved in the scheme
-	nums = set(scheme)
-	subs = []
-	lumpings = []
-	for sub in k_subsets(nums, 2):
-		lump = list(scheme)
-		sub = list(sub)
-		sub.sort()
-		#now replace all the instance of one number in lump with the other in sub
-		while lump.count(sub[1])>0:
-			lump[lump.index(sub[1])] = sub[0]
-		lumpings.append(lump)
+    """
+    generate all possible lumpings of a given scheme, where a lumping involves
+    joining two partitions together scheme has to be a list of digits
+    """
+    # Get the numbers involved in the scheme
+    nums = set(scheme)
+    lumpings = []
+    for sub in k_subsets(nums, 2):
+        lump = list(scheme)
+        sub = list(sub)
+        sub.sort()
+        #now replace all the instance of one number in lump with the other in sub
+        while lump.count(sub[1]) > 0:
+            lump[lump.index(sub[1])] = sub[0]
+        lumpings.append(lump)
 
-	return lumpings
+    return lumpings
+
 
 def euclidean_distance(x, y):
-    sum=0
+    sum = 0
     for xval, yval in izip(x, y):
-        sum += (xval - yval)**2
+        sum += (xval - yval) ** 2
     dist = sqrt(sum)
     return dist
 
 
+# def getLevels(cluster, levs):
+    # """
+    # Returns the levels of the cluster as list.
+    # """
+    # levs.append(cluster.level())
 
-def getLevels(cluster, levs):
-	"""
-	Returns the levels of the cluster as list.
-	"""
-	levs.append(cluster.level())
+    # left = cluster.items()[0]
+    # right = cluster.items()[1]
+    # if isinstance(left, Cluster):
+        # first = getLevels(left, levs)
+    # else:
+        # first = left
+    # if isinstance(right, Cluster):
+        # second = getLevels(right, levs)
+    # else:
+        # second = right
+    # return levs
 
-	left  = cluster.items()[0]
-	right = cluster.items()[1]
-	if isinstance(left, Cluster):
-		first = getLevels(left, levs)
-	else:
-		first = left
-	if isinstance(right, Cluster):
-		second = getLevels(right, levs)
-	else:
-		second = right
-	return levs
 
 def levels_to_scheme(levels, namedict):
     """
@@ -114,9 +117,8 @@ def levels_to_scheme(levels, namedict):
 
     for key in namedict.keys():
         old = str(namedict[key])
-        new = '"%s"' %key
+        new = '"%s"' % key
         levels = levels.replace(old, new)
 
     levels = eval(levels)
     return levels
-
