@@ -17,7 +17,6 @@
 
 import logging
 log = logging.getLogger("scheme")
-from algorithm import *
 import subset
 import submodels
 
@@ -92,21 +91,18 @@ class SchemeResult(object):
 
     @property
     def score(self):
-        try:
-            return getattr(self, self.model_selection)
-        except AttributeError:
-            log.error("Unrecognised model_selection variable '%s', please check", self.model_selection)
-            raise AnalysisError
+        return getattr(self, self.model_selection)
 
     def __repr__(self):
-        return "SchemeResult<aic:%f, aicc:%f, bic:%f>" % (self.aic, self.aicc, self.bic)
+        return "SchemeResult<score({0.model_selection}):{0.score}>".format(self)
 
 
 class Scheme(object):
-    def __init__(self, cfg, name, *subsets):
+    def __init__(self, cfg, name, subsets, description=None):
         """A set of subsets of partitions"""
         self.name = name
         self.subsets = set()
+        self.description = description
 
         # This one is a set of frozensets of partitions...
         part_subsets = set()
@@ -186,18 +182,22 @@ class SchemeSet(object):
 
     def __len__(self):
         return len(self.schemes_by_name)
-    # Easy iteration
 
     def __iter__(self):
         return iter(self.schemes_by_name.itervalues())
 
 
 def create_scheme(cfg, scheme_name, scheme_description):
-    """Generate a single scheme given a list of numbers e.g. [0,1,2,3,4,5,6,7]"""
-    partnum = len(cfg.partitions)  # total number of partitions defined by user
+    """
+    Generate a single scheme given a list of numbers that represent the
+    indexes of the partitions e.g. [0,1,2,3,4,5,6,7]
+    """
 
-    #check that the correct number of items are in the list
-    if len(scheme_description) != partnum:
+    partition_count = len(
+        cfg.partitions)  # total number of partitions defined by user
+
+    # Check that the correct number of items are in the list
+    if len(scheme_description) != partition_count:
         log.error("There's a problem with the description of scheme %s" %
                   scheme_name)
         raise SchemeError
@@ -214,15 +214,9 @@ def create_scheme(cfg, scheme_name, scheme_description):
     created_subsets = []
     for sub_indexes in subs.values():
         sub = subset.Subset(*tuple([cfg.partitions[i] for i in sub_indexes]))
-        # print sub
         created_subsets.append(sub)
 
-    new_scheme = Scheme(cfg, str(scheme_name), *tuple(created_subsets))
-
-    # TODO : Hack for now...
-    new_scheme.description = scheme_description
-
-    return new_scheme
+    return Scheme(cfg, str(scheme_name), created_subsets, description=scheme_description)
 
 
 def model_to_scheme(model, scheme_name, cfg):
@@ -232,6 +226,7 @@ def model_to_scheme(model, scheme_name, cfg):
     for sub_index, grouping in enumerate(model):
         insub = subs.setdefault(grouping, [])
         insub.append(sub_index)
+
     # We now have what we need to create a subset. Each entry will have a
     # set of values which are the index for the partition
     created_subsets = []
@@ -239,20 +234,21 @@ def model_to_scheme(model, scheme_name, cfg):
         sub = subset.Subset(*tuple([cfg.partitions[i] for i in sub_indexes]))
         created_subsets.append(sub)
 
-    scheme = (Scheme(cfg, str(scheme_name), *tuple(created_subsets)))
-    #log.info("Created scheme %d of %d" %(scheme_name, len(all_schemes)))
-    return scheme
+    return Scheme(cfg, str(scheme_name), created_subsets)
 
 
 def generate_all_schemes(cfg):
-    """Convert the abstract schema given by the algorithm into subsets"""
+    """
+    Convert the abstract schema given by the algorithm into subsets
+    """
 
     log.info("Generating all possible schemes for the partitions...")
 
-    partnum = len(cfg.partitions)  # total number of partitions defined by user
+    partition_count = len(
+        cfg.partitions)  # total number of partitions defined by user
 
     # Now generate the pattern for this many partitions
-    all_schemes = submodels.get_submodels(partnum)
+    all_schemes = submodels.get_submodels(partition_count)
     scheme_name = 1
     scheme_list = []
     for scheme in all_schemes:
@@ -270,7 +266,7 @@ def generate_all_schemes(cfg):
             created_subsets.append(sub)
 
         scheme_list.append(
-            Scheme(cfg, str(scheme_name), *tuple(created_subsets)))
+            Scheme(cfg, str(scheme_name), created_subsets))
 
         log.debug("Created scheme %d of %d" % (scheme_name, len(all_schemes)))
 
