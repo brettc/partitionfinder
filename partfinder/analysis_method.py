@@ -106,10 +106,8 @@ class AllAnalysis(Analysis):
 
         scheme_count = submodels.count_all_schemes(partnum)
         subset_count = submodels.count_all_subsets(partnum)
-        log.info("Analysing all possible schemes for %d starting partitions",
-                 partnum)
-        log.info("This will result in %s schemes being created",
-                 scheme_count)
+        log.info("Analysing all possible schemes for %d starting partitions", partnum)
+        log.info("This will result in %s schemes being created", scheme_count)
         self.cfg.progress.begin(scheme_count, subset_count)
 
         log.info("PartitionFinder will have to analyse %d subsets to complete this analysis", subset_count)
@@ -124,7 +122,14 @@ class AllAnalysis(Analysis):
         for m in model_iterator:
             s = scheme.model_to_scheme(m, scheme_name, self.cfg)
             scheme_name = scheme_name + 1
-            self.analyse_scheme(s)
+            res = self.analyse_scheme(s)
+
+            # Write out the scheme
+            self.cfg.reporter.write_scheme_summary(s, res)
+
+    def report(self):
+        txt = "Best scheme out of all Schemes, analysed with %s" % self.cfg.model_selection
+        self.cfg.reporter.write_best_scheme(txt, self.results)
 
 
 class GreedyAnalysis(Analysis):
@@ -158,7 +163,6 @@ class GreedyAnalysis(Analysis):
         # Now we try out all lumpings of the current scheme, to see if we can
         # find a better one and if we do, we just keep going
         while True:
-            scheme.tracker.create_snapshot()
             log.info("***Greedy algorithm step %d***" % step)
 
             # Get a list of all possible lumpings of the best_scheme
