@@ -106,14 +106,7 @@ class AllAnalysis(Analysis):
 
         scheme_count = submodels.count_all_schemes(partnum)
         subset_count = submodels.count_all_subsets(partnum)
-        log.info("Analysing all possible schemes for %d starting partitions", partnum)
-        log.info("This will result in %s schemes being created", scheme_count)
         self.cfg.progress.begin(scheme_count, subset_count)
-
-        log.info("PartitionFinder will have to analyse %d subsets to complete this analysis", subset_count)
-        if subset_count > 10000:
-            log.warning("%d is a lot of subsets, this might take a long time to analyse", subset_count)
-            log.warning("Perhaps consider using a different search scheme instead (see Manual)")
 
         # Iterate over submodels, which we can turn into schemes afterwards in the loop
         model_iterator = submodels.submodel_iterator([], 1, partnum)
@@ -142,12 +135,6 @@ class GreedyAnalysis(Analysis):
         scheme_count = submodels.count_greedy_schemes(partnum)
         subset_count = submodels.count_greedy_subsets(partnum)
 
-        log.info("This will result in a maximum of %s schemes being created", scheme_count)
-        log.info("PartitionFinder will have to analyse a maximum of %d subsets of sites to complete this analysis", subset_count)
-        if subset_count > 10000:
-            log.warning("%d is a lot of subsets, this might take a long time to analyse", subset_count)
-            log.warning("Perhaps consider using a different search scheme instead (see Manual)")
-
         self.cfg.progress.begin(scheme_count, subset_count)
 
         # Start with the most partitioned scheme
@@ -155,7 +142,7 @@ class GreedyAnalysis(Analysis):
         start_scheme = scheme.create_scheme(self.cfg, "start_scheme", start_description)
 
         log.info("Analysing starting scheme (scheme %s)" % start_scheme.name)
-        result = self.analyse_scheme(start_scheme)
+        self.analyse_scheme(start_scheme)
 
         step = 1
         cur_s = 2
