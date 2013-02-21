@@ -39,19 +39,27 @@ class UserAnalysis(Analysis):
         self.cfg.progress.begin(scheme_count, subset_count)
         if scheme_count > 0:
             for s in current_schemes:
-                self.analyse_scheme(s)
+                res = self.analyse_scheme(s)
+
+                # Write out the scheme
+                self.cfg.reporter.write_scheme_summary(s, res)
         else:
             log.error("Search set to 'user', but no user schemes detected in .cfg file. Please check.")
             raise AnalysisError
 
         self.cfg.progress.end()
 
+    def report(self):
+        txt = "Best scheme out of all User Schemes, analysed with %s" % self.cfg.model_selection
+        self.cfg.reporter.write_best_scheme(txt, self.results)
+
 
 class ClusteringAnalysis(Analysis):
-    """This analysis uses model parameters to guess at similar partitions, then just joins them together
-        this is much less accurate than other methods, but a LOT quicker - it runs in order
-        N time (where N is the number of initial datablocks), whereas the greedy algorithm is
-        still N squared.
+    """
+    This analysis uses model parameters to guess at similar partitions, then
+    just joins them together this is much less accurate than other methods, but
+    a LOT quicker - it runs in order N time (where N is the number of initial
+    datablocks), whereas the greedy algorithm is still N squared.
     """
 
     def do_analysis(self):
@@ -196,23 +204,24 @@ class GreedyAnalysis(Analysis):
 
 
 class GreediestAnalysis(Analysis):
+    '''
+    A greediest algorithm for heuristic partitioning searches
+
+    1. Analyse up to greediest-percent of the possible lumpings
+    2. If we find greediest-schemes of major improvements (delta score >10)
+        then we take the best one*. If we find this many improvements before
+        greediest-percent we quit early
+    3. If we hit greediest-percent before we find greediest-schemes
+        improvements, we take the best improvement*
+
+    *best improvement includes all the imrpovements we find in a given
+    scheme, plus all improvements we have found anywhere at all.
+
+    4. If we get to greediest percent, and there are zero improvements we
+        can make, then we quit.
+    '''
+
     def do_analysis(self):
-        '''A greediest algorithm for heuristic partitioning searches
-        1. Analyse up to greediest-percent of the possible lumpings
-        2. If we find greediest-schemes of major improvements (delta score >10)
-           then we take the best one*. If we find this many improvements before greediest-percent
-           we quit early
-        3. If we hit greediest-percent before we find greediest-schemes improvements, we
-           take the best improvement*
-
-        *best improvement includes all the imrpovements we find in a given scheme, plus all
-        improvements we have found anywhere at all.
-
-        4. If we get to greediest percent, and there are zero improvements we can make, then
-           we quit.
-
-
-        '''
         log.info("Performing greediest analysis")
 
         model_selection = self.cfg.model_selection
