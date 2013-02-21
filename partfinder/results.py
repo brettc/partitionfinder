@@ -23,6 +23,8 @@ import cPickle as pickle
 
 from util import PartitionFinderError
 
+_check_fields = "lnl aic aicc bic".split()
+
 
 class ComparisonError(PartitionFinderError):
     pass
@@ -51,30 +53,20 @@ class AnalysisResults(object):
     def get_dump_path(self, cfg):
         return os.path.join(cfg.base_path, 'results.bin')
 
+    def get_result_fields(self):
+        flds = []
+        for k in _check_fields:
+            flds.append(getattr(self.best_result, k))
+        return flds
+
     def dump(self, cfg):
         pth = self.get_dump_path(cfg)
         log.info("Dumping all results to '%s'", pth)
         f = open(pth, 'wb')
-        pickle.dump(self.scheme_results, f, -1)
-
-    def compare_schemes(self, old, new):
-        lnl_err = abs(old.lnl - new.lnl)
-        aic_err = abs(old.aic - new.aic)
-        aicc_err = abs(old.aicc - new.aicc)
-        bic_err = abs(old.bic - new.bic)
-
-        # TODO: What's going on here?
-        if lnl_err > AnalysisResults.MAX_ERROR and\
-            aic_err > AnalysisResults.MAX_ERROR and\
-            aicc_err > AnalysisResults.MAX_ERROR and\
-                bic_err > AnalysisResults.MAX_ERROR:
-            return True
-
-        return False
+        pickle.dump(self.get_result_fields(), f, -1)
 
     def compare(self, cfg):
         """We only compare the best result!"""
-
         pth = self.get_dump_path(cfg)
         if not os.path.exists(pth):
             log.error("Previous results file not found at '%s'. "
@@ -83,15 +75,22 @@ class AnalysisResults(object):
 
         log.info("Loading old results from '%s'", pth)
         f = open(pth, 'rb')
-        old = pickle.load(f)
+        old_fields = pickle.load(f)
         f.close()
+
+        cur_fields = self.get_result_fields()
 
         log.info("Comparing results...")
         # Now do the comparison
 
-        if self.compare_schemes(self.best_scheme, old.best_scheme):
-            log.error("Best Scheme Results were more than acceptable value of %s", AnalysisResults.MAX_ERROR)
-            log.error("%s to %s", self, old)
+        errors = 0
+        for nm, oldv, curv in zip(_check_fields, old_fields, cur_fields):
+            if abs(oldv - curv) > self.MAX_ERROR:
+                log.error("Differences were more than acceptable value of %s", AnalysisResults.MAX_ERROR)
+                log.error("Old %s value: %s, new %s value %s", nm, oldv, nm, curv)
+                errors += 1
+
+        if errors > 0:
             raise ComparisonError
         else:
             log.info(
