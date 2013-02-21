@@ -172,38 +172,36 @@ class GreedyAnalysis(Analysis):
                 #this is just checking to see if a scheme is any good, if it is, we remember and write it later
                 self.analyse_scheme(lumped_scheme)
 
-            # Did we get any better?
+            # Did out best score change (It ONLY gets better -- see in
+            # results.py)
             if self.results.best_score == old_best_score:
+                # It didn't, so we're done
                 break
 
-            # Let's look further
+            # Let's look further. We use the description from our best scheme
+            # (which will be the one that just changed in the last lumpings
+            # iteration)
             start_description = self.results.best_result.scheme.description
 
-            # TODO: write this out elsewhere, automatically
-            # fname = os.path.join(
-                # self.cfg.schemes_path, "step_%d" % step + '.txt')
-            # self.cfg.reporter.write_scheme_summary(
-                # best_result, open(fname, 'w'))
+            # Rename and record the best scheme for this step
+            self.results.best_scheme.name = "step_%d" % step
+            self.cfg.reporter.write_scheme_summary(self.results.best_scheme, self.results.best_result)
 
-            # then it's the scheme with everything equal, so quit
+            # If it's the scheme with everything equal, quit
             if len(set(start_description)) == 1:
                 break
 
+            # Go do the next round...
             step += 1
 
-
         log.info("Greedy algorithm finished after %d steps" % step)
-        # log.info("Highest scoring scheme is scheme %s, with %s score of %.3f" %
-                 # (self.results.best_result.scheme.name,
-                  # model_selection,
-                  # self.results.best_score))
+        log.info("Highest scoring scheme is scheme %s, with %s score of %.3f" %
+                 (self.results.best_scheme.name, self.cfg.model_selection,
+                  self.results.best_score))
 
     def report(self):
-        # txt = "Best scheme according to Greedy algorithm, analysed with %s"
-        # best = [(txt % self.cfg.model_selection, self.best_result)]
-        # self.cfg.reporter.write_best_schemes(best)
-        # self.cfg.reporter.write_all_schemes(self.results, info="Information on the best scheme from each step of the greedy algorithm is here: ")
-        pass
+        txt = "Best scheme according to Greedy algorithm, analysed with %s" % self.cfg.model_selection
+        self.cfg.reporter.write_best_scheme(txt, self.results)
 
 
 class GreediestAnalysis(Analysis):

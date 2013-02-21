@@ -29,7 +29,8 @@ class ComparisonError(PartitionFinderError):
 
 
 class AnalysisResults(object):
-    """This should hold all the results
+    """
+    This stores the results, keeping only the winning scheme.
     """
 
     MAX_ERROR = .01
@@ -38,12 +39,14 @@ class AnalysisResults(object):
         self.model_selection = model_selection
         self.best_score = None
         self.best_result = None
+        self.best_scheme = None
 
-    def add_scheme_result(self, result):
+    def add_scheme_result(self, sch, result):
         score = result.score
         if self.best_score is None or score < self.best_score:
             self.best_score = score
             self.best_result = result
+            self.best_scheme = sch
 
     def get_dump_path(self, cfg):
         return os.path.join(cfg.base_path, 'results.bin')
@@ -60,12 +63,7 @@ class AnalysisResults(object):
         aicc_err = abs(old.aicc - new.aicc)
         bic_err = abs(old.bic - new.bic)
 
-        # Keep a list of errors
-        self.lnl_errs.append(lnl_err)
-        self.aic_errs.append(aic_err)
-        self.aicc_errs.append(aicc_err)
-        self.bic_errs.append(bic_err)
-
+        # TODO: What's going on here?
         if lnl_err > AnalysisResults.MAX_ERROR and\
             aic_err > AnalysisResults.MAX_ERROR and\
             aicc_err > AnalysisResults.MAX_ERROR and\

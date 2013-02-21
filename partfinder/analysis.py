@@ -79,14 +79,7 @@ class Analysis(object):
         return self.results
 
     def report(self):
-        pass
-        # best = [
-            # ("Best scheme according to AIC", self.results.best_aic),
-            # ("Best scheme according to AICc", self.results.best_aicc),
-            # ("Best scheme according to BIC", self.results.best_bic),
-        # ]
-        # self.cfg.reporter.write_best_schemes(best)
-        # self.cfg.reporter.write_all_schemes(self.results)
+        self.cfg.reporter.write_best_scheme(self.result)
 
     def make_alignment(self, source_alignment_path):
         # Make the alignment
@@ -211,9 +204,6 @@ class Analysis(object):
         # AIC needs the number of sequences
         number_of_seq = len(self.alignment.species)
         result = scheme.SchemeResult(sch, number_of_seq, self.cfg.branchlengths, self.cfg.model_selection)
-        self.results.add_scheme_result(result)
-
-        fname = os.path.join(self.cfg.schemes_path, sch.name + '.txt')
-        self.cfg.reporter.write_scheme_summary(result, open(fname, 'w'))
+        self.results.add_scheme_result(sch, result)
 
         return result

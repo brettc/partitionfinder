@@ -42,9 +42,11 @@ def count_subsets():
     # return len(Subset._cache)
     #
 
+
 def clear_subsets():
     pass
     # Subset._cache.clear()
+
 
 class Subset(object):
     """A Subset of Partitions
