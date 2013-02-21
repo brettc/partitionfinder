@@ -1,18 +1,22 @@
 TODO
+* Bug fix (kind of): if a user quits during the estimation of the starting tree, funny things
+    happen. We need to put in some kind of check for this. Basically just make sure that
+    if we're thinking of using old results, then we check that the starting tree file has
+    something in it. If it doesn't, quit with an error message and ask the user to 
+    use force-restart
+* Usability: change the 'we aborted' error message to suggest trying force-restart. A lot of 
+    user errors are fixed this way, there have been a few queries on email and on the user 
+    group.
+* Add RAxML windows executable and check it works.
+* Make RAxML mac universal binary and check it works.
+* Change name of clustering to 'strict-clustering' in the program and the manual
+* Change name of greediest to 'relaxed-clustering' in the program and the manual
+* Change name of greediest-cutoff to something better.
+
 * Change --save-phyml to --save-phylofiles in the manual
 * merge phyml_models.py and raxml_models.py into one, have a 'model' class, make models
    know to which lists they belong, and let them return their own command lines when asked
 * change phyml folder to phylofiles folder
-* add --raxml to manual, include all the model definitions
-* add 'clustering' search option to the manual
-* add --additional_cmd_line option so that we can pass e.g. precision controllers to PhyML and RAxML
-  and we could also then use the RAxML Pthreads version, and tell it how many processors to use.
-  helpful for massive datasets on desktops I suspect.
-* when we fail to load output from RAxML, we need to go and delete ALL files that contain the 
-  run_id in question. Right now we're not doing this properly so running stuff again is failing...
-* if we're not saving phylofiles, we need to do a better job deleting RAxML files more generally, right now 
-  stuff is stacking up in the phyml folder. Best way to do that is as above, and maybe we should just add a function
-  into phyml.py and raxml.py, something like delete_analysis_files(run_ID). That way we can keep things in check.
 
 DONE
 
@@ -49,6 +53,16 @@ DONE
 
 Done
 ____
+* add 'clustering' search option to the manual
+* add --additional_cmd_line option so that we can pass e.g. precision controllers to PhyML and RAxML
+  and we could also then use the RAxML Pthreads version, and tell it how many processors to use.
+  helpful for massive datasets on desktops I suspect.
+* when we fail to load output from RAxML, we need to go and delete ALL files that contain the 
+  run_id in question. Right now we're not doing this properly so running stuff again is failing...
+* if we're not saving phylofiles, we need to do a better job deleting RAxML files more generally, right now 
+  stuff is stacking up in the phyml folder. Best way to do that is as above, and maybe we should just add a function
+  into phyml.py and raxml.py, something like delete_analysis_files(run_ID). That way we can keep things in check.
+- add --raxml to manual, include all the model definitions
 - the numbers of columns are wrong when we warn that there are missing columns. Need to add 1 to the final number.
 - we don't save phyml output by default now, but we have the option to
 - we have universal line break support now
