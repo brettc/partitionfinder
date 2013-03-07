@@ -239,12 +239,14 @@ class GreediestAnalysis(Analysis):
 
         self.cfg.progress.begin(scheme_count, subset_count)
 
-        # Start with the most partitioned scheme
+        # Start with the most partitioned scheme, and record it.
         start_description = range(len(self.cfg.partitions))
         start_scheme = scheme.create_scheme(
             self.cfg, "start_scheme", start_description)
         log.info("Analysing starting scheme (scheme %s)" % start_scheme.name)
         self.analyse_scheme(start_scheme)
+        self.cfg.reporter.write_scheme_summary(
+            self.results.best_scheme, self.results.best_result)
 
 
         # Start by remembering that we analysed the starting scheme
@@ -254,7 +256,6 @@ class GreediestAnalysis(Analysis):
 
             log.info("***Greediest algorithm step %d of %d***" % (step, partnum - 1))
             name_prefix = "step_%d" % (step)
-            step += 1
 
             # Get a list of all possible lumpings of the best_scheme, ordered
             # according to the clustering weights
@@ -286,6 +287,13 @@ class GreediestAnalysis(Analysis):
                          "scheme changed the %s score by %.1f units.", 
                          self.cfg.greediest_percent, self.cfg.model_selection,
                          (self.results.best_score - old_best_score))
+
+                #write out the best scheme
+                self.results.best_scheme.name = "step_%d" % step
+                self.cfg.reporter.write_scheme_summary(
+                    self.results.best_scheme, self.results.best_result)
+
+
                 # Now we find out which is the best lumping we know of for this step
                 start_scheme = self.results.best_scheme
             else:
@@ -296,6 +304,10 @@ class GreediestAnalysis(Analysis):
             # We're done if it's the scheme with everything together
             if len(set(lumped_scheme.subsets)) == 1:
                 break
+    
+            step += 1
+
+
 
         log.info("Greediest algorithm finished after %d steps" % step)
         log.info("Best scoring scheme is scheme %s, with %s score of %.3f"
