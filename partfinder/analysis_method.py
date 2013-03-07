@@ -1,4 +1,4 @@
-#Copyright (C) 2012 Robert Lanfear and Brett Calcott
+# Copyright (C) 2012 Robert Lanfear and Brett Calcott
 #
 #This program is free software: you can redistribute it and/or modify it
 #under the terms of the GNU General Public License as published by the
@@ -49,7 +49,6 @@ class UserAnalysis(Analysis):
 
         self.cfg.progress.end()
 
-    def report(self):
         txt = "Best scheme out of all User Schemes, analysed with %s" % self.cfg.model_selection
         self.cfg.reporter.write_best_scheme(txt, self.results)
 
@@ -72,7 +71,8 @@ class ClusteringAnalysis(Analysis):
 
         # Start with the most partitioned scheme
         start_description = range(len(self.cfg.partitions))
-        start_scheme = scheme.create_scheme(self.cfg, "start_scheme", start_description)
+        start_scheme = scheme.create_scheme(
+            self.cfg, "start_scheme", start_description)
 
         # Analyse our first scheme
         log.info("Analysing starting scheme (scheme %s)" % start_scheme.name)
@@ -84,7 +84,8 @@ class ClusteringAnalysis(Analysis):
         # Now we try out all clusterings of the first scheme, to see if we can
         # find a better one
         while True:
-            log.info("***Clustering algorithm step %d of %d***" % (cur_s - 1, partnum - 1))
+            log.info("***Clustering algorithm step %d of %d***" %
+                     (cur_s - 1, partnum - 1))
 
             # Calculate the subsets which are most similar
             # e.g. combined rank ordering of euclidean distances
@@ -93,17 +94,20 @@ class ClusteringAnalysis(Analysis):
             clustered_scheme = neighbour.get_nearest_neighbour_scheme(
                 start_scheme, scheme_name, self.cfg)
 
-            #now analyse that new scheme
+            # Now analyse that new scheme
             cur_s += 1
             self.analyse_scheme(clustered_scheme)
 
-            #stop when we've anlaysed the scheme with all subsets combined
+            # Stop when we've anlaysed the scheme with all subsets combined
             if len(set(clustered_scheme.subsets)) == 1:  # then it's the scheme with everything together
                 break
             else:
                 start_scheme = clustered_scheme
 
         self.cfg.progress.end()
+
+        txt = "Best scheme using Clustering Analysis, analysed with %s" % self.cfg.model_selection
+        self.cfg.reporter.write_best_scheme(txt, self.results)
 
 
 class AllAnalysis(Analysis):
@@ -128,7 +132,6 @@ class AllAnalysis(Analysis):
             # Write out the scheme
             self.cfg.reporter.write_scheme_summary(s, res)
 
-    def report(self):
         txt = "Best scheme out of all Schemes, analysed with %s" % self.cfg.model_selection
         self.cfg.reporter.write_best_scheme(txt, self.results)
 
@@ -147,7 +150,8 @@ class GreedyAnalysis(Analysis):
 
         # Start with the most partitioned scheme
         start_description = range(len(self.cfg.partitions))
-        start_scheme = scheme.create_scheme(self.cfg, "start_scheme", start_description)
+        start_scheme = scheme.create_scheme(
+            self.cfg, "start_scheme", start_description)
 
         log.info("Analysing starting scheme (scheme %s)" % start_scheme.name)
         self.analyse_scheme(start_scheme)
@@ -168,7 +172,8 @@ class GreedyAnalysis(Analysis):
             for lumped_description in lumpings:
                 lumped_scheme = scheme.create_scheme(self.cfg, cur_s, lumped_description)
                 cur_s += 1
-                #this is just checking to see if a scheme is any good, if it is, we remember and write it later
+                # This is just checking to see if a scheme is any good, if it
+                # is, we remember and write it later
                 self.analyse_scheme(lumped_scheme)
 
             # Did out best score change (It ONLY gets better -- see in
@@ -184,7 +189,8 @@ class GreedyAnalysis(Analysis):
 
             # Rename and record the best scheme for this step
             self.results.best_scheme.name = "step_%d" % step
-            self.cfg.reporter.write_scheme_summary(self.results.best_scheme, self.results.best_result)
+            self.cfg.reporter.write_scheme_summary(
+                self.results.best_scheme, self.results.best_result)
 
             # If it's the scheme with everything equal, quit
             if len(set(start_description)) == 1:
@@ -198,7 +204,6 @@ class GreedyAnalysis(Analysis):
                  (self.results.best_scheme.name, self.cfg.model_selection,
                   self.results.best_score))
 
-    def report(self):
         txt = "Best scheme according to Greedy algorithm, analysed with %s" % self.cfg.model_selection
         self.cfg.reporter.write_best_scheme(txt, self.results)
 
@@ -229,150 +234,104 @@ class GreediestAnalysis(Analysis):
 
         scheme_count = submodels.count_greedy_schemes(partnum)
         subset_count = submodels.count_greedy_subsets(partnum)
-        log.info("This will result in a maximum of %s schemes being created, probably a lot less", scheme_count)
-        log.info("PartitionFinder will have to analyse a maximum of %d subsets of sites to complete this analysis, probably a lot less", subset_count)
+
         self.cfg.progress.begin(scheme_count, subset_count)
 
-        #start with the most partitioned scheme
+        # Start with the most partitioned scheme
         start_description = range(len(self.cfg.partitions))
         start_scheme = scheme.create_scheme(
             self.cfg, "start_scheme", start_description)
         log.info("Analysing starting scheme (scheme %s)" % start_scheme.name)
-        result = self.analyse_scheme(start_scheme)
-
-        def get_score(my_result):
-            try:
-                return getattr(my_result, model_selection)
-            except AttributeError:
-                log.error("Unrecognised model_selection variable '%s', please check", model_selection)
-                raise AnalysisError
-
-        def process_best_scheme(all_improvements, best_score):
-            #find the best score we can possibly find
-            scores = list(all_improvements.keys())
-
-            new_best_score = min(scores)
-            best_improvements = (all_improvements[new_best_score])
-
-            #in case there are >1, we just pick the first one
-            r = best_improvements[0]
-            best_result = r[0]
-            best_lumping = r[1]
-            best_name = r[2]
-            best_lumped_scheme = r[3]
-
-            write_this_scheme(name_prefix, best_result)
-            log.info("Best scheme was number %s. It has %s: %.2f, %s difference: %.2f, and %d subsets." %(best_name.split('_')[-1], model_selection, new_best_score, model_selection, new_best_score-best_score, len(best_result.scheme.subsets)))
-
-            return best_lumped_scheme, best_result
-
-        def write_this_scheme(name_prefix, best_result):
-            fname = os.path.join(self.cfg.schemes_path, name_prefix + '.txt')
-            fobj = open(fname, 'wb')
-            self.cfg.reporter.write_scheme_summary(best_result, fobj)
-            self.results.add_scheme_result(best_result)
-
-        best_score = get_score(result)
-        best_result = result
+        self.analyse_scheme(start_scheme)
 
         step = 1
-        #now we try out all clusterings of the first scheme, to see if we can find a better one
-        no_improvements=0
-        subset_counter = 1 #start by remembering that we analysed the starting scheme
+
+        # Now we try out all clusterings of the first scheme, to see if we can
+        # find a better one
+        no_improvements = 0
+        stop_at = self.cfg.greediest_percent * 0.01
+
+        # Start by remembering that we analysed the starting scheme
+        subset_counter = 1
         while True:
             if no_improvements == 1:
                 break
-            log.info("***Greediest algorithm step %d of %d***" %
-                     (step, partnum - 1))
-
+            log.info("***Greediest algorithm step %d of %d***" % (step, partnum - 1))
 
             all_improvements = {}
-            name_prefix ="step_%d" %(step)
+            name_prefix = "step_%d" % (step)
             step += 1
 
-            #get a list of all possible lumpings of the best_scheme, ordered according to the clustering weights
-            lumped_subsets = neighbour.get_ranked_clustered_subsets(start_scheme, name_prefix, self.cfg)
+            # Get a list of all possible lumpings of the best_scheme, ordered
+            # according to the clustering weights
+            lumped_subsets = neighbour.get_ranked_clustered_subsets(
+                start_scheme, self.cfg)
 
-            #set the scheme counter to run by algorithm step
-            self.cfg.progress.schemes_analysed = 0
-            self.cfg.progress.scheme_count = len(lumped_subsets)
+            # Set the scheme counter to run by algorithm step
+            # self.cfg.progress.schemes_analysed = 0
+            # self.cfg.progress.scheme_count = len(lumped_subsets)
 
-            #now analyse the lumped schemes
+            # Now analyse the lumped schemes
             lumpings_done = 0
+            old_best_score = self.results.best_score
+            improved = 0
             for subset_grouping in lumped_subsets:
 
-                scheme_name = "%s_%d" % (name_prefix, (lumpings_done + 1))
+                scheme_name = "%s_%d" % (name_prefix, lumpings_done + 1)
                 lumped_scheme = neighbour.make_clustered_scheme(
                     start_scheme, scheme_name, subset_grouping, self.cfg)
 
-                result = self.analyse_scheme(lumped_scheme, suppress_writing=True, suppress_memory=True)
-                new_score = get_score(result)
-
+                self.analyse_scheme(lumped_scheme)
                 lumpings_done += 1
 
-                if new_score < best_score:
-                    #it's an improvement
-                    log.info("Found improved score with delta %s: %.2f" %(model_selection, new_score-best_score))
-                    #careful here - there might (might!) be >1 scheme with the same score...
-                    results_with_this_score = all_improvements.setdefault(new_score, [])
-                    results_with_this_score.append((result, subset_grouping, scheme_name, lumped_scheme))
-                    all_improvements[new_score] = results_with_this_score
+                # if self.results.best_score != old_best_score:
+                    # improved += 1
 
-                #Stopping condition 1 - we found N improvements...
-                #if len(all_improvements) >= int(self.cfg.greediest_schemes):
-                #   log.info("Found %d schemes that improve the %s score, reached greediest-schemes "
-                #             "cutoff condition." %(len(all_improvements), model_selection))
-                #
-                #   #now we find out which is the best lumping we know of for this step
-                #   best_lumped_scheme, best_result = process_best_scheme(all_improvements, best_score)
-                #   break
+                # Stopping condition: We got to greediest_percent way through...
+                if float(lumpings_done) / float(len(lumped_subsets)) >= stop_at:
+                    # If we have any improvements, then we use the best one
+                    if self.results.best_score != old_best_score:
+                        # log.info("Analysed %.1f percent of the schemes for this step and found %d schemes "
+                                 # "that improve %s score, reached greediest-percent cutoff "
+                                 # "condition" % (self.cfg.greediest_percent, len(all_improvements), model_selection))
 
-                #Stopping condition 2 - we got to greediest_percent way through...
-                if (float(lumpings_done)/float(len(lumped_subsets)) >= self.cfg.greediest_percent*0.01):
-                    #if we have any improvements, then we use the best one
-                    if (len(all_improvements)>=1):
-                        log.info("Analysed %.1f percent of the schemes for this step and found %d schemes "
-                                 "that improve %s score, reached greediest-percent cutoff "
-                                 "condition" %(self.cfg.greediest_percent, len(all_improvements), model_selection))
+                        # Now we find out which is the best lumping we know of
+                        # for this step
+                        best_lumped_scheme = self.results.best_scheme.description
+                    else:
+                        no_improvements = 1
+                    break
 
-                        #now we find out which is the best lumping we know of for this step
-                        best_lumped_scheme, best_result = process_best_scheme(all_improvements, best_score)
-                        break
+            # Stop when we've anlaysed the scheme with all subsets combined, or
+            # if we can't find an improvement
 
-                    else: #we have no improvements
-                        no_improvements=1
-                        break
-
-            #stop when we've anlaysed the scheme with all subsets combined, or if we can't find an improvement
-            if len(set(lumped_scheme.subsets)) == 1:  # then it's the scheme with everything together
+            # We're done if it's the scheme with everything together
+            if len(set(lumped_scheme.subsets)) == 1:
                 break
-            elif no_improvements==1:
+
+            elif no_improvements == 1:
                 log.info("Analysed %.1f percent of the schemes for this step and found no schemes "
                          "that improve %s score, terminating greediest algorithm"
-                         %(self.cfg.greediest_percent, model_selection))
+                         % (self.cfg.greediest_percent, model_selection))
                 break
             else:
-                if step==2:
-                    subset_counter = subset_counter + submodels.a_choose_b(len(start_scheme.subsets), 2)
+                if step == 2:
+                    subset_counter = subset_counter + \
+                        submodels.a_choose_b(len(start_scheme.subsets), 2)
                 else:
                     subset_counter = subset_counter + len(start_scheme.subsets)
-                #before we loop, let's update the counter as if we'd analysed all the subsets
+                # Before we loop, let's update the counter as if we'd analysed
+                # all the subsets
                 self.cfg.progress.subsets_analysed = subset_counter
                 start_scheme = best_lumped_scheme
-                best_score = get_score(best_result)
+                best_score = best_result.score
 
+        # log.info("Greediest algorithm finished after %d steps" % step)
+        # log.info("Best scoring scheme is scheme %s, with %s score of %.3f"
+                 # % (best_result.scheme.name, model_selection, best_score))
 
-        log.info("Greediest algorithm finished after %d steps" % step)
-        log.info("Best scoring scheme is scheme %s, with %s score of %.3f"
-                 % (best_result.scheme.name, model_selection, best_score))
-
-        self.best_result = best_result
-
-    def report(self):
-        txt = "Best scheme according to Greediest algorithm, analysed with %s"
-        best = [(txt % self.cfg.model_selection, self.best_result)]
-        self.cfg.reporter.write_best_schemes(best)
-        self.cfg.reporter.write_all_schemes(self.results, info= "Information on the best scheme from each step of the Greediest algorithm is here: ")
+        txt = "Best scheme according to Greediest algorithm, analysed with %s" % self.cfg.model_selection
+        self.cfg.reporter.write_best_scheme(txt, self.results)
 
 
 def choose_method(search):

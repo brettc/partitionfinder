@@ -71,7 +71,6 @@ class Analysis(object):
 
     def analyse(self):
         self.do_analysis()
-        self.report()
         return self.results
 
     def make_alignment(self, source_alignment_path):

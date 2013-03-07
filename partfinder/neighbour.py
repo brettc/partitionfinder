@@ -24,29 +24,30 @@ log = logging.getLogger("cluster")
 
 
 def get_ranked_list(final_distances):
-    """return the closest subsets defined by a distance matrix
-    usually there will just be a pair that's closer than all other pairs
-    BUT, it's feasible (if unlikely) that >2 subsets are equally close.
-    This is possible if, e.g. all weights are zero. Then we just want to group all the
-    equally close subsets...
+    """
+    Return the closest subsets defined by a distance matrix usually there will
+    just be a pair that's closer than all other pairs BUT, it's feasible (if
+    unlikely) that >2 subsets are equally close.  This is possible if, e.g. all
+    weights are zero. Then we just want to group all the equally close
+    subsets...
 
     So, we return a list of all the closest subsets
     """
 
-    #let's make a dict keyed by the distance in the matrix, using setdefault to
-    #add things, in case there are subsets with identical pairwise distances
+    # Let's make a dict keyed by the distance in the matrix, using setdefault
+    # to add things, in case there are subsets with identical pairwise
+    # distances
     distances = {}
     for pair in final_distances:
         d = final_distances[pair]
 
-        #get any subs that we already know are that distance apart as a set
-        #default to empty set if it's a new distance
+        # Get any subs that we already know are that distance apart as a set
+        # default to empty set if it's a new distance
         subs = distances.setdefault(d, set())
 
-        #add subs that correspond to this cell
+        # Add subs that correspond to this cell
         subs.add(pair[0])
         subs.add(pair[1])
-
 
     ordered_subsets = []
     unique_distances = list(distances.keys())
@@ -56,6 +57,7 @@ def get_ranked_list(final_distances):
         ordered_subsets.append(list(distances[d]))
 
     return ordered_subsets
+
 
 def get_pairwise_dists(subsets, rates, freqs, model, alpha, weights):
 
@@ -68,7 +70,7 @@ def get_pairwise_dists(subsets, rates, freqs, model, alpha, weights):
     a = itertools.combinations(alpha, 2)
 
     #now we can izip over ALL of them at once (isn't python great!)
-    subset_pairs =[]
+    subset_pairs = []
     r_dists = []
     f_dists = []
     m_dists = []
@@ -102,20 +104,20 @@ def get_pairwise_dists(subsets, rates, freqs, model, alpha, weights):
     mindist = None
     for i, pair in enumerate(itertools.izip(r_dists, f_dists, m_dists, a_dists, subset_pairs)):
 
-        if max_r>0.0:
-            r_final = pair[0]*float(weights["rate"])/float(max_r)
+        if max_r > 0.0:
+            r_final = pair[0] * float(weights["rate"]) / float(max_r)
         else:
-            r_final=0.0
-        if max_f>0.0:
-            f_final = pair[1]*float(weights["freqs"])/float(max_f)
+            r_final = 0.0
+        if max_f > 0.0:
+            f_final = pair[1] * float(weights["freqs"]) / float(max_f)
         else:
             f_final = 0.0
-        if max_m>0.0:
-            m_final = pair[2]*float(weights["model"])/float(max_m)
+        if max_m > 0.0:
+            m_final = pair[2] * float(weights["model"]) / float(max_m)
         else:
             m_final = 0.0
-        if max_a>0:
-            a_final = pair[3]*float(weights["alpha"])/float(max_a)
+        if max_a > 0:
+            a_final = pair[3] * float(weights["alpha"]) / float(max_a)
         else:
             a_final = 0.0
 
@@ -126,9 +128,9 @@ def get_pairwise_dists(subsets, rates, freqs, model, alpha, weights):
         final_dists[pair[4]] = total_dist
 
         #check to see if this is the closest
-        if (total_dist<mindist or mindist is None):
+        if (total_dist < mindist or mindist is None):
             mindist = total_dist
-            closest_pairs = pair[4] #pair[4] is the tuple of two subsets
+            closest_pairs = pair[4]  # pair[4] is the tuple of two subsets
         elif total_dist == mindist:
             #we want a tuple with all of the subsets that are equally close
             #with no replicates, so we use tuple(set())
@@ -138,10 +140,10 @@ def get_pairwise_dists(subsets, rates, freqs, model, alpha, weights):
 
 def get_distance_matrix(start_scheme, weights):
     #1. get the parameter lists for each subset
-    subsets = [] #a list of subset names, so we know the order things appear in the list
-    rates = [] #tree length
-    freqs = [] #amino acid or base frequencies
-    model = [] #model parameters e.g. A<->C
+    subsets = []  # a list of subset names, so we know the order things appear in the list
+    rates = []  # tree length
+    freqs = []  # amino acid or base frequencies
+    model = []  # model parameters e.g. A<->C
     alpha = [] #alpha parameter of the gamma distribution of rates across sites
 
     for s in start_scheme.subsets:
@@ -164,15 +166,17 @@ def get_closest_subsets(start_scheme, weights):
 
     return closest_pairs
 
-def get_ranked_clustered_subsets(
-    start_scheme, name_prefix, cfg):
-    """The idea here is to take a scheme, and perform some analyses to find out how the
-    subsets in that scheme cluster.
 
-    We then just return the list of schemes, ordered by closest to most distant in the
-    clustering space
+def get_ranked_clustered_subsets(start_scheme, cfg):
     """
-    final_dists, closest_pairs = get_distance_matrix(start_scheme, cfg.cluster_weights)
+    The idea here is to take a scheme, and perform some analyses to find out
+    how the subsets in that scheme cluster.
+
+    We then just return the list of schemes, ordered by closest to most distant
+    in the clustering space
+    """
+    final_dists, closest_pairs = get_distance_matrix(
+        start_scheme, cfg.cluster_weights)
 
     ranked_subset_groupings = get_ranked_list(final_dists)
     return ranked_subset_groupings
@@ -183,7 +187,7 @@ def make_clustered_scheme(start_scheme, scheme_name, subsets_to_cluster, cfg):
     #1. Create a new subset that merges the subsets_to_cluster
     newsub_parts = []
 
-    log.info("Clustering %d subsets" %len(subsets_to_cluster))
+    log.info("Clustering %d subsets" % len(subsets_to_cluster))
 
     for s in subsets_to_cluster:
         newsub_parts = newsub_parts + list(s.partitions)
@@ -205,15 +209,15 @@ def make_clustered_scheme(start_scheme, scheme_name, subsets_to_cluster, cfg):
     return final_scheme
 
 
+def get_nearest_neighbour_scheme(start_scheme, scheme_name, cfg):
+    """
+    The idea here is to take a scheme, and perform some analyses to find a
+    neighbouring scheme, where the neighbour has one less subset than the
+    current scheme.  Really this is just progressive clustering, but specified
+    to work well with PartitionFinder
 
-def get_nearest_neighbour_scheme(
-        start_scheme, scheme_name, cfg):
-    """The idea here is to take a scheme, and perform some analyses to find a neighbouring
-    scheme, where the neighbour has one less subset than the current scheme.
-    Really this is just progressive clustering, but specified to work well with PartitionFinder
-
-    The weights argument allows us to assign different weights to different model parameters
-
+    The weights argument allows us to assign different weights to different
+    model parameters
     """
 
     #1. First we get the closest subsets, based on some weights. This will almost always
@@ -222,9 +226,7 @@ def get_nearest_neighbour_scheme(
     #   for the overall subset rate, the base/aminoacid frequencies, and the model parameters
     closest_subsets = get_closest_subsets(start_scheme, cfg.cluster_weights)
 
-    scheme = make_clustered_scheme(start_scheme, scheme_name, closest_subsets, cfg)
-
+    scheme = make_clustered_scheme(
+        start_scheme, scheme_name, closest_subsets, cfg)
 
     return scheme
-
-
