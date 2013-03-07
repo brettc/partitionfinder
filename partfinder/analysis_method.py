@@ -234,7 +234,6 @@ class GreediestAnalysis(Analysis):
         model_selection = self.cfg.model_selection
         partnum = len(self.cfg.partitions)
 
-        #TODO: multiply these by greediest percent
         scheme_count = int(math.ceil(submodels.count_greedy_schemes(partnum)*stop_at))
         subset_count = int(math.ceil(submodels.count_greedy_subsets(partnum)*stop_at))
 
@@ -275,13 +274,18 @@ class GreediestAnalysis(Analysis):
                 lumped_scheme = neighbour.make_clustered_scheme(
                     start_scheme, scheme_name, subset_grouping, self.cfg)
 
-                self.analyse_scheme(lumped_scheme)
+                new_result = self.analyse_scheme(lumped_scheme)
+                
+                log.info("Difference in %s: %.1f", self.cfg.model_selection, (new_result.score-old_best_score))
+                
                 lumpings_done += 1
 
             
             if self.results.best_score != old_best_score:
-                log.info("Analysed %.1f percent of the schemes for this step and found "
-                         "a better scheme.", self.cfg.greediest_percent)
+                log.info("Analysed %.1f percent of the schemes for this step. The best "
+                         "scheme changed the %s score by %.1f units.", 
+                         self.cfg.greediest_percent, self.cfg.model_selection,
+                         (self.results.best_score - old_best_score))
                 # Now we find out which is the best lumping we know of for this step
                 start_scheme = self.results.best_scheme
             else:

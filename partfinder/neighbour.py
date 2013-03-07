@@ -187,7 +187,7 @@ def make_clustered_scheme(start_scheme, scheme_name, subsets_to_cluster, cfg):
     #1. Create a new subset that merges the subsets_to_cluster
     newsub_parts = []
 
-    log.info("Clustering %d subsets" % len(subsets_to_cluster))
+    #log.info("Clustering %d subsets" % len(subsets_to_cluster))
 
     for s in subsets_to_cluster:
         newsub_parts = newsub_parts + list(s.partitions)
