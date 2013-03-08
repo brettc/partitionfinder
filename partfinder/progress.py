@@ -69,7 +69,7 @@ class TextProgress(Progress):
 
     def subset_done(self, sub):
         old_num_done = len(self.subsets_analysed)
-        self.subsets_analysed.add(sub)
+        self.subsets_analysed.add(sub.name)
         num_subs_done = len(self.subsets_analysed)
         if old_num_done != num_subs_done:
             percent_done = (
