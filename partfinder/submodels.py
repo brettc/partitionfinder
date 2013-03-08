@@ -57,6 +57,7 @@ def submodel_iterator(pat, current, maxn):
 def a_choose_b(n,k):
     return reduce(lambda a,b: a*(n-b)/(b+1),xrange(k),1)
 
+
 def count_greedy_schemes(N):
     """oeis.org reveals this is 1+(N*(N+1)*(N-1))/6"""
     count = 1+(N*(N+1)*(N-1))/6
