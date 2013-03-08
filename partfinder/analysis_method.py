@@ -235,7 +235,7 @@ class GreediestAnalysis(Analysis):
         partnum = len(self.cfg.partitions)
 
         scheme_count = int(math.ceil(submodels.count_greedy_schemes(partnum)*stop_at))
-        subset_count = int(math.ceil(submodels.count_greedy_subsets(partnum)*stop_at))
+        subset_count = int(math.ceil(submodels.count_greedy_subsets(partnum)))
 
         self.cfg.progress.begin(scheme_count, subset_count)
 
