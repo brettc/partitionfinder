@@ -50,7 +50,7 @@ class TextProgress(Progress):
         self.scheme_count = scheme_count
         self.subset_count = subset_count
         self.schemes_analysed = 0
-        self.subsets_analysed = 0
+        self.subsets_analysed = set()
 
         log.info("PartitionFinder will have to analyse %d subsets to complete this analysis", subset_count)
         log.info("This will result in %s schemes being created", scheme_count)
@@ -68,10 +68,13 @@ class TextProgress(Progress):
         pass
 
     def subset_done(self, sub):
-        self.subsets_analysed += 1
-        percent_done = (
-            float(self.subsets_analysed) * 100.0) / float(self.subset_count)
-        log.info("Finished subset %d/%d, %.2f percent done", self.subsets_analysed, self.subset_count, percent_done)
+        old_num_done = len(self.subsets_analysed)
+        self.subsets_analysed.add(sub)
+        num_subs_done = len(self.subsets_analysed)
+        if old_num_done != num_subs_done:
+            percent_done = (
+                float(num_subs_done) * 100.0) / float(self.subset_count)
+            log.info("Finished subset %d/%d, %.2f percent done", num_subs_done, self.subset_count, percent_done)
 
     def end(self):
         pass
