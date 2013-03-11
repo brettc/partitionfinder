@@ -58,7 +58,7 @@ def submodel_iterator(pat, current, maxn):
 def a_choose_b(n,k):
     return reduce(lambda a,b: a*(n-b)/(b+1),xrange(k),1)
 
-def greediest_subsets(N, greediest_percent, output=False):
+def count_greediest_subsets(N, greediest_percent, output=False):
     #startscheme    
     start_scheme = N
     #firstbatch is just greediest_percent of N choose 2
@@ -88,7 +88,7 @@ def greediest_subsets(N, greediest_percent, output=False):
         if output:print cumsum
     return cumsum
 
-def greediest_schemes(N, greediest_percent, output=False):
+def count_greediest_schemes(N, greediest_percent, output=False):
     #startscheme    
     start_scheme = 1
     #firstbatch is just greediest_percent of N choose 2
