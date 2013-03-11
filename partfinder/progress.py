@@ -60,8 +60,7 @@ class TextProgress(Progress):
 
     def next_scheme(self):
         self.schemes_analysed += 1
-        log.info("Analysing scheme %d/%d", self.schemes_analysed,
-                 self.scheme_count)
+        #log.info("Analysing scheme %d/%d", self.schemes_analysed,self.scheme_count)
 
     def subset_begin(self, sub):
         #log.info("Begin analysing subset %s", sub)
