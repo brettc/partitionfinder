@@ -311,7 +311,7 @@ class Parser(object):
             self.subsets = []
 
             if self.ignore_schemes == False:
-                sch = scheme.Scheme(self.cfg, scheme_def.name, *subs)
+                sch = scheme.Scheme(self.cfg, scheme_def.name, subs)
                 self.cfg.user_schemes.add_scheme(sch)
 
         except (scheme.SchemeError, subset.SubsetError):

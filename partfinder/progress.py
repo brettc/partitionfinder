@@ -11,8 +11,8 @@
 #General Public License for more details. You should have received a copy
 #of the GNU General Public License along with this program.  If not, see
 #<http://www.gnu.org/licenses/>. PartitionFinder also includes the PhyML
-#program, the RAxML program, and the PyParsing library, 
-#all of which are protected by their own licenses and conditions, using 
+#program, the RAxML program, and the PyParsing library,
+#all of which are protected by their own licenses and conditions, using
 #PartitionFinder implies that you agree with those licences and conditions as well.
 
 import logging
@@ -50,21 +50,30 @@ class TextProgress(Progress):
         self.scheme_count = scheme_count
         self.subset_count = subset_count
         self.schemes_analysed = 0
-        self.subsets_analysed = 0
+        self.subsets_analysed = set()
+
+        log.info("PartitionFinder will have to analyse %d subsets to complete this analysis", subset_count)
+        log.info("This will result in %s schemes being created", scheme_count)
+        if subset_count > 10000:
+            log.warning("%d is a lot of subsets, this might take a long time to analyse", subset_count)
+            log.warning("Perhaps consider using a different search scheme instead (see Manual)")
 
     def next_scheme(self):
         self.schemes_analysed += 1
-        log.info("Analysing scheme %d/%d", self.schemes_analysed,
-                 self.scheme_count)
+        #log.info("Analysing scheme %d/%d", self.schemes_analysed,self.scheme_count)
 
     def subset_begin(self, sub):
         #log.info("Begin analysing subset %s", sub)
-        pass 
-        
+        pass
+
     def subset_done(self, sub):
-        self.subsets_analysed += 1
-        percent_done = (float(self.subsets_analysed) * 100.0) / float(self.subset_count)
-        log.info("Finished subset %d/%d, %.2f percent done", self.subsets_analysed, self.subset_count, percent_done)
+        old_num_done = len(self.subsets_analysed)
+        self.subsets_analysed.add(sub.name)
+        num_subs_done = len(self.subsets_analysed)
+        if old_num_done != num_subs_done:
+            percent_done = (
+                float(num_subs_done) * 100.0) / float(self.subset_count)
+            log.info("Finished subset %d/%d, %.2f percent done", num_subs_done, self.subset_count, percent_done)
 
     def end(self):
         pass

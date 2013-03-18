@@ -15,6 +15,7 @@
 #all of which are protected by their own licenses and conditions, using 
 #PartitionFinder implies that you agree with those licences and conditions as well.
 
+import math
 import logging
 log = logging.getLogger("submodels")
 import algorithm
@@ -56,6 +57,55 @@ def submodel_iterator(pat, current, maxn):
 
 def a_choose_b(n,k):
     return reduce(lambda a,b: a*(n-b)/(b+1),xrange(k),1)
+
+def count_greediest_subsets(N, greediest_percent, output=False):
+    #startscheme    
+    start_scheme = N
+    #firstbatch is just greediest_percent of N choose 2
+    step_1 = int(math.ceil(a_choose_b(N, 2)*greediest_percent*0.01))
+    previous = step_1
+    cumsum = start_scheme+step_1
+    if output: print start_scheme
+    if output: print cumsum
+    #now for the rest
+    for i in reversed(xrange(N)):
+        # once we get to the all combined scheme we can stop  
+        if i == 1:
+            break
+        num_new_schemes = int(math.ceil((a_choose_b(i, 2))*greediest_percent*0.01))
+        # but those new schemes include a lot we will have already analysed
+        # so we want to subtract that many. We could have already seen up to i-1 choose 2
+        # the worst case is that the scheme we chose knocked out the maximum number of 
+        # previously analysed schemes, which is just 2(i)-1, so:
+        worst_case = 2*i - 1
+        num_already_analysed = previous - worst_case
+        if num_already_analysed <0: num_already_analysed=0
+        # now we transfer over the 'previous' for the next round of the loop
+        previous = num_new_schemes
+        # now we calculate the final number of new schemes
+        num_new_schemes = num_new_schemes - num_already_analysed
+        cumsum += num_new_schemes
+        if output:print cumsum
+    return cumsum
+
+def count_greediest_schemes(N, greediest_percent, output=False):
+    #startscheme    
+    start_scheme = 1
+    #firstbatch is just greediest_percent of N choose 2
+    step_1 = int(math.ceil(a_choose_b(N, 2)*greediest_percent*0.01))
+    previous = step_1
+    cumsum = start_scheme+step_1
+    if output: print start_scheme
+    if output: print cumsum
+    #now for the rest
+    for i in reversed(xrange(N)):
+        # each subsequent step is greediest_percent of i choose 2  
+        if i == 1:
+            break
+        num_new_schemes = int(math.ceil((a_choose_b(i, 2))*greediest_percent*0.01))
+        cumsum += num_new_schemes
+        if output:print cumsum
+    return cumsum
 
 def count_greedy_schemes(N):
     """oeis.org reveals this is 1+(N*(N+1)*(N-1))/6"""
