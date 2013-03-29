@@ -282,7 +282,7 @@ def check_python_version():
 
 
 def main(name, datatype, cmdargs=None):
-    v = version.get_git_version()
+    v = version.get_version()
     options, args = parse_args(datatype, cmdargs)
     if not args:
         # Help has already been printed
