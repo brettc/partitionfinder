@@ -31,12 +31,12 @@ def pytest_generate_tests(metafunc):
 
 def test_dna(dna_folder):
     full_path = os.path.join(HERE, dna_folder)
-    main.call_main("DNA", "%s" % full_path)
+    main.call_main("DNA", "--compare %s" % full_path)
 
 
 def test_prot(prot_folder):
     full_path = os.path.join(HERE, prot_folder)
-    main.call_main("protein", "%s" % full_path)
+    main.call_main("protein", "--compare %s" % full_path)
 
 
 def load_rerun(pth):
