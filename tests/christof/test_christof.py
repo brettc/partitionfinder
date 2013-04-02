@@ -1,71 +1,86 @@
+"""Incorporate some tests from Christoph Mayer (originally in Perl)"""
+# TODO This could be automated in the same way "full_analysis'
+
 import os
+import inspect
 import pytest
-from partfinder import main, util, analysis, config
-from zipfile import ZipFile
+from partfinder import main, util, analysis, config, alignment
 
 HERE = os.path.abspath(os.path.dirname(__file__))
 
+# Far too clever function
+def path_from_function():
+    funname = inspect.stack()[1][3]
+    # remove test_
+    funname = funname[5:]
+    funname = funname.replace('_', '-')
+    pth = os.path.join(HERE, funname)
+    return pth
 
-# block_names = ["data-blocks%02d" % n for n in range(1, 11)]
-# prot_names = ["prot%d" % n for n in range(1, 9)]
-# rerun_success_names = ["rerun%02d" % int(n) for n in "1 2 3 4 5 6 7 8 17".split()]
-# rerun_config_error = ["rerun%02d" % int(n) for n in "9 10 11 12 13 16".split()]
-# rerun_analysis_error = ["rerun%02d" % int(n) for n in "14 15".split()]
-# rerun_pf_error = ["rerun%02d" % int(n) for n in "18 19 20 21".split()]
+# ---------------- SUCCESS ---------------------
 
-# def pytest_generate_tests(metafunc):
-    # # This function feeds the output of the above function into the tests below
-    # if "dna_folder" in metafunc.fixturenames:
-        # metafunc.parametrize("dna_folder", DNA_names)
-    # if "prot_folder" in metafunc.fixturenames:
-        # metafunc.parametrize("prot_folder", prot_names)
-    # if "rerun_success_folder" in metafunc.fixturenames:
-        # metafunc.parametrize("rerun_success_folder", rerun_success_names)
-    # if "rerun_pf_error_folder" in metafunc.fixturenames:
-        # metafunc.parametrize("rerun_pf_error_folder", rerun_pf_error)
-    # if "rerun_analysis_error_folder" in metafunc.fixturenames:
-        # metafunc.parametrize("rerun_analysis_error_folder", rerun_analysis_error)
-    # if "rerun_config_error_folder" in metafunc.fixturenames:
-        # metafunc.parametrize("rerun_config_error_folder", rerun_config_error)
+def test_greedy_phyml_dna():
+    main.call_main("DNA", path_from_function())
 
+def test_greedy_raxml_dna():
+    main.call_main("DNA", "%s --raxml" % path_from_function())
 
-def test_data01():
-    full_path = os.path.join(HERE, "data-blocks01-greedy-phyml")
-    main.call_main("protein", "%s" % full_path)
+def test_greedy_phyml_protein():
+    main.call_main("protein", path_from_function())
+
+def test_greedy_raxml_protein():
+    main.call_main("protein", "%s --raxml" % path_from_function())
+
+def test_clustering_raxml_dna():
+    main.call_main("DNA", "%s --raxml" % path_from_function())
 
 
-# def test_prot(prot_folder):
-    # full_path = os.path.join(HERE, prot_folder)
-    # main.call_main("protein", "%s" % full_path)
+# ---------------- ERRORS ---------------------
+# Check the exception, and then look in the log output for specific
+# details of the exception.
 
+def test_alignment_error(caplog):
+    with pytest.raises(alignment.AlignmentError):
+        main.call_main("protein", path_from_function())
+    assert "Site 1000 is specified in [data_blocks], but the alignment only has 949 sites." in caplog.text()
 
-# def load_rerun(pth):
-    # dna3 = ZipFile(os.path.join(HERE, 'DNA3-analysis.zip'))
-    # dna3.extractall(pth)
+def test_overlap_error(caplog):
+    with pytest.raises(util.PartitionFinderError):
+        main.call_main("protein", path_from_function())
+    assert "overlaps with previously defined partitions" in caplog.text()
 
+def test_clustering_phyml_dna(caplog):
+    with pytest.raises(util.PartitionFinderError):
+        main.call_main("DNA", path_from_function())
+    assert "The 'search = clustering' option is only available when using raxml" in caplog.text()
 
-# def test_rerun_success(rerun_success_folder):
-    # full_path = os.path.join(HERE, rerun_success_folder)
-    # load_rerun(full_path)
-    # main.call_main("DNA", "%s" % full_path)
+def test_model_greedy_phyml01(caplog):
+    with pytest.raises(util.PartitionFinderError):
+        main.call_main("DNA", path_from_function())
+    assert "'WAG+I+G+I' is not a valid model for phylogeny program phyml." in caplog.text()
 
+def test_model_greedy_phyml02(caplog):
+    with pytest.raises(util.PartitionFinderError):
+        main.call_main("DNA", path_from_function())
+    assert "only works with nucleotide models" in caplog.text()
 
-# def test_rerun_pf_error(rerun_pf_error_folder):
-    # full_path = os.path.join(HERE, rerun_pf_error_folder)
-    # load_rerun(full_path)
-    # with pytest.raises(util.PartitionFinderError):
-        # main.call_main("DNA", "%s" % full_path)
+def test_model_greedy_phyml03(caplog):
+    with pytest.raises(util.PartitionFinderError):
+        main.call_main("DNA", path_from_function())
+    assert "'WAG+LG+F+I' is not a valid model for phylogeny program phyml" in caplog.text()
 
+def test_model_greedy_raxml01(caplog):
+    with pytest.raises(util.PartitionFinderError):
+        main.call_main("DNA", "%s --raxml" % path_from_function())
+    assert "WAG+F' is not a valid model for phylogeny program raxml" in caplog.text()
 
-# def test_rerun_analysis_error(rerun_analysis_error_folder):
-    # full_path = os.path.join(HERE, rerun_analysis_error_folder)
-    # load_rerun(full_path)
-    # with pytest.raises(analysis.AnalysisError):
-        # main.call_main("DNA", "%s" % full_path)
+def test_model_greedy_raxml02(caplog):
+    with pytest.raises(util.PartitionFinderError):
+        main.call_main("DNA", "%s --raxml" % path_from_function())
+    assert "Expected ";" (at char 284), (line:9, col:22)" in caplog.text()
 
+def test_model_greedy_raxml03(caplog):
+    with pytest.raises(util.PartitionFinderError):
+        main.call_main("DNA", "%s --raxml" % path_from_function())
+    assert "MtArt+I+G+F' is not a valid model for phylogeny program raxml" in caplog.text()
 
-# def test_rerun_config_error(rerun_config_error_folder):
-    # full_path = os.path.join(HERE, rerun_config_error_folder)
-    # load_rerun(full_path)
-    # with pytest.raises(config.ConfigurationError):
-        # main.call_main("DNA", "%s" % full_path)

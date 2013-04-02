@@ -63,6 +63,7 @@ class Configuration(object):
         self.base_path = '.'
         self.alignment = None
         self.user_tree = None
+        self.old_cwd = None
 
         # Some basic checking of the setup, so that we don't hit too many
         # problems later
@@ -140,8 +141,9 @@ class Configuration(object):
         log.info("Program path is here %s", self.program_path)
 
     def reset(self):
-        log.debug("Returning to original path: %s", self.old_cwd)
-        os.chdir(self.old_cwd)
+        if self.old_cwd is not None:
+            log.debug("Returning to original path: %s", self.old_cwd)
+            os.chdir(self.old_cwd)
         log.debug("Cleaning out all subsets (There are %d)...", subset.count_subsets())
         subset.clear_subsets()
 
@@ -270,7 +272,7 @@ class Configuration(object):
 
         #TODO: not the best place for this at all..., but it works
         if option == "search" and value == "clustering" and self.phylogeny_program != 'raxml':
-            log.error("The 'search = clustering' option is only availalbe when using raxml"
+            log.error("The 'search = clustering' option is only available when using raxml"
                       " (the --raxml commandline option). Please check and try again."
                       " See the manual for more details.")
             raise ConfigurationError
