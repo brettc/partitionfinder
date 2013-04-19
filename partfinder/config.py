@@ -216,7 +216,7 @@ class Configuration(object):
     def register_output_folders(self):
         self.register_folder('subsets')
         self.register_folder('schemes')
-        self.register_folder('phyml')
+        self.register_folder('phylofiles')
         self.register_folder('start_tree')
 
     def init_logger(self, pth):
