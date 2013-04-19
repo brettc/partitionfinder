@@ -293,6 +293,10 @@ def main(name, datatype, cmdargs=None):
 
     check_python_version()
 
+    if cmdargs is None:
+        cmdargs = sys.argv
+    log.info("Command-line arguments used: %s", " ".join(cmdargs))
+
     # Load, using the first argument as the folder
     try:
         cfg = config.Configuration(datatype, options.phylogeny_program,
