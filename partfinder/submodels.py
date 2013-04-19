@@ -58,11 +58,11 @@ def submodel_iterator(pat, current, maxn):
 def a_choose_b(n,k):
     return reduce(lambda a,b: a*(n-b)/(b+1),xrange(k),1)
 
-def count_greediest_subsets(N, greediest_percent, output=False):
+def count_relaxed_clustering_subsets(N, cluster_percent, output=False):
     #startscheme    
     start_scheme = N
-    #firstbatch is just greediest_percent of N choose 2
-    step_1 = int(math.ceil(a_choose_b(N, 2)*greediest_percent*0.01))
+    #firstbatch is just cluster_percent of N choose 2
+    step_1 = int(math.ceil(a_choose_b(N, 2)*cluster_percent*0.01))
     previous = step_1
     cumsum = start_scheme+step_1
     if output: print start_scheme
@@ -72,7 +72,7 @@ def count_greediest_subsets(N, greediest_percent, output=False):
         # once we get to the all combined scheme we can stop  
         if i == 1:
             break
-        num_new_schemes = int(math.ceil((a_choose_b(i, 2))*greediest_percent*0.01))
+        num_new_schemes = int(math.ceil((a_choose_b(i, 2))*cluster_percent*0.01))
         # but those new schemes include a lot we will have already analysed
         # so we want to subtract that many. We could have already seen up to i-1 choose 2
         # the worst case is that the scheme we chose knocked out the maximum number of 
@@ -88,21 +88,21 @@ def count_greediest_subsets(N, greediest_percent, output=False):
         if output:print cumsum
     return cumsum
 
-def count_greediest_schemes(N, greediest_percent, output=False):
+def count_relaxed_clustering_schemes(N, cluster_percent, output=False):
     #startscheme    
     start_scheme = 1
-    #firstbatch is just greediest_percent of N choose 2
-    step_1 = int(math.ceil(a_choose_b(N, 2)*greediest_percent*0.01))
+    #firstbatch is just cluster_percent of N choose 2
+    step_1 = int(math.ceil(a_choose_b(N, 2)*cluster_percent*0.01))
     previous = step_1
     cumsum = start_scheme+step_1
     if output: print start_scheme
     if output: print cumsum
     #now for the rest
     for i in reversed(xrange(N)):
-        # each subsequent step is greediest_percent of i choose 2  
+        # each subsequent step is cluster_percent of i choose 2  
         if i == 1:
             break
-        num_new_schemes = int(math.ceil((a_choose_b(i, 2))*greediest_percent*0.01))
+        num_new_schemes = int(math.ceil((a_choose_b(i, 2))*cluster_percent*0.01))
         cumsum += num_new_schemes
         if output:print cumsum
     return cumsum
