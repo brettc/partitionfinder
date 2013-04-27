@@ -46,6 +46,74 @@ class TextReporter(object):
         for bic, r in model_results:
             output.write(subset_template % (r.model, r.lnl, r.aic, r.aicc, r.bic))
 
+        
+    def garli_sub_text(self, sub, number):
+        """In garli, the subset models are specified in one file, and the charsets in a 
+        separate nexus file. The model definitions look like this:
+
+        [model1]
+        datatype = nucleotide
+        ratematrix = ( 0 1 2 2 3 4 )
+        statefrequencies = estimate
+        ratehetmodel = gamma
+        numratecats = 4
+        invariantsites = none
+      
+        The point of this function is to take a subset, and extract information for
+        these models, and return it
+        
+        """
+
+        models = {
+            "JC"    :   (" 0 0 0 0 0 0 ", "equal"),
+            "K80"   :   (" 0 1 0 0 1 0 ", "equal"),
+            "TrNef" :   (" 0 1 0 0 2 0 ", "equal"),
+            "K81"   :   (" 0 1 2 2 1 0 ", "equal"),
+            "TVMef" :   (" 0 1 2 3 1 4 ", "equal"),
+            "TIMef" :   (" 0 1 2 2 3 0 ", "equal"),
+            "SYM"   :   (" 0 1 2 3 4 5 ", "equal"),
+            "F81"   :   (" 0 0 0 0 0 0 ", "estimate"),
+            "HKY"   :   (" 0 1 0 0 1 0 ", "estimate"),
+            "TrN"   :   (" 0 1 0 0 2 0 ", "estimate"),  
+            "K81uf" :   (" 0 1 2 2 1 0 ", "estimate"),
+            "TVM"   :   (" 0 1 2 3 1 4 ", "estimate"),
+            "TIM"   :   (" 0 1 2 2 3 0 ", "estimate"),
+            "GTR"   :   (" 0 1 2 3 4 5 ", "estimate")
+        }    
+
+
+        
+        header = "[model" + str(number) + "]"
+        data = "datatype = " + self.cfg.datatype
+        elements = sub.best_model.split("+")
+        model_name = elements[0]
+        ratemat = "ratematrix = " + "(" + models[model_name][0] + ")"
+        statefreq = "statefrequencies = " + models[model_name][1]
+
+        if "G" in elements[1:]:
+            ratemod = "ratehetmodel = gamma\nnumratecats = 4"
+        else:  
+            ratemod = "ratehetmodel = none\nnumratecats = 1"
+        if "I" in elements[1:]:
+            inv = "invariantsites = estimate"
+        else:
+            inv = "invariantsites = none"
+        
+        final = "\n".join([header, data, ratemat, statefreq, ratemod, inv, "\n"])
+        
+        return(final)
+    
+    def write_garli(self, output, sorted_subsets):
+        output.write("\n\nGARLI model definitions\n")
+        output.write("Please double check for accuracy.\n")
+        output.write("These can be pasted into the garli.conf file.\n\n")
+        
+        for i, sub in enumerate(sorted_subsets):
+            model = self.garli_sub_text(sub, i+1)
+            output.write(model)
+            
+
+
     def write_scheme_summary(self, sch, result):
         pth = os.path.join(self.cfg.schemes_path, sch.name + '.txt')
         output = open(pth, 'w')
@@ -57,6 +125,7 @@ class TextReporter(object):
         sorted_subsets.sort(key=lambda sub: min(sub.columns), reverse=False)
         self.write_subsets(sch, result, output, sorted_subsets)
         self.write_raxml(sch, result, output, sorted_subsets)
+        self.write_garli(output, sorted_subsets)
 
     def write_scheme_header(self, sch, result, output):
         output.write(scheme_header_template % ("Scheme Name", sch.name))
