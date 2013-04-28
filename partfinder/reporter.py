@@ -65,41 +65,63 @@ class TextReporter(object):
         """
 
         models = {
-            "JC"    :   (" 0 0 0 0 0 0 ", "equal"),
-            "K80"   :   (" 0 1 0 0 1 0 ", "equal"),
-            "TrNef" :   (" 0 1 0 0 2 0 ", "equal"),
-            "K81"   :   (" 0 1 2 2 1 0 ", "equal"),
-            "TVMef" :   (" 0 1 2 3 1 4 ", "equal"),
-            "TIMef" :   (" 0 1 2 2 3 0 ", "equal"),
-            "SYM"   :   (" 0 1 2 3 4 5 ", "equal"),
-            "F81"   :   (" 0 0 0 0 0 0 ", "estimate"),
-            "HKY"   :   (" 0 1 0 0 1 0 ", "estimate"),
-            "TrN"   :   (" 0 1 0 0 2 0 ", "estimate"),  
-            "K81uf" :   (" 0 1 2 2 1 0 ", "estimate"),
-            "TVM"   :   (" 0 1 2 3 1 4 ", "estimate"),
-            "TIM"   :   (" 0 1 2 2 3 0 ", "estimate"),
-            "GTR"   :   (" 0 1 2 3 4 5 ", "estimate")
+            "JC"        :   ("( 0 0 0 0 0 0 )", "equal"),
+            "K80"       :   ("( 0 1 0 0 1 0 )", "equal"),
+            "TrNef"     :   ("( 0 1 0 0 2 0 )", "equal"),
+            "K81"       :   ("( 0 1 2 2 1 0 )", "equal"),
+            "TVMef"     :   ("( 0 1 2 3 1 4 )", "equal"),
+            "TIMef"     :   ("( 0 1 2 2 3 0 )", "equal"),
+            "SYM"       :   ("( 0 1 2 3 4 5 )", "equal"),
+            "F81"       :   ("( 0 0 0 0 0 0 )", "estimate"),
+            "HKY"       :   ("( 0 1 0 0 1 0 )", "estimate"),
+            "TrN"       :   ("( 0 1 0 0 2 0 )", "estimate"),  
+            "K81uf"     :   ("( 0 1 2 2 1 0 )", "estimate"),
+            "TVM"       :   ("( 0 1 2 3 1 4 )", "estimate"),
+            "TIM"       :   ("( 0 1 2 2 3 0 )", "estimate"),
+            "GTR"       :   ("( 0 1 2 3 4 5 )", "estimate"),
+            "Dayhoff"   :   ("dayhoff", "dayhoff"),
+            "JTT"       :   ("jones", "jones"),
+            "WAG"       :   ("wag", "wag"),
+            "mtREV"     :   ("mtrev", "mtrev"),
+            "MtMam"     :   ("mtmam", "mtmam")
         }    
-
-
         
+        #now we build up the description one by one
         header = "[model" + str(number) + "]"
         data = "datatype = " + self.cfg.datatype
+
+        #now the model itself
         elements = sub.best_model.split("+")
         model_name = elements[0]
-        ratemat = "ratematrix = " + "(" + models[model_name][0] + ")"
-        statefreq = "statefrequencies = " + models[model_name][1]
+ 
+        # some yoga to make sure we catch models that aren't in the list above
+        # typically, these are protein models like LG
 
-        if "G" in elements[1:]:
+        try:
+            ratemat = "ratematrix = " + models[model_name][0]
+            statefreq = "statefrequencies = " + models[model_name][1]
+            #state frequencies, with a special catch for protein models
+            if len(elements)>1 and "F" in elements[1:] and self.cfg.datatype=="protein":
+                inv = "statefrequencies = empirical"
+            warning = ""
+        except KeyError: 
+            ratemat = "ratematrix = fixed"
+            statefreq = "statefrequencies = fixed"
+            warning = ("N.B. There are rate matrices specified for your subsets that are"
+                      " not specified in GARLI. You will need to specify these in the"
+                      " correct order in your nexus file if you are going to run GARLI."
+                      " See https://www.nescent.org/wg_garli/" "Specifying_a_custom_amino_acid_rate_matrix for more information.")
+        
+        if len(elements)>1 and "G" in elements[1:]:
             ratemod = "ratehetmodel = gamma\nnumratecats = 4"
         else:  
             ratemod = "ratehetmodel = none\nnumratecats = 1"
-        if "I" in elements[1:]:
+        if len(elements)>1 and "I" in elements[1:]:
             inv = "invariantsites = estimate"
         else:
             inv = "invariantsites = none"
         
-        final = "\n".join([header, data, ratemat, statefreq, ratemod, inv, "\n"])
+        final = "\n".join([header, warning, data, ratemat, statefreq, ratemod, inv, "\n"])
         
         return(final)
     
