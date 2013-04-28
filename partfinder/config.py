@@ -41,12 +41,12 @@ class Configuration(object):
     options = {
         'branchlengths': ['linked', 'unlinked'],
         'model_selection': ['aic', 'aicc', 'bic'],
-        'search': ['all', 'user', 'greedy', 'clustering', 'greediest']
+        'search': ['all', 'user', 'greedy', 'strict_clustering', 'relaxed_clustering']
     }
 
     def __init__(self, datatype="DNA", phylogeny_program='phyml',
         save_phylofiles=False, cmdline_extras = "", cluster_weights = None,
-        greediest_schemes = 1, greediest_percent=100):
+        cluster_percent=10):
 
         log.info("Configuring Parameters -------------")
         self.partitions = partition.PartitionSet()
@@ -56,8 +56,7 @@ class Configuration(object):
         self.save_phylofiles = save_phylofiles
         self.progress = progress.NoProgress(self)
         self.cmdline_extras = cmdline_extras
-        self.greediest_schemes = greediest_schemes
-        self.greediest_percent = float(greediest_percent)
+        self.cluster_percent = float(cluster_percent)
 
         # Record this
         self.base_path = '.'
@@ -216,7 +215,7 @@ class Configuration(object):
     def register_output_folders(self):
         self.register_folder('subsets')
         self.register_folder('schemes')
-        self.register_folder('phyml')
+        self.register_folder('phylofiles')
         self.register_folder('start_tree')
 
     def init_logger(self, pth):
@@ -271,15 +270,8 @@ class Configuration(object):
             raise ConfigurationError
 
         #TODO: not the best place for this at all..., but it works
-        if option == "search" and value == "clustering" and self.phylogeny_program != 'raxml':
-            log.error("The 'search = clustering' option is only available when using raxml"
-                      " (the --raxml commandline option). Please check and try again."
-                      " See the manual for more details.")
-            raise ConfigurationError
-
-        #TODO: not the best place for this at all..., but it works
-        if option == "search" and value == "greediest" and self.phylogeny_program != 'raxml':
-            log.error("The 'search = greediest' option is only availalbe when using raxml"
+        if option == "search" and "cluster" in value and self.phylogeny_program != 'raxml':
+            log.error("Clustering methods are only available when using raxml"
                       " (the --raxml commandline option). Please check and try again."
                       " See the manual for more details.")
             raise ConfigurationError

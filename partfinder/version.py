@@ -33,9 +33,6 @@
 # contains the following line:
 #
 #   include RELEASE-VERSION
-
-__all__ = ("get_git_version")
-
 from subprocess import Popen, PIPE
 import os
 
@@ -80,6 +77,7 @@ def write_release_version(version):
     f.close()
 
 
+
 def get_git_version(abbrev=4):
     # Read in the version that's currently in RELEASE-VERSION.
 
@@ -111,6 +109,11 @@ def get_git_version(abbrev=4):
 
     return version
 
+def get_version():
+    version = read_release_version()
+    if version is None:
+        raise ValueError("Cannot find the version number!")
+    return version
 
 if __name__ == "__main__":
-    print get_git_version()
+    print get_version()

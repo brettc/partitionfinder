@@ -215,9 +215,6 @@ def get_nearest_neighbour_scheme(start_scheme, scheme_name, cfg):
     neighbouring scheme, where the neighbour has one less subset than the
     current scheme.  Really this is just progressive clustering, but specified
     to work well with PartitionFinder
-
-    The weights argument allows us to assign different weights to different
-    model parameters
     """
 
     #1. First we get the closest subsets, based on some weights. This will almost always

@@ -172,7 +172,7 @@ def parse_args(datatype, cmdargs=None):
         "--cluster-weights",
         type="str", dest="cluster_weights", default=None, metavar="N",
         help="Mainly for algorithm development. Only use it if you know what you're doing."
-        "A list of weights to use in the clustering algorithm. This list allows you "
+        "A list of weights to use in the clustering algorithms. This list allows you "
         "to assign different weights to: the overall rate for a subset, the base/amino acid "
         "frequencies, model parameters, and alpha value. This will affect how subsets are "
         "clustered together. For instance: --cluster_weights '1, 2, 5, 1', would weight "
@@ -180,22 +180,12 @@ def parse_args(datatype, cmdargs=None):
         "more, and the alpha parameter the same as the model rate"
     )
     op.add_option(
-        "--greediest-schemes",
-        type="int", dest="greediest_schemes", default=1, metavar="N",
-        help="This defines how many improved schemes the greediest algorithm needs to see "
-        " before it will move on to the next step, see manual for more info. The default "
-        " is 1."
-    )
-    op.add_option(
-        "--greediest-percent",
-        type="float", dest="greediest_percent", default=100.0, metavar="N",
-        help="This defines the proportion of possible schemes that the greediest algorithm "
-        "will consider before it stops looking. So, if you set greediest-schemes to 10, and "
-        "greediest-percent to 50, then the algorithm will stop searching for improvements "
-        "if it finds 10 improved schemes, or if it finds at least one scheme in the first "
-        "50% of possible schemes, whichever is sooner. If it finds no improved schemes in "
-        "the first 50% (or whatever you set greediest-percent to) it will keep looking and "
-        "accept the next improved scheme it finds. The default is 0%."
+        "--cluster-percent",
+        type="float", dest="cluster_percent", default=10.0, metavar="N",
+        help="This defines the proportion of possible schemes that the relaxed clustering"
+        " algorithm will consider before it stops looking. The default is 10%."
+        "e.g. --cluster-percent 10.0"
+            
     )
     op.add_option(
         '--debug-output',
@@ -282,7 +272,7 @@ def check_python_version():
 
 
 def main(name, datatype, cmdargs=None):
-    v = version.get_git_version()
+    v = version.get_version()
     options, args = parse_args(datatype, cmdargs)
     if not args:
         # Help has already been printed
@@ -293,13 +283,16 @@ def main(name, datatype, cmdargs=None):
 
     check_python_version()
 
+    if cmdargs is None:
+        cmdargs = sys.argv
+    log.info("Command-line arguments used: %s", " ".join(cmdargs))
+
     # Load, using the first argument as the folder
     try:
         cfg = config.Configuration(datatype, options.phylogeny_program,
                                    options.save_phylofiles, options.cmdline_extras,
                                    options.cluster_weights,
-                                   options.greediest_schemes,
-                                   options.greediest_percent)
+                                   options.cluster_percent)
 
         # Set up the progress callback
         progress.TextProgress(cfg)

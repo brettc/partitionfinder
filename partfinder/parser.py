@@ -88,7 +88,7 @@ class Parser(object):
         treedef.setParseAction(self.set_user_tree)
 
         def simple_option(name):
-            opt = Keyword(name) + EQUALS + Word(alphas + nums) + SEMICOLON
+            opt = Keyword(name) + EQUALS + Word(alphas + nums + '-_') + SEMICOLON
             opt.setParseAction(self.set_simple_option)
             return opt
 

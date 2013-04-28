@@ -24,12 +24,12 @@ def pytest_generate_tests(metafunc):
 
 def test_dna(dna):
     full_path = os.path.join(HERE, dna)
-    main.call_main("DNA", "--compare %s" % full_path)
+    main.call_main("DNA", '--compare "%s"' % full_path)
 
 
 def test_prot(prot):
     full_path = os.path.join(HERE, prot)
-    main.call_main("protein", "--compare %s" % full_path)
+    main.call_main("protein", '--compare "%s"' % full_path)
 
 
 def load_rerun(pth):
@@ -40,25 +40,25 @@ def load_rerun(pth):
 def test_rerun_success(rerun_success):
     full_path = os.path.join(HERE, rerun_success)
     load_rerun(full_path)
-    main.call_main("DNA", "%s" % full_path)
+    main.call_main("DNA", '"%s"' % full_path)
 
 
 def test_rerun_pf_error(rerun_pf_error):
     full_path = os.path.join(HERE, rerun_pf_error)
     load_rerun(full_path)
     with pytest.raises(util.PartitionFinderError):
-        main.call_main("DNA", "%s" % full_path)
+        main.call_main("DNA", '"%s"' % full_path)
 
 
 def test_rerun_analysis_error(rerun_ana_error):
     full_path = os.path.join(HERE, rerun_ana_error)
     load_rerun(full_path)
     with pytest.raises(analysis.AnalysisError):
-        main.call_main("DNA", "%s" % full_path)
+        main.call_main("DNA", '"%s"' % full_path)
 
 
 def test_rerun_config_error(rerun_conf_error):
     full_path = os.path.join(HERE, rerun_conf_error)
     load_rerun(full_path)
     with pytest.raises(config.ConfigurationError):
-        main.call_main("DNA", "%s" % full_path)
+        main.call_main("DNA", '"%s"' % full_path)
