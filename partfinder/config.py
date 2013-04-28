@@ -271,7 +271,7 @@ class Configuration(object):
 
         #TODO: not the best place for this at all..., but it works
         if option == "search" and "cluster" in value and self.phylogeny_program != 'raxml':
-            log.error("Clustering methods are only availalbe when using raxml"
+            log.error("Clustering methods are only available when using raxml"
                       " (the --raxml commandline option). Please check and try again."
                       " See the manual for more details.")
             raise ConfigurationError

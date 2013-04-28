@@ -52,7 +52,7 @@ def test_overlap_error(caplog):
 def test_clustering_phyml_dna(caplog):
     with pytest.raises(util.PartitionFinderError):
         main.call_main("DNA", '"%s"' % path_from_function())
-    assert "The 'search = clustering' option is only available when using raxml" in caplog.text()
+    assert "Clustering methods are only available when using raxml" in caplog.text()
 
 def test_model_greedy_phyml01(caplog):
     with pytest.raises(util.PartitionFinderError):
