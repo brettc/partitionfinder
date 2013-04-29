@@ -103,15 +103,12 @@ class TextReporter(object):
             #state frequencies, with a special catch for protein models
             if len(elements)>1 and "F" in elements[1:] and self.cfg.datatype=="protein":
                 inv = "statefrequencies = empirical"
-            warning = ""
+            warning = 0
         except KeyError: 
             ratemat = "ratematrix = fixed"
             statefreq = "statefrequencies = fixed"
-            warning = ("N.B. There are rate matrices specified for your subsets that are"
-                      " not specified in GARLI. You will need to specify these in the"
-                      " correct order in your nexus file if you are going to run GARLI."
-                      " See https://www.nescent.org/wg_garli/" "Specifying_a_custom_amino_acid_rate_matrix for more information.")
-        
+            warning = 1
+                    
         if len(elements)>1 and "G" in elements[1:]:
             ratemod = "ratehetmodel = gamma\nnumratecats = 4"
         else:  
@@ -121,19 +118,28 @@ class TextReporter(object):
         else:
             inv = "invariantsites = none"
         
-        final = "\n".join([header, warning, data, ratemat, statefreq, ratemod, inv, "\n"])
+        final = "\n".join([header, data, ratemat, statefreq, ratemod, inv, "\n"])
         
-        return(final)
+        return(final, warning)
     
     def write_garli(self, output, sorted_subsets):
         output.write("\n\nGARLI model definitions\n")
         output.write("Please double check for accuracy.\n")
         output.write("These can be pasted into the garli.conf file.\n\n")
         
+        warning = 0
         for i, sub in enumerate(sorted_subsets):
-            model = self.garli_sub_text(sub, i+1)
+            model, warning = self.garli_sub_text(sub, i+1)
             output.write(model)
+            warning += warning
             
+        if warning>0:
+            warning = ("N.B. There are rate matrices specified for your subsets that are"
+                      " not specified in GARLI. You will need to specify these in the"
+                      " correct order in your nexus file if you are going to run GARLI."
+                      " See https://www.nescent.org/wg_garli/" "Specifying_a_custom_amino_acid_rate_matrix for more information.")
+            output.write(warning)
+
 
 
     def write_scheme_summary(self, sch, result):
