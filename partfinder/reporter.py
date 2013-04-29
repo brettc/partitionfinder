@@ -88,7 +88,12 @@ class TextReporter(object):
         
         #now we build up the description one by one
         header = "[model" + str(number) + "]"
-        data = "datatype = " + self.cfg.datatype
+        if self.cfg.datatype == "DNA":
+            data = "datatype = nucleotide"
+        elif self.cfg.datatype == "protein":
+            data = "datatype = aminoacid"
+        else:
+            data = "datatype = nucleotide - this is a guess, please double check!"
 
         #now the model itself
         elements = sub.best_model.split("+")
@@ -110,7 +115,7 @@ class TextReporter(object):
             warning = 1
                     
         if len(elements)>1 and "G" in elements[1:]:
-            ratemod = "ratehetmodel = gamma\nnumratecats = 4"
+            ratemod = "ratehetmodel = gamma\nnumratecats = 16"
         else:  
             ratemod = "ratehetmodel = none\nnumratecats = 1"
         if len(elements)>1 and "I" in elements[1:]:
@@ -125,7 +130,11 @@ class TextReporter(object):
     def write_garli(self, output, sorted_subsets):
         output.write("\n\nGARLI model definitions\n")
         output.write("Please double check for accuracy.\n")
-        output.write("These can be pasted into the garli.conf file.\n\n")
+        output.write("These can be pasted into the garli.conf file.\n")
+        output.write("Note: models in PartitionFinder are calculated with 4 categories"
+                     " of gamma distributed rates, for speed. However, we recommend you"
+                     " use more than that for inferring your final phylogeny, so we've "
+                     " put 16 below.\n\n")
         
         warning = 0
         for i, sub in enumerate(sorted_subsets):
