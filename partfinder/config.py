@@ -41,7 +41,7 @@ class Configuration(object):
     options = {
         'branchlengths': ['linked', 'unlinked'],
         'model_selection': ['aic', 'aicc', 'bic'],
-        'search': ['all', 'user', 'greedy', 'strict_clustering', 'relaxed_clustering']
+        'search': ['all', 'user', 'greedy', 'hcluster', 'rcluster']
     }
 
     def __init__(self, datatype="DNA", phylogeny_program='phyml',

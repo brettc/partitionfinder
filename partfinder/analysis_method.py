@@ -316,9 +316,9 @@ def choose_method(search):
         method = UserAnalysis
     elif search == 'greedy':
         method = GreedyAnalysis
-    elif search == 'strict_clustering':
+    elif search == 'hcluster':
         method = StrictClusteringAnalysis
-    elif search == 'relaxed_clustering':
+    elif search == 'rcluster':
         method = RelaxedClusteringAnalysis
     else:
         log.error("Search algorithm '%s' is not yet implemented", search)
