@@ -148,6 +148,9 @@ class Subset(object):
         #here we put in a catch for small subsets, where n<K+2
         #if this happens, the AICc actually starts rewarding very small datasets, which is wrong
         #a simple but crude catch for this is just to never allow n to go below k+2
+        result.aic = (-2.0 * lnL) + (2.0 * K)
+        result.bic = (-2.0 * lnL) + (K * logarithm(n))
+
         if n < (K + 2):
             log.warning("The subset containing the following data_blocks: %s, has a very small"
                         " number of sites (%d) compared to the number of parameters"
@@ -158,8 +161,6 @@ class Subset(object):
                         " /analysis/subsets/%s.txt\n" % (self, n, model, K, self.name))
             n = K + 2
 
-        result.aic = (-2.0 * lnL) + (2.0 * K)
-        result.bic = (-2.0 * lnL) + (K * logarithm(n))
         result.aicc = (-2.0 * lnL) + ((2.0 * K) * (n / (n - K - 1.0)))
 
         #this is the rate per site of the model - used in some clustering analyses
