@@ -169,7 +169,7 @@ def parse_args(datatype, cmdargs=None):
         " PartitionFinder"
     )
     op.add_option(
-        "--cluster-weights",
+        "--weights",
         type="str", dest="cluster_weights", default=None, metavar="N",
         help="Mainly for algorithm development. Only use it if you know what you're doing."
         "A list of weights to use in the clustering algorithms. This list allows you "
@@ -180,7 +180,7 @@ def parse_args(datatype, cmdargs=None):
         "more, and the alpha parameter the same as the model rate"
     )
     op.add_option(
-        "--cluster-percent",
+        "--rcluster-percent",
         type="float", dest="cluster_percent", default=10.0, metavar="N",
         help="This defines the proportion of possible schemes that the relaxed clustering"
         " algorithm will consider before it stops looking. The default is 10%."
