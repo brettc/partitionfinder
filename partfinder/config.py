@@ -48,7 +48,7 @@ class Configuration(object):
         save_phylofiles=False, cmdline_extras = "", cluster_weights = None,
         cluster_percent=10):
 
-        log.info("Configuring Parameters -------------")
+        log.info("------------- Configuring Parameters -------------")
         self.partitions = partition.PartitionSet()
         # Only required if user adds them
         self.user_schemes = scheme.SchemeSet()
