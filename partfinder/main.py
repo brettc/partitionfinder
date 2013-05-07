@@ -185,7 +185,7 @@ def parse_args(datatype, cmdargs=None):
         help="This defines the proportion of possible schemes that the relaxed clustering"
         " algorithm will consider before it stops looking. The default is 10%."
         "e.g. --cluster-percent 10.0"
-            
+
     )
     op.add_option(
         '--debug-output',
@@ -301,18 +301,22 @@ def main(name, datatype, cmdargs=None):
         if options.check_only:
             log.info("Exiting without processing (because of the -c/--check-only option ...")
         else:
-            # Now try processing everything....
-            method = analysis_method.choose_method(cfg.search)
-            reporter.TextReporter(cfg)
-            anal = method(cfg,
-                          options.force_restart,
-                          options.processes)
-            results = anal.analyse()
+            try:
+                # Now try processing everything....
+                method = analysis_method.choose_method(cfg.search)
+                reporter.TextReporter(cfg)
+                anal = method(cfg,
+                            options.force_restart,
+                            options.processes)
+                results = anal.analyse()
 
-            if options.dump_results:
-                results.dump(cfg)
-            elif options.compare_results:
-                results.compare(cfg)
+                if options.dump_results:
+                    results.dump(cfg)
+                elif options.compare_results:
+                    results.compare(cfg)
+            finally:
+                # Make sure that we reset the configuration
+                cfg.reset()
 
         # Successful exit
         end_time = datetime.datetime.now().replace(microsecond=0)
@@ -332,9 +336,6 @@ def main(name, datatype, cmdargs=None):
     except KeyboardInterrupt:
         log.error("User interrupted the Program")
 
-    finally:
-        # Make sure that we reset the configuration
-        cfg.reset()
 
     return 1
 
