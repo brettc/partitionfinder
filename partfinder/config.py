@@ -91,14 +91,15 @@ class Configuration(object):
             self.cluster_weights = {"rate": 1, "freqs": 1,
                                     "model": 1, "alpha": 1}
         else:
-            #TODO. Is there a more robust way to do this...
-            cluster_weights = cluster_weights.split(",")
+            # TODO. Is there a more robust way to do this...
+            # Brett say "YES. But this will do for now..."
+            cluster_weights = [x.strip() for x in cluster_weights.split(",")]
 
             #now we check that it's a list of exactly three numbers
             if len(cluster_weights) != 4:
                 log.error("Your --cluster_weights argument should have exactly 4"
-                          " numbers separated by commas, but it has %d. "
-                          "Please check and try again" % len(cluster_weights))
+                          " numbers separated by commas, but it has %d ('%s') "
+                          "Please check and try again", len(cluster_weights), cluster_weights)
                 raise ConfigurationError
             final_weights = []
             for thing in cluster_weights:
