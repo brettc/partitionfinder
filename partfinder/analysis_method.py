@@ -227,7 +227,7 @@ class RelaxedClusteringAnalysis(Analysis):
         partnum = len(self.cfg.partitions)
 
         scheme_count = submodels.count_relaxed_clustering_schemes(partnum, self.cfg.cluster_percent)
-        subset_count = submodels.count_relaxed_clusetering_subsets(partnum, self.cfg.cluster_percent)
+        subset_count = submodels.count_relaxed_clustering_subsets(partnum, self.cfg.cluster_percent)
 
         self.cfg.progress.begin(scheme_count, subset_count)
 
@@ -255,7 +255,7 @@ class RelaxedClusteringAnalysis(Analysis):
                 start_scheme, self.cfg)
 
             # reduce the size of the lumped subsets to cluster_percent long
-            cutoff = int(math.ceil(len(lumped_subsets)*stop_at)) #round up to stop zeros            
+            cutoff = int(math.ceil(len(lumped_subsets)*stop_at)) #round up to stop zeros
             lumped_subsets = lumped_subsets[:cutoff]
 
             # Now analyse the lumped schemes
@@ -268,15 +268,15 @@ class RelaxedClusteringAnalysis(Analysis):
                     start_scheme, scheme_name, subset_grouping, self.cfg)
 
                 new_result = self.analyse_scheme(lumped_scheme)
-                
+
                 log.info("Difference in %s: %.1f", self.cfg.model_selection, (new_result.score-old_best_score))
-                
+
                 lumpings_done += 1
 
-            
+
             if self.results.best_score != old_best_score:
                 log.info("Analysed %.1f percent of the schemes for this step. The best "
-                         "scheme changed the %s score by %.1f units.", 
+                         "scheme changed the %s score by %.1f units.",
                          self.cfg.cluster_percent, self.cfg.model_selection,
                          (self.results.best_score - old_best_score))
 
@@ -296,7 +296,7 @@ class RelaxedClusteringAnalysis(Analysis):
             # We're done if it's the scheme with everything together
             if len(set(lumped_scheme.subsets)) == 1:
                 break
-    
+
             step += 1
 
 
