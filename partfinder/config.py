@@ -87,15 +87,15 @@ class Configuration(object):
         self.find_programs()
 
         if cluster_weights is None:
-            #default to equal weights. TODO. This should change depending on results of our analyses
-            self.cluster_weights = {"rate": 1, "freqs": 1,
-                                    "model": 1, "alpha": 1}
+            #default weights - just use overall rates of subsets. Based on 2013 analyses.
+            self.cluster_weights = {"rate": 1, "freqs": 0,
+                                    "model": 0, "alpha": 0}
         else:
             # TODO. Is there a more robust way to do this...
             # Brett say "YES. But this will do for now..."
             cluster_weights = [x.strip() for x in cluster_weights.split(",")]
 
-            #now we check that it's a list of exactly three numbers
+            #now we check that it's a list of exactly four numbers
             if len(cluster_weights) != 4:
                 log.error("Your --cluster_weights argument should have exactly 4"
                           " numbers separated by commas, but it has %d ('%s') "
