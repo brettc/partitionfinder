@@ -116,6 +116,7 @@ class Configuration(object):
                     raise ConfigurationError
 
             log.info("Setting cluster_weights to: "
+                     "subset_rate = %.1f, freqs = %.1f, model = %.1f, alpha %.1f" 
                      % (cluster_weights[0], cluster_weights[1], 
                         cluster_weights[2], cluster_weights[3]))
 
