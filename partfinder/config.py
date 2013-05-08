@@ -110,12 +110,15 @@ class Configuration(object):
                     log.error("Unable to understand your --cluster_weights argument."
                               " It should look like this: --cluster_weights '1,2,3,6'. "
                               "Please double check that you included quotes, "
-                              "and four numbers greater than or equal to zero 
+                              "and four numbers greater than or equal to zero "
                               "separated by commas. Then try again. "
                               "The part that I couldn't understand is this: '%s'" % thing)
                     raise ConfigurationError
 
-            log.info("Setting cluster_weights to: subset_rate = %.1f, freqs = %.1f, model = %.1f" % (final_weights[0], final_weights[1], final_weights[2]))
+            log.info("Setting cluster_weights to: "
+                     % (cluster_weights[0], cluster_weights[1], 
+                        cluster_weights[2], cluster_weights[3]))
+
             self.cluster_weights = {}
             self.cluster_weights["rate"] = float(eval(final_weights[0]))
             self.cluster_weights["freqs"] = float(eval(final_weights[1]))
