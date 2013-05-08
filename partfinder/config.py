@@ -116,15 +116,15 @@ class Configuration(object):
                     raise ConfigurationError
 
             log.info("Setting cluster_weights to: "
-                     "subset_rate = %.1f, freqs = %.1f, model = %.1f, alpha %.1f" 
+                     "subset_rate = %s, freqs = %s, model = %s, alpha %s" 
                      % (cluster_weights[0], cluster_weights[1], 
                         cluster_weights[2], cluster_weights[3]))
 
             self.cluster_weights = {}
-            self.cluster_weights["rate"] = float(eval(final_weights[0]))
-            self.cluster_weights["freqs"] = float(eval(final_weights[1]))
-            self.cluster_weights["model"] = float(eval(final_weights[2]))
-            self.cluster_weights["alpha"] = float(eval(final_weights[3]))
+            self.cluster_weights["rate"] =  float(eval(cluster_weights[0]))
+            self.cluster_weights["freqs"] = float(eval(cluster_weights[1]))
+            self.cluster_weights["model"] = float(eval(cluster_weights[2]))
+            self.cluster_weights["alpha"] = float(eval(cluster_weights[3]))
 
         #check that cluster_percent is 0-100
         try:
