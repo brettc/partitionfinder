@@ -122,6 +122,15 @@ class Configuration(object):
             self.cluster_weights["model"] = float(eval(final_weights[2]))
             self.cluster_weights["alpha"] = float(eval(final_weights[3]))
 
+        #check that cluster_percent is 0-100
+        try:
+            assert self.cluster_percent >= 0.0
+            assert self.cluster_percent <= 100.0
+        except:
+            
+            log.error("The rcluster-percent variable must be from 0.0 to 100.0, yours "
+                      "is %.2f. Please check and try again." % self.cluster_percent)
+
         # Set the defaults into the class. These can be reset by calling
         # set_option(...)
         for o, v in self.options.items():
