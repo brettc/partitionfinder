@@ -25,19 +25,19 @@ DNA_rcluster4  | success              | --weights "1,1,1,1"
 DNA_rcluster5  | success              | --weights "0,0,0,0"
 DNA_rcluster6  | success              | --weights "1000, 0.01, 0.003, 0"
 DNA_rcluster7  | ConfigurationError   | --weights "-1000, 0.01, 0.003, 0"
-DNA_rcluster8  | success              | --rcluster-percent "0"
-DNA_rcluster9  | success              | --rcluster-percent "0.000001"
-DNA_rcluster10 | success              | --rcluster-percent "99.999999"
-DNA_rcluster11 | success              | --rcluster-percent "100.00"
-DNA_rcluster12 | ConfigurationError   | --rcluster-percent "100.001"
-DNA_rcluster13 | ConfigurationError   | --rcluster-percent "-0.001"
+DNA_rcluster8  | success              | --rcluster-percent 0
+DNA_rcluster9  | success              | --rcluster-percent 0.000001
+DNA_rcluster10 | success              | --rcluster-percent 99.999999
+DNA_rcluster11 | success              | --rcluster-percent 100.00
+DNA_rcluster12 | ConfigurationError   | --rcluster-percent 100.001
+DNA_rcluster13 | ConfigurationError   | --rcluster-percent -0.001
 
 prot_hcluster1 | success              |
 prot_hcluster2 | success              |
 prot_rcluster1 | ConfigurationError   | --weight  "1, 0, 100, egg"
 prot_rcluster2 | success              | --rcluster-percent 12 --weight "1,0,0,0"
 prot_rcluster3 | success              | --weight "0,0,0,0"
-prot_rcluster4 | ConfigurationError   |
+prot_rcluster4 | PartitionFinderError |
 prot_rcluster5 | success              |
 """
 
