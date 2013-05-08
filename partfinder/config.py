@@ -101,25 +101,26 @@ class Configuration(object):
                           " numbers separated by commas, but it has %d ('%s') "
                           "Please check and try again", len(cluster_weights), cluster_weights)
                 raise ConfigurationError
-            final_weights = []
+
             for thing in cluster_weights:
                 try:
                     num = float(eval(thing))
-                    final_weights.append(num)
+                    assert num >= 0
                 except:
                     log.error("Unable to understand your --cluster_weights argument."
                               " It should look like this: --cluster_weights '1,2,3,6'. "
                               "Please double check that you included quotes, "
-                              "and three numbers separated by commas. Then try again. "
-                              "The part that I coudln't understand is this: '%s'" % thing)
+                              "and four numbers greater than or equal to zero 
+                              "separated by commas. Then try again. "
+                              "The part that I couldn't understand is this: '%s'" % thing)
                     raise ConfigurationError
 
             log.info("Setting cluster_weights to: subset_rate = %.1f, freqs = %.1f, model = %.1f" % (final_weights[0], final_weights[1], final_weights[2]))
             self.cluster_weights = {}
-            self.cluster_weights["rate"] = final_weights[0]
-            self.cluster_weights["freqs"] = final_weights[1]
-            self.cluster_weights["model"] = final_weights[2]
-            self.cluster_weights["alpha"] = final_weights[3]
+            self.cluster_weights["rate"] = float(eval(final_weights[0]))
+            self.cluster_weights["freqs"] = float(eval(final_weights[1]))
+            self.cluster_weights["model"] = float(eval(final_weights[2]))
+            self.cluster_weights["alpha"] = float(eval(final_weights[3]))
 
         # Set the defaults into the class. These can be reset by calling
         # set_option(...)
