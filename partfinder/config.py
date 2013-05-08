@@ -132,8 +132,11 @@ class Configuration(object):
             assert self.cluster_percent <= 100.0
         except:
             
-            log.error("The rcluster-percent variable must be from 0.0 to 100.0, yours "
+            log.error("The rcluster-percent variable must be between 0.0 to 100.0, yours "
                       "is %.2f. Please check and try again." % self.cluster_percent)
+            raise ConfigurationError
+
+        log.info("Setting rcluster-percent to %.2f" % self.cluster_percent)
 
         # Set the defaults into the class. These can be reset by calling
         # set_option(...)
