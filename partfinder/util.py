@@ -49,6 +49,19 @@ def check_folder_exists(pth):
         log.error("No such folder: '%s'", pth)
         raise PartitionFinderError
 
+def clean_out_folder(folder, keep = []):
+    """Hat Tip: http://stackoverflow.com/questions/185936/delete-folder-contents-in-python
+    """
+    for the_file in os.listdir(folder):
+        if the_file not in keep:
+            file_path = os.path.join(folder, the_file)
+            try:
+                if os.path.isfile(file_path):
+                    os.unlink(file_path)
+            except Exception, e:
+                log.error(e)
+                raise PartitionFinderError
+
 
 def make_dir(pth):
     if os.path.exists(pth):
