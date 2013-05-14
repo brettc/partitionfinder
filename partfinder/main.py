@@ -271,9 +271,11 @@ def check_python_version():
                     "version 3 or higher. To guarantee success, please use Python 2.7.x" % python_version)
 
 
-def main(name, datatype, cmdargs=None):
+def main(name, datatype, passed_args=None):
     v = version.get_version()
-    options, args = parse_args(datatype, cmdargs)
+
+    # If passed_args is None, this will use sys.argv
+    options, args = parse_args(datatype, passed_args)
     if not args:
         # Help has already been printed
         return 2
@@ -283,9 +285,12 @@ def main(name, datatype, cmdargs=None):
 
     check_python_version()
 
-    if cmdargs is None:
-        cmdargs = sys.argv
-    log.info("Command-line arguments used: %s", " ".join(cmdargs))
+    if passed_args is None:
+        cmdline = "".join(sys.argv)
+    else:
+        cmdline = "".join(passed_args)
+
+    log.info("Command-line arguments used: %s", cmdline)
 
     # Load, using the first argument as the folder
     try:
@@ -330,7 +335,7 @@ def main(name, datatype, cmdargs=None):
     except util.PartitionFinderError:
         log.error("Failed to run. See previous errors.")
         # Reraise if we were called by call_main, or if the options is set
-        if options.show_python_exceptions or cmdargs is not None:
+        if options.show_python_exceptions or passed_args is not None:
             raise
 
     except KeyboardInterrupt:
