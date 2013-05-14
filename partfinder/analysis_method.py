@@ -269,7 +269,7 @@ class RelaxedClusteringAnalysis(Analysis):
 
                 new_result = self.analyse_scheme(lumped_scheme)
 
-                log.info("Difference in %s: %.1f", self.cfg.model_selection, (new_result.score-old_best_score))
+                log.debug("Difference in %s: %.1f", self.cfg.model_selection, (new_result.score-old_best_score))
 
                 lumpings_done += 1
 
