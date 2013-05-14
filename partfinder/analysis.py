@@ -91,6 +91,17 @@ class Analysis(object):
         else:
             self.alignment.write(self.alignment_path)
 
+    def need_new_tree(self, tree_path):
+        if os.path.exists(tree_path):
+            if ');' in open(tree_path).read():
+                redo_tree = False
+            else: 
+                redo_tree = True
+        else:
+            redo_tree = True
+                
+        return redo_tree
+
     def make_tree(self, user_path):
         # Begin by making a filtered alignment, containing ONLY those columns
         # that are defined in the subsets
@@ -108,9 +119,9 @@ class Analysis(object):
         self.alignment_path = os.path.join(self.cfg.start_tree_path, 'source.phy')
 
         # Now check for the tree
-        tree_path = self.cfg.processor.make_tree_path(
-            self.filtered_alignment_path)
-        if not os.path.exists(tree_path):
+        tree_path = self.cfg.processor.make_tree_path(self.filtered_alignment_path)
+        
+        if self.need_new_tree(tree_path):
             # If we have a user tree, then use that, otherwise, create a topology
             if user_path is not None and user_path != "":
                 # Copy it into the start tree folder
