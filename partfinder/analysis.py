@@ -28,7 +28,7 @@ import subset
 import results
 import threading
 from util import PartitionFinderError
-
+import util
 
 class AnalysisError(PartitionFinderError):
     pass
@@ -93,13 +93,16 @@ class Analysis(object):
 
     def need_new_tree(self, tree_path):
         if os.path.exists(tree_path):
-            if ');' in open(tree_path).read():
+            if ';' in open(tree_path).read():
+                log.info("Starting tree file found.")
                 redo_tree = False
             else: 
+                log.info("Starting tree file found but incomplete. Re-estimating")
                 redo_tree = True
         else:
+            log.info("No starting tree file found.")
             redo_tree = True
-                
+        
         return redo_tree
 
     def make_tree(self, user_path):
@@ -120,9 +123,13 @@ class Analysis(object):
 
         # Now check for the tree
         tree_path = self.cfg.processor.make_tree_path(self.filtered_alignment_path)
-        
-        if self.need_new_tree(tree_path):
+
+        if self.need_new_tree(tree_path) == True:
+            log.debug("Estimating new starting tree, no old tree found")
+            
             # If we have a user tree, then use that, otherwise, create a topology
+            util.clean_out_folder(self.cfg.start_tree_path, keep = ["filtered_source.phy", "source.phy"])
+            
             if user_path is not None and user_path != "":
                 # Copy it into the start tree folder
                 log.info("Using user supplied topology at %s", user_path)
