@@ -153,7 +153,9 @@ class Alignment(object):
             return False
 
         if self.species != other.species:
-            log.warning("Alignments not the same, species differs %s: %s", self.species, other.species)
+            log.warning("Alignments not the same. " 
+                        "This alignment has %s species, the alignment from the previous "
+                        "analysis had %s.", len(self.species), len(other.species))
             return False
 
         return True
