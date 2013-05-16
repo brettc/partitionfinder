@@ -49,8 +49,7 @@ class UserAnalysis(Analysis):
 
         self.cfg.progress.end()
 
-        txt = "Best scheme out of all User Schemes, analysed with %s" % self.cfg.model_selection
-        self.cfg.reporter.write_best_scheme(txt, self.results)
+        self.cfg.reporter.write_best_scheme(self.results)
 
 
 class StrictClusteringAnalysis(Analysis):
@@ -106,8 +105,7 @@ class StrictClusteringAnalysis(Analysis):
 
         self.cfg.progress.end()
 
-        txt = "Best scheme using strict clustering Analysis, analysed with %s" % self.cfg.model_selection
-        self.cfg.reporter.write_best_scheme(txt, self.results)
+        self.cfg.reporter.write_best_scheme(self.results)
 
 
 class AllAnalysis(Analysis):
@@ -132,8 +130,7 @@ class AllAnalysis(Analysis):
             # Write out the scheme
             self.cfg.reporter.write_scheme_summary(s, res)
 
-        txt = "Best scheme out of all Schemes, analysed with %s" % self.cfg.model_selection
-        self.cfg.reporter.write_best_scheme(txt, self.results)
+        self.cfg.reporter.write_best_scheme(self.results)
 
 
 class GreedyAnalysis(Analysis):
@@ -204,8 +201,7 @@ class GreedyAnalysis(Analysis):
                  (self.results.best_scheme.name, self.cfg.model_selection,
                   self.results.best_score))
 
-        txt = "Best scheme according to Greedy algorithm, analysed with %s" % self.cfg.model_selection
-        self.cfg.reporter.write_best_scheme(txt, self.results)
+        self.cfg.reporter.write_best_scheme(self.results)
 
 
 class RelaxedClusteringAnalysis(Analysis):
@@ -227,7 +223,7 @@ class RelaxedClusteringAnalysis(Analysis):
         partnum = len(self.cfg.partitions)
 
         scheme_count = submodels.count_relaxed_clustering_schemes(partnum, self.cfg.cluster_percent)
-        subset_count = submodels.count_relaxed_clusetering_subsets(partnum, self.cfg.cluster_percent)
+        subset_count = submodels.count_relaxed_clustering_subsets(partnum, self.cfg.cluster_percent)
 
         self.cfg.progress.begin(scheme_count, subset_count)
 
@@ -255,7 +251,7 @@ class RelaxedClusteringAnalysis(Analysis):
                 start_scheme, self.cfg)
 
             # reduce the size of the lumped subsets to cluster_percent long
-            cutoff = int(math.ceil(len(lumped_subsets)*stop_at)) #round up to stop zeros            
+            cutoff = int(math.ceil(len(lumped_subsets)*stop_at)) #round up to stop zeros
             lumped_subsets = lumped_subsets[:cutoff]
 
             # Now analyse the lumped schemes
@@ -268,15 +264,15 @@ class RelaxedClusteringAnalysis(Analysis):
                     start_scheme, scheme_name, subset_grouping, self.cfg)
 
                 new_result = self.analyse_scheme(lumped_scheme)
-                
-                log.info("Difference in %s: %.1f", self.cfg.model_selection, (new_result.score-old_best_score))
-                
+
+                log.debug("Difference in %s: %.1f", self.cfg.model_selection, (new_result.score-old_best_score))
+
                 lumpings_done += 1
 
-            
+
             if self.results.best_score != old_best_score:
                 log.info("Analysed %.1f percent of the schemes for this step. The best "
-                         "scheme changed the %s score by %.1f units.", 
+                         "scheme changed the %s score by %.1f units.",
                          self.cfg.cluster_percent, self.cfg.model_selection,
                          (self.results.best_score - old_best_score))
 
@@ -296,7 +292,7 @@ class RelaxedClusteringAnalysis(Analysis):
             # We're done if it's the scheme with everything together
             if len(set(lumped_scheme.subsets)) == 1:
                 break
-    
+
             step += 1
 
 
@@ -305,8 +301,7 @@ class RelaxedClusteringAnalysis(Analysis):
         log.info("Best scoring scheme is scheme %s, with %s score of %.3f"
                  % (self.results.best_scheme.name, model_selection, self.results.best_score))
 
-        txt = "Best scheme according to relaxed clustering algorithm, analysed with %s" % self.cfg.model_selection
-        self.cfg.reporter.write_best_scheme(txt, self.results)
+        self.cfg.reporter.write_best_scheme(self.results)
 
 
 def choose_method(search):
@@ -316,9 +311,9 @@ def choose_method(search):
         method = UserAnalysis
     elif search == 'greedy':
         method = GreedyAnalysis
-    elif search == 'strict_clustering':
+    elif search == 'hcluster':
         method = StrictClusteringAnalysis
-    elif search == 'relaxed_clustering':
+    elif search == 'rcluster':
         method = RelaxedClusteringAnalysis
     else:
         log.error("Search algorithm '%s' is not yet implemented", search)

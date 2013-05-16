@@ -14,3 +14,4 @@ example/results.bin
 .DS_Store
 .ropeproject
 analysis
+.cache
