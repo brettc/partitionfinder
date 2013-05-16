@@ -49,8 +49,7 @@ class UserAnalysis(Analysis):
 
         self.cfg.progress.end()
 
-        txt = "Best scheme out of all User Schemes, analysed with %s" % self.cfg.model_selection
-        self.cfg.reporter.write_best_scheme(txt, self.results)
+        self.cfg.reporter.write_best_scheme(self.results)
 
 
 class StrictClusteringAnalysis(Analysis):
@@ -106,8 +105,7 @@ class StrictClusteringAnalysis(Analysis):
 
         self.cfg.progress.end()
 
-        txt = "Best scheme using strict clustering Analysis, analysed with %s" % self.cfg.model_selection
-        self.cfg.reporter.write_best_scheme(txt, self.results)
+        self.cfg.reporter.write_best_scheme(self.results)
 
 
 class AllAnalysis(Analysis):
@@ -132,8 +130,7 @@ class AllAnalysis(Analysis):
             # Write out the scheme
             self.cfg.reporter.write_scheme_summary(s, res)
 
-        txt = "Best scheme out of all Schemes, analysed with %s" % self.cfg.model_selection
-        self.cfg.reporter.write_best_scheme(txt, self.results)
+        self.cfg.reporter.write_best_scheme(self.results)
 
 
 class GreedyAnalysis(Analysis):
@@ -204,8 +201,7 @@ class GreedyAnalysis(Analysis):
                  (self.results.best_scheme.name, self.cfg.model_selection,
                   self.results.best_score))
 
-        txt = "Best scheme according to Greedy algorithm, analysed with %s" % self.cfg.model_selection
-        self.cfg.reporter.write_best_scheme(txt, self.results)
+        self.cfg.reporter.write_best_scheme(self.results)
 
 
 class RelaxedClusteringAnalysis(Analysis):
@@ -305,8 +301,7 @@ class RelaxedClusteringAnalysis(Analysis):
         log.info("Best scoring scheme is scheme %s, with %s score of %.3f"
                  % (self.results.best_scheme.name, model_selection, self.results.best_score))
 
-        txt = "Best scheme according to relaxed clustering algorithm, analysed with %s" % self.cfg.model_selection
-        self.cfg.reporter.write_best_scheme(txt, self.results)
+        self.cfg.reporter.write_best_scheme(self.results)
 
 
 def choose_method(search):
