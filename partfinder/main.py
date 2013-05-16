@@ -18,6 +18,7 @@
 import logging
 import sys
 import shlex
+import os
 
 logging.basicConfig(
     format="%(levelname)-8s | %(asctime)s | %(message)s",
@@ -81,6 +82,19 @@ def set_debug_regions(regions):
 
     return None
 
+def clean_folder(folder):
+    """ Delete all the files in a folder 
+    Thanks to StackOverflow for this:  
+    http://stackoverflow.com/questions/185936/delete-folder-contents-in-python
+    """
+    for the_file in os.listdir(folder):
+        file_path = os.path.join(folder, the_file)
+        try:
+            if os.path.isfile(file_path):
+                os.unlink(file_path)
+        except Exception, e:
+            log.error("Couldn't delete file from phylofiles folder: %s" % e)
+            raise PartitionFinderError
 
 def parse_args(datatype, cmdargs=None):
     usage = """usage: python %prog [options] <foldername>
@@ -169,10 +183,10 @@ def parse_args(datatype, cmdargs=None):
         " PartitionFinder"
     )
     op.add_option(
-        "--cluster-weights",
+        "--weights",
         type="str", dest="cluster_weights", default=None, metavar="N",
         help="Mainly for algorithm development. Only use it if you know what you're doing."
-        "A list of weights to use in the clustering algorithm. This list allows you "
+        "A list of weights to use in the clustering algorithms. This list allows you "
         "to assign different weights to: the overall rate for a subset, the base/amino acid "
         "frequencies, model parameters, and alpha value. This will affect how subsets are "
         "clustered together. For instance: --cluster_weights '1, 2, 5, 1', would weight "
@@ -180,22 +194,12 @@ def parse_args(datatype, cmdargs=None):
         "more, and the alpha parameter the same as the model rate"
     )
     op.add_option(
-        "--greediest-schemes",
-        type="int", dest="greediest_schemes", default=1, metavar="N",
-        help="This defines how many improved schemes the greediest algorithm needs to see "
-        " before it will move on to the next step, see manual for more info. The default "
-        " is 1."
-    )
-    op.add_option(
-        "--greediest-percent",
-        type="float", dest="greediest_percent", default=100.0, metavar="N",
-        help="This defines the proportion of possible schemes that the greediest algorithm "
-        "will consider before it stops looking. So, if you set greediest-schemes to 10, and "
-        "greediest-percent to 50, then the algorithm will stop searching for improvements "
-        "if it finds 10 improved schemes, or if it finds at least one scheme in the first "
-        "50% of possible schemes, whichever is sooner. If it finds no improved schemes in "
-        "the first 50% (or whatever you set greediest-percent to) it will keep looking and "
-        "accept the next improved scheme it finds. The default is 0%."
+        "--rcluster-percent",
+        type="float", dest="cluster_percent", default=10.0, metavar="N",
+        help="This defines the proportion of possible schemes that the relaxed clustering"
+        " algorithm will consider before it stops looking. The default is 10%."
+        "e.g. --cluster-percent 10.0"
+
     )
     op.add_option(
         '--debug-output',
@@ -281,9 +285,11 @@ def check_python_version():
                     "version 3 or higher. To guarantee success, please use Python 2.7.x" % python_version)
 
 
-def main(name, datatype, cmdargs=None):
-    v = version.get_git_version()
-    options, args = parse_args(datatype, cmdargs)
+def main(name, datatype, passed_args=None):
+    v = version.get_version()
+
+    # If passed_args is None, this will use sys.argv
+    options, args = parse_args(datatype, passed_args)
     if not args:
         # Help has already been printed
         return 2
@@ -293,13 +299,21 @@ def main(name, datatype, cmdargs=None):
 
     check_python_version()
 
+    if passed_args is None:
+        cmdline = "".join(sys.argv)
+    else:
+        cmdline = "".join(passed_args)
+
+    log.info("Command-line arguments used: %s", cmdline)
+
     # Load, using the first argument as the folder
     try:
-        cfg = config.Configuration(datatype, options.phylogeny_program,
-                                   options.save_phylofiles, options.cmdline_extras,
+        cfg = config.Configuration(datatype, 
+                                   options.phylogeny_program,
+                                   options.save_phylofiles, 
+                                   options.cmdline_extras,
                                    options.cluster_weights,
-                                   options.greediest_schemes,
-                                   options.greediest_percent)
+                                   options.cluster_percent)
 
         # Set up the progress callback
         progress.TextProgress(cfg)
@@ -308,18 +322,24 @@ def main(name, datatype, cmdargs=None):
         if options.check_only:
             log.info("Exiting without processing (because of the -c/--check-only option ...")
         else:
-            # Now try processing everything....
-            method = analysis_method.choose_method(cfg.search)
-            reporter.TextReporter(cfg)
-            anal = method(cfg,
-                          options.force_restart,
-                          options.processes)
-            results = anal.analyse()
+            try:
+                # Now try processing everything....
+                if not cfg.save_phylofiles:
+                    clean_folder(cfg.phylofiles_path)
+                method = analysis_method.choose_method(cfg.search)
+                reporter.TextReporter(cfg)
+                anal = method(cfg,
+                            options.force_restart,
+                            options.processes)
+                results = anal.analyse()
 
-            if options.dump_results:
-                results.dump(cfg)
-            elif options.compare_results:
-                results.compare(cfg)
+                if options.dump_results:
+                    results.dump(cfg)
+                elif options.compare_results:
+                    results.compare(cfg)
+            finally:
+                # Make sure that we reset the configuration
+                cfg.reset()
 
         # Successful exit
         end_time = datetime.datetime.now().replace(microsecond=0)
@@ -333,15 +353,12 @@ def main(name, datatype, cmdargs=None):
     except util.PartitionFinderError:
         log.error("Failed to run. See previous errors.")
         # Reraise if we were called by call_main, or if the options is set
-        if options.show_python_exceptions or cmdargs is not None:
+        if options.show_python_exceptions or passed_args is not None:
             raise
 
     except KeyboardInterrupt:
         log.error("User interrupted the Program")
 
-    finally:
-        # Make sure that we reset the configuration
-        cfg.reset()
 
     return 1
 

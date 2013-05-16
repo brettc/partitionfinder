@@ -35,7 +35,7 @@ class AnalysisResults(object):
     This stores the results, keeping only the winning scheme.
     """
 
-    MAX_ERROR = .01
+    MAX_ERROR = .1
 
     def __init__(self, model_selection):
         self.model_selection = model_selection

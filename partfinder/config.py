@@ -41,14 +41,14 @@ class Configuration(object):
     options = {
         'branchlengths': ['linked', 'unlinked'],
         'model_selection': ['aic', 'aicc', 'bic'],
-        'search': ['all', 'user', 'greedy', 'clustering', 'greediest']
+        'search': ['all', 'user', 'greedy', 'hcluster', 'rcluster']
     }
 
     def __init__(self, datatype="DNA", phylogeny_program='phyml',
         save_phylofiles=False, cmdline_extras = "", cluster_weights = None,
-        greediest_schemes = 1, greediest_percent=100):
+        cluster_percent=10):
 
-        log.info("Configuring Parameters -------------")
+        log.info("------------- Configuring Parameters -------------")
         self.partitions = partition.PartitionSet()
         # Only required if user adds them
         self.user_schemes = scheme.SchemeSet()
@@ -56,13 +56,13 @@ class Configuration(object):
         self.save_phylofiles = save_phylofiles
         self.progress = progress.NoProgress(self)
         self.cmdline_extras = cmdline_extras
-        self.greediest_schemes = greediest_schemes
-        self.greediest_percent = float(greediest_percent)
+        self.cluster_percent = float(cluster_percent)
 
         # Record this
         self.base_path = '.'
         self.alignment = None
         self.user_tree = None
+        self.old_cwd = None
 
         # Some basic checking of the setup, so that we don't hit too many
         # problems later
@@ -87,38 +87,56 @@ class Configuration(object):
         self.find_programs()
 
         if cluster_weights is None:
-            #default to equal weights. TODO. This should change depending on results of our analyses
-            self.cluster_weights = {"rate": 1, "freqs": 1,
-                                    "model": 1, "alpha": 1}
+            #default weights - just use overall rates of subsets. Based on 2013 analyses.
+            self.cluster_weights = {"rate": 1, "freqs": 0,
+                                    "model": 0, "alpha": 0}
         else:
-            #TODO. Is there a more robust way to do this...
-            cluster_weights = cluster_weights.split(",")
+            # TODO. Is there a more robust way to do this...
+            # Brett say "YES. But this will do for now..."
+            cluster_weights = [x.strip() for x in cluster_weights.split(",")]
 
-            #now we check that it's a list of exactly three numbers
+            #now we check that it's a list of exactly four numbers
             if len(cluster_weights) != 4:
                 log.error("Your --cluster_weights argument should have exactly 4"
-                          " numbers separated by commas, but it has %d. "
-                          "Please check and try again" % len(cluster_weights))
+                          " numbers separated by commas, but it has %d ('%s') "
+                          "Please check and try again", len(cluster_weights), cluster_weights)
                 raise ConfigurationError
-            final_weights = []
+
             for thing in cluster_weights:
                 try:
                     num = float(eval(thing))
-                    final_weights.append(num)
+                    assert num >= 0
                 except:
                     log.error("Unable to understand your --cluster_weights argument."
                               " It should look like this: --cluster_weights '1,2,3,6'. "
                               "Please double check that you included quotes, "
-                              "and three numbers separated by commas. Then try again. "
-                              "The part that I coudln't understand is this: '%s'" % thing)
+                              "and four numbers greater than or equal to zero "
+                              "separated by commas. Then try again. "
+                              "The part that I couldn't understand is this: '%s'" % thing)
                     raise ConfigurationError
 
-            log.info("Setting cluster_weights to: subset_rate = %.1f, freqs = %.1f, model = %.1f" % (final_weights[0], final_weights[1], final_weights[2]))
+            log.info("Setting cluster_weights to: "
+                     "subset_rate = %s, freqs = %s, model = %s, alpha %s" 
+                     % (cluster_weights[0], cluster_weights[1], 
+                        cluster_weights[2], cluster_weights[3]))
+
             self.cluster_weights = {}
-            self.cluster_weights["rate"] = final_weights[0]
-            self.cluster_weights["freqs"] = final_weights[1]
-            self.cluster_weights["model"] = final_weights[2]
-            self.cluster_weights["alpha"] = final_weights[3]
+            self.cluster_weights["rate"] =  float(eval(cluster_weights[0]))
+            self.cluster_weights["freqs"] = float(eval(cluster_weights[1]))
+            self.cluster_weights["model"] = float(eval(cluster_weights[2]))
+            self.cluster_weights["alpha"] = float(eval(cluster_weights[3]))
+
+        #check that cluster_percent is 0-100
+        try:
+            assert self.cluster_percent >= 0.0
+            assert self.cluster_percent <= 100.0
+        except:
+            
+            log.error("The rcluster-percent variable must be between 0.0 to 100.0, yours "
+                      "is %.2f. Please check and try again." % self.cluster_percent)
+            raise ConfigurationError
+
+        log.info("Setting rcluster-percent to %.2f" % self.cluster_percent)
 
         # Set the defaults into the class. These can be reset by calling
         # set_option(...)
@@ -140,8 +158,9 @@ class Configuration(object):
         log.info("Program path is here %s", self.program_path)
 
     def reset(self):
-        log.debug("Returning to original path: %s", self.old_cwd)
-        os.chdir(self.old_cwd)
+        if self.old_cwd is not None:
+            log.debug("Returning to original path: %s", self.old_cwd)
+            os.chdir(self.old_cwd)
         log.debug("Cleaning out all subsets (There are %d)...", subset.count_subsets())
         subset.clear_subsets()
 
@@ -214,7 +233,7 @@ class Configuration(object):
     def register_output_folders(self):
         self.register_folder('subsets')
         self.register_folder('schemes')
-        self.register_folder('phyml')
+        self.register_folder('phylofiles')
         self.register_folder('start_tree')
 
     def init_logger(self, pth):
@@ -269,15 +288,8 @@ class Configuration(object):
             raise ConfigurationError
 
         #TODO: not the best place for this at all..., but it works
-        if option == "search" and value == "clustering" and self.phylogeny_program != 'raxml':
-            log.error("The 'search = clustering' option is only availalbe when using raxml"
-                      " (the --raxml commandline option). Please check and try again."
-                      " See the manual for more details.")
-            raise ConfigurationError
-
-        #TODO: not the best place for this at all..., but it works
-        if option == "search" and value == "greediest" and self.phylogeny_program != 'raxml':
-            log.error("The 'search = greediest' option is only availalbe when using raxml"
+        if option == "search" and "cluster" in value and self.phylogeny_program != 'raxml':
+            log.error("Clustering methods are only available when using raxml"
                       " (the --raxml commandline option). Please check and try again."
                       " See the manual for more details.")
             raise ConfigurationError

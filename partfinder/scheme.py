@@ -75,18 +75,17 @@ class SchemeResult(object):
         #here we put in a catch for small subsets, where n<K+2
         #if this happens, the AICc actually starts rewarding very small datasets, which is wrong
         #a simple but crude catch for this is just to never allow n to go below k+2
+        self.aic = (-2.0 * lnL) + (2.0 * K)
+        self.bic = (-2.0 * lnL) + (K * logarithm(n))
+
         if n < (K + 2):
             log.warning("Scheme '%s' has a very small"
                         " number of sites (%d) compared to the number of parameters"
                         " in the models that make up the subsets"
                         " This may give misleading AICc results, so please check carefully"
-                        " if you are using the AICc for your analyses."
-                        " The results for this scheme are in the following file:"
-                        " /analysis/schemes/%s.txt\n" % (sch.name, n, sch.name))
+                        " if you are using the AICc for your analyses." % (sch.name, n,))
             n = K + 2
 
-        self.aic = (-2.0 * lnL) + (2.0 * K)
-        self.bic = (-2.0 * lnL) + (K * logarithm(n))
         self.aicc = (-2.0 * lnL) + ((2.0 * K) * (n / (n - K - 1.0)))
 
     @property

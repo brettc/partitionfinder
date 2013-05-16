@@ -49,11 +49,10 @@ class UserAnalysis(Analysis):
 
         self.cfg.progress.end()
 
-        txt = "Best scheme out of all User Schemes, analysed with %s" % self.cfg.model_selection
-        self.cfg.reporter.write_best_scheme(txt, self.results)
+        self.cfg.reporter.write_best_scheme(self.results)
 
 
-class ClusteringAnalysis(Analysis):
+class StrictClusteringAnalysis(Analysis):
     """
     This analysis uses model parameters to guess at similar partitions, then
     just joins them together this is much less accurate than other methods, but
@@ -62,7 +61,7 @@ class ClusteringAnalysis(Analysis):
     """
 
     def do_analysis(self):
-        log.info("Performing clustering analysis")
+        log.info("Performing strict clustering analysis")
 
         partnum = len(self.cfg.partitions)
         subset_count = 2 * partnum - 1
@@ -84,7 +83,7 @@ class ClusteringAnalysis(Analysis):
         # Now we try out all clusterings of the first scheme, to see if we can
         # find a better one
         while True:
-            log.info("***Clustering algorithm step %d of %d***" %
+            log.info("***Strict clustering algorithm step %d of %d***" %
                      (cur_s - 1, partnum - 1))
 
             # Calculate the subsets which are most similar
@@ -106,8 +105,7 @@ class ClusteringAnalysis(Analysis):
 
         self.cfg.progress.end()
 
-        txt = "Best scheme using Clustering Analysis, analysed with %s" % self.cfg.model_selection
-        self.cfg.reporter.write_best_scheme(txt, self.results)
+        self.cfg.reporter.write_best_scheme(self.results)
 
 
 class AllAnalysis(Analysis):
@@ -132,8 +130,7 @@ class AllAnalysis(Analysis):
             # Write out the scheme
             self.cfg.reporter.write_scheme_summary(s, res)
 
-        txt = "Best scheme out of all Schemes, analysed with %s" % self.cfg.model_selection
-        self.cfg.reporter.write_best_scheme(txt, self.results)
+        self.cfg.reporter.write_best_scheme(self.results)
 
 
 class GreedyAnalysis(Analysis):
@@ -204,38 +201,29 @@ class GreedyAnalysis(Analysis):
                  (self.results.best_scheme.name, self.cfg.model_selection,
                   self.results.best_score))
 
-        txt = "Best scheme according to Greedy algorithm, analysed with %s" % self.cfg.model_selection
-        self.cfg.reporter.write_best_scheme(txt, self.results)
+        self.cfg.reporter.write_best_scheme(self.results)
 
 
-class GreediestAnalysis(Analysis):
+class RelaxedClusteringAnalysis(Analysis):
     '''
-    A greediest algorithm for heuristic partitioning searches
+    A relaxed clustering algorithm for heuristic partitioning searches
 
-    1. Analyse up to greediest-percent of the possible lumpings
-    2. If we find greediest-schemes of major improvements (delta score >10)
-        then we take the best one*. If we find this many improvements before
-        greediest-percent we quit early
-    3. If we hit greediest-percent before we find greediest-schemes
-        improvements, we take the best improvement*
-
-    *best improvement includes all the imrpovements we find in a given
-    scheme, plus all improvements we have found anywhere at all.
-
-    4. If we get to greediest percent, and there are zero improvements we
-        can make, then we quit.
+    1. Rank subsets by their similarity (defined by clustering-weights)
+    2. Analyse cluster-percent of the most similar schemes
+    3. Take the scheme that improves the AIC/BIC score the most
+    4. Quit if no improvements.
     '''
 
     def do_analysis(self):
-        log.info("Performing greediest analysis")
+        log.info("Performing relaxed clustering analysis")
 
-        stop_at = self.cfg.greediest_percent * 0.01
+        stop_at = self.cfg.cluster_percent * 0.01
 
         model_selection = self.cfg.model_selection
         partnum = len(self.cfg.partitions)
 
-        scheme_count = submodels.count_greediest_schemes(partnum, self.cfg.greediest_percent)
-        subset_count = submodels.count_greediest_subsets(partnum, self.cfg.greediest_percent)
+        scheme_count = submodels.count_relaxed_clustering_schemes(partnum, self.cfg.cluster_percent)
+        subset_count = submodels.count_relaxed_clustering_subsets(partnum, self.cfg.cluster_percent)
 
         self.cfg.progress.begin(scheme_count, subset_count)
 
@@ -254,7 +242,7 @@ class GreediestAnalysis(Analysis):
         step = 1
         while True:
 
-            log.info("***Greediest algorithm step %d of %d***" % (step, partnum - 1))
+            log.info("***Relaxed clustering algorithm step %d of %d***" % (step, partnum - 1))
             name_prefix = "step_%d" % (step)
 
             # Get a list of all possible lumpings of the best_scheme, ordered
@@ -262,8 +250,8 @@ class GreediestAnalysis(Analysis):
             lumped_subsets = neighbour.get_ranked_clustered_subsets(
                 start_scheme, self.cfg)
 
-            # reduce the size of the lumped subsets to greediest_percent long
-            cutoff = int(math.ceil(len(lumped_subsets)*stop_at)) #round up to stop zeros            
+            # reduce the size of the lumped subsets to cluster_percent long
+            cutoff = int(math.ceil(len(lumped_subsets)*stop_at)) #round up to stop zeros
             lumped_subsets = lumped_subsets[:cutoff]
 
             # Now analyse the lumped schemes
@@ -276,16 +264,16 @@ class GreediestAnalysis(Analysis):
                     start_scheme, scheme_name, subset_grouping, self.cfg)
 
                 new_result = self.analyse_scheme(lumped_scheme)
-                
-                log.info("Difference in %s: %.1f", self.cfg.model_selection, (new_result.score-old_best_score))
-                
+
+                log.debug("Difference in %s: %.1f", self.cfg.model_selection, (new_result.score-old_best_score))
+
                 lumpings_done += 1
 
-            
+
             if self.results.best_score != old_best_score:
                 log.info("Analysed %.1f percent of the schemes for this step. The best "
-                         "scheme changed the %s score by %.1f units.", 
-                         self.cfg.greediest_percent, self.cfg.model_selection,
+                         "scheme changed the %s score by %.1f units.",
+                         self.cfg.cluster_percent, self.cfg.model_selection,
                          (self.results.best_score - old_best_score))
 
                 #write out the best scheme
@@ -298,23 +286,22 @@ class GreediestAnalysis(Analysis):
                 start_scheme = self.results.best_scheme
             else:
                 log.info("Analysed %.1f percent of the schemes for this step and found no schemes "
-                         "that improve the score, stopping" , self.cfg.greediest_percent)
+                         "that improve the score, stopping" , self.cfg.cluster_percent)
                 break
 
             # We're done if it's the scheme with everything together
             if len(set(lumped_scheme.subsets)) == 1:
                 break
-    
+
             step += 1
 
 
 
-        log.info("Greediest algorithm finished after %d steps" % step)
+        log.info("Relaxed clustering algorithm finished after %d steps" % step)
         log.info("Best scoring scheme is scheme %s, with %s score of %.3f"
                  % (self.results.best_scheme.name, model_selection, self.results.best_score))
 
-        txt = "Best scheme according to Greediest algorithm, analysed with %s" % self.cfg.model_selection
-        self.cfg.reporter.write_best_scheme(txt, self.results)
+        self.cfg.reporter.write_best_scheme(self.results)
 
 
 def choose_method(search):
@@ -324,10 +311,10 @@ def choose_method(search):
         method = UserAnalysis
     elif search == 'greedy':
         method = GreedyAnalysis
-    elif search == 'clustering':
-        method = ClusteringAnalysis
-    elif search == 'greediest':
-        method = GreediestAnalysis
+    elif search == 'hcluster':
+        method = StrictClusteringAnalysis
+    elif search == 'rcluster':
+        method = RelaxedClusteringAnalysis
     else:
         log.error("Search algorithm '%s' is not yet implemented", search)
         raise AnalysisError

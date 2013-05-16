@@ -20,7 +20,7 @@ log = logging.getLogger("reporter")
 
 import os
 
-scheme_header_template = "%-15s: %s\n"
+scheme_header_template = "%-18s: %s\n"
 scheme_subset_template = "%-6s | %-10s | %-30s | %-30s | %-40s\n"
 subset_template = "%-15s | %-15s | %-15s | %-15s | %-15s\n"
 
@@ -61,12 +61,15 @@ class TextReporter(object):
     def write_scheme_header(self, sch, result, output):
         output.write(scheme_header_template % ("Scheme Name", sch.name))
         output.write(scheme_header_template % ("Scheme lnL", result.lnl))
-        output.write(scheme_header_template % ("Scheme AIC", result.aic))
-        output.write(scheme_header_template % ("Scheme AICc", result.aicc))
-        output.write(scheme_header_template % ("Scheme BIC", result.bic))
-        output.write(scheme_header_template % ("Num params", result.sum_k))
-        output.write(scheme_header_template % ("Num sites", result.nsites))
-        output.write(scheme_header_template % ("Num subsets", result.nsubs))
+        if self.cfg.model_selection == "aic":
+            output.write(scheme_header_template % ("Scheme AIC", result.aic))
+        if self.cfg.model_selection == "aicc":
+            output.write(scheme_header_template % ("Scheme AICc", result.aicc))
+        if self.cfg.model_selection == "bic":
+            output.write(scheme_header_template % ("Scheme BIC", result.bic))
+        output.write(scheme_header_template % ("Number of params", result.sum_k))
+        output.write(scheme_header_template % ("Number of sites", result.nsites))
+        output.write(scheme_header_template % ("Number of subsets", result.nsubs))
         output.write("\n")
 
     def write_subsets(self, sch, result, output, sorted_subsets):
@@ -152,10 +155,26 @@ class TextReporter(object):
 
             number += 1
 
-    def write_best_scheme(self, txt, result):
+    def write_best_scheme(self, result):
         pth = os.path.join(self.cfg.output_path, 'best_scheme.txt')
         output = open(pth, 'wb')
-        output.write(txt)
-        output.write('\n\n')
+        output.write('Settings used\n\n')
+        output.write(scheme_header_template % ("alignment", self.cfg.alignment_path))
+        output.write(scheme_header_template % ("branchlengths", self.cfg.branchlengths))
+        output.write(scheme_header_template % ("models", ', '.join(self.cfg.models)))
+        output.write(scheme_header_template % ("model_selection",
+                                                self.cfg.model_selection))
+        output.write(scheme_header_template % ("search", self.cfg.search))
+        if self.cfg.search in ["rcluster", "hcluster"]:
+            pretty_weights = "rate = %s, base = %s, model = %s, alpha = %s" %(
+                               str(self.cfg.cluster_weights["rate"]),
+                               str(self.cfg.cluster_weights["freqs"]),
+                               str(self.cfg.cluster_weights["model"]),
+                               str(self.cfg.cluster_weights["alpha"]))
+            output.write(scheme_header_template % ("weights", pretty_weights))
+        if self.cfg.search == "rcluster":
+            output.write(scheme_header_template % ("rcluster-percent",         
+                                                   self.cfg.cluster_percent))        
+        output.write('\n\nBest partitioning scheme\n\n')        
         self.output_scheme(result.best_scheme, result.best_result, output)
         log.info("Information on best scheme is here: %s", pth)

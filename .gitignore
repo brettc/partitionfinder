@@ -14,5 +14,4 @@ example/results.bin
 .DS_Store
 .ropeproject
 analysis
-RELEASE-VERSION
-Li_2008
+.cache
