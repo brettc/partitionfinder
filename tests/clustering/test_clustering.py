@@ -19,7 +19,8 @@ DNA_hcluster6  | success              | --weights "1000,0.01,0.003,0"
 DNA_hcluster7  | PartitionFinderError | --weights "-1000,0.01,0.003,0"
 DNA_rcluster1  | success              |
 DNA_rcluster2  | success              |
-DNA_rcluster3  | success              |
+
+DNA_rcluster3  | xfail Raxml Bug      |
 
 DNA_rcluster4  | success              | --weights "1,1,1,1"
 DNA_rcluster5  | success              | --weights "0,0,0,0"
@@ -54,6 +55,8 @@ for line in test_description.split('\n'):
         kind = "protein"
     if res == 'success':
         error = None
+    elif res[:5] == 'xfail':
+        error = 'xfail', res[5:].strip()
     else:
         # Get the Exception from the local space (must be imported)
         error = locals()[res]
@@ -74,6 +77,8 @@ def test_clustering(folder_name):
     error , kind, cmdline = test_container[folder_name]
     if error == None:
         main.call_main(kind, '"%s" --raxml %s' % (full_path, cmdline))
+    elif type(error) == type((0,0)):
+        pytest.xfail(error[1])
     else:
         with pytest.raises(error):
             main.call_main(kind, '"%s" --raxml %s' % (full_path, cmdline))
