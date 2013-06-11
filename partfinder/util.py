@@ -50,7 +50,7 @@ def delete_files(pths):
     for f in pths:
         try:
             os.remove(f)
-        except:
+        except OSError:
             log.debug("Found and ignored Error when deleting file %s" % f)
             pass
     log.debug("deleted %d files" % len(pths))
