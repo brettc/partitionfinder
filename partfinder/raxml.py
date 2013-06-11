@@ -26,6 +26,7 @@ import os
 import shutil
 import sys
 import fnmatch
+import util
 
 from pyparsing import (
     Word, Literal, nums, Suppress, ParseException,
@@ -250,9 +251,9 @@ def remove_files(aln_path, model):
     dir, file = os.path.split(aln_path)
     analysis_ID = raxml_analysis_ID(aln_path, model)
     dir = os.path.abspath(dir)
-    fnames = os.listdir(dir)
-    fs = fnmatch.filter(fnames, '*%s*' % analysis_ID)
-    [os.remove(os.path.join(dir, f)) for f in fs]
+    fs = os.listdir(dir)
+    fnames = fnmatch.filter(fs, '*%s*' % analysis_ID)
+    util.delete_files(fnames)
 
 
 class RaxmlResult(object):

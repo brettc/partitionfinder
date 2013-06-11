@@ -213,7 +213,7 @@ def make_output_path(aln_path, model):
 def remove_files(aln_path, model):
     '''remove all files from the alignment directory that are produced by phyml'''
     fnames = make_output_path(aln_path, model)
-    [os.remove(f) for f in fnames]
+    util.delete_files(fnames)
 
 
 class PhymlResult(object):
