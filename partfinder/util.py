@@ -43,6 +43,18 @@ def check_file_exists(pth):
                 "Failed to find file: '%s'. Please check and try again.", pth)
             raise PartitionFinderError
 
+def delete_files(pths):
+    """ delete files, but watch out for a WindowsError that crops up sometimes with threading 
+        oddly, this error occurs, but the files get deleted anyway. So we ignore it for now
+    """
+    for f in pths:
+        try:
+            os.remove(f)
+        except:
+            log.debug("Found and ignored Error when deleting file %s" % f)
+            pass
+    log.debug("deleted %d files" % len(pths))
+
 
 def check_folder_exists(pth):
     if not os.path.exists(pth) or not os.path.isdir(pth):
