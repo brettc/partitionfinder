@@ -27,6 +27,13 @@ _base_models = {
     "GTR"   :   (5+3, "")
 }
 
+# number of free parameters in substitution model, listed as "parameters"
+# TODO we could include the GTR model, but then we'd have to calculate the number of params
+# TODO how many parameters does the RAxML MK model have????
+_base_morphology_models = {
+    "MK"   :   (0, "")
+}
+
 # number of free parameters in substitution model, listed as "aa_frequencies"
 _base_protein_models = {
     "DAYHOFF"   :   (0, ""),
@@ -75,6 +82,14 @@ def get_protein_models_gammaI():
         model_list.append("%s+I+G+F"    %(model))
     return model_list
 
+@memoize
+def get_all_morphology_models():
+    model_list = []
+    for model in _base_morphology_models.keys():
+        model_list.append("%s+G"     %(model))
+    return model_list
+
+
 def get_all_protein_models():
     model_list = get_protein_models_gamma() + get_protein_models_gammaI()
     return model_list
@@ -100,6 +115,7 @@ def get_all_dna_models():
     model_list = get_dna_models_gamma() + get_dna_models_gammaI()
     return model_list
 
+
 @memoize
 def get_all_models():
     model_list = get_all_DNA_models() + get_all_protein_models()
@@ -117,17 +133,23 @@ def get_model_commandline(modelstring):
     # Everything but the first element
     extras = elements[1:]
 
+    log.debug("Building commandline for raxml, model = '%s'" % modelstring)
+
     if model_name in _base_models.keys(): #DNA models
         commandline = ''.join([commandline, "GTRGAMMA"])
         if "I" in extras:
             commandline = ''.join([commandline, "I"])
-    else: #protein models, look like this 'PROTGAMMAILGF
+    elif model_name in _base_protein_models: #protein models, look like this 'PROTGAMMAILGF
         commandline = ''.join([commandline, "PROTGAMMA"])
         if "I" in extras:
             commandline = ''.join([commandline, "I"])
         commandline = ''.join([commandline, model_name])        
         if "F" in extras:
             commandline = ''.join([commandline, "F"])
+    elif model_name in _base_morphology_models:
+        # these look like this: "-m MULTIGAMMA -K MK" or ""-m MULTIGAMMA -K GTR"
+        commandline = "-m MULTIGAMMA -K %s" % model_name
+
 
     return commandline
 
@@ -141,11 +163,16 @@ def get_num_params(modelstring):
     model_name = elements[0]
     if model_name in _base_models.keys():
         model_params = _base_models[model_name][0]
-    else:
+    elif model_name in _base_protein_models.keys():
         model_params = _base_protein_models[model_name][0]
         if "F" in elements[1:]:
             model_params = model_params+19-1 #the -1 here is to account for the fact we add 1 for the + in '+F' below
-    
+    elif model_name in _base_morphology_models.keys():
+        model_params = _base_morphology_models[model_name][0]
+    else:
+        log.error("Unrecognised datatype: '%s'" % (datatype))
+        raise(RaxmlError)
+
     extras = modelstring.count("+")
     total = model_params+extras
     log.debug("Model: %s Params: %d" %(modelstring, total))

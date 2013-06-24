@@ -79,7 +79,8 @@ class SchemeResult(object):
         self.bic = (-2.0 * lnL) + (K * logarithm(n))
 
         if n < (K + 2):
-            log.warning("Scheme '%s' has a very small"
+            if self.model_selection.lower() == "aicc":
+                log.warning("Scheme '%s' has a very small"
                         " number of sites (%d) compared to the number of parameters"
                         " in the models that make up the subsets"
                         " This may give misleading AICc results, so please check carefully"

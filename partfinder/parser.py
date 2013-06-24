@@ -174,7 +174,9 @@ class Parser(object):
 
         all_dna_mods = set(self.phylo_models.get_all_dna_models())
         all_protein_mods = set(self.phylo_models.get_all_protein_models())
+        all_morphology_mods = set(self.phylo_models.get_all_morphology_models())
         total_mods = all_dna_mods.union(all_protein_mods)
+        total_mods = total_mods.union(all_morphology_mods)
 
         mods = tokens[1]
         DNA_mods = 0
@@ -256,13 +258,13 @@ class Parser(object):
                 " If you're analysing a nucelotide dataset, please use PartitionFinder.py,"
                 " which you can download here: www.robertlanfear.com/partitionfinder"
                 " The models line in the .cfg file is")
-        else:  # we've got a mixture of models.
-            raise ParserError(
-                text, loc, "The models list contains a mixture of protein and nucelotide models."
-                " If you're analysing a nucelotide dataset, please use PartitionFinder."
-                " If you're analysing an amino acid dataset, please use PartitionFinderProtein."
-                " You can download both of these programs from here: www.robertlanfear.com/partitionfinder"
-                " The models line in the .cfg file is")
+        #else:  # we've got a mixture of models.
+            #raise ParserError(
+            #    text, loc, "The models list contains a mixture of protein and nucelotide models."
+            #    " If you're analysing a nucelotide dataset, please use PartitionFinder."
+            #    " If you're analysing an amino acid dataset, please use PartitionFinderProtein."
+            #    " You can download both of these programs from here: www.robertlanfear.com/partitionfinder"
+            #    " The models line in the .cfg file is")
 
     def define_range(self, part):
         """Turn the 1, 2 or 3 tokens into integers, supplying a default if needed"""

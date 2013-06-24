@@ -122,6 +122,9 @@ def make_topology(alignment_path, datatype, cmdline_extras):
     elif datatype == "protein":
         command = "-y -s '%s' -m PROTGAMMALG -n MPTREE -p 123456789 %s" % (
             alignment_path, cmdline_extras)
+    elif datatype == "morphology":
+        command = "-y -s '%s' -m MULTIGAMMA -K MK -n MPTREE -p 123456789 %s" % (
+            alignment_path, cmdline_extras)
     else:
         log.error("Unrecognised datatype: '%s'" % (datatype))
         raise(RaxmlError)
@@ -150,11 +153,19 @@ def make_branch_lengths(alignment_path, topology_path, datatype, cmdline_extras)
         command = "-f e -s '%s' -t '%s' -m GTRGAMMA -n BLTREE -w '%s' %s" % (
             alignment_path, tree_path, os.path.abspath(dir_path), cmdline_extras)
         run_raxml(command)
-    if datatype == "protein":
+    elif datatype == "protein":
         log.info("Estimating LG+G branch lengths on tree using RAxML")
         command = "-f e -s '%s' -t '%s' -m PROTGAMMALG -n BLTREE -w '%s' %s" % (
             alignment_path, tree_path, os.path.abspath(dir_path), cmdline_extras)
         run_raxml(command)
+    elif datatype == "morphology":
+        log.info("Estimating MK+G branch lengths on tree using RAxML")
+        command = "-f e -s '%s' -t '%s' -m MULTIGAMMA -K MK -n BLTREE -w '%s' %s" % (
+            alignment_path, tree_path, os.path.abspath(dir_path), cmdline_extras)
+        run_raxml(command)
+    else:
+        log.error("Unrecognised datatype: '%s'" % (datatype))
+        raise(RaxmlError)
 
     dir, aln = os.path.split(alignment_path)
     tree_path = os.path.join(dir, "RAxML_result.BLTREE")
@@ -274,6 +285,9 @@ class Parser(object):
             letters = "ARNDCQEGHILKMFPSTWYV"
         elif datatype == "DNA":
             letters = "ATCG"
+        elif datatype == "morphology":
+            # TODO: WTF are all these letters for?
+            letters = "ABCDEFGHIJKLMNOPQRSTUV0123456789"
         else:
             log.error("Unknown datatype '%s', please check" % datatype)
             raise RaxmlError
