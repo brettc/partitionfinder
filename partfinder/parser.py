@@ -20,8 +20,7 @@ log = logging.getLogger("parser")
 
 from pyparsing import (
     Word, OneOrMore, alphas, nums, Suppress, Optional, Group, stringEnd,
-    delimitedList, pythonStyleComment, line, lineno, col, Keyword, Or,
-    NoMatch, CaselessKeyword, ParseException, SkipTo)
+    delimitedList, pythonStyleComment, line, lineno, col, Keyword, CaselessKeyword, ParseException )
 
 # debugging
 # ParserElement.verbose_stacktrace = True
@@ -186,23 +185,23 @@ class Parser(object):
             modsgroup = mods.predefined
             if modsgroup.lower() == "all":
                 modlist = list(all_dna_mods)
-                DNA_mods = DNA_mods + 1
+                DNA_mods += 1
             elif modsgroup.lower() == "mrbayes":
                 modlist = set(phyml_models.get_mrbayes_models())
-                DNA_mods = DNA_mods + 1
+                DNA_mods += 1
             elif modsgroup.lower() == "beast":
                 modlist = set(phyml_models.get_beast_models())
-                DNA_mods = DNA_mods + 1
+                DNA_mods += 1
             elif modsgroup.lower() == "raxml":
                 modlist = set(phyml_models.get_raxml_models())
-                DNA_mods = DNA_mods + 1
+                DNA_mods += 1
             elif modsgroup.lower() == "all_protein":
                 modlist = set(self.phylo_models.get_all_protein_models())
-                prot_mods = prot_mods + 1
+                prot_mods += 1
             elif modsgroup.lower() == "all_protein_gamma":
                 if self.cfg.phylogeny_program == "raxml":
                     modlist = set(raxml_models.get_protein_models_gamma())
-                    prot_mods = prot_mods + 1
+                    prot_mods += 1
                 else:
                     log.error("The models option 'all_protein_gamma' is only available with raxml"
                               ", (the --raxml commandline option). Please check and try again")
@@ -210,7 +209,7 @@ class Parser(object):
             elif modsgroup.lower() == "all_protein_gammaI":
                 if self.cfg.phylogeny_program == "raxml":
                     modlist = set(raxml_models.get_protein_models_gammaI())
-                    prot_mods = prot_mods + 1
+                    prot_mods += 1
                 else:
                     log.error("The models option 'all_protein_gammaI' is only available with raxml"
                               ", (the --raxml commandline option). Please check and try again")
@@ -228,9 +227,9 @@ class Parser(object):
                                " manual and try again" % (m, self.cfg.phylogeny_program))
 
             if m in all_dna_mods:
-                DNA_mods = DNA_mods + 1
+                DNA_mods += 1
             if m in all_protein_mods:
-                prot_mods = prot_mods + 1
+                prot_mods += 1
 
             self.cfg.models.add(m)
 
@@ -251,15 +250,15 @@ class Parser(object):
                 " The models line in the .cfg file is")
         elif DNA_mods > 0 and prot_mods == 0 and self.cfg.datatype == "protein":
             raise ParserError(
-                text, loc, "The models list contains only models of nucelotide change."
+                text, loc, "The models list contains only models of nucleotide change."
                 " PartitionFinderProtein.py only works with amino acid models (like the WAG model)."
-                " If you're analysing a nucelotide dataset, please use PartitionFinder.py,"
+                " If you're analysing a nucleotide dataset, please use PartitionFinder.py,"
                 " which you can download here: www.robertlanfear.com/partitionfinder"
                 " The models line in the .cfg file is")
         else:  # we've got a mixture of models.
             raise ParserError(
-                text, loc, "The models list contains a mixture of protein and nucelotide models."
-                " If you're analysing a nucelotide dataset, please use PartitionFinder."
+                text, loc, "The models list contains a mixture of protein and nucleotide models."
+                " If you're analysing a nucleotide dataset, please use PartitionFinder."
                 " If you're analysing an amino acid dataset, please use PartitionFinderProtein."
                 " You can download both of these programs from here: www.robertlanfear.com/partitionfinder"
                 " The models line in the .cfg file is")
@@ -310,7 +309,7 @@ class Parser(object):
             subs = tuple(self.subsets)
             self.subsets = []
 
-            if self.ignore_schemes == False:
+            if not self.ignore_schemes:
                 sch = scheme.Scheme(self.cfg, scheme_def.name, subs)
                 self.cfg.user_schemes.add_scheme(sch)
 
@@ -344,12 +343,12 @@ class Parser(object):
                     missing = e
 
             if missing:
-                log.info("It looks like the '%s' option might be missing or in the wrong place" % (missing))
-                log.info("Or perhaps something is wrong in the lines just before the '%s' option" % (missing))
+                log.info("It looks like the '%s' option might be missing or in the wrong place" % missing)
+                log.info("Or perhaps something is wrong in the lines just before the '%s' option" % missing)
                 log.info("Please double check the .cfg file and try again")
             else:
                 log.info(
-                    "The line causing the problem is this: '%s'" % (p.line))
+                    "The line causing the problem is this: '%s'" % p.line)
                 log.info("Please check that line, and make sure it appears in the right place in the .cfg file.")
                 log.info("If it looks OK, try double-checking the semi-colons on other lines in the .cfg file")
             raise PartitionFinderError
