@@ -109,8 +109,10 @@ class Analysis(object):
         # Begin by making a filtered alignment, containing ONLY those columns
         # that are defined in the subsets
         subset_with_everything = subset.Subset(*list(self.cfg.partitions))
-        self.filtered_alignment = SubsetAlignment(self.alignment, subset_with_everything)
-        self.filtered_alignment_path = os.path.join(self.cfg.start_tree_path, 'filtered_source.phy')
+        self.filtered_alignment = SubsetAlignment(
+            self.alignment, subset_with_everything)
+        self.filtered_alignment_path = os.path.join(
+            self.cfg.start_tree_path,  'filtered_source.phy')
         self.filtered_alignment.write(self.filtered_alignment_path)
 
         # Now we've written this alignment, we need to lock everything in
@@ -119,16 +121,19 @@ class Analysis(object):
         self.cfg.partitions.finalise()
 
         # We start by copying the alignment
-        self.alignment_path = os.path.join(self.cfg.start_tree_path, 'source.phy')
+        self.alignment_path = os.path.join(
+            self.cfg.start_tree_path, 'source.phy')
 
         # Now check for the tree
-        tree_path = self.cfg.processor.make_tree_path(self.filtered_alignment_path)
+        tree_path = self.cfg.processor.make_tree_path(
+            self.filtered_alignment_path)
 
-        if self.need_new_tree(tree_path) == True:
+        if self.need_new_tree(tree_path):
             log.debug("Estimating new starting tree, no old tree found")
             
             # If we have a user tree, then use that, otherwise, create a topology
-            util.clean_out_folder(self.cfg.start_tree_path, keep = ["filtered_source.phy", "source.phy"])
+            util.clean_out_folder(self.cfg.start_tree_path,
+                                  keep=["filtered_source.phy", "source.phy"])
             
             if user_path is not None and user_path != "":
                 # Copy it into the start tree folder
