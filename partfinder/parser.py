@@ -1,19 +1,19 @@
 #Copyright (C) 2012 Robert Lanfear and Brett Calcott
 #
-#This program is free software: you can redistribute it and/or modify it
-#under the terms of the GNU General Public License as published by the
-#Free Software Foundation, either version 3 of the License, or (at your
-#option) any later version.
+# This program is free software: you can redistribute it and/or modify it under
+# the terms of the GNU General Public License as published by the Free Software
+# Foundation, either version 3 of the License, or (at your option) any later
+# version.
 #
-#This program is distributed in the hope that it will be useful, but
-#WITHOUT ANY WARRANTY; without even the implied warranty of
-#MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-#General Public License for more details. You should have received a copy
-#of the GNU General Public License along with this program.  If not, see
-#<http://www.gnu.org/licenses/>. PartitionFinder also includes the PhyML
-#program, the RAxML program, and the PyParsing library,
-#all of which are protected by their own licenses and conditions, using
-#PartitionFinder implies that you agree with those licences and conditions as well.
+# This program is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+# details. You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+# PartitionFinder also includes the PhyML program, the RAxML program, and the
+# PyParsing library, all of which are protected by their own licenses and
+# conditions, using PartitionFinder implies that you agree with those licences
+# and conditions as well.
 
 import logging
 log = logging.getLogger("parser")
@@ -52,7 +52,6 @@ class Parser(object):
 
     The results are put into the configuration object
     """
-
     def __init__(self, cfg):
         """Construct parser from the configuration
         """
@@ -72,8 +71,6 @@ class Parser(object):
         # Some syntax that we need, but don't care about
         SEMICOLON = (Suppress(";"))
         EQUALS = Suppress("=")
-        OPENB = Suppress("(")
-        CLOSEB = Suppress(")")
         BACKSLASH = Suppress("\\")
         DASH = Suppress("-")
 
@@ -97,16 +94,14 @@ class Parser(object):
 
         MODEL_NAME = Word(alphas + nums + '+')
         model_list = delimitedList(MODEL_NAME)
-        model_def = Keyword("models") + EQUALS + Group(
-            (
+        model_def = Keyword("models") + EQUALS + Group((
                 CaselessKeyword("all") |
                 CaselessKeyword("mrbayes") |
                 CaselessKeyword("raxml") |
                 CaselessKeyword("beast") |
                 CaselessKeyword("all_protein") |
                 CaselessKeyword("all_protein_gamma") |
-                CaselessKeyword("all_protein_gammaI")
-            )("predefined") |
+            CaselessKeyword("all_protein_gammaI"))("predefined") |
             Group(model_list)("userlist")) + SEMICOLON
         model_def.setParseAction(self.set_models)
 
@@ -116,27 +111,30 @@ class Parser(object):
 
         # Data Block Parsing
         column = Word(nums)
-        part_name = Word(alphas + '_-' + nums)
-        part_def = column("start") +\
+        block_name = Word(alphas + '_-' + nums)
+        block_def = column("start") +\
             Optional(DASH + column("end")) +\
             Optional(BACKSLASH + column("step"))
+        block_def.setParseAction(self.define_range)
 
-        part_def.setParseAction(self.define_range)
-        part_def_list = Group(OneOrMore(Group(part_def)))
-        partition = Optional("charset") + part_name("name") + \
-            EQUALS + part_def_list("parts") + SEMICOLON
-        partition.setParseAction(self.define_partition)
-        part_list = OneOrMore(Group(partition))
-        part_section = Suppress("[data_blocks]") + part_list
+        block_list_def = Group(OneOrMore(Group(block_def)))
+
+        user_subset_def = Optional("charset") + block_name("name") + \
+            EQUALS + block_list_def("parts") + SEMICOLON
+        user_subset_def.setParseAction(self.define_user_subset)
+
+        block_def_list = OneOrMore(Group(user_subset_def))
+        block_section = Suppress("[data_blocks]") + block_def_list
 
         # Scheme Parsing
         scheme_name = Word(alphas + '_-' + nums)
 
         # Make a copy, cos we set a different action on it
-        part_name_ref = part_name.copy()
-        part_name_ref.setParseAction(self.check_part_exists)
+        block_ref = block_name.copy()
+        block_ref.setParseAction(self.check_block_exists)
 
-        subset = Group(OPENB + delimitedList(part_name_ref("name")) + CLOSEB)
+        subset = Group(Suppress("(") +
+                       delimitedList(block_ref("name")) + Suppress(")"))
         subset.setParseAction(self.define_subset)
 
         scheme = Group(OneOrMore(subset))
@@ -150,20 +148,17 @@ class Parser(object):
         scheme_section = \
             Suppress("[schemes]") + scheme_algo + Optional(scheme_list)
 
-        # We've defined the grammar for each section. Here we just put it all together
+        # We've defined the grammar for each section.
+        # Here we just put it all together
         self.config_parser = (
-            top_section + part_section + scheme_section + stringEnd)
+            top_section + block_section + scheme_section + stringEnd)
 
     def set_alignment(self, text, loc, tokens):
         value = tokens[1]
         self.cfg.set_alignment_file(value)
-        # TODO Make sure it is readable!
-        # raise ParserError(text, loc, "No '%s' defined in the configuration" % var)
-        #
 
-    def set_user_tree(self, text, loc, tokens):
+    def set_user_tree(self, tokens):
         self.cfg.user_tree = tokens[1]
-        pass
 
     def set_simple_option(self, text, loc, tokens):
         try:
@@ -183,7 +178,7 @@ class Parser(object):
 
         mods = tokens[1]
         DNA_mods = 0
-        prot_mods = 0
+        protein_mods = 0
         if mods.userlist:
             modlist = mods.userlist
             log.info("Setting 'models' to a user-specified list")
@@ -203,11 +198,11 @@ class Parser(object):
                 DNA_mods += 1
             elif modsgroup.lower() == "all_protein":
                 modlist = set(self.phylo_models.get_all_protein_models())
-                prot_mods += 1
+                protein_mods += 1
             elif modsgroup.lower() == "all_protein_gamma":
                 if self.cfg.phylogeny_program == "raxml":
                     modlist = set(raxml_models.get_protein_models_gamma())
-                    prot_mods += 1
+                    protein_mods += 1
                 else:
                     log.error("The models option 'all_protein_gamma' is only available with raxml"
                               ", (the --raxml commandline option). Please check and try again")
@@ -215,7 +210,7 @@ class Parser(object):
             elif modsgroup.lower() == "all_protein_gammaI":
                 if self.cfg.phylogeny_program == "raxml":
                     modlist = set(raxml_models.get_protein_models_gammaI())
-                    prot_mods += 1
+                    protein_mods += 1
                 else:
                     log.error("The models option 'all_protein_gammaI' is only available with raxml"
                               ", (the --raxml commandline option). Please check and try again")
@@ -235,26 +230,27 @@ class Parser(object):
             if m in all_dna_mods:
                 DNA_mods += 1
             if m in all_protein_mods:
-                prot_mods += 1
+                protein_mods += 1
 
             self.cfg.models.add(m)
 
         log.info("The models included in this analysis are: %s",
                  ", ".join(self.cfg.models))
 
-        #check datatype against the model list that we've got a sensible model list
-        if DNA_mods > 0 and prot_mods == 0 and self.cfg.datatype == "DNA":
+        # Check data type against the model list that we've got a sensible
+        # model list
+        if DNA_mods > 0 and protein_mods == 0 and self.cfg.datatype == "DNA":
             log.info("Setting datatype to 'DNA'")
-        elif DNA_mods == 0 and prot_mods > 0 and self.cfg.datatype == "protein":
+        elif DNA_mods == 0 and protein_mods > 0 and self.cfg.datatype == "protein":
             log.info("Setting datatype to 'protein'")
-        elif DNA_mods == 0 and prot_mods > 0 and self.cfg.datatype == "DNA":
+        elif DNA_mods == 0 and protein_mods > 0 and self.cfg.datatype == "DNA":
             raise ParserError(
                 text, loc, "The models list contains only models of amino acid change."
                 " PartitionFinder.py only works with nucleotide models (like the GTR model)."
                 " If you're analysing an amino acid dataset, please use PartitionFinderProtein,"
                 " which you can download here: www.robertlanfear.com/partitionfinder."
                 " The models line in the .cfg file is")
-        elif DNA_mods > 0 and prot_mods == 0 and self.cfg.datatype == "protein":
+        elif DNA_mods > 0 and protein_mods == 0 and self.cfg.datatype == "protein":
             raise ParserError(
                 text, loc, "The models list contains only models of nucleotide change."
                 " PartitionFinderProtein.py only works with amino acid models (like the WAG model)."
