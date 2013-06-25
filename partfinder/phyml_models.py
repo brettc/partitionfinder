@@ -18,8 +18,6 @@
 import logging
 log = logging.getLogger("analysis")
 
-import config
-
 # TODO need some error checking!
 
 # number of free parameters in substitution model, listed as "model+base_frequencies"
@@ -72,75 +70,75 @@ def memoize(f):
 
 @memoize
 def get_all_dna_models():
-    '''
+    """
     Return a list of all implemented _base_models
-    '''
+    """
     model_list = []
     for model in _base_models.keys():
         model_list.append(model)
-        model_list.append("%s+I"   %(model))
-        model_list.append("%s+G"   %(model))
-        model_list.append("%s+I+G" %(model))
+        model_list.append("%s+I"   % model)
+        model_list.append("%s+G"   % model)
+        model_list.append("%s+I+G" % model)
     return model_list
 
 @memoize
 def get_all_protein_models():
-    '''
+    """
     Return a list of all implemented _base__protein_models
-    '''
+    """
     model_list = []
     for model in _base_protein_models.keys():
         model_list.append(model)
-        model_list.append("%s+F"     %(model))
-        model_list.append("%s+I"     %(model))
-        model_list.append("%s+G"     %(model))
-        model_list.append("%s+I+G"   %(model))
-        model_list.append("%s+I+F"   %(model))
-        model_list.append("%s+G+F"   %(model))
-        model_list.append("%s+I+G+F" %(model))
+        model_list.append("%s+F"     % model)
+        model_list.append("%s+I"     % model)
+        model_list.append("%s+G"     % model)
+        model_list.append("%s+I+G"   % model)
+        model_list.append("%s+I+F"   % model)
+        model_list.append("%s+G+F"   % model)
+        model_list.append("%s+I+G+F" % model)
     return model_list
 
 @memoize
 def get_mrbayes_models():
-    '''
+    """
     Return a list of all models implemented in MrBayes. Thanks to Ainsley Seago for this.
-    '''
+    """
     mrbayes_base_models = ["JC", "F81", "K80", "HKY", "SYM", "GTR"]
     model_list = []
     for model in mrbayes_base_models:
         model_list.append(model)
-        model_list.append("%s+I"   %(model))
-        model_list.append("%s+G"   %(model))
-        model_list.append("%s+I+G" %(model))
+        model_list.append("%s+I"   % model)
+        model_list.append("%s+G"   % model)
+        model_list.append("%s+I+G" % model)
     return model_list
 
 def get_beast_models():
-    '''
+    """
     Return a list of all models implemented in BEAST v1.7.2.
-    '''
+    """
     beast_base_models = ["K80", "TrNef", "SYM", "HKY", "TrN", "GTR"]
     model_list = []
     for model in beast_base_models:
         model_list.append(model)
-        model_list.append("%s+I"   %(model))
-        model_list.append("%s+G"   %(model))
-        model_list.append("%s+I+G" %(model))
+        model_list.append("%s+I"   % model)
+        model_list.append("%s+G"   % model)
+        model_list.append("%s+I+G" % model)
     return model_list
 
 
 @memoize
 def get_raxml_models():
-    '''
+    """
     Return a list of all models implemented in RaxML. Thanks to Ainsley Seago for this.
-    '''
+    """
     model_list = ["GTR+G", "GTR+I+G"]
     return model_list
 
 @memoize
 def get_protein_models():
-    '''
+    """
     Return a list of all protein models implemented in PhyML
-    '''
+    """
     model_list = [
 		"LG",
 		"cheese"
@@ -151,9 +149,9 @@ def get_protein_models():
 
 @memoize
 def get_num_params(modelstring):
-    '''
+    """
     Input a model string like HKY+I+G or LG+G+F, and get the number of parameters
-    '''
+    """
     elements = modelstring.split("+")
     model_name = elements[0]
     if model_name in _base_models.keys():
@@ -171,23 +169,23 @@ def get_num_params(modelstring):
  
 @memoize
 def get_model_difficulty(modelstring):
-    '''
+    """
     Input a model string like HKY+I+G or LG+G+F, and a guess about how long it takes to analyse
     Right now, this is done with a simple hack. I just return a number that is the number of params
     plus a modifier for extra stuff like +I and +G
     the hardest models are +I+G, then +G, then +I
     this is just used to rank models for ordering the analysis
     The return is a 'difficulty' score that can be used to rank models
-    '''
+    """
     elements = modelstring.split("+")
 
     model_params = get_num_params(modelstring)
     
     difficulty = 0
     if "G" in elements[1:]:
-        difficulty = difficulty + 2000
-    if "I" in elements[1:]: 
-        difficulty = difficulty + 1000
+        difficulty += 2000
+    if "I" in elements[1:]:
+        difficulty += 1000
     
     extras = modelstring.count("+")
     total = model_params+extras+difficulty
@@ -199,9 +197,9 @@ def get_model_difficulty(modelstring):
  
 @memoize
 def get_model_commandline(modelstring):
-    '''
+    """
     Input a model string, and get the PhyML command line
-    '''
+    """
 
     # This is always the same - optimise brlens and model, not tree
     commandline = ["-o lr "]
@@ -233,15 +231,4 @@ def get_model_commandline(modelstring):
     return " ".join(commandline)
 
 if __name__ == "__main__":
-    print "  ",
-    print "Name".ljust(12),
-    print "Params".ljust(10),
-    print "CommandLine"
-    for i, model in enumerate(get_all_models()):
-        print str(i+1).rjust(2), 
-        print model.ljust(12),
-        print str(get_num_params(model)).ljust(10),
-        print get_model_commandline(model)
-    for model in get_protein_models():
-        print model
-
+    pass

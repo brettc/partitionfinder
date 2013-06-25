@@ -20,9 +20,10 @@ log = logging.getLogger("parser")
 
 from pyparsing import (
     Word, OneOrMore, alphas, nums, Suppress, Optional, Group, stringEnd,
-    delimitedList, pythonStyleComment, line, lineno, col, Keyword, CaselessKeyword, ParseException )
+    delimitedList, pythonStyleComment, line, lineno, col, Keyword,
+    CaselessKeyword, ParseException )
 
-# debugging
+# Use this for debugging
 # ParserElement.verbose_stacktrace = True
 
 import partition
@@ -32,8 +33,6 @@ import phyml_models
 import raxml_models
 import config
 from util import PartitionFinderError
-
-# Only used internally
 
 
 class ParserError(Exception):
@@ -54,9 +53,9 @@ class Parser(object):
     The results are put into the configuration object
     """
 
-    # These will get set in the configuration passed in
     def __init__(self, cfg):
-        # For adding variables
+        """Construct parser from the configuration
+        """
         self.cfg = cfg
 
         # Use these to keep track of stuff that is going on in parser
@@ -64,13 +63,13 @@ class Parser(object):
         self.subsets = []
         self.init_grammar()
         self.ignore_schemes = False
-        # provide useful error messages when parsing settings with limited options
 
     def init_grammar(self):
         """Set up the parsing classes
         Any changes to the grammar of the config file be done here.
         """
-        # Some syntax that we need, but don't bother looking at
+
+        # Some syntax that we need, but don't care about
         SEMICOLON = (Suppress(";"))
         EQUALS = Suppress("=")
         OPENB = Suppress("(")
@@ -79,74 +78,81 @@ class Parser(object):
         DASH = Suppress("-")
 
         # Top Section
-        FILENAME = Word(alphas + nums + '-_.')
-        alignmentdef = Keyword('alignment') + EQUALS + FILENAME + SEMICOLON
-        alignmentdef.setParseAction(self.set_alignment)
+        FILE_NAME = Word(alphas + nums + '-_.')
+        alignment_def = Keyword('alignment') + EQUALS\
+                        + FILE_NAME + SEMICOLON
+        alignment_def.setParseAction(self.set_alignment)
 
-        treedef = Keyword('user_tree_topology') + EQUALS + FILENAME + SEMICOLON
-        treedef.setParseAction(self.set_user_tree)
+        tree_def = Keyword('user_tree_topology') + EQUALS\
+                   + FILE_NAME + SEMICOLON
+        tree_def.setParseAction(self.set_user_tree)
 
         def simple_option(name):
-            opt = Keyword(name) + EQUALS + Word(alphas + nums + '-_') + SEMICOLON
+            opt = Keyword(name) + EQUALS +\
+                  Word(alphas + nums + '-_') + SEMICOLON
             opt.setParseAction(self.set_simple_option)
             return opt
 
-        branchdef = simple_option('branchlengths')
+        branch_def = simple_option('branchlengths')
 
-        MODELNAME = Word(alphas + nums + '+')
-        modellist = delimitedList(MODELNAME)
-        modeldef = Keyword("models") + EQUALS + Group(
+        MODEL_NAME = Word(alphas + nums + '+')
+        model_list = delimitedList(MODEL_NAME)
+        model_def = Keyword("models") + EQUALS + Group(
             (
-                CaselessKeyword("all") | CaselessKeyword("mrbayes") | CaselessKeyword("raxml") |
-                CaselessKeyword("beast") | CaselessKeyword("all_protein") |
-                CaselessKeyword(
-                    "all_protein_gamma") | CaselessKeyword("all_protein_gammaI")
+                CaselessKeyword("all") |
+                CaselessKeyword("mrbayes") |
+                CaselessKeyword("raxml") |
+                CaselessKeyword("beast") |
+                CaselessKeyword("all_protein") |
+                CaselessKeyword("all_protein_gamma") |
+                CaselessKeyword("all_protein_gammaI")
             )("predefined") |
-            Group(modellist)("userlist")) + SEMICOLON
-        modeldef.setParseAction(self.set_models)
+            Group(model_list)("userlist")) + SEMICOLON
+        model_def.setParseAction(self.set_models)
 
-        modseldef = simple_option("model_selection")
-        topsection = alignmentdef + Optional(treedef) + branchdef + \
-            modeldef + modseldef
+        model_selection_def = simple_option("model_selection")
+        top_section = alignment_def + Optional(tree_def) + branch_def + \
+            model_def + model_selection_def
 
-        # Partition Parsing
+        # Data Block Parsing
         column = Word(nums)
-        partname = Word(alphas + '_-' + nums)
-        partdef = column("start") +\
+        part_name = Word(alphas + '_-' + nums)
+        part_def = column("start") +\
             Optional(DASH + column("end")) +\
             Optional(BACKSLASH + column("step"))
 
-        partdef.setParseAction(self.define_range)
-        partdeflist = Group(OneOrMore(Group(partdef)))
-        partition = Optional("charset") + partname("name") + \
-            EQUALS + partdeflist("parts") + SEMICOLON
+        part_def.setParseAction(self.define_range)
+        part_def_list = Group(OneOrMore(Group(part_def)))
+        partition = Optional("charset") + part_name("name") + \
+            EQUALS + part_def_list("parts") + SEMICOLON
         partition.setParseAction(self.define_partition)
-        partlist = OneOrMore(Group(partition))
-        partsection = Suppress("[data_blocks]") + partlist
+        part_list = OneOrMore(Group(partition))
+        part_section = Suppress("[data_blocks]") + part_list
 
         # Scheme Parsing
-        schemename = Word(alphas + '_-' + nums)
-        partnameref = partname.copy(
-        )  # Make a copy, cos we set a different action on it
-        partnameref.setParseAction(self.check_part_exists)
+        scheme_name = Word(alphas + '_-' + nums)
 
-        subset = Group(OPENB + delimitedList(partnameref("name")) + CLOSEB)
+        # Make a copy, cos we set a different action on it
+        part_name_ref = part_name.copy()
+        part_name_ref.setParseAction(self.check_part_exists)
+
+        subset = Group(OPENB + delimitedList(part_name_ref("name")) + CLOSEB)
         subset.setParseAction(self.define_subset)
 
         scheme = Group(OneOrMore(subset))
-        schemedef = schemename("name") + \
+        scheme_def = scheme_name("name") + \
             EQUALS + scheme("scheme") + SEMICOLON
-        schemedef.setParseAction(self.define_schema)
+        scheme_def.setParseAction(self.define_schema)
 
-        schemelist = OneOrMore(Group(schemedef))
+        scheme_list = OneOrMore(Group(scheme_def))
 
-        schemealgo = simple_option("search")
-        schemesection = \
-            Suppress("[schemes]") + schemealgo + Optional(schemelist)
+        scheme_algo = simple_option("search")
+        scheme_section = \
+            Suppress("[schemes]") + scheme_algo + Optional(scheme_list)
 
         # We've defined the grammar for each section. Here we just put it all together
         self.config_parser = (
-            topsection + partsection + schemesection + stringEnd)
+            top_section + part_section + scheme_section + stringEnd)
 
     def set_alignment(self, text, loc, tokens):
         value = tokens[1]
@@ -173,7 +179,7 @@ class Parser(object):
 
         all_dna_mods = set(self.phylo_models.get_all_dna_models())
         all_protein_mods = set(self.phylo_models.get_all_protein_models())
-        total_mods = all_dna_mods.union(all_protein_mods)
+        total_mods = all_dna_mods | all_protein_mods
 
         mods = tokens[1]
         DNA_mods = 0
