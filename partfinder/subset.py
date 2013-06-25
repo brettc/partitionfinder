@@ -1,18 +1,18 @@
-#Copyright (C) 2012 Robert Lanfear and Brett Calcott
+# Copyright (C) 2012 Robert Lanfear and Brett Calcott
 #
 # This program is free software: you can redistribute it and/or modify it under
 # the terms of the GNU General Public License as published by the Free Software
 # Foundation, either version 3 of the License, or (at your option) any later
 # version.
 #
-#This program is distributed in the hope that it will be useful, but
-#WITHOUT ANY WARRANTY; without even the implied warranty of
-#MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-#General Public License for more details. You should have received a copy
-#of the GNU General Public License along with this program.  If not, see
+# This program is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+# General Public License for more details. You should have received a copy
+# of the GNU General Public License along with this program.  If not, see
 #<http://www.gnu.org/licenses/>. PartitionFinder also includes the PhyML
-#program, the RAxML program, and the PyParsing library,
-#all of which are protected by their own licenses and conditions, using
+# program, the RAxML program, and the PyParsing library,
+# all of which are protected by their own licenses and conditions, using
 # PartitionFinder implies that you agree with those licences and
 # conditions as well.
 
@@ -22,15 +22,11 @@ log = logging.getLogger("subset")
 import os
 import weakref
 
-from hashlib import md5
-
-# import base64
-# from zlib import compress
-
 import cPickle as pickle
 from math import log as logarithm
 from alignment import Alignment, SubsetAlignment
-from util import PartitionFinderError, remove_runID_files
+from util import PartitionFinderError, remove_runID_files, make_warning
+import subset_ops
 
 FRESH, PREPARED, DONE = range(3)
 
@@ -39,68 +35,29 @@ class SubsetError(PartitionFinderError):
     pass
 
 
-def count_subsets():
-    return 1
-    # return len(Subset._cache)
-    #
-
-
-def clear_subsets():
-    pass
-    # Subset._cache.clear()
-
-
 class Subset(object):
-    """A Subset of Partitions
+    """Contains a set of columns in the Alignment
     """
-    # TODO: Move this to the config -- once we have a global one
     _cache = weakref.WeakValueDictionary()
 
-    def __new__(cls, *parts):
-        """Return the SAME subset if the partitions are identical. This is
-        basically a pythonized factory. See here:
+    def __new__(cls, cfg, column_set):
+        """Returns the identical subset if the columns are identical.
+
+        This is basically a pythonized factory. See here:
         http://codesnipers.com/?q=python-flyweights
         """
-
-        cacheid = frozenset(parts)
-        obj = Subset._cache.get(cacheid, None)
-        # TODO Flush cache? USE MRU? functools.lrucache
+        column_set = frozenset(column_set)
+        obj = Subset._cache.get(column_set, None)
         if not obj:
             obj = object.__new__(cls)
-            Subset._cache[cacheid] = obj
-            obj.init(cacheid, *parts)
+            Subset._cache[column_set] = obj
+            obj.init(cfg, column_set)
 
-        # obj = object.__new__(cls)
-        # cacheid = frozenset(parts)
-        # obj.init(cacheid, *parts)
         return obj
 
-    def init(self, cacheid, *parts):
-        # Error checking....
+    def init(self, cfg, column_set):
         self.status = FRESH
-
-        tempparts = set()
-        for p in parts:
-            if p.partition_set is None:
-                log.error("You cannot add a Partition to a Subset until "
-                          "the Partition belongs to a PartitionSet")
-                raise SubsetError
-
-            if p in tempparts:
-                log.error("%s is duplicated in a Subset", p)
-                raise SubsetError
-
-            tempparts.add(p)
-
-        self.partitions = cacheid
-
-        # a list of columns in the subset
-        self.columns = []
-        self.columnset = set()
-        for p in parts:
-            self.columns += p.columns
-            self.columnset |= p.columnset
-        self.columns.sort()
+        self.column_set = column_set
 
         self.results = {}
         self.best_info_score = None  # e.g. AIC, BIC, AICc
@@ -110,18 +67,13 @@ class Subset(object):
         self.alignment_path = None
         log.debug("Created %s", self)
 
-    def __str__(self):
-        return "(%s)" % ", ".join([str(p.name) for p in self.partitions])
+    def add_description(self, name, description):
+        """User created subsets can get some extra info"""
+        self.full_name = name
+        self.description = description
 
-    @property
-    def full_name(self):
-        if hasattr(self, '_full_name'):
-            nm = self._full_name
-        else:
-            s = sorted([p.name for p in self.partitions])
-            nm = '-'.join(s)
-            self._full_name = nm
-        return nm
+    def __repr__(self):
+        return "Subset(%s)" % self.name
 
     @property
     def name(self):

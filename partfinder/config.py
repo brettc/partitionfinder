@@ -52,6 +52,7 @@ class Configuration(object):
         self.partitions = partition.PartitionSet()
         # Only required if user adds them
         self.user_schemes = scheme.SchemeSet()
+        self.user_subsets = []
 
         self.save_phylofiles = save_phylofiles
         self.progress = progress.NoProgress(self)
@@ -116,8 +117,8 @@ class Configuration(object):
                     raise ConfigurationError
 
             log.info("Setting cluster_weights to: "
-                     "subset_rate = %s, freqs = %s, model = %s, alpha %s" 
-                     % (cluster_weights[0], cluster_weights[1], 
+                     "subset_rate = %s, freqs = %s, model = %s, alpha %s"
+                     % (cluster_weights[0], cluster_weights[1],
                         cluster_weights[2], cluster_weights[3]))
 
             self.cluster_weights = {}
@@ -131,7 +132,7 @@ class Configuration(object):
             assert self.cluster_percent >= 0.0
             assert self.cluster_percent <= 100.0
         except:
-            
+
             log.error("The rcluster-percent variable must be between 0.0 to 100.0, yours "
                       "is %.2f. Please check and try again." % self.cluster_percent)
             raise ConfigurationError

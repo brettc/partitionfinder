@@ -6,6 +6,7 @@ def test_one():
     c = Configuration()
     p = Parser(c)
     p.parse_configuration(test1)
+    print c.user_subsets
 
     # Now do some testing on the Parsed stuff
 
@@ -27,6 +28,10 @@ Gene3_pos2 = 1451-2208\3;
 Gene3_pos3 = 1452-2208\3;
 
 [schemes]
+search = greedy;
+"""
+
+"""
 search = user;
 allsame         = (Gene1_pos1, Gene1_pos2, Gene1_pos3, Gene2_pos1, Gene2_pos2, Gene2_pos3, Gene3_pos1, Gene3_pos2, Gene3_pos3);
 by_gene         = (Gene1_pos1, Gene1_pos2, Gene1_pos3) (Gene2_pos1, Gene2_pos2, Gene2_pos3) (Gene3_pos1, Gene3_pos2, Gene3_pos3);

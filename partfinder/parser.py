@@ -1,4 +1,4 @@
-#Copyright (C) 2012 Robert Lanfear and Brett Calcott
+# Copyright (C) 2012 Robert Lanfear and Brett Calcott
 #
 # This program is free software: you can redistribute it and/or modify it under
 # the terms of the GNU General Public License as published by the Free Software
@@ -95,12 +95,12 @@ class Parser(object):
         MODEL_NAME = Word(alphas + nums + '+')
         model_list = delimitedList(MODEL_NAME)
         model_def = Keyword("models") + EQUALS + Group((
-                CaselessKeyword("all") |
-                CaselessKeyword("mrbayes") |
-                CaselessKeyword("raxml") |
-                CaselessKeyword("beast") |
-                CaselessKeyword("all_protein") |
-                CaselessKeyword("all_protein_gamma") |
+            CaselessKeyword("all") |
+            CaselessKeyword("mrbayes") |
+            CaselessKeyword("raxml") |
+            CaselessKeyword("beast") |
+            CaselessKeyword("all_protein") |
+            CaselessKeyword("all_protein_gamma") |
             CaselessKeyword("all_protein_gammaI"))("predefined") |
             Group(model_list)("userlist")) + SEMICOLON
         model_def.setParseAction(self.set_models)
@@ -166,7 +166,129 @@ class Parser(object):
         except config.ConfigurationError:
             raise ParserError(text, loc, "Invalid option in .cfg file")
 
+    def define_range(self, text, loc, part):
+        """Turn the 1, 2 or 3 tokens into integers: from:to/step
+        """
+        from_column = int(part.start)
+
+        if part.end:
+            to_column = int(part.end)
+        else:
+            to_column = from_column
+
+        if part.step:
+            step = int(part.step)
+        else:
+            step = 1
+
+        if from_column > to_column:
+            raise ParserError(
+                text, loc, "Data block has must have beginning less than end "
+                "(%d is great than %d)" % (from_column, to_column))
+        return [from_column, to_column, step]
+
+    def define_user_subset(self, text, loc, part_def):
+        """Use a list of tuples with start,stop,step to produces columns"""
+
+        # We now need to convert to column definitions. Note that these are
+        # zero based, which is not how they are specified in the config. So we
+        # must do some fiddling to make sure they are right. In addition, we
+        # use range(...) which excludes the final column, whereas the
+        # definitions assume inclusive. Subtracting 1 from start deals with
+        # both issues...
+        columns = []
+        description = []
+        for start, stop, step in part_def.parts:
+            columns.extend(range(start-1, stop, step))
+            description.append((start, stop, step))
+
+        # Normalise it all
+        columns.sort()
+        columnset = frozenset(columns)
+
+        # If there was any overlap then these will differ...
+        if len(columns) != len(columnset):
+            raise ParserError(text, loc, "Block '%s' has internal overlap" % name)
+
+        user_subset = subset.Subset(self.cfg, columnset)
+
+        # Munge this in for now
+        user_subset.add_description(part_def.name, tuple(description))
+        self.cfg.user_subsets.append(user_subset)
+
+    def check_block_exists(self, text, loc, partref):
+        if partref.name not in self.cfg.partitions:
+            raise ParserError(text, loc, "Partition %s not defined" %
+                              partref.name)
+
+    def define_subset(self, text, loc, subset_def):
+        try:
+            # Get the partitions from the names
+            parts = [self.cfg.partitions[nm] for nm in subset_def[0]]
+
+            # Keep a running list of these till we define the schema below
+            self.subsets.append(subset.Subset(*tuple(parts)))
+        except subset.SubsetError:
+            raise ParserError(text, loc, "Error creating subset...")
+
+    def define_schema(self, text, loc, scheme_def):
+        try:
+            # Clear out the subsets as we need to reuse it
+            subs = tuple(self.subsets)
+            self.subsets = []
+
+            if not self.ignore_schemes:
+                sch = scheme.Scheme(self.cfg, scheme_def.name, subs)
+                self.cfg.user_schemes.add_scheme(sch)
+
+        except (scheme.SchemeError, subset.SubsetError):
+            raise ParserError(text, loc, "Error in '%s' can be found" %
+                              scheme_def.name)
+
+    def parse_file(self, file_name):
+        #this just reads in the config file into 's'
+        s = open(file_name, 'rU').read()
+        self.parse_configuration(s)
+
+    def parse_configuration(self, s):
+        """Parse a string as a configuration settings file"""
+        try:
+            self.result = self.config_parser.ignore(pythonStyleComment).\
+                parseString(s)
+
+        except ParserError, p:
+            log.error(p.format_message())
+            raise PartitionFinderError
+
+        except ParseException, p:
+            log.error("There was a problem loading your .cfg file, "
+                      "please check and try again")
+            log.error(p)
+
+            # Let's see if there was something missing from the input file
+            expectations = ["models", "search", "[schemes]", "[data_blocks]",
+                            "model_selection", "branchlengths", "alignment"]
+            missing = None
+            for e in expectations:
+                if p.msg.count(e):
+                    missing = e
+
+            if missing:
+                log.info("It looks like the '%s' option might be missing or "
+                         "in the wrong place" % missing)
+                log.info("Or perhaps something is wrong in the lines just "
+                         "before the '%s' option" % missing)
+                log.info("Please double check the .cfg file and try again")
+            else:
+                log.info("The line causing the problem is this: '%s'" % p.line)
+                log.info("Please check that line, and make sure it appears in"
+                         "the right place in the .cfg file.")
+                log.info("If it looks OK, try double-checking the semi-colons"
+                         "on other lines in the .cfg file")
+            raise PartitionFinderError
+
     def set_models(self, text, loc, tokens):
+        # TODO: Fix this ugly mess
         if self.cfg.phylogeny_program == "phyml":
             self.phylo_models = phyml_models
         elif self.cfg.phylogeny_program == "raxml":
@@ -246,111 +368,21 @@ class Parser(object):
         elif DNA_mods == 0 and protein_mods > 0 and self.cfg.datatype == "DNA":
             raise ParserError(
                 text, loc, "The models list contains only models of amino acid change."
-                " PartitionFinder.py only works with nucleotide models (like the GTR model)."
-                " If you're analysing an amino acid dataset, please use PartitionFinderProtein,"
-                " which you can download here: www.robertlanfear.com/partitionfinder."
-                " The models line in the .cfg file is")
+                           " PartitionFinder.py only works with nucleotide models (like the GTR model)."
+                           " If you're analysing an amino acid dataset, please use PartitionFinderProtein,"
+                           " which you can download here: www.robertlanfear.com/partitionfinder."
+                           " The models line in the .cfg file is")
         elif DNA_mods > 0 and protein_mods == 0 and self.cfg.datatype == "protein":
             raise ParserError(
                 text, loc, "The models list contains only models of nucleotide change."
-                " PartitionFinderProtein.py only works with amino acid models (like the WAG model)."
-                " If you're analysing a nucleotide dataset, please use PartitionFinder.py,"
-                " which you can download here: www.robertlanfear.com/partitionfinder"
-                " The models line in the .cfg file is")
+                           " PartitionFinderProtein.py only works with amino acid models (like the WAG model)."
+                           " If you're analysing a nucleotide dataset, please use PartitionFinder.py,"
+                           " which you can download here: www.robertlanfear.com/partitionfinder"
+                           " The models line in the .cfg file is")
         else:  # we've got a mixture of models.
             raise ParserError(
                 text, loc, "The models list contains a mixture of protein and nucleotide models."
-                " If you're analysing a nucleotide dataset, please use PartitionFinder."
-                " If you're analysing an amino acid dataset, please use PartitionFinderProtein."
-                " You can download both of these programs from here: www.robertlanfear.com/partitionfinder"
-                " The models line in the .cfg file is")
-
-    def define_range(self, part):
-        """Turn the 1, 2 or 3 tokens into integers, supplying a default if needed"""
-        fromc = int(part.start)
-
-        if part.end:
-            toc = int(part.end)
-        else:
-            toc = fromc
-
-        if part.step:
-            stepc = int(part.step)
-        else:
-            stepc = 1
-        return [fromc, toc, stepc]
-
-    def define_partition(self, text, loc, part_def):
-        """We have everything we need here to make a partition"""
-        try:
-            # Creation adds it to set
-            p = partition.Partition(
-                self.cfg, part_def.name, *tuple(part_def.parts))
-        except partition.PartitionError:
-            raise ParserError(
-                text, loc, "Error in '%s' can be found" % part_def.name)
-
-    def check_part_exists(self, text, loc, partref):
-        if partref.name not in self.cfg.partitions:
-            raise ParserError(text, loc, "Partition %s not defined" %
-                              partref.name)
-
-    def define_subset(self, text, loc, subset_def):
-        try:
-            # Get the partitions from the names
-            parts = [self.cfg.partitions[nm] for nm in subset_def[0]]
-
-            # Keep a running list of these till we define the schema below
-            self.subsets.append(subset.Subset(*tuple(parts)))
-        except subset.SubsetError:
-            raise ParserError(text, loc, "Error creating subset...")
-
-    def define_schema(self, text, loc, scheme_def):
-        try:
-            # Clear out the subsets as we need to reuse it
-            subs = tuple(self.subsets)
-            self.subsets = []
-
-            if not self.ignore_schemes:
-                sch = scheme.Scheme(self.cfg, scheme_def.name, subs)
-                self.cfg.user_schemes.add_scheme(sch)
-
-        except (scheme.SchemeError, subset.SubsetError):
-            raise ParserError(text, loc, "Error in '%s' can be found" %
-                              scheme_def.name)
-
-    def parse_file(self, fname):
-        #this just reads in the config file into 's'
-        s = open(fname, 'rU').read()
-        self.parse_configuration(s)
-
-    def parse_configuration(self, s):
-        #parse the config cfg
-        try:
-            self.result = self.config_parser.ignore(
-                pythonStyleComment).parseString(s)
-        except ParserError, p:
-            log.error(p.format_message())
-            raise PartitionFinderError
-        except ParseException, p:
-            log.error("There was a problem loading your .cfg file, please check and try again")
-            log.error(p)
-
-            #let's see if there was something missing fro the input file
-            expectations = ["models", "search", "[schemes]", "[data_blocks]",
-                            "model_selection", "branchlengths", "alignment"]
-            missing = None
-            for e in expectations:
-                if p.msg.count(e):
-                    missing = e
-
-            if missing:
-                log.info("It looks like the '%s' option might be missing or in the wrong place" % missing)
-                log.info("Or perhaps something is wrong in the lines just before the '%s' option" % missing)
-                log.info("Please double check the .cfg file and try again")
-            else:
-                log.info(
-                    "The line causing the problem is this: '%s'" % p.line)
-                log.info("Please check that line, and make sure it appears in the right place in the .cfg file.")
-                log.info("If it looks OK, try double-checking the semi-colons on other lines in the .cfg file")
-            raise PartitionFinderError
+                           " If you're analysing a nucleotide dataset, please use PartitionFinder."
+                           " If you're analysing an amino acid dataset, please use PartitionFinderProtein."
+                           " You can download both of these programs from here: www.robertlanfear.com/partitionfinder"
+                           " The models line in the .cfg file is")

@@ -1,4 +1,4 @@
-#Copyright (C) 2012 Robert Lanfear and Brett Calcott
+# Copyright (C) 2012 Robert Lanfear and Brett Calcott
 #
 # This program is free software: you can redistribute it and/or modify it under
 # the terms of the GNU General Public License as published by the Free Software
@@ -99,10 +99,10 @@ class PartitionSet(object):
             # This does not raise an error, just a warning
             log.warn(
                 "Columns defined in partitions range from %s to %s, "
-                "but these columns in the alignment are missing: %s", 
+                "but these columns in the alignment are missing: %s",
                 self.columns[0]+1, self.columns[-1]+1,
                 columnset_to_string(leftout))
-        
+
     # We can treat this like a bit like a dictionary
     def __iter__(self):
         return iter(self.partitions)
