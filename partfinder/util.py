@@ -5,20 +5,21 @@
 # Foundation, either version 3 of the License, or (at your option) any later
 # version.
 #
-#This program is distributed in the hope that it will be useful, but
-#WITHOUT ANY WARRANTY; without even the implied warranty of
-#MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-#General Public License for more details. You should have received a copy
-#of the GNU General Public License along with this program.  If not, see
+# This program is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+# General Public License for more details. You should have received a copy
+# of the GNU General Public License along with this program.  If not, see
 #<http://www.gnu.org/licenses/>. PartitionFinder also includes the PhyML
-#program, the RAxML program, and the PyParsing library,
-#all of which are protected by their own licenses and conditions, using
-#PartitionFinder implies that you agree with those licences and conditions as well.
+# program, the RAxML program, and the PyParsing library,
+# all of which are protected by their own licenses and conditions, using
+# PartitionFinder implies that you agree with those licences and
+# conditions as well.
 
 import logging
 log = logging.getLogger("util")
 import os
-import sys
+import re
 import fnmatch
 
 
@@ -30,22 +31,30 @@ class PartitionFinderError(Exception):
 class PhylogenyProgramError(PartitionFinderError):
     pass
 
+NO_CONFIG_ERROR = """
+Failed to find configuration file: '%s'. For PartitionFinder to run, there
+must be a file called 'partition_finder.cfg' located in the same folder as
+your alignment. Please check and try again.
+"""
+
 
 def check_file_exists(pth):
     if not os.path.exists(pth) or not os.path.isfile(pth):
         if pth.count("partition_finder.cfg") > 0:
-            log.error("Failed to find configuration file: '%s'. "
-                      "For PartitionFinder to run, there must be a file called 'partition_finder.cfg' "
-                      "located in the same folder as your alignment. Please check and try again.", pth)
+            log.error(NO_CONFIG_ERROR, pth)
             raise PartitionFinderError
         else:
             log.error(
                 "Failed to find file: '%s'. Please check and try again.", pth)
             raise PartitionFinderError
 
+
 def delete_files(pths):
-    """ delete files, but watch out for a WindowsError that crops up sometimes with threading 
-        oddly, this error occurs, but the files get deleted anyway. So we ignore it for now
+    """Delete files from paths
+
+    Watch out for a WindowsError that crops up sometimes with threading oddly,
+    this error occurs, but the files get deleted anyway.  So we ignore it for
+    now
     """
     for f in pths:
         try:
@@ -61,8 +70,10 @@ def check_folder_exists(pth):
         log.error("No such folder: '%s'", pth)
         raise PartitionFinderError
 
-def clean_out_folder(folder, keep = []):
-    """Hat Tip: http://stackoverflow.com/questions/185936/delete-folder-contents-in-python
+
+def clean_out_folder(folder, keep=[]):
+    """Hat Tip:
+    http://stackoverflow.com/questions/185936/delete-folder-contents-in-python
     """
     for the_file in os.listdir(folder):
         if the_file not in keep:
@@ -70,7 +81,7 @@ def clean_out_folder(folder, keep = []):
             try:
                 if os.path.isfile(file_path):
                     os.unlink(file_path)
-            except Exception, e:
+            except Exception as e:
                 log.error(e)
                 raise PartitionFinderError
 
@@ -85,8 +96,11 @@ def make_dir(pth):
 
 
 def remove_runID_files(aln_pth):
-    """remove all files that match a particular run_ID. Useful for cleaning out directories
-    but ONLY after a whole analysis of a subset is completely finished, be careful!"""
+    """Remove all files that match a particular run_ID.
+
+    Useful for cleaning out directories but ONLY after a whole analysis of a
+    subset is completely finished, be careful!
+    """
     head, tail = os.path.split(aln_pth)
     run_ID = os.path.splitext(tail)[0]
     head = os.path.abspath(head)
@@ -96,20 +110,39 @@ def remove_runID_files(aln_pth):
         try:
             os.remove(os.path.join(head, f))
         except OSError:
-            # Don't complain if you can't delete them
-            # (This is here because we sometimes try and delete things twice in
-            # the threading).
+            # Don't complain if you can't delete them (This is here because we
+            # sometimes try and delete things twice in the threading).
             pass
 
 
-# def we_are_frozen():
-    # # All of the modules are built-in to the interpreter, e.g., by py2exe
-    # return hasattr(sys, "frozen")
+def make_warning(warning):
+    """Strip multiline comments down to a single line"""
+    # First, get rid of tabs and newlines
+    warning = re.sub('\s', ' ', warning)
 
+    # Now get rid of all extra spaces
+    # http://stackoverflow.com/questions/1546226/
+    # the-shortest-way-to-remove-multiple-spaces-in-a-string-in-python
+    return ' '.join(warning.split())
+
+
+def memoize(f):
+    """Cache results from functions"""
+    cache = {}
+
+    def memf(*x):
+        if x not in cache:
+            cache[x] = f(*x)
+        return cache[x]
+    return memf
+
+# def we_are_frozen():
+    # All of the modules are built-in to the interpreter, e.g., by py2exe
+    # return hasattr(sys, "frozen")
 
 # def get_root_install_path():
     # pth = os.path.abspath(__file__)
-    # # Split off the name and the directory...
+    # Split off the name and the directory...
     # pth, not_used = os.path.split(pth)
     # pth, not_used = os.path.split(pth)
     # return pth
