@@ -139,14 +139,14 @@ class GreedyAnalysis(Analysis):
 
         log.info("Performing greedy analysis")
 
-        partnum = len(self.cfg.partitions)
+        partnum = len(self.cfg.user_subsets)
         scheme_count = submodels.count_greedy_schemes(partnum)
         subset_count = submodels.count_greedy_subsets(partnum)
 
         self.cfg.progress.begin(scheme_count, subset_count)
 
         # Start with the most partitioned scheme
-        start_description = range(len(self.cfg.partitions))
+        start_description = range(partnum)
         start_scheme = scheme.create_scheme(
             self.cfg, "start_scheme", start_description)
 

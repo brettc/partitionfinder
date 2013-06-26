@@ -25,6 +25,7 @@ from alignment import Alignment, SubsetAlignment
 import threadpool
 import scheme
 import subset
+import subset_ops
 import results
 import threading
 from util import PartitionFinderError
@@ -96,19 +97,19 @@ class Analysis(object):
             if ';' in open(tree_path).read():
                 log.info("Starting tree file found.")
                 redo_tree = False
-            else: 
+            else:
                 log.info("Starting tree file found but incomplete. Re-estimating")
                 redo_tree = True
         else:
             log.info("No starting tree file found.")
             redo_tree = True
-        
+
         return redo_tree
 
     def make_tree(self, user_path):
         # Begin by making a filtered alignment, containing ONLY those columns
         # that are defined in the subsets
-        subset_with_everything = subset.Subset(*list(self.cfg.partitions))
+        subset_with_everything = subset_ops.merge_subsets(self.cfg.user_subsets)
         self.filtered_alignment = SubsetAlignment(
             self.alignment, subset_with_everything)
         self.filtered_alignment_path = os.path.join(
@@ -117,8 +118,9 @@ class Analysis(object):
 
         # Now we've written this alignment, we need to lock everything in
         # place, no more adding partitions, or changing them from now on.
-        self.cfg.partitions.check_against_alignment(self.alignment)
-        self.cfg.partitions.finalise()
+        # TODO: Recheck this
+        # self.cfg.partitions.check_against_alignment(self.alignment)
+        # self.cfg.partitions.finalise()
 
         # We start by copying the alignment
         self.alignment_path = os.path.join(
@@ -130,11 +132,11 @@ class Analysis(object):
 
         if self.need_new_tree(tree_path):
             log.debug("Estimating new starting tree, no old tree found")
-            
+
             # If we have a user tree, then use that, otherwise, create a topology
             util.clean_out_folder(self.cfg.start_tree_path,
                                   keep=["filtered_source.phy", "source.phy"])
-            
+
             if user_path is not None and user_path != "":
                 # Copy it into the start tree folder
                 log.info("Using user supplied topology at %s", user_path)

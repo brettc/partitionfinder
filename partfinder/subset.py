@@ -34,6 +34,11 @@ FRESH, PREPARED, DONE = range(3)
 class SubsetError(PartitionFinderError):
     pass
 
+def count_subsets():
+    return len(Subset._cache)
+
+def clear_subsets():
+    Subset._cache.clear()
 
 class Subset(object):
     """Contains a set of columns in the Alignment
@@ -56,8 +61,11 @@ class Subset(object):
         return obj
 
     def init(self, cfg, column_set):
-        self.status = FRESH
+        self.cfg = cfg
         self.column_set = column_set
+        self.columns = list(column_set)
+        self.columns.sort()
+        self.status = FRESH
 
         self.results = {}
         self.best_info_score = None  # e.g. AIC, BIC, AICc
@@ -98,7 +106,7 @@ class Subset(object):
         result.params = cfg.processor.models.get_num_params(model)
 
         K = float(result.params)
-        n = float(len(self.columnset))
+        n = float(len(self.column_set))
         lnL = float(result.lnl)
 
         # Here we put in a catch for small subsets, where n < K+2.
@@ -158,10 +166,7 @@ class Subset(object):
                   % (self.best_model, self.best_params, self.best_site_rate))
 
     def get_param_values(self):
-        param_values = {}
-
-        param_values["rate"] = self.best_site_rate
-        param_values["alpha"] = self.best_alpha
+        param_values = {"rate": self.best_site_rate, "alpha": self.best_alpha}
 
         # Not sure if this sorting is necessary, but it's here in case it's
         # needed to make sure that freqs and model parameters are always in the
@@ -199,7 +204,6 @@ class Subset(object):
     def prepare(self, cfg, alignment):
         """Get everything ready for running the analysis
         """
-        # cfg.progress.update_subsets(self)
         cfg.progress.subset_begin(self)
 
         # Load the cached results

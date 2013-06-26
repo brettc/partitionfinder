@@ -7,6 +7,7 @@
 
 import hashlib
 import cPickle as pickle
+import subset
 
 def subset_unique_name(subset):
     """Return a unique string based on the subsets columns (which are unique)"""
@@ -19,4 +20,23 @@ def subset_unique_name(subset):
     return hashlib.md5(pickled_columns).hexdigest()
 
 
+def merge_subsets(subset_list):
+    """Take a set of subsets and merge them together"""
+
+    columns = set()
+
+    # We just need the columns
+    for sub in subset_list:
+        columns |= sub.column_set
+
+    return subset.Subset(sub.cfg, columns)
+
+
+# TODO: FIX THESE
+def has_overlap(subset_list):
+    return False
+
+
+def has_missing(subset_list):
+    return False
 
