@@ -308,6 +308,7 @@ def main(name, datatype, passed_args=None):
 
     # Load, using the first argument as the folder
     try:
+        # TODO: just pass the options in!
         cfg = config.Configuration(datatype, 
                                    options.phylogeny_program,
                                    options.save_phylofiles, 

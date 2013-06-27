@@ -53,6 +53,7 @@ class Configuration(object):
         # Only required if user adds them
         self.user_schemes = scheme.SchemeSet()
         self.user_subsets = []
+        self.user_subsets_by_name = {}
 
         self.save_phylofiles = save_phylofiles
         self.progress = progress.NoProgress(self)

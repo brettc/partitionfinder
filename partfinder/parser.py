@@ -29,6 +29,7 @@ from pyparsing import (
 import partition
 import scheme
 import subset
+import subset_ops
 import phyml_models
 import raxml_models
 import config
@@ -59,7 +60,7 @@ class Parser(object):
 
         # Use these to keep track of stuff that is going on in parser
         self.schemes = []
-        self.subsets = []
+        self.current_subsets = []
         self.init_grammar()
         self.ignore_schemes = False
 
@@ -71,8 +72,6 @@ class Parser(object):
         # Some syntax that we need, but don't care about
         SEMICOLON = (Suppress(";"))
         EQUALS = Suppress("=")
-        BACKSLASH = Suppress("\\")
-        DASH = Suppress("-")
 
         # Top Section
         FILE_NAME = Word(alphas + nums + '-_.')
@@ -113,8 +112,8 @@ class Parser(object):
         column = Word(nums)
         block_name = Word(alphas + '_-' + nums)
         block_def = column("start") +\
-            Optional(DASH + column("end")) +\
-            Optional(BACKSLASH + column("step"))
+            Optional(Suppress("-") + column("end")) +\
+            Optional(Suppress("\\") + column("step"))
         block_def.setParseAction(self.define_range)
 
         block_list_def = Group(OneOrMore(Group(block_def)))
@@ -130,17 +129,17 @@ class Parser(object):
         scheme_name = Word(alphas + '_-' + nums)
 
         # Make a copy, cos we set a different action on it
-        block_ref = block_name.copy()
-        block_ref.setParseAction(self.check_block_exists)
+        user_subset_ref = block_name.copy()
+        user_subset_ref.setParseAction(self.check_block_exists)
 
         subset = Group(Suppress("(") +
-                       delimitedList(block_ref("name")) + Suppress(")"))
-        subset.setParseAction(self.define_subset)
+                       delimitedList(user_subset_ref("name")) + Suppress(")"))
+        subset.setParseAction(self.define_subset_grouping)
 
         scheme = Group(OneOrMore(subset))
         scheme_def = scheme_name("name") + \
             EQUALS + scheme("scheme") + SEMICOLON
-        scheme_def.setParseAction(self.define_schema)
+        scheme_def.setParseAction(self.define_scheme)
 
         scheme_list = OneOrMore(Group(scheme_def))
 
@@ -203,39 +202,38 @@ class Parser(object):
             description.append((start, stop, step))
 
         # Normalise it all
-        columns.sort()
-        columnset = frozenset(columns)
+        column_set = set(columns)
 
         # If there was any overlap then these will differ...
-        if len(columns) != len(columnset):
-            raise ParserError(text, loc, "Block '%s' has internal overlap" % name)
+        if len(columns) != len(column_set):
+            raise ParserError(
+                text, loc, "Block '%s' has internal overlap" % part_def.name)
 
-        user_subset = subset.Subset(self.cfg, columnset)
+        user_subset = subset.Subset(self.cfg, column_set)
 
-        # Munge this in for now
+        # TODO: Think about how we want to add descriptions
         user_subset.add_description(part_def.name, tuple(description))
         self.cfg.user_subsets.append(user_subset)
+        self.cfg.user_subsets_by_name[part_def.name] = user_subset
 
     def check_block_exists(self, text, loc, partref):
-        if partref.name not in self.cfg.partitions:
-            raise ParserError(text, loc, "Partition %s not defined" %
+        if partref.name not in self.cfg.user_subsets_by_name:
+            raise ParserError(text, loc, "Block %s not defined" %
                               partref.name)
 
-    def define_subset(self, text, loc, subset_def):
+    def define_subset_grouping(self, text, loc, subset_def):
         try:
             # Get the partitions from the names
-            parts = [self.cfg.partitions[nm] for nm in subset_def[0]]
+            subsets = [self.cfg.user_subsets_by_name[nm] for nm in subset_def[0]]
 
             # Keep a running list of these till we define the schema below
-            self.subsets.append(subset.Subset(*tuple(parts)))
+            self.current_subsets.append(subset_ops.merge_subsets(subsets))
         except subset.SubsetError:
             raise ParserError(text, loc, "Error creating subset...")
 
-    def define_schema(self, text, loc, scheme_def):
+    def define_scheme(self, text, loc, scheme_def):
         try:
-            # Clear out the subsets as we need to reuse it
-            subs = tuple(self.subsets)
-            self.subsets = []
+            subs = tuple(self.current_subsets)
 
             if not self.ignore_schemes:
                 sch = scheme.Scheme(self.cfg, scheme_def.name, subs)
@@ -244,6 +242,10 @@ class Parser(object):
         except (scheme.SchemeError, subset.SubsetError):
             raise ParserError(text, loc, "Error in '%s' can be found" %
                               scheme_def.name)
+        finally:
+            # Clear out the current_subsets as we need to reuse it
+            self.current_subsets = []
+
 
     def parse_file(self, file_name):
         #this just reads in the config file into 's'

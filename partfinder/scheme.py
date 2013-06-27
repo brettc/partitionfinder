@@ -131,7 +131,7 @@ class SchemeSet(object):
 
     def clear_schemes(self):
         self.schemes_by_name = {}
-        self.schemes_by_subsets = {}
+        # self.schemes_by_subsets = {}
 
     def add_scheme(self, scheme):
         if scheme.name in self.schemes_by_name:
@@ -139,16 +139,17 @@ class SchemeSet(object):
                       scheme.name)
             raise SchemeError
 
-        if scheme.part_subsets in self.schemes_by_subsets:
-            existing_scheme = \
-                self.schemes_by_subsets[scheme.part_subsets]
-            log.warning(
-                "Scheme named %s being added is identical to existing %s",
-                scheme.name, existing_scheme)
-            # raise SchemeError
+        # TODO: Recheck schemes to make sure they're ok...
+        # if scheme.part_subsets in self.schemes_by_subsets:
+            # existing_scheme = \
+                # self.schemes_by_subsets[scheme.part_subsets]
+            # log.warning(
+                # "Scheme named %s being added is identical to existing %s",
+                # scheme.name, existing_scheme)
+            # # raise SchemeError
 
         self.schemes_by_name[scheme.name] = scheme
-        self.schemes_by_subsets[scheme.part_subsets] = scheme
+        # self.schemes_by_subsets[scheme.part_subsets] = scheme
 
     def __len__(self):
         return len(self.schemes_by_name)

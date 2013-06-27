@@ -118,7 +118,7 @@ class Analysis(object):
 
         # Now we've written this alignment, we need to lock everything in
         # place, no more adding partitions, or changing them from now on.
-        # TODO: Recheck this
+        # TODO: This checking should still be done...
         # self.cfg.partitions.check_against_alignment(self.alignment)
         # self.cfg.partitions.finalise()
 
