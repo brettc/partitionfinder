@@ -189,7 +189,7 @@ class Parser(object):
     def define_user_subset(self, text, loc, part_def):
         """Use a list of tuples with start,stop,step to produces columns"""
 
-        # We now need to convert to column definitions. Note that these are
+        # We need to convert to column definitions. Note that these are
         # zero based, which is not how they are specified in the config. So we
         # must do some fiddling to make sure they are right. In addition, we
         # use range(...) which excludes the final column, whereas the
@@ -199,6 +199,8 @@ class Parser(object):
         description = []
         for start, stop, step in part_def.parts:
             columns.extend(range(start-1, stop, step))
+
+            # Keep a description of this around
             description.append((start, stop, step))
 
         # Normalise it all
@@ -211,7 +213,8 @@ class Parser(object):
 
         user_subset = subset.Subset(self.cfg, column_set)
 
-        # TODO: Think about how we want to add descriptions
+        # TODO: Think about how we want to add descriptions.
+        # Maybe this should be part of the __init__
         user_subset.add_description(part_def.name, tuple(description))
         self.cfg.user_subsets.append(user_subset)
         self.cfg.user_subsets_by_name[part_def.name] = user_subset
@@ -222,6 +225,8 @@ class Parser(object):
                               partref.name)
 
     def define_subset_grouping(self, text, loc, subset_def):
+        """These define initial groupings that users think are useful
+        """
         try:
             # Get the partitions from the names
             subsets = [self.cfg.user_subsets_by_name[nm] for nm in subset_def[0]]
