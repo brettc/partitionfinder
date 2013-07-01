@@ -26,7 +26,6 @@ from pyparsing import (
 # Use this for debugging
 # ParserElement.verbose_stacktrace = True
 
-import partition
 import scheme
 import subset
 import subset_ops

@@ -22,7 +22,6 @@ import os
 import fnmatch
 import cPickle as pickle
 import scheme
-import partition
 import subset
 import parser
 import util
@@ -49,7 +48,6 @@ class Configuration(object):
         cluster_percent=10):
 
         log.info("------------- Configuring Parameters -------------")
-        self.partitions = partition.PartitionSet()
         # Only required if user adds them
         self.user_schemes = scheme.SchemeSet()
         self.user_subsets = []
@@ -316,10 +314,15 @@ class Configuration(object):
             util.check_file_exists(self.user_tree_topology_path)
 
     def check_for_old_config(self):
-        """Check whether the analysis dictated by cfg has been run before, and if the config has changed
-        in any way that would make re-running it invalid"""
-        #the important stuff in our analysis, that can't change if we want to re-use old subsets
-        # FIXME: This needs to be updated for getting rid of partitions
+        """
+        Check whether the analysis dictated by cfg has been run before, and if
+        the config has changed in any way that would make re-running it invalid
+        """
+
+        # TODO: Fix this mess
+        return
+
+
         log.info("Checking previously run configuration data...")
         if self.user_tree is None:
             topology = ""
@@ -328,11 +331,11 @@ class Configuration(object):
 
         cfg_list = [self.alignment,
                     self.branchlengths,
-                    self.partitions.partitions,
+                    # self.user_subsets,
                     self.phylogeny_program,
                     topology]
 
-        #we need to know if there's anything in the subsets folder
+        # We need to know if there's anything in the subsets folder
         subset_path = os.path.join(self.output_path, 'subsets')
         has_subsets = False
         if os.path.exists(subset_path):
@@ -343,9 +346,7 @@ class Configuration(object):
                 if ex.errno == errno.ENOTEMPTY:
                     has_subsets = True
 
-
-
-        #we also need to know if there's an old conifg file saved
+        # We also need to know if there's an old conifg file saved
         cfg_dir = os.path.join(self.output_path, 'cfg')
         old_cfg_path = os.path.join(cfg_dir, 'oldcfg.bin')
         if os.path.exists(old_cfg_path):

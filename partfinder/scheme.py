@@ -216,11 +216,10 @@ def generate_all_schemes(cfg):
 
     log.info("Generating all possible schemes for the partitions...")
 
-    partition_count = len(
-        cfg.partitions)  # total number of partitions defined by user
+    subset_count = len(cfg.user_subsets)
 
     # Now generate the pattern for this many partitions
-    all_schemes = submodels.get_submodels(partition_count)
+    all_schemes = submodels.get_submodels(subset_count)
     scheme_name = 1
     scheme_list = []
     for scheme in all_schemes:
@@ -233,12 +232,11 @@ def generate_all_schemes(cfg):
         # set of values which are the index for the partition
         created_subsets = []
         for sub_indexes in subs.values():
-            sub = subset.Subset(
-                *tuple([cfg.partitions[i] for i in sub_indexes]))
+            sub = subset_ops.merge_subsets(
+                [cfg.user_subsets[i] for i in sub_indexes])
             created_subsets.append(sub)
 
-        scheme_list.append(
-            Scheme(cfg, str(scheme_name), created_subsets))
+        scheme_list.append(Scheme(cfg, str(scheme_name), created_subsets))
 
         log.debug("Created scheme %d of %d" % (scheme_name, len(all_schemes)))
 
