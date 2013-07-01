@@ -105,7 +105,7 @@ class Scheme(object):
         self.subsets = set(subsets)
         self.description = description
 
-        if subset_ops.has_overlap(subsets):
+        if subset_ops.subsets_overlap(subsets):
             log.error("Scheme '%s' contains overlapping subsets", name)
             raise SchemeError
 
@@ -202,7 +202,8 @@ def model_to_scheme(model, scheme_name, cfg):
     # set of values which are the index for the partition
     created_subsets = []
     for sub_indexes in subs.values():
-        sub = subset.Subset(*tuple([cfg.partitions[i] for i in sub_indexes]))
+        subs_to_merge = [cfg.user_subsets[i] for i in sub_indexes]
+        sub = subset_ops.merge_subsets(subs_to_merge)
         created_subsets.append(sub)
 
     return Scheme(cfg, str(scheme_name), created_subsets)
