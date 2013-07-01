@@ -1,21 +1,22 @@
-#Copyright (C) 2012 Robert Lanfear and Brett Calcott
+# Copyright (C) 2012 Robert Lanfear and Brett Calcott
 #
-#This program is free software: you can redistribute it and/or modify it
-#under the terms of the GNU General Public License as published by the
-#Free Software Foundation, either version 3 of the License, or (at your
-#option) any later version.
+# This program is free software: you can redistribute it and/or modify it under
+# the terms of the GNU General Public License as published by the Free Software
+# Foundation, either version 3 of the License, or (at your option) any later
+# version.
 #
-#This program is distributed in the hope that it will be useful, but
-#WITHOUT ANY WARRANTY; without even the implied warranty of
-#MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-#General Public License for more details. You should have received a copy
-#of the GNU General Public License along with this program.  If not, see
-#<http://www.gnu.org/licenses/>. PartitionFinder also includes the PhyML
-#program, the RAxML program, and the PyParsing library,
-#all of which are protected by their own licenses and conditions, using
-#PartitionFinder implies that you agree with those licences and conditions as well.
+# This program is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+# details. You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+# PartitionFinder also includes the PhyML program, the RAxML program, and the
+# PyParsing library, all of which are protected by their own licenses and
+# conditions, using PartitionFinder implies that you agree with those licences
+# and conditions as well.
 
 import subset
+import subset_ops
 import scheme
 from algorithm import euclidean_distance
 
@@ -184,27 +185,15 @@ def get_ranked_clustered_subsets(start_scheme, cfg):
 
 def make_clustered_scheme(start_scheme, scheme_name, subsets_to_cluster, cfg):
 
-    #1. Create a new subset that merges the subsets_to_cluster
-    newsub_parts = []
+    # 1. Create a new subset that merges the subsets_to_cluster
+    merged_sub = subset_ops.merge_subsets(subsets_to_cluster)
 
-    #log.info("Clustering %d subsets" % len(subsets_to_cluster))
+    # 2. Then we define a new scheme with those merged subsets
+    new_subsets = start_scheme.subsets - set(subsets_to_cluster)
+    new_subsets.add(merged_sub)
 
-    for s in subsets_to_cluster:
-        newsub_parts = newsub_parts + list(s.partitions)
-    newsub = subset.Subset(*tuple(newsub_parts))
-
-    #2. Then we define a new scheme with those merged subsets
-    all_subs = [s for s in start_scheme.subsets]
-
-    #pop out the subsets we're going to join together
-    for s in subsets_to_cluster:
-        all_subs.remove(s)
-
-    #and now we add back in our new subset...
-    all_subs.append(newsub)
-
-    #and finally create the clustered scheme
-    final_scheme = (scheme.Scheme(cfg, str(scheme_name), all_subs))
+    #3. Create the clustered scheme
+    final_scheme = scheme.Scheme(cfg, str(scheme_name), new_subsets)
 
     return final_scheme
 

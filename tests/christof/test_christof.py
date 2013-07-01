@@ -47,7 +47,7 @@ def test_alignment_error(caplog):
 def test_overlap_error(caplog):
     with pytest.raises(util.PartitionFinderError):
         main.call_main("protein", '"%s"' % path_from_function())
-    assert "overlaps with previously defined partitions" in caplog.text()
+    assert "contains overlapping subsets" in caplog.text()
 
 def test_clustering_phyml_dna(caplog):
     with pytest.raises(util.PartitionFinderError):

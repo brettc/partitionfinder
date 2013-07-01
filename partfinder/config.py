@@ -1,19 +1,19 @@
-#Copyright (C) 2012 Robert Lanfear and Brett Calcott
+# Copyright (C) 2012 Robert Lanfear and Brett Calcott
 #
-#This program is free software: you can redistribute it and/or modify it
-#under the terms of the GNU General Public License as published by the
-#Free Software Foundation, either version 3 of the License, or (at your
-#option) any later version.
+# This program is free software: you can redistribute it and/or modify it under
+# the terms of the GNU General Public License as published by the Free Software
+# Foundation, either version 3 of the License, or (at your option) any later
+# version.
 #
-#This program is distributed in the hope that it will be useful, but
-#WITHOUT ANY WARRANTY; without even the implied warranty of
-#MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-#General Public License for more details. You should have received a copy
-#of the GNU General Public License along with this program.  If not, see
-#<http://www.gnu.org/licenses/>. PartitionFinder also includes the PhyML
-#program, the RAxML program, the PyParsing library, and the python-cluster library
-#all of which are protected by their own licenses and conditions, using
-#PartitionFinder implies that you agree with those licences and conditions as well.
+# This program is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+# details. You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+# PartitionFinder also includes the PhyML program, the RAxML program, and the
+# PyParsing library, all of which are protected by their own licenses and
+# conditions, using PartitionFinder implies that you agree with those licences
+# and conditions as well.
 
 import logging
 log = logging.getLogger("config")
@@ -22,7 +22,6 @@ import os
 import fnmatch
 import cPickle as pickle
 import scheme
-import partition
 import subset
 import parser
 import util
@@ -49,9 +48,10 @@ class Configuration(object):
         cluster_percent=10):
 
         log.info("------------- Configuring Parameters -------------")
-        self.partitions = partition.PartitionSet()
         # Only required if user adds them
         self.user_schemes = scheme.SchemeSet()
+        self.user_subsets = []
+        self.user_subsets_by_name = {}
 
         self.save_phylofiles = save_phylofiles
         self.progress = progress.NoProgress(self)
@@ -62,7 +62,7 @@ class Configuration(object):
         self.base_path = '.'
         self.alignment = None
         self.user_tree = None
-        self.old_cwd = None
+        self.old_working_directory = None
 
         # Some basic checking of the setup, so that we don't hit too many
         # problems later
@@ -116,8 +116,8 @@ class Configuration(object):
                     raise ConfigurationError
 
             log.info("Setting cluster_weights to: "
-                     "subset_rate = %s, freqs = %s, model = %s, alpha %s" 
-                     % (cluster_weights[0], cluster_weights[1], 
+                     "subset_rate = %s, freqs = %s, model = %s, alpha %s"
+                     % (cluster_weights[0], cluster_weights[1],
                         cluster_weights[2], cluster_weights[3]))
 
             self.cluster_weights = {}
@@ -131,7 +131,7 @@ class Configuration(object):
             assert self.cluster_percent >= 0.0
             assert self.cluster_percent <= 100.0
         except:
-            
+
             log.error("The rcluster-percent variable must be between 0.0 to 100.0, yours "
                       "is %.2f. Please check and try again." % self.cluster_percent)
             raise ConfigurationError
@@ -158,9 +158,9 @@ class Configuration(object):
         log.info("Program path is here %s", self.program_path)
 
     def reset(self):
-        if self.old_cwd is not None:
-            log.debug("Returning to original path: %s", self.old_cwd)
-            os.chdir(self.old_cwd)
+        if self.old_working_directory is not None:
+            log.debug("Returning to original path: %s", self.old_working_directory)
+            os.chdir(self.old_working_directory)
         log.debug("Cleaning out all subsets (There are %d)...", subset.count_subsets())
         subset.clear_subsets()
 
@@ -258,7 +258,7 @@ class Configuration(object):
 
         # Now make our working folder this folder. All of our other paths will
         # be relative to this
-        self.old_cwd = os.getcwd()
+        self.old_working_directory = os.getcwd()
         os.chdir(self.full_base_path)
 
         # Our base path is now this
@@ -314,9 +314,15 @@ class Configuration(object):
             util.check_file_exists(self.user_tree_topology_path)
 
     def check_for_old_config(self):
-        """Check whether the analysis dictated by cfg has been run before, and if the config has changed
-        in any way that would make re-running it invalid"""
-        #the important stuff in our analysis, that can't change if we want to re-use old subsets
+        """
+        Check whether the analysis dictated by cfg has been run before, and if
+        the config has changed in any way that would make re-running it invalid
+        """
+
+        # TODO: Fix this mess
+        return
+
+
         log.info("Checking previously run configuration data...")
         if self.user_tree is None:
             topology = ""
@@ -325,11 +331,11 @@ class Configuration(object):
 
         cfg_list = [self.alignment,
                     self.branchlengths,
-                    self.partitions.partitions,
+                    # self.user_subsets,
                     self.phylogeny_program,
                     topology]
 
-        #we need to know if there's anything in the subsets folder
+        # We need to know if there's anything in the subsets folder
         subset_path = os.path.join(self.output_path, 'subsets')
         has_subsets = False
         if os.path.exists(subset_path):
@@ -340,9 +346,7 @@ class Configuration(object):
                 if ex.errno == errno.ENOTEMPTY:
                     has_subsets = True
 
-
-
-        #we also need to know if there's an old conifg file saved
+        # We also need to know if there's an old conifg file saved
         cfg_dir = os.path.join(self.output_path, 'cfg')
         old_cfg_path = os.path.join(cfg_dir, 'oldcfg.bin')
         if os.path.exists(old_cfg_path):

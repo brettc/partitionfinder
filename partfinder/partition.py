@@ -1,32 +1,35 @@
-#Copyright (C) 2012 Robert Lanfear and Brett Calcott
+# Copyright (C) 2012 Robert Lanfear and Brett Calcott
 #
-#This program is free software: you can redistribute it and/or modify it
-#under the terms of the GNU General Public License as published by the
-#Free Software Foundation, either version 3 of the License, or (at your
-#option) any later version.
+# This program is free software: you can redistribute it and/or modify it under
+# the terms of the GNU General Public License as published by the Free Software
+# Foundation, either version 3 of the License, or (at your option) any later
+# version.
 #
-#This program is distributed in the hope that it will be useful, but
-#WITHOUT ANY WARRANTY; without even the implied warranty of
-#MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-#General Public License for more details. You should have received a copy
-#of the GNU General Public License along with this program.  If not, see
-#<http://www.gnu.org/licenses/>. PartitionFinder also includes the PhyML
-#program, the RAxML program, and the PyParsing library, 
-#all of which are protected by their own licenses and conditions, using 
-#PartitionFinder implies that you agree with those licences and conditions as well.
+# This program is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+# details. You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+# PartitionFinder also includes the PhyML program, the RAxML program, and the
+# PyParsing library, all of which are protected by their own licenses and
+# conditions, using PartitionFinder implies that you agree with those licences
+# and conditions as well.
 
 import logging
 log = logging.getLogger("partition")
 
 from util import PartitionFinderError
+
 class PartitionError(PartitionFinderError):
     pass
+
 
 def columnset_to_string(colset):
     s = list(colset)
     s.sort()
     # Add one, cos we converted to zero base...
     return ', '.join([str(x+1) for x in s])
+
 
 class PartitionSet(object):
     """The set of all partitions loaded from a configuration file"""
@@ -96,10 +99,10 @@ class PartitionSet(object):
             # This does not raise an error, just a warning
             log.warn(
                 "Columns defined in partitions range from %s to %s, "
-                "but these columns in the alignment are missing: %s", 
+                "but these columns in the alignment are missing: %s",
                 self.columns[0]+1, self.columns[-1]+1,
                 columnset_to_string(leftout))
-        
+
     # We can treat this like a bit like a dictionary
     def __iter__(self):
         return iter(self.partitions)

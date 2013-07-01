@@ -16,6 +16,8 @@
 #PartitionFinder implies that you agree with those licences and conditions as well.
 
 import logging
+from partfinder import subset_ops
+
 log = logging.getLogger("scheme")
 import subset
 import submodels
@@ -64,7 +66,7 @@ class SchemeResult(object):
         log.debug("Grand total parameters: %d" % (self.sum_k))
 
         self.lnl = sum([s.best_lnl for s in sch])
-        self.nsites = sum([len(s.columnset) for s in sch])
+        self.nsites = sum([len(s.column_set) for s in sch])
 
         K = float(self.sum_k)
         n = float(self.nsites)
@@ -100,47 +102,16 @@ class Scheme(object):
     def __init__(self, cfg, name, subsets, description=None):
         """A set of subsets of partitions"""
         self.name = name
-        self.subsets = set()
+        self.subsets = set(subsets)
         self.description = description
 
-        # This one is a set of frozensets of partitions...
-        part_subsets = set()
-
-        # This is really long-winded, but it is mainly for error-checking
-        partitions = set()
-        duplicates = []
-        for s in subsets:
-            for p in s:
-                if p in partitions:
-                    # This is an error -- we'll collect them up
-                    duplicates.append(str(p))
-                else:
-                    partitions.add(p)
-            self.subsets.add(s)
-            part_subsets.add(s.partitions)
-
-        self.part_subsets = frozenset(part_subsets)
-
-        # Report the errors
-        if duplicates:
-            log.error("Scheme '%s' contains duplicate partitions: %s",
-                      name, ', '.join(duplicates))
+        if subset_ops.subsets_overlap(subsets):
+            log.error("Scheme '%s' contains overlapping subsets", name)
             raise SchemeError
 
-        # Hm. It seems this is the only way to get just one item out of a set
-        # as pop would remove one...
-        pset = cfg.partitions
-
-        # Do a set-difference to see what is missing...
-        missing = pset.partitions - partitions
-        if missing:
-            log.error("Scheme '%s' is missing partitions: %s",
-                      name, ', '.join([str(p) for p in missing]))
+        if subset_ops.has_missing(subsets):
+            log.error("Scheme '%s' has missing subsets", name)
             raise SchemeError
-
-        # This locks down whether new partitions can be created.
-        if not cfg.partitions.finalised:
-            cfg.partitions.finalise()
 
         log.debug("Created %s", self)
 
@@ -160,7 +131,7 @@ class SchemeSet(object):
 
     def clear_schemes(self):
         self.schemes_by_name = {}
-        self.schemes_by_subsets = {}
+        # self.schemes_by_subsets = {}
 
     def add_scheme(self, scheme):
         if scheme.name in self.schemes_by_name:
@@ -168,16 +139,17 @@ class SchemeSet(object):
                       scheme.name)
             raise SchemeError
 
-        if scheme.part_subsets in self.schemes_by_subsets:
-            existing_scheme = \
-                self.schemes_by_subsets[scheme.part_subsets]
-            log.warning(
-                "Scheme named %s being added is identical to existing %s",
-                scheme.name, existing_scheme)
-            # raise SchemeError
+        # TODO: Recheck schemes to make sure they're ok...
+        # if scheme.part_subsets in self.schemes_by_subsets:
+            # existing_scheme = \
+                # self.schemes_by_subsets[scheme.part_subsets]
+            # log.warning(
+                # "Scheme named %s being added is identical to existing %s",
+                # scheme.name, existing_scheme)
+            # # raise SchemeError
 
         self.schemes_by_name[scheme.name] = scheme
-        self.schemes_by_subsets[scheme.part_subsets] = scheme
+        # self.schemes_by_subsets[scheme.part_subsets] = scheme
 
     def __len__(self):
         return len(self.schemes_by_name)
@@ -192,11 +164,10 @@ def create_scheme(cfg, scheme_name, scheme_description):
     indexes of the partitions e.g. [0,1,2,3,4,5,6,7]
     """
 
-    partition_count = len(
-        cfg.partitions)  # total number of partitions defined by user
+    subset_count = len(cfg.user_subsets)
 
     # Check that the correct number of items are in the list
-    if len(scheme_description) != partition_count:
+    if len(scheme_description) != subset_count:
         log.error("There's a problem with the description of scheme %s" %
                   scheme_name)
         raise SchemeError
@@ -212,7 +183,8 @@ def create_scheme(cfg, scheme_name, scheme_description):
     # set of values which are the index for the partition
     created_subsets = []
     for sub_indexes in subs.values():
-        sub = subset.Subset(*tuple([cfg.partitions[i] for i in sub_indexes]))
+        subs_to_merge = [cfg.user_subsets[i] for i in sub_indexes]
+        sub = subset_ops.merge_subsets(subs_to_merge)
         created_subsets.append(sub)
 
     return Scheme(cfg, str(scheme_name), created_subsets, description=scheme_description)
@@ -230,7 +202,8 @@ def model_to_scheme(model, scheme_name, cfg):
     # set of values which are the index for the partition
     created_subsets = []
     for sub_indexes in subs.values():
-        sub = subset.Subset(*tuple([cfg.partitions[i] for i in sub_indexes]))
+        subs_to_merge = [cfg.user_subsets[i] for i in sub_indexes]
+        sub = subset_ops.merge_subsets(subs_to_merge)
         created_subsets.append(sub)
 
     return Scheme(cfg, str(scheme_name), created_subsets)
@@ -243,11 +216,10 @@ def generate_all_schemes(cfg):
 
     log.info("Generating all possible schemes for the partitions...")
 
-    partition_count = len(
-        cfg.partitions)  # total number of partitions defined by user
+    subset_count = len(cfg.user_subsets)
 
     # Now generate the pattern for this many partitions
-    all_schemes = submodels.get_submodels(partition_count)
+    all_schemes = submodels.get_submodels(subset_count)
     scheme_name = 1
     scheme_list = []
     for scheme in all_schemes:
@@ -260,12 +232,11 @@ def generate_all_schemes(cfg):
         # set of values which are the index for the partition
         created_subsets = []
         for sub_indexes in subs.values():
-            sub = subset.Subset(
-                *tuple([cfg.partitions[i] for i in sub_indexes]))
+            sub = subset_ops.merge_subsets(
+                [cfg.user_subsets[i] for i in sub_indexes])
             created_subsets.append(sub)
 
-        scheme_list.append(
-            Scheme(cfg, str(scheme_name), created_subsets))
+        scheme_list.append(Scheme(cfg, str(scheme_name), created_subsets))
 
         log.debug("Created scheme %d of %d" % (scheme_name, len(all_schemes)))
 

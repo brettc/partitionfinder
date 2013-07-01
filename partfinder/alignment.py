@@ -28,12 +28,15 @@ import os
 
 from pyparsing import (
     Word, OneOrMore, alphas, nums, Suppress, Optional, Group, stringEnd,
-    delimitedList, ParseException, line, lineno, col, LineStart, restOfLine,
-    LineEnd, White, Literal, Combine, Or, MatchFirst, ZeroOrMore)
+    delimitedList, ParseException, line, lineno, col, restOfLine, LineEnd,
+    White, Literal, Combine, Or, MatchFirst, ZeroOrMore)
 
 from util import PartitionFinderError
+
+
 class AlignmentError(PartitionFinderError):
     pass
+
 
 class AlignmentParser(object):
     """Parses an alignment and returns species sequence tuples"""
@@ -55,7 +58,7 @@ class AlignmentParser(object):
         INTEGER.setParseAction(lambda x: int(x[0]))
 
         header = INTEGER("species_count") + INTEGER("sequence_length") +\
-                Suppress(restOfLine)
+            Suppress(restOfLine)
         header.setParseAction(self.set_header)
 
         sequence_name = Word(
@@ -65,7 +68,8 @@ class AlignmentParser(object):
         # Take a copy and disallow line breaks in the bases
         bases = self.BASES.copy()
         bases.setWhitespaceChars(" \t")
-        seq_start = sequence_name("species") + bases("sequence") + Suppress(LineEnd())
+        seq_start = sequence_name("species") + bases(
+            "sequence") + Suppress(LineEnd())
         seq_start.setParseAction(self.set_seq_start)
         seq_start_block = OneOrMore(seq_start)
         seq_start_block.setParseAction(self.set_start_block)
@@ -101,12 +105,13 @@ class AlignmentParser(object):
 
     def parse(self, s):
         try:
-            defs = self.root_parser.parseString(s)
-        except ParseException, p:
+            self.root_parser.parseString(s)
+
+        except ParseException as p:
             log.error("Error in Alignment Parsing:" + str(p))
             log.error("A common cause of this error is having whitespace"
-            ", i.e. spaces or tabs, in the species names. Please check this and remove"
-            " all whitespace from species names, or replace them with e.g. underscores")
+                      ", i.e. spaces or tabs, in the species names. Please check this and remove"
+                      " all whitespace from species names, or replace them with e.g. underscores")
 
             raise AlignmentError
 
@@ -118,26 +123,29 @@ class AlignmentParser(object):
                 slen = len(seq)
             else:
                 if len(seq) != slen:
-                    log.error("Bad alignment file: Not all species have the same sequences length")
+                    log.error(
+                        "Bad alignment file: Not all species have the same sequences length")
                     raise AlignmentError
 
         # Not all formats have a heading, but if we have one do some checking
         if self.sequence_length is not None:
             if self.sequence_length != slen:
                 log.error("Bad Alignment file: sequence length count in header does not match"
-                " sequence length in file, please check")
+                          " sequence length in file, please check")
                 raise AlignmentError
 
         if self.species_count is not None:
             if len(self.sequences) != self.species_count:
                 log.error("Bad Alignment file: species count in header does not match"
-                " number of sequences in file, please check")
+                          " number of sequences in file, please check")
                 raise AlignmentError
 
         return self.sequences
 
+
 def parse(s):
     return AlignmentParser().parse(s)
+
 
 class Alignment(object):
     def __init__(self):
@@ -145,15 +153,17 @@ class Alignment(object):
         self.sequence_len = 0
 
     def __str__(self):
-        return "Alignment(%s species, %s codons)" % self.species, self.sequence_len
+        return "Alignment(%s species, %s codons)"\
+               % self.species, self.sequence_len
 
     def same_as(self, other):
         if self.sequence_len != other.sequence_len:
-            log.warning("Alignments not the same, length differs %s: %s", self.sequence_len, other.sequence_len)
+            log.warning("Alignments not the same, length differs %s: %s",
+                        self.sequence_len, other.sequence_len)
             return False
 
         if self.species != other.species:
-            log.warning("Alignments not the same. " 
+            log.warning("Alignments not the same. "
                         "This alignment has %s species, the alignment from the previous "
                         "analysis had %s.", len(self.species), len(other.species))
             return False
@@ -211,24 +221,31 @@ class Alignment(object):
 
         fd.write("%d %d\n" % (species_count, sequence_len))
         for species, sequence in self.species.iteritems():
-            # we use a version of phylip which can have longer species names, up to 100
-            shortened = "%s    " %(species[:99])
+            # We use a version of phylip which can have longer species names,
+            # up to 100
+            shortened = "%s    " % (species[:99])
             fd.write(shortened)
             fd.write(sequence)
             fd.write("\n")
         fd.close()
 
+
 class SubsetAlignment(Alignment):
+
     """Create an alignment based on some others and a subset definition"""
     def __init__(self, source, subset):
         """create an alignment for this subset"""
         Alignment.__init__(self)
 
-        #let's do a basic check to make sure that the specified sites aren't > alignment length
-        site_max = max(subset.columns)+1
-        log.debug("Max site in data_blocks: %d; max site in alignment: %d" %(site_max, source.sequence_len))
-        if site_max>source.sequence_len:
-            log.error("Site %d is specified in [data_blocks], but the alignment only has %d sites. Please check." %(site_max, source.sequence_len))
+        # Let's do a basic check to make sure that the specified sites
+        # aren't > alignment length
+        site_max = max(subset.columns) + 1
+        log.debug("Max site in data_blocks: %d; max site in alignment: %d"
+                  % (site_max, source.sequence_len))
+        if site_max > source.sequence_len:
+            log.error("Site %d is specified in [data_blocks], "
+                      "but the alignment only has %d sites. "
+                      "Please check." % (site_max, source.sequence_len))
             raise AlignmentError
 
         # Pull out the columns we need
@@ -242,9 +259,10 @@ class SubsetAlignment(Alignment):
 
         self.sequence_len = len(self.species.itervalues().next())
 
+
 class TestAlignment(Alignment):
+
     """Good for testing stuff"""
     def __init__(self, text):
         Alignment.__init__(self)
         self.from_parser_output(parse(text))
-

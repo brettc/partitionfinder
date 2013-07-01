@@ -32,9 +32,9 @@ class UserAnalysis(Analysis):
 
     def do_analysis(self):
         log.info("Performing User analysis")
-        current_schemes = [s for s in self.cfg.user_schemes]
+        current_schemes = self.cfg.user_schemes
         scheme_count = len(current_schemes)
-        subset_count = subset.count_subsets()
+        subset_count = len(self.cfg.user_subsets)
 
         self.cfg.progress.begin(scheme_count, subset_count)
         if scheme_count > 0:
@@ -48,7 +48,6 @@ class UserAnalysis(Analysis):
             raise AnalysisError
 
         self.cfg.progress.end()
-
         self.cfg.reporter.write_best_scheme(self.results)
 
 
@@ -63,13 +62,13 @@ class StrictClusteringAnalysis(Analysis):
     def do_analysis(self):
         log.info("Performing strict clustering analysis")
 
-        partnum = len(self.cfg.partitions)
+        partnum = len(self.cfg.user_subsets)
         subset_count = 2 * partnum - 1
         scheme_count = partnum
         self.cfg.progress.begin(scheme_count, subset_count)
 
         # Start with the most partitioned scheme
-        start_description = range(len(self.cfg.partitions))
+        start_description = range(partnum)
         start_scheme = scheme.create_scheme(
             self.cfg, "start_scheme", start_description)
 
@@ -112,7 +111,7 @@ class AllAnalysis(Analysis):
 
     def do_analysis(self):
         log.info("Performing complete analysis")
-        partnum = len(self.cfg.partitions)
+        partnum = len(self.cfg.user_subsets)
 
         scheme_count = submodels.count_all_schemes(partnum)
         subset_count = submodels.count_all_subsets(partnum)
@@ -139,14 +138,14 @@ class GreedyAnalysis(Analysis):
 
         log.info("Performing greedy analysis")
 
-        partnum = len(self.cfg.partitions)
+        partnum = len(self.cfg.user_subsets)
         scheme_count = submodels.count_greedy_schemes(partnum)
         subset_count = submodels.count_greedy_subsets(partnum)
 
         self.cfg.progress.begin(scheme_count, subset_count)
 
         # Start with the most partitioned scheme
-        start_description = range(len(self.cfg.partitions))
+        start_description = range(partnum)
         start_scheme = scheme.create_scheme(
             self.cfg, "start_scheme", start_description)
 
@@ -220,22 +219,23 @@ class RelaxedClusteringAnalysis(Analysis):
         stop_at = self.cfg.cluster_percent * 0.01
 
         model_selection = self.cfg.model_selection
-        partnum = len(self.cfg.partitions)
+        partnum = len(self.cfg.user_subsets)
 
-        scheme_count = submodels.count_relaxed_clustering_schemes(partnum, self.cfg.cluster_percent)
-        subset_count = submodels.count_relaxed_clustering_subsets(partnum, self.cfg.cluster_percent)
+        scheme_count = submodels.count_relaxed_clustering_schemes(
+            partnum, self.cfg.cluster_percent)
+        subset_count = submodels.count_relaxed_clustering_subsets(
+            partnum, self.cfg.cluster_percent)
 
         self.cfg.progress.begin(scheme_count, subset_count)
 
         # Start with the most partitioned scheme, and record it.
-        start_description = range(len(self.cfg.partitions))
+        start_description = range(partnum)
         start_scheme = scheme.create_scheme(
             self.cfg, "start_scheme", start_description)
         log.info("Analysing starting scheme (scheme %s)" % start_scheme.name)
         self.analyse_scheme(start_scheme)
         self.cfg.reporter.write_scheme_summary(
             self.results.best_scheme, self.results.best_result)
-
 
         # Start by remembering that we analysed the starting scheme
         subset_counter = 1
@@ -250,8 +250,9 @@ class RelaxedClusteringAnalysis(Analysis):
             lumped_subsets = neighbour.get_ranked_clustered_subsets(
                 start_scheme, self.cfg)
 
-            # reduce the size of the lumped subsets to cluster_percent long
-            cutoff = int(math.ceil(len(lumped_subsets)*stop_at)) #round up to stop zeros
+            # Reduce the size of the lumped subsets to cluster_percent long
+            # Round up to stop zeros
+            cutoff = int(math.ceil(len(lumped_subsets)*stop_at))
             lumped_subsets = lumped_subsets[:cutoff]
 
             # Now analyse the lumped schemes
@@ -265,10 +266,11 @@ class RelaxedClusteringAnalysis(Analysis):
 
                 new_result = self.analyse_scheme(lumped_scheme)
 
-                log.debug("Difference in %s: %.1f", self.cfg.model_selection, (new_result.score-old_best_score))
+                log.debug("Difference in %s: %.1f",
+                          self.cfg.model_selection,
+                          (new_result.score-old_best_score))
 
                 lumpings_done += 1
-
 
             if self.results.best_score != old_best_score:
                 log.info("Analysed %.1f percent of the schemes for this step. The best "
@@ -276,11 +278,9 @@ class RelaxedClusteringAnalysis(Analysis):
                          self.cfg.cluster_percent, self.cfg.model_selection,
                          (self.results.best_score - old_best_score))
 
-                #write out the best scheme
                 self.results.best_scheme.name = "step_%d" % step
                 self.cfg.reporter.write_scheme_summary(
                     self.results.best_scheme, self.results.best_result)
-
 
                 # Now we find out which is the best lumping we know of for this step
                 start_scheme = self.results.best_scheme
@@ -295,14 +295,11 @@ class RelaxedClusteringAnalysis(Analysis):
 
             step += 1
 
-
-
         log.info("Relaxed clustering algorithm finished after %d steps" % step)
         log.info("Best scoring scheme is scheme %s, with %s score of %.3f"
                  % (self.results.best_scheme.name, model_selection, self.results.best_score))
 
         self.cfg.reporter.write_best_scheme(self.results)
-
 
 def choose_method(search):
     if search == 'all':

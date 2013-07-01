@@ -80,38 +80,38 @@ class TextReporter(object):
         pf_scheme_description = []
             # a way to print out the scheme in PF format
 
-        for sub in sorted_subsets:
-            desc = {}
-            names = []
-            for part in sub:
-                names.append(part.name)
-                for subpart in part.description:  # loop through each sub-part of the partition
-                    desc[subpart[0]] = subpart
+        # for sub in sorted_subsets:
+            # desc = {}
+            # names = []
+            # for part in sub:
+                # names.append(part.name)
+                # for subpart in part.description:  # loop through each sub-part of the partition
+                    # desc[subpart[0]] = subpart
 
-            #pretty print the sites in the scheme
-            desc_starts = desc.keys()
-            desc_starts.sort()
-            parts = []
-            for key in desc_starts:
-                part = desc[key]
-                if part[2] == 1:
-                    text = "%s-%s" % (part[0], part[1])
-                else:
-                    text = "%s-%s\\%s" % tuple(part)
-                parts.append(text)
-            parts = ', '.join(parts)
+            # #pretty print the sites in the scheme
+            # desc_starts = desc.keys()
+            # desc_starts.sort()
+            # parts = []
+            # for key in desc_starts:
+                # part = desc[key]
+                # if part[2] == 1:
+                    # text = "%s-%s" % (part[0], part[1])
+                # else:
+                    # text = "%s-%s\\%s" % tuple(part)
+                # parts.append(text)
+            # parts = ', '.join(parts)
 
-            names.sort()
-            names = ', '.join(names)
+            # names.sort()
+            # names = ', '.join(names)
 
-            pf_scheme_description.append("(%s)" % names)
+            # pf_scheme_description.append("(%s)" % names)
 
-            output.write(scheme_subset_template % (
-                number, sub.best_model, names, parts, sub.alignment_path))
-            number += 1
+            # output.write(scheme_subset_template % (
+                # number, sub.best_model, names, parts, sub.alignment_path))
+            # number += 1
 
-        pf_scheme_description = " ".join(pf_scheme_description)
-        output.write("\n\nScheme Description in PartitionFinder format\n")
+        # pf_scheme_description = " ".join(pf_scheme_description)
+        # output.write("\n\nScheme Description in PartitionFinder format\n")
         output.write("Scheme_%s = %s;" % (sch.name, pf_scheme_description))
 
     def write_raxml(self, sch, result, output, sorted_subsets):
@@ -121,39 +121,39 @@ class TextReporter(object):
         from raxml_models import get_raxml_protein_modelstring
         output.write("\n\nRaxML-style partition definitions\n")
         number = 1
-        for sub in sorted_subsets:
+        # for sub in sorted_subsets:
 
-            desc = {}
-            names = []
-            for part in sub:
-                names.append(part.name)
-                for subpart in part.description:  # loop through each sub-part of the partition
-                    desc[subpart[0]] = subpart
+            # desc = {}
+            # names = []
+            # for part in sub:
+                # names.append(part.name)
+                # for subpart in part.description:  # loop through each sub-part of the partition
+                    # desc[subpart[0]] = subpart
 
-            # Pretty print the sites in the scheme
-            desc_starts = desc.keys()
-            desc_starts.sort()
-            parts = []
-            for key in desc_starts:
-                part = desc[key]
-                if part[2] == 1:
-                    text = "%s-%s" % (part[0], part[1])
-                else:
-                    text = "%s-%s\\%s" % tuple(part)
-                parts.append(text)
-            parts = ', '.join(parts)
+            # # Pretty print the sites in the scheme
+            # desc_starts = desc.keys()
+            # desc_starts.sort()
+            # parts = []
+            # for key in desc_starts:
+                # part = desc[key]
+                # if part[2] == 1:
+                    # text = "%s-%s" % (part[0], part[1])
+                # else:
+                    # text = "%s-%s\\%s" % tuple(part)
+                # parts.append(text)
+            # parts = ', '.join(parts)
 
-            if self.cfg.datatype == "DNA":
-                model = "DNA"
-            elif self.cfg.datatype == "protein":
-                model = get_raxml_protein_modelstring(sub.best_model)
-            else:
-                raise RuntimeError
+            # if self.cfg.datatype == "DNA":
+                # model = "DNA"
+            # elif self.cfg.datatype == "protein":
+                # model = get_raxml_protein_modelstring(sub.best_model)
+            # else:
+                # raise RuntimeError
 
-            line = "%s, p%s = %s\n" % (model, number, parts)
-            output.write(line)
+            # line = "%s, p%s = %s\n" % (model, number, parts)
+            # output.write(line)
 
-            number += 1
+            # number += 1
 
     def write_best_scheme(self, result):
         pth = os.path.join(self.cfg.output_path, 'best_scheme.txt')
@@ -173,8 +173,8 @@ class TextReporter(object):
                                str(self.cfg.cluster_weights["alpha"]))
             output.write(scheme_header_template % ("weights", pretty_weights))
         if self.cfg.search == "rcluster":
-            output.write(scheme_header_template % ("rcluster-percent",         
-                                                   self.cfg.cluster_percent))        
-        output.write('\n\nBest partitioning scheme\n\n')        
+            output.write(scheme_header_template % ("rcluster-percent",
+                                                   self.cfg.cluster_percent))
+        output.write('\n\nBest partitioning scheme\n\n')
         self.output_scheme(result.best_scheme, result.best_result, output)
         log.info("Information on best scheme is here: %s", pth)
