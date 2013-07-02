@@ -66,7 +66,6 @@ def split_subset(a_subset, subset_list, cluster_list):
     # Take each site from the first list and add it to a new subset
     subset_columns = []
     list_of_subsets = []
-    old_score = a_subset.
     for cluster in cluster_list:
         list_of_sites = []
         for site in cluster:
