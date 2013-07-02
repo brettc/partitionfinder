@@ -27,6 +27,10 @@ import submodels
 import subset
 from analysis import Analysis, AnalysisError
 import neighbour
+import kmeans
+import raxml
+import phyml
+from subset_ops import split_subset
 
 class UserAnalysis(Analysis):
 
@@ -301,6 +305,46 @@ class RelaxedClusteringAnalysis(Analysis):
 
         self.cfg.reporter.write_best_scheme(self.results)
 
+class KmeansAnalysis(Analysis):
+    def do_analysis(self):
+        partnum = len(self.cfg.user_subsets)
+        start_description = range(partnum)
+        log.info("Performing subset splitting using kmeans")
+
+        # Create the first scheme
+        start_scheme = scheme.create_scheme(self.cfg, "start_scheme", start_description)
+        new_scheme = scheme.create_scheme(self.cfg, "new_scheme", start_description)
+        for a_subset in start_scheme:
+            # Save the alignment path
+            a_subset.make_alignment(self.cfg, self.alignment)
+            phylip_file = a_subset.alignment_path
+
+            # Add option to output likelihoods, *raxml version takes more 
+            # modfying of the commands in the analyse function
+            processor = self.cfg.processor
+            processor.analyse("GTR", str(phylip_file), 
+                "./analysis/start_tree/filtered_source.phy_phyml_tree.txt", 
+                "unlinked", "--print_site_lnl")
+
+            phyml_lk_file = str(phylip_file) + "_phyml_lk_GTR.txt"
+            likelihood_dictionary = kmeans.phyml_likelihood_parser(phyml_lk_file)
+            split_categories = kmeans.kmeans(likelihood_dictionary)[1]
+            list_of_sites = []
+            for k in split_categories:
+                list_of_sites.append(split_categories[k])
+            list_of_columns = a_subset.columns
+
+            # Now make a list of split columns for input into a subset
+            new_subsets = split_subset(a_subset, list_of_columns, list_of_sites)
+
+            log.info(new_subsets)
+            
+
+
+
+
+
+
 def choose_method(search):
     if search == 'all':
         method = AllAnalysis
@@ -312,6 +356,8 @@ def choose_method(search):
         method = StrictClusteringAnalysis
     elif search == 'rcluster':
         method = RelaxedClusteringAnalysis
+    elif search == 'paul':
+        method = KmeansAnalysis
     else:
         log.error("Search algorithm '%s' is not yet implemented", search)
         raise AnalysisError
