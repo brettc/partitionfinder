@@ -20,6 +20,9 @@ import cPickle as pickle
 import subset
 from util import PartitionFinderError
 
+import logging
+log = logging.getLogger("subset_ops")
+
 def subset_unique_name(subset):
     """Return a unique string based on the subsets columns (which are unique)"""
 
@@ -55,4 +58,22 @@ def subsets_overlap(subset_list):
 
 def has_missing(subset_list):
     return False
+
+def split_subset(a_subset, subset_list, cluster_list):
+    """Takes a list of columns in a subset and splits it according to a 
+    cluster list, then returns the two subsets, if and only if there is
+    and increase in the AIC/AICc/BIC score"""
+    # Take each site from the first list and add it to a new subset
+    subset_columns = []
+    list_of_subsets = []
+    old_score = a_subset.
+    for cluster in cluster_list:
+        list_of_sites = []
+        for site in cluster:
+            list_of_sites.append(subset_list[site-1])
+        subset_columns.append(set(list_of_sites))
+    for column_set in subset_columns:
+        new_subset = subset.Subset(a_subset.cfg, column_set)
+        list_of_subsets.append(new_subset)
+    return list_of_subsets
 
