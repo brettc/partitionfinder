@@ -307,14 +307,6 @@ class RelaxedClusteringAnalysis(Analysis):
 
 class KmeansAnalysis(Analysis):
     def do_analysis(self):
-        # partnum = len(self.cfg.user_subsets)
-        # start_description = range(partnum)
-        # log.info(start_description)
-        log.info("Performing subset splitting using kmeans")
-
-        # # Create the first scheme
-        # start_scheme = scheme.create_scheme(self.cfg, "start_scheme", start_description)
-
         # Copied and Pasted from greedy analysis
         partnum = len(self.cfg.user_subsets)
         scheme_count = submodels.count_greedy_schemes(partnum)
@@ -326,10 +318,15 @@ class KmeansAnalysis(Analysis):
         start_description = range(partnum)
         start_scheme = scheme.create_scheme(
             self.cfg, "start_scheme", start_description)
+        
+
 
         log.info("Analysing starting scheme (scheme %s)" % start_scheme.name)
-        self.analyse_scheme(start_scheme)
-        
+        old_score = self.analyse_scheme(start_scheme)
+        log.info("Start scheme result is : " + str(old_score))
+
+
+        log.info("Performing subset splitting using kmeans")
         new_scheme_subsets = []
         for a_subset in start_scheme:
             # Save the alignment path
@@ -355,8 +352,8 @@ class KmeansAnalysis(Analysis):
             new_scheme_subsets += new_subsets
         new_scheme = scheme.Scheme(self.cfg, "new_scheme", new_scheme_subsets)
         # self.analyse_scheme(start_scheme)
-        self.analyse_scheme(new_scheme)
-
+        new_score = self.analyse_scheme(new_scheme)
+        log.info("New scheme result is: " + str(new_score))
         log.info(new_scheme)
         return new_scheme
 
