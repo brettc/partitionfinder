@@ -307,13 +307,29 @@ class RelaxedClusteringAnalysis(Analysis):
 
 class KmeansAnalysis(Analysis):
     def do_analysis(self):
-        partnum = len(self.cfg.user_subsets)
-        start_description = range(partnum)
-        log.info(start_description)
+        # partnum = len(self.cfg.user_subsets)
+        # start_description = range(partnum)
+        # log.info(start_description)
         log.info("Performing subset splitting using kmeans")
 
-        # Create the first scheme
-        start_scheme = scheme.create_scheme(self.cfg, "start_scheme", start_description)
+        # # Create the first scheme
+        # start_scheme = scheme.create_scheme(self.cfg, "start_scheme", start_description)
+
+        # Copied and Pasted from greedy analysis
+        partnum = len(self.cfg.user_subsets)
+        scheme_count = submodels.count_greedy_schemes(partnum)
+        subset_count = submodels.count_greedy_subsets(partnum)
+
+        self.cfg.progress.begin(scheme_count, subset_count)
+
+        # Start with the most partitioned scheme
+        start_description = range(partnum)
+        start_scheme = scheme.create_scheme(
+            self.cfg, "start_scheme", start_description)
+
+        log.info("Analysing starting scheme (scheme %s)" % start_scheme.name)
+        self.analyse_scheme(start_scheme)
+        
         new_scheme_subsets = []
         for a_subset in start_scheme:
             # Save the alignment path
@@ -333,15 +349,16 @@ class KmeansAnalysis(Analysis):
             list_of_sites = []
             for k in split_categories:
                 list_of_sites.append(split_categories[k])
-            list_of_columns = a_subset.columns
 
             # Now make a list of split columns for input into a subset
-            new_subsets = split_subset(a_subset, list_of_columns, list_of_sites)
-            for each_subset in new_subsets:
-                new_scheme_subsets.append(each_subset)
-            log.info(new_scheme_subsets)
+            new_subsets = split_subset(a_subset, list_of_sites)
+            new_scheme_subsets += new_subsets
         new_scheme = scheme.Scheme(self.cfg, "new_scheme", new_scheme_subsets)
+        # self.analyse_scheme(start_scheme)
+        self.analyse_scheme(new_scheme)
+
         log.info(new_scheme)
+        return new_scheme
 
 
 
