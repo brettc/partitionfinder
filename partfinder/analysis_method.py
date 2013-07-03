@@ -309,11 +309,12 @@ class KmeansAnalysis(Analysis):
     def do_analysis(self):
         partnum = len(self.cfg.user_subsets)
         start_description = range(partnum)
+        log.info(start_description)
         log.info("Performing subset splitting using kmeans")
 
         # Create the first scheme
         start_scheme = scheme.create_scheme(self.cfg, "start_scheme", start_description)
-        new_scheme = scheme.create_scheme(self.cfg, "new_scheme", start_description)
+        new_scheme_subsets = []
         for a_subset in start_scheme:
             # Save the alignment path
             a_subset.make_alignment(self.cfg, self.alignment)
@@ -324,7 +325,7 @@ class KmeansAnalysis(Analysis):
             processor = self.cfg.processor
             processor.analyse("GTR", str(phylip_file), 
                 "./analysis/start_tree/filtered_source.phy_phyml_tree.txt", 
-                "unlinked", "--print_site_lnl")
+                "unlinked", "--print_site_lnl -m GTR")
 
             phyml_lk_file = str(phylip_file) + "_phyml_lk_GTR.txt"
             likelihood_dictionary = kmeans.phyml_likelihood_parser(phyml_lk_file)
@@ -336,10 +337,11 @@ class KmeansAnalysis(Analysis):
 
             # Now make a list of split columns for input into a subset
             new_subsets = split_subset(a_subset, list_of_columns, list_of_sites)
-
-            log.info(new_subsets)
-            
-
+            for each_subset in new_subsets:
+                new_scheme_subsets.append(each_subset)
+            log.info(new_scheme_subsets)
+        new_scheme = scheme.Scheme(self.cfg, "new_scheme", new_scheme_subsets)
+        log.info(new_scheme)
 
 
 
