@@ -59,11 +59,11 @@ def subsets_overlap(subset_list):
 def has_missing(subset_list):
     return False
 
-def split_subset(a_subset, subset_list, cluster_list):
-    """Takes a list of columns in a subset and splits it according to a 
-    cluster list, then returns the two subsets, if and only if there is
-    and increase in the AIC/AICc/BIC score"""
-    # Take each site from the first list and add it to a new subset
+def split_subset(a_subset, cluster_list):
+    """Takes a subset and splits it according to a cluster list,
+     then returns the subsets resulting from the split"""
+    # Take each site from the first list and add it to a new 
+    subset_list = a_subset.columns
     subset_columns = []
     list_of_subsets = []
     for cluster in cluster_list:
