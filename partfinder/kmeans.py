@@ -17,108 +17,6 @@ from collections import defaultdict
 import logging
 log = logging.getLogger("kmeans")
 
-
-
-def rate_cat_likelhood_parser(phyml_lk_file):
-    '''
-    BRETT SAYS: Format Code so that it flows 80 columns. (your editor will do
-       this for you)
-
-    Note: A new parser has been written that uses csv module and also outputs a
-    dictionary of site likelihoods.
-
-    This function takes the path of the phyml_lk file and returns a dictionary
-    with sites as keys and a list of likelihoods under different rate
-    categories as as the values
-    '''
-
-    # BRETT SAYS: Try to use white space to separate logical pieces in a
-    # function -- and associate comments
-
-    # Open the file and assign it to a variable
-    try:
-        phyml_lk_file = open(phyml_lk_file, "r")
-    except IOError:
-        raise IOError("Could not find site likelihood file!")
-
-    # BRETT SAYS: If you use good variable names, comments are less
-    # necessary:
-    # count -> line_number
-    # site -> site_number
-    #
-    # Start the count of the line number
-    line_number = 0
-    # Begin site number count
-    site_number = 1
-
-    # BRETT SAYS: We know you're creating a dictionary! Tell us what will be in
-    # it...
-    # Create dictionary for output
-    all_rates_dict = {}
-
-    # Read the file line by line
-    for line in phyml_lk_file.readlines():
-        # BRETT SAYS: If you need a counter (like site), try this:
-        # for line_number, line in enumerate(file.readlines()):
-
-        line_number += 1
-        if line_number > 7 and line_number < 1000007:
-            # Split the data and objects into a list and remove
-            # unnecessary whitespace
-            rate_list = " ".join(line.split()).split(" ")
-
-            # This could also be accomplished with regex
-            # rate_list = re.sub(' +', ' ', line).split(" ")
-            # Raise error if rate variation is not modeled
-            if len(rate_list) < 4:
-                raise IOError("Rate variation was not modeled in "
-                    "PhyML analysis. Please choose > 1 rate category")
-
-            # BRETT SAYS: Why are you doing this? You can just index into the
-            # rate_list, why modify it?
-            # rate_list[-1] == last element
-            # rate_list[-2] == second to last element...
-            #
-            # Remove first two and last numbers from list
-            rate_list.pop(0)
-            rate_list.pop(0)
-            rate_list.pop(-1)
-
-            # Convert all likelihoods to floats
-            # BRETT SAYS: Maybe do this: rate_list = [float(x) for x in rate_list]
-            for i in range(len(rate_list)):
-                rate_list[i] = float(rate_list[i])
-
-            # Add site number and rate list to dictionary
-            all_rates_dict[site] = rate_list
-            site_number += 1
-
-
-        # If there are more than 1,000,000 nts in a phyml_lk.txt
-        # file, the numbers merge with the site likelihoods
-        elif line_number >= 1000007:
-            # Split the data
-            rate_list = " ".join(line.split()).split(" ")
-            # Remove last and first number from list
-            # BRETT SAYS: if you need to modify lists, then you should learn
-            # how to use *slicing*. Google it. You can do this x = x[1:-1]
-            rate_list.pop(0)
-            rate_list.pop(-1)
-            # Convert all likelihoods to floats
-            for i in range(len(rate_list)):
-                rate_list[i] = float(rate_list[i])
-
-            # Add site number and rate list to dictionary
-            # BRETT SAYS: Why are you using a dict here? They are consecutive
-            # numbers -- just append to a list instead. Get used to ZERO
-            # indexed lists too.
-            all_rates_dict[site_number] = rate_list
-            site_number += 1
-    # print all_rates_dict
-    #
-    phyml_lk_file.close()
-    return all_rates_dict
-
 def phyml_likelihood_parser(phyml_lk_file):
     '''
     Takes a *_phyml_lk.txt file and returns a dictionary of sites and site
@@ -165,6 +63,7 @@ def phyml_likelihood_parser(phyml_lk_file):
                 delimiter = " ", skipinitialspace = True))
     except IOError:
         raise IOError("Could not find the likelihood file!")
+    phyml_lk_file.close()
 
     # Right now, when the alignment is over 1,000,000 sites, PhyML
     # merges the site number with the site likelihood, catch that and
@@ -183,47 +82,33 @@ def phyml_likelihood_parser(phyml_lk_file):
     # just return the likelihood scores for each site, otherwise, return
     # site likelihoods and likelihoods under each rate category
     if len(headers) < 4:
-        headers.pop(0)
-        # Make a dictionary of sites and likelihoods
-        like_dict = {}
-        for i in list_of_dicts:
-            like_dict[int(i[headers[-1]])] = [float(i[headers[0]])]
-        phyml_lk_file.close()
-        # Return a dictionary of sites and their likelihoods
-        return like_dict
+        # Make a list of site likelihoods
+        likelihood_list = [[float(site[headers[1]])] for site in list_of_dicts]
+        return likelihood_list
+
     else:
-        # Get rid of the two values that csv imports that we don't need
-        # along with the posterior means we won't use
-        headers.pop(0)
-        headers.pop(-1)
-        headers.pop(-2)
-        # Make a dictionary of sites and likelihoods
-        like_dict = {}
+        # Make a list of site likelihoods
+        likelihood_list = [[float(site[headers[1]])] for site in list_of_dicts]
+
+        # Now make a list of lists of site likelihoods under different 
+        # rate categories
+        lk_rate_list = []
         for i in list_of_dicts:
-            like_dict[int(i[headers[-1]])] = [float(i[headers[0]])]
-        # Now get rid of the site likelihoods from the header list
-        headers.pop(0)
-        # Figure out how many rate categories there are
-        num_rate_cat = len(headers) - 1
-        # Now make a dictionary with sites as the keys and a list
-        # of likelihoods under the rate categories as values
-        like_cat_dict = {}
-        for i in list_of_dicts:
-            # Make a list with the rate category likelihoods for each site
-            like_list = []
-            for p in range(num_rate_cat):
-                like_list.append(float(i[headers[p]]))
-            # Now add that list with it's corresponding site to a dictionary
-            # BRETT SAYS: This looks complex.
-            like_cat_dict[int(i[headers[-1]])] = like_list
-        phyml_lk_file.close()
-        # Return a tuple with the site likelihoods and the likelihoods under
-        # different rate categories
-        return like_dict, like_cat_dict
+            ind_lk_list = []
+            # Pull the likelihood from each rate category by calling the 
+            # appropriate key from "headers"
+            for num in range(2, len(headers) - 3):
+                ind_lk_list.append(float(i[headers[num]]))
+            # Now add the list of likelihoods for the site to a master list
+            lk_rate_list.append(ind_lk_list)
+
+        # Return both the list of site likelihoods and the list of lists of
+        # likelihoods under different rate categories
+        return likelihood_list, lk_rate_list
 
 def raxml_likelihood_parser(raxml_lnl_file):
     '''
-    This functiont takes as input the RAxML_perSiteLLs* file from a RAxML -f g
+    This function takes as input the RAxML_perSiteLLs* file from a RAxML -f g
     run, and returns a dictionary of sites and likelihoods to feed into kmeans.
 
     Note: the likelihoods are already logged, so either we should change the
@@ -234,7 +119,6 @@ def raxml_likelihood_parser(raxml_lnl_file):
     # that contains the log likelihoods. If it isn't found
     # raise an error
     try:
-        # BRETT SAYS: SUPER ugly inconsistent variable name!
         with open(str(raxml_lnl_file)) as raxml_lnl_file:
             line_num = 1
             for line in raxml_lnl_file.readlines():
@@ -248,82 +132,64 @@ def raxml_likelihood_parser(raxml_lnl_file):
     # the first element in the list
     site_lnl_list[0] = site_lnl_list[0].strip("tr1\t")
     site_lnl_list.pop(-1)
-    num_sites = len(site_lnl_list)
 
-    # Now make a dictionary with sites as values and likelihoods (in a list
-    # for import into kmeans()) as the values
-    site_num = 1
-    site_lnl_dict = {}
-    # Add the site and transform the log likelihoods back to likelihoods
-    # so it is adequate to feed into kmeans()
-    for i in site_lnl_list:
-        site_lnl_dict[site_num] = [10**float(i)]
-        site_num += 1
-    perSiteLL_file.close()
-    return site_lnl_dict
+    # You have to take the antilog the output will be likelihoods
+    # like the output from PhyML
+    site_lk_list = [[10**float(site)] for site in site_lnl_list]
+
+    raxml_lnl_file.close()
+    return site_lk_list
 
 
 # You can run kmeans in parallel, specify n_jobs as -1 and it will run
 # on all cores available.
-def kmeans(dictionary, number_of_ks = 2, n_jobs = 1):
+def kmeans(likelihood_list, number_of_ks = 2, n_jobs = 1):
     '''Take as input a dictionary made up of site numbers as keys
     and lists of rates as values, performs k-means clustering on
     sites and returns k centroids and a dictionary with k's as keys
     and lists of sites belonging to that k as values
     '''
-    # Take start time
     start = time.clock()
     all_rates_list = []
-    for i in range(1, (len(dictionary) + 1)):
-        rate_cat_list = dictionary[i]
-        log_rate_cat_list = []
-        # Natural log transform the data
-        for rate in rate_cat_list:
-            log_rate_cat_list.append(logarithm(rate))
+    for site in likelihood_list:
+        lk_list = site
+        log_rate_cat_list = [logarithm(lk) for lk in lk_list]
         all_rates_list.append(log_rate_cat_list)
-    # Create an array with the appropriate number of dimensions
+
+    # Create and scale an array for input into kmeans function
     array = np.array(all_rates_list)
-    # Use sklearns preprocessing to scale array
     array = scale(array)
+
     # Call scikit_learn's k-means, use "k-means++" to find centroids
     # kmeans_out = KMeans(init='k-means++', n_init = 100)
     kmeans_out = KMeans(init='k-means++', n_clusters = number_of_ks,
         n_init = 100)
     # Perform k-means clustering on the array of site likelihoods
     kmeans_out.fit(array)
-    # Messing around with different outputs from KMeans object
-    # params = kmeans_out.score(array)
-    # print params
+
     # Retrieve centroids
     centroids = kmeans_out.cluster_centers_
-    # Append all centroids to a list to return
-    centroid_list = []
-    for i in centroids:
-        centroid_list.append(list(i))
-    # Retrieve the cluster number for each site
+    # Add all centroids to a list to return
+    centroid_list = [list(centroid) for centroid in centroids]
+    
+
+    # Retrieve a list with the cluster number for each site
     rate_categories = kmeans_out.labels_
-    # Create dictionary of sites and the cluster they've been assigned to
-    site_clus_dict = {}
-    char_number = 1
-    # Loop through list of rate categories and add them to dictionary
-    # with associated character
-    for i in rate_categories:
-        site_clus_dict[char_number] = i
-        char_number += 1
-    # Create "defaultdict" to transpose dictionary
+    rate_categories = list(rate_categories)
+
+    # Transpose the list of cluster numbers to a dictionary with
+    # cluster numbers as keys and list of sites belonging to that
+    # cluster as the value
     cluster_dict = defaultdict(list)
-    # Loop through site_clus_dict and create new key for each cluster
-    # with values of lists of sites belonging to that cluster
-    for k, v in site_clus_dict.iteritems():
-        cluster_dict[v].append(k)
-    # Convert defaultdict to regular dictionary
-    cluster_dict = dict(cluster_dict)
-    # Stop clock and output total time
+    for num in range(len(rate_categories)):
+        cluster_dict[rate_categories[num]].append(num + 1)
+
     stop = time.clock()
-    time_taken = "k-means took " + str(stop - start) + "seconds!"
+    time_taken = "k-means took " + str(stop - start) + "seconds"
     log.info(time_taken)
+
     # Return centroids and dictionary with lists of sites for each k
-    return centroid_list, cluster_dict
+    return centroid_list, dict(cluster_dict)
 
 if __name__ == "__main__":
     # phylip_filename = sys.argv[1]
