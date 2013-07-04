@@ -323,7 +323,6 @@ class KmeansAnalysis(Analysis):
 
         log.info("Analysing starting scheme (scheme %s)" % start_scheme.name)
         old_score = self.analyse_scheme(start_scheme)
-        log.info("Start scheme result is : " + str(old_score))
 
 
         log.info("Performing subset splitting using kmeans")
@@ -340,9 +339,9 @@ class KmeansAnalysis(Analysis):
                 "./analysis/start_tree/filtered_source.phy_phyml_tree.txt", 
                 "unlinked", "--print_site_lnl -m GTR")
 
-            phyml_lk_file = str(phylip_file) + "_phyml_lk_GTR.txt"
+            phyml_lk_file = os.path.join(str(phylip_file) + "_phyml_lk_GTR.txt")
             likelihood_dictionary = kmeans.phyml_likelihood_parser(phyml_lk_file)
-            split_categories = kmeans.kmeans(likelihood_dictionary)[1]
+            split_categories = kmeans.kmeans(likelihood_dictionary, number_of_ks = 2)[1]
             list_of_sites = []
             for k in split_categories:
                 list_of_sites.append(split_categories[k])
@@ -353,6 +352,7 @@ class KmeansAnalysis(Analysis):
         new_scheme = scheme.Scheme(self.cfg, "new_scheme", new_scheme_subsets)
         # self.analyse_scheme(start_scheme)
         new_score = self.analyse_scheme(new_scheme)
+        log.info("Start scheme result is : " + str(old_score))
         log.info("New scheme result is: " + str(new_score))
         log.info(new_scheme)
         return new_scheme
