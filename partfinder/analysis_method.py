@@ -307,7 +307,7 @@ class RelaxedClusteringAnalysis(Analysis):
 
 class KmeansAnalysis(Analysis):
     def do_analysis(self):
-        # Copied and Pasted from greedy analysis
+        # Copied and pasted from greedy analysis
         partnum = len(self.cfg.user_subsets)
         scheme_count = submodels.count_greedy_schemes(partnum)
         subset_count = submodels.count_greedy_subsets(partnum)
@@ -339,22 +339,27 @@ class KmeansAnalysis(Analysis):
                 "./analysis/start_tree/filtered_source.phy_phyml_tree.txt", 
                 "unlinked", "--print_site_lnl -m GTR")
 
-            phyml_lk_file = os.path.join(str(phylip_file) + "_phyml_lk_GTR.txt")
-            likelihood_dictionary = kmeans.phyml_likelihood_parser(phyml_lk_file)
-            split_categories = kmeans.kmeans(likelihood_dictionary, number_of_ks = 2)[1]
+            phyml_lk_file = os.path.join(str(phylip_file) + 
+                "_phyml_lk_GTR.txt")
+
+            # Open the phyml output and parse for input into the kmeans
+            likelihood_dictionary = kmeans.phyml_likelihood_parser(
+                phyml_lk_file)
+            split_categories = kmeans.kmeans(likelihood_dictionary, 
+                number_of_ks = 2)[1]
             list_of_sites = []
             for k in split_categories:
                 list_of_sites.append(split_categories[k])
 
-            # Now make a list of split columns for input into a subset
+            # Now make a list of the columns for each subset
             new_subsets = split_subset(a_subset, list_of_sites)
             new_scheme_subsets += new_subsets
+            
         new_scheme = scheme.Scheme(self.cfg, "new_scheme", new_scheme_subsets)
-        # self.analyse_scheme(start_scheme)
         new_score = self.analyse_scheme(new_scheme)
         log.info("Start scheme result is : " + str(old_score))
         log.info("New scheme result is: " + str(new_score))
-        log.info(new_scheme)
+        # log.info(new_scheme)
         return new_scheme
 
 
