@@ -359,6 +359,7 @@ class KmeansAnalysis(Analysis):
         new_score = self.analyse_scheme(new_scheme)
         log.info("Start scheme result is : " + str(old_score))
         log.info("New scheme result is: " + str(new_score))
+        self.cfg.reporter.write_best_scheme(self.results)
         # log.info(new_scheme)
         return new_scheme
 
