@@ -69,8 +69,9 @@ def split_subset(a_subset, cluster_list):
     for cluster in cluster_list:
         list_of_sites = []
         for site in cluster:
-            list_of_sites.append(subset_list[site-1])
+            list_of_sites.append(subset_list[site - 1])
         subset_columns.append(set(list_of_sites))
+        
     for column_set in subset_columns:
         new_subset = subset.Subset(a_subset.cfg, column_set)
         list_of_subsets.append(new_subset)
