@@ -93,6 +93,8 @@ def recursive_subset_split(cfg, scheme, subset):
 
             recursive_subset_split(new_scheme, s)
 
+    return new_scheme
+
 def build_split_scheme(cfg, scheme, subset, new_subsets):
     """Takes a scheme a subset within that scheme and new subsets
     created from splitting the subset, and returns a new_scheme with
