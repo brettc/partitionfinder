@@ -318,43 +318,50 @@ class KmeansAnalysis(Analysis):
         start_description = range(partnum)
         start_scheme = scheme.create_scheme(
             self.cfg, "start_scheme", start_description)
-        
-
 
         log.info("Analysing starting scheme (scheme %s)" % start_scheme.name)
         old_score = self.analyse_scheme(start_scheme)
-
 
         log.info("Performing subset splitting using kmeans")
         new_scheme_subsets = []
         for a_subset in start_scheme:
             # Save the alignment path
+            #
+            # -----------
+            # Move this bit into the "phyml.py" I think
             a_subset.make_alignment(self.cfg, self.alignment)
             phylip_file = a_subset.alignment_path
 
-            # Add option to output likelihoods, *raxml version takes more 
+            # Add option to output likelihoods, *raxml version takes more
             # modfying of the commands in the analyse function
             processor = self.cfg.processor
-            processor.analyse("GTR", str(phylip_file), 
-                "./analysis/start_tree/filtered_source.phy_phyml_tree.txt", 
+            processor.analyse("GTR", str(phylip_file),
+                "./analysis/start_tree/filtered_source.phy_phyml_tree.txt",
                 "unlinked", "--print_site_lnl -m GTR")
 
-            phyml_lk_file = os.path.join(str(phylip_file) + 
+            # os.path.join does nothing below. You should use it above. There
+            # shouldn't be ANY forward slashes in the code (this will NOT work
+            # on windows)
+            phyml_lk_file = os.path.join(str(phylip_file) +
                 "_phyml_lk_GTR.txt")
-
-            # Open the phyml output and parse for input into the kmeans
             likelihood_dictionary = kmeans.phyml_likelihood_parser(
                 phyml_lk_file)
-            split_categories = kmeans.kmeans(likelihood_dictionary, 
+
+            ------
+            # This bit belongs in kmeans.py I think
+            # Open the phyml output and parse for input into the kmeans
+            split_categories = kmeans.kmeans(likelihood_dictionary,
                 number_of_ks = 2)[1]
             list_of_sites = []
             for k in split_categories:
                 list_of_sites.append(split_categories[k])
 
             # Now make a list of the columns for each subset
+            # OK. THIS bit should be here.
             new_subsets = split_subset(a_subset, list_of_sites)
             new_scheme_subsets += new_subsets
-            
+
+        # So right now this only does it once?
         new_scheme = scheme.Scheme(self.cfg, "new_scheme", new_scheme_subsets)
         new_score = self.analyse_scheme(new_scheme)
         log.info("Start scheme result is : " + str(old_score))
@@ -363,8 +370,36 @@ class KmeansAnalysis(Analysis):
         # log.info(new_scheme)
         return new_scheme
 
+    def do_analysis_sketch(self):
 
+        # Get first scheme
+        best_scheme = bla
+        subset_index = 0
+        all_subsets = list(best_scheme.subsets)
 
+        while subset_index < len(all_subsets):
+            current_subset = all_subsets[current_subset_index]
+            split_subsets = kmeans.split_subset(self, current_subset)
+
+            # Take a copy
+            updated_subsets = all_subsets[:]
+
+            # Replace the current one with the split one
+            # Google "slice assignments"
+            # This list is the key to avoiding recursion. It expands to contain
+            # all of the split subsets by replacing them with the split ones
+            updated_subsets[subset_index:subset_index+1] = split_subsets
+
+            test_scheme = Scheme(self.cfg, "bla", updated_subsets)
+            if test_scheme.score > best_scheme.score:
+                best_scheme = test_scheme
+
+                # Change this to the one with split subsets in it. Note that
+                # the subset_index now points a NEW subset, one that was split
+                all_subsets = updated_subsets
+            else:
+                # Move to the next subset in the all_subsets list
+                subset_index += 1
 
 
 def choose_method(search):
