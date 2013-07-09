@@ -30,7 +30,7 @@ import neighbour
 import kmeans
 import raxml
 import phyml
-from subset_ops import split_subset
+import subset_ops
 
 class UserAnalysis(Analysis):
 
@@ -323,30 +323,15 @@ class KmeansAnalysis(Analysis):
         log.info("Analysing starting scheme (scheme %s)" % start_scheme.name)
         old_score = self.analyse_scheme(start_scheme)
 
-        log.info("Performing subset splitting using kmeans")
-        new_scheme_subsets = []
-        for a_subset in start_scheme:
-            new_subsets = kmeans.kmeans_split_subset(self.cfg, self.alignment, a_subset)
-            new_scheme_subsets += new_subsets
-
-        new_scheme = scheme.Scheme(self.cfg, "new_scheme", new_scheme_subsets)
-        new_score = self.analyse_scheme(new_scheme)
-        log.info("Start scheme result is : " + str(old_score))
-        log.info("New scheme result is: " + str(new_score))
-        self.cfg.reporter.write_best_scheme(self.results)
-        # log.info(new_scheme)
-        return new_scheme
-
-    def do_analysis_sketch(self):
-
         # Get first scheme
-        best_scheme = bla
+        best_scheme = start_scheme
         subset_index = 0
         all_subsets = list(best_scheme.subsets)
 
+
         while subset_index < len(all_subsets):
-            current_subset = all_subsets[current_subset_index]
-            split_subsets = kmeans.split_subset(self, current_subset)
+            current_subset = all_subsets[subset_index]
+            split_subsets = kmeans.kmeans_split_subset(self.cfg, self.alignment, current_subset)
 
             # Take a copy
             updated_subsets = all_subsets[:]
@@ -357,8 +342,14 @@ class KmeansAnalysis(Analysis):
             # all of the split subsets by replacing them with the split ones
             updated_subsets[subset_index:subset_index+1] = split_subsets
 
-            test_scheme = Scheme(self.cfg, "bla", updated_subsets)
-            if test_scheme.score > best_scheme.score:
+            test_scheme = scheme.Scheme(self.cfg, "bla", updated_subsets)
+            print test_scheme
+            best_score = self.analyse_scheme(best_scheme)
+            log.info("Current best score is: " + str(best_score))
+            new_score = self.analyse_scheme(test_scheme)
+            log.info("Current new score is: " + str(new_score))
+            if new_score.score < best_score.score:
+                log.info("New score " + str(subset_index) + " is better and will be set to best score")
                 best_scheme = test_scheme
 
                 # Change this to the one with split subsets in it. Note that
@@ -367,6 +358,7 @@ class KmeansAnalysis(Analysis):
             else:
                 # Move to the next subset in the all_subsets list
                 subset_index += 1
+        self.cfg.reporter.write_best_scheme(self.results)
 
 
 def choose_method(search):
