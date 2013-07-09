@@ -16,6 +16,7 @@ from collections import defaultdict
 
 import logging
 log = logging.getLogger("kmeans")
+from subset_ops import split_subset
 
 def phyml_likelihood_parser(phyml_lk_file):
     '''
@@ -184,12 +185,53 @@ def kmeans(likelihood_list, number_of_ks = 2, n_jobs = 1):
     for num in range(len(rate_categories)):
         cluster_dict[rate_categories[num]].append(num + 1)
 
+    # # Check if all k's are > 1
+    # for cat in cluster_dict:
+    #     print cluster_dict[cat]
+    #     if len(cluster_dict[cat]) <= 1:
+    #         array[cluster_dict[cat][0]] = 
+
     stop = time.clock()
     time_taken = "k-means took " + str(stop - start) + "seconds"
     log.info(time_taken)
 
     # Return centroids and dictionary with lists of sites for each k
     return centroid_list, dict(cluster_dict)
+
+def kmeans_split_subset(a_subset, number_of_ks = 2):
+    """Takes a subset and number of k's and returns
+    subsets for however many k's are specified"""
+    pass
+    # a_subset.make_alignment(a_subset.cfg, a_subset.alignment)
+    # phylip_file = a_subset.alignment_path
+
+    # # Add option to output likelihoods, *raxml version takes more 
+    # # modfying of the commands in the analyse function
+    # processor = a_subset.cfg.processor
+
+    # # TO DO: still need to make this  call suitable to call RAxML as well
+    # processor.analyse("GTR", str(phylip_file), 
+    #     "./analysis/start_tree/filtered_source.phy_phyml_tree.txt", 
+    #     "unlinked", "--print_site_lnl -m GTR")
+
+    # phyml_lk_file = os.path.join(str(phylip_file) + 
+    #     "_phyml_lk_GTR.txt")
+
+    # # Open the phyml output and parse for input into the kmeans
+    # # function
+    # likelihood_dictionary = kmeans.phyml_likelihood_parser(
+    #     phyml_lk_file)
+    # split_categories = kmeans.kmeans(likelihood_dictionary, 
+    #     number_of_ks)[1]
+    # list_of_sites = []
+    # for k in split_categories:
+    #     list_of_sites.append(split_categories[k])
+
+    # # Make the new subsets
+    # new_subsets = split_subset(a_subset, list_of_sites)
+
+    # return new_subsets
+
 
 if __name__ == "__main__":
     # phylip_filename = sys.argv[1]
@@ -202,14 +244,18 @@ if __name__ == "__main__":
     # phyml_likelihood_parser(phyml_lk_file)
     # likelihood_dictionary = phyml_likelihood_parser(phyml_lk_file)
     # print kmeans(likelihood_dictionary[1], number_of_ks = 4)
-    phylip_filename = sys.argv[1]
-    outfile_command = "testing"
-    run_raxml("-s " + str(phylip_filename) + " -m GTRGAMMA -n " + outfile_command + " -y -p 23456")
-    outfile_command2 = "testing2"
-    start = time.clock()
-    run_raxml("-s " + str(phylip_filename) + " -m GTRGAMMA -n " + outfile_command2 + " -f g -p 23456 -z RAxML_parsimonyTree." + outfile_command)
-    stop = time.clock()
-    print "RAxML took " + str(stop-start) + " seconds!"
-    likelihood_dict = raxml_likelihood_parser("RAxML_perSiteLLs." + outfile_command2)
-    print kmeans(likelihood_dict, number_of_ks = 5)
+
+    # phylip_filename = sys.argv[1]
+    # outfile_command = "testing"
+    # run_raxml("-s " + str(phylip_filename) + " -m GTRGAMMA -n " + outfile_command + " -y -p 23456")
+    # outfile_command2 = "testing2"
+    # start = time.clock()
+    # run_raxml("-s " + str(phylip_filename) + " -m GTRGAMMA -n " + outfile_command2 + " -f g -p 23456 -z RAxML_parsimonyTree." + outfile_command)
+    # stop = time.clock()
+    # print "RAxML took " + str(stop-start) + " seconds!"
+    # likelihood_dict = raxml_likelihood_parser("RAxML_perSiteLLs." + outfile_command2)
+    # print kmeans(likelihood_dict, number_of_ks = 5)
+
+    kmeans_split_subset()
+
 
