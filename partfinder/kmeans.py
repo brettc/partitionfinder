@@ -198,39 +198,39 @@ def kmeans(likelihood_list, number_of_ks = 2, n_jobs = 1):
     # Return centroids and dictionary with lists of sites for each k
     return centroid_list, dict(cluster_dict)
 
-def kmeans_split_subset(a_subset, number_of_ks = 2):
+def kmeans_split_subset(cfg, alignment, a_subset, number_of_ks = 2):
     """Takes a subset and number of k's and returns
     subsets for however many k's are specified"""
-    pass
-    # a_subset.make_alignment(a_subset.cfg, a_subset.alignment)
-    # phylip_file = a_subset.alignment_path
+    # pass
+    a_subset.make_alignment(cfg, alignment)
+    phylip_file = a_subset.alignment_path
 
-    # # Add option to output likelihoods, *raxml version takes more 
-    # # modfying of the commands in the analyse function
-    # processor = a_subset.cfg.processor
+    # Add option to output likelihoods, *raxml version takes more 
+    # modfying of the commands in the analyse function
+    processor = cfg.processor
 
-    # # TO DO: still need to make this  call suitable to call RAxML as well
-    # processor.analyse("GTR", str(phylip_file), 
-    #     "./analysis/start_tree/filtered_source.phy_phyml_tree.txt", 
-    #     "unlinked", "--print_site_lnl -m GTR")
+    # TO DO: still need to make this  call suitable to call RAxML as well
+    processor.analyse("GTR", str(phylip_file), 
+        "./analysis/start_tree/filtered_source.phy_phyml_tree.txt", 
+        "unlinked", "--print_site_lnl -m GTR")
 
-    # phyml_lk_file = os.path.join(str(phylip_file) + 
-    #     "_phyml_lk_GTR.txt")
+    phyml_lk_file = os.path.join(str(phylip_file) + 
+        "_phyml_lk_GTR.txt")
 
-    # # Open the phyml output and parse for input into the kmeans
-    # # function
-    # likelihood_dictionary = kmeans.phyml_likelihood_parser(
-    #     phyml_lk_file)
-    # split_categories = kmeans.kmeans(likelihood_dictionary, 
-    #     number_of_ks)[1]
-    # list_of_sites = []
-    # for k in split_categories:
-    #     list_of_sites.append(split_categories[k])
+    # Open the phyml output and parse for input into the kmeans
+    # function
+    likelihood_dictionary = phyml_likelihood_parser(
+        phyml_lk_file)
+    split_categories = kmeans(likelihood_dictionary, 
+        number_of_ks)[1]
+    list_of_sites = []
+    for k in split_categories:
+        list_of_sites.append(split_categories[k])
 
-    # # Make the new subsets
-    # new_subsets = split_subset(a_subset, list_of_sites)
+    # Make the new subsets
+    new_subsets = split_subset(a_subset, list_of_sites)
 
-    # return new_subsets
+    return new_subsets
 
 
 if __name__ == "__main__":
