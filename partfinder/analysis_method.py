@@ -319,8 +319,6 @@ class KmeansAnalysis(Analysis):
         start_scheme = scheme.create_scheme(
             self.cfg, "start_scheme", start_description)
 
-        
-
 
         log.info("Analysing starting scheme (scheme %s)" % start_scheme.name)
         old_score = self.analyse_scheme(start_scheme)
@@ -329,34 +327,6 @@ class KmeansAnalysis(Analysis):
         new_scheme_subsets = []
         for a_subset in start_scheme:
             new_subsets = kmeans.kmeans_split_subset(self.cfg, self.alignment, a_subset)
-
-            # # Save the alignment path
-            # a_subset.make_alignment(self.cfg, self.alignment)
-            # phylip_file = a_subset.alignment_path
-
-            # # Add option to output likelihoods, *raxml version takes more 
-            # # modfying of the commands in the analyse function
-            # processor = self.cfg.processor
-            # # log.info("Processor is: " + str(processor))
-            # processor.analyse("GTR", str(phylip_file), 
-            #     "./analysis/start_tree/filtered_source.phy_phyml_tree.txt", 
-            #     "unlinked", "--print_site_lnl -m GTR")
-
-            # phyml_lk_file = os.path.join(str(phylip_file) + 
-            #     "_phyml_lk_GTR.txt")
-
-            # # Open the phyml output and parse for input into the kmeans
-            # # function
-            # likelihood_dictionary = kmeans.phyml_likelihood_parser(
-            #     phyml_lk_file)
-            # split_categories = kmeans.kmeans(likelihood_dictionary, 
-            #     number_of_ks = 2)[1]
-            # list_of_sites = []
-            # for k in split_categories:
-            #     list_of_sites.append(split_categories[k])
-
-            # # Now make a list of the columns for each subset
-            # new_subsets = split_subset(a_subset, list_of_sites)
             new_scheme_subsets += new_subsets
 
         new_scheme = scheme.Scheme(self.cfg, "new_scheme", new_scheme_subsets)
@@ -367,8 +337,36 @@ class KmeansAnalysis(Analysis):
         # log.info(new_scheme)
         return new_scheme
 
+    def do_analysis_sketch(self):
 
+        # Get first scheme
+        best_scheme = bla
+        subset_index = 0
+        all_subsets = list(best_scheme.subsets)
 
+        while subset_index < len(all_subsets):
+            current_subset = all_subsets[current_subset_index]
+            split_subsets = kmeans.split_subset(self, current_subset)
+
+            # Take a copy
+            updated_subsets = all_subsets[:]
+
+            # Replace the current one with the split one
+            # Google "slice assignments"
+            # This list is the key to avoiding recursion. It expands to contain
+            # all of the split subsets by replacing them with the split ones
+            updated_subsets[subset_index:subset_index+1] = split_subsets
+
+            test_scheme = Scheme(self.cfg, "bla", updated_subsets)
+            if test_scheme.score > best_scheme.score:
+                best_scheme = test_scheme
+
+                # Change this to the one with split subsets in it. Note that
+                # the subset_index now points a NEW subset, one that was split
+                all_subsets = updated_subsets
+            else:
+                # Move to the next subset in the all_subsets list
+                subset_index += 1
 
 
 def choose_method(search):
