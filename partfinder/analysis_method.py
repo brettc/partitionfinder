@@ -318,43 +318,47 @@ class KmeansAnalysis(Analysis):
         start_description = range(partnum)
         start_scheme = scheme.create_scheme(
             self.cfg, "start_scheme", start_description)
+
         
 
 
         log.info("Analysing starting scheme (scheme %s)" % start_scheme.name)
         old_score = self.analyse_scheme(start_scheme)
 
-
         log.info("Performing subset splitting using kmeans")
         new_scheme_subsets = []
         for a_subset in start_scheme:
-            # Save the alignment path
-            a_subset.make_alignment(self.cfg, self.alignment)
-            phylip_file = a_subset.alignment_path
+            new_subsets = kmeans.kmeans_split_subset(self.cfg, self.alignment, a_subset)
 
-            # Add option to output likelihoods, *raxml version takes more 
-            # modfying of the commands in the analyse function
-            processor = self.cfg.processor
-            processor.analyse("GTR", str(phylip_file), 
-                "./analysis/start_tree/filtered_source.phy_phyml_tree.txt", 
-                "unlinked", "--print_site_lnl -m GTR")
+            # # Save the alignment path
+            # a_subset.make_alignment(self.cfg, self.alignment)
+            # phylip_file = a_subset.alignment_path
 
-            phyml_lk_file = os.path.join(str(phylip_file) + 
-                "_phyml_lk_GTR.txt")
+            # # Add option to output likelihoods, *raxml version takes more 
+            # # modfying of the commands in the analyse function
+            # processor = self.cfg.processor
+            # # log.info("Processor is: " + str(processor))
+            # processor.analyse("GTR", str(phylip_file), 
+            #     "./analysis/start_tree/filtered_source.phy_phyml_tree.txt", 
+            #     "unlinked", "--print_site_lnl -m GTR")
 
-            # Open the phyml output and parse for input into the kmeans
-            likelihood_dictionary = kmeans.phyml_likelihood_parser(
-                phyml_lk_file)
-            split_categories = kmeans.kmeans(likelihood_dictionary, 
-                number_of_ks = 2)[1]
-            list_of_sites = []
-            for k in split_categories:
-                list_of_sites.append(split_categories[k])
+            # phyml_lk_file = os.path.join(str(phylip_file) + 
+            #     "_phyml_lk_GTR.txt")
 
-            # Now make a list of the columns for each subset
-            new_subsets = split_subset(a_subset, list_of_sites)
+            # # Open the phyml output and parse for input into the kmeans
+            # # function
+            # likelihood_dictionary = kmeans.phyml_likelihood_parser(
+            #     phyml_lk_file)
+            # split_categories = kmeans.kmeans(likelihood_dictionary, 
+            #     number_of_ks = 2)[1]
+            # list_of_sites = []
+            # for k in split_categories:
+            #     list_of_sites.append(split_categories[k])
+
+            # # Now make a list of the columns for each subset
+            # new_subsets = split_subset(a_subset, list_of_sites)
             new_scheme_subsets += new_subsets
-            
+
         new_scheme = scheme.Scheme(self.cfg, "new_scheme", new_scheme_subsets)
         new_score = self.analyse_scheme(new_scheme)
         log.info("Start scheme result is : " + str(old_score))
