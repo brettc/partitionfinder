@@ -16,7 +16,7 @@ from collections import defaultdict
 
 import logging
 log = logging.getLogger("kmeans")
-from subset_ops import split_subset
+import subset_ops
 
 def phyml_likelihood_parser(phyml_lk_file):
     '''
@@ -214,6 +214,9 @@ def kmeans_split_subset(cfg, alignment, a_subset, number_of_ks = 2):
         "./analysis/start_tree/filtered_source.phy_phyml_tree.txt", 
         "unlinked", "--print_site_lnl -m GTR")
 
+    # os.path.join does nothing below. You should use it above. There
+    # shouldn't be ANY forward slashes in the code (this will NOT work
+    # on windows)
     phyml_lk_file = os.path.join(str(phylip_file) + 
         "_phyml_lk_GTR.txt")
 
@@ -228,7 +231,7 @@ def kmeans_split_subset(cfg, alignment, a_subset, number_of_ks = 2):
         list_of_sites.append(split_categories[k])
 
     # Make the new subsets
-    new_subsets = split_subset(a_subset, list_of_sites)
+    new_subsets = subset_ops.split_subset(a_subset, list_of_sites)
 
     return new_subsets
 
