@@ -77,13 +77,13 @@ def split_subset(a_subset, cluster_list):
         list_of_subsets.append(new_subset)
     return list_of_subsets
 
-def recursive_subset_split(scheme, subset):
+def recursive_subset_split(cfg, scheme, subset):
     """Takes a scheme and a subset within that scheme and returns
     the list of subsets that most improves the AIC score"""
     # Do the first round of splitting
     new_subsets = split_subset_kmeans(subset)
     # Get the new scheme
-    new_scheme = build_split_scheme(new_subsets, subset, scheme)
+    new_scheme = build_split_scheme(cfg, scheme, subset, new_subsets)
 
     # Retrieve the score of both of the schemes and compare them
     if get_score(new_scheme) < get_score(scheme):
@@ -93,7 +93,7 @@ def recursive_subset_split(scheme, subset):
 
             recursive_subset_split(new_scheme, s)
 
-def build_split_scheme(scheme, subset, new_subsets):
+def build_split_scheme(cfg, scheme, subset, new_subsets):
     """Takes a scheme a subset within that scheme and new subsets
     created from splitting the subset, and returns a new_scheme with
     the new_subset in place of the old one"""
@@ -104,6 +104,6 @@ def build_split_scheme(scheme, subset, new_subsets):
     set_of_subsets.remove(subset)
     list_of_subsets = list(set_of_subsets)
     list_of_subsets += new_subsets
-    new_scheme = scheme.Scheme(self.cfg, "new_scheme", list_subsets)
+    new_scheme = scheme.Scheme(cfg, "new_scheme", list_subsets)
     return new_scheme
 
