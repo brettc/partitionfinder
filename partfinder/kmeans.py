@@ -208,6 +208,7 @@ def kmeans_split_subset(cfg, alignment, a_subset, number_of_ks = 2):
     # Add option to output likelihoods, *raxml version takes more 
     # modfying of the commands in the analyse function
     processor = cfg.processor
+    print processor
 
     try:
         # TO DO: still need to make this  call suitable to call RAxML as well
@@ -215,7 +216,7 @@ def kmeans_split_subset(cfg, alignment, a_subset, number_of_ks = 2):
             "./analysis/start_tree/filtered_source.phy_phyml_tree.txt", 
             "unlinked", "--print_site_lnl -m GTR")
     except Exception, e:
-        print e
+        log.info(e)
         return 1
 
     # os.path.join does nothing below. You should use it above. There
@@ -228,7 +229,6 @@ def kmeans_split_subset(cfg, alignment, a_subset, number_of_ks = 2):
     # function
     likelihood_dictionary = phyml_likelihood_parser(
         phyml_lk_file)
-    print likelihood_dictionary
     split_categories = kmeans(likelihood_dictionary, 
         number_of_ks)[1]
     list_of_sites = []
@@ -237,8 +237,92 @@ def kmeans_split_subset(cfg, alignment, a_subset, number_of_ks = 2):
 
     # Make the new subsets
     new_subsets = subset_ops.split_subset(a_subset, list_of_sites)
-
     return new_subsets
+
+def kmeans_wrapper(likelihood_list, max_ks = 10):
+    '''This function performs kmeans on
+    a specified number of different k's on a dictionary parsed
+    from a *_phyml_lk.txt file. It then calculates
+    the within sum of squares (wss) of the k's and returns
+    the optimal number of k's and a dictionary of
+    the k's and sites belonging to the k's as output
+    determined by the first time the wss a decrease that is 1/10
+    of the initial decrease
+    '''
+    # Start variable counters
+    # Currently we do kmeans with one k for the first cluster, this
+    # can be modified to start with two k's. This will results in
+    # a slightly larger amount of clusters, we should check the change
+    # in AIC scores of both methods and choose one.
+    count = 1
+    sum_wss = 0
+    new_wss = 0
+    list_of_wss = []
+    # Calculate a bunch of kmeans on however many max_ks are determined
+    for i in range(max_ks):
+        # Run kmeans with each count
+        site_categories = kmeans(dictionary, number_of_ks = count)
+        likelihood_lists = make_likelihood_list(dictionary, site_categories[1])
+        # Set previous wss
+        previous_wss = new_wss
+        # Calculate new wss
+        new_wss = wss(likelihood_lists)
+        list_of_wss.append(new_wss)
+        # Keep the first wss value
+        if count == 1:
+            first_wss = new_wss
+        # Find out the initial decrease
+        if count == 2:
+            initial_decrease = first_wss - new_wss
+            print "The initial decrease is " + str(initial_decrease) + "!"
+        # Find out if the most recent decrease is less than 10% of the
+        # initial decrease
+        # print "New wss: " + str(new_wss)
+        if count > 2:
+            decrease = previous_wss - new_wss
+            # print "decrease: " + str(decrease)
+            if decrease < ((0.1) * initial_decrease):
+                # print "You're finished!"
+                return site_categories
+        count += 1
+    return site_categories
+
+def ss(list_of_likelihoods):
+    '''Input a list of likelihoods, and returns the sum of squares
+    of the list
+    '''
+    sums_of_squares = 0
+    # Need to log transform the data as you do during kmeans
+    log_list_of_likelihoods = []
+    for i in list_of_likelihoods:
+        log_list_of_likelihoods.append(log(float(i)))
+    # Calculate mean
+    mean_likelihood = sum(log_list_of_likelihoods)/len(log_list_of_likelihoods)
+    # Calculate and return sum of squares
+    for i in log_list_of_likelihoods:
+        sums_of_squares += (i - mean_likelihood)**2
+    return sums_of_squares
+
+def wss(likelihood_lists):
+    '''Inputs a list that contains lists of likelihoods from different
+    clusters, outputs the within sum of squares
+    '''
+    within_sum_of_squares = 0
+    # Call ss on each list to get global wss
+    for i in likelihood_lists:
+        within_sum_of_squares += ss(i)
+    return within_sum_of_squares
+
+def make_likelihood_list(likelihood_dict, site_categories):
+    '''Takes a likelihood dictionary and site categories
+    as input and returns a list of lists of likelihoods 
+    '''
+    new_like_dict = {k: [likelihood_dict[i][0] for i in v] for k, v in site_categories.items()}
+    rate_list = []
+    for i in new_like_dict:
+        rate_list.append(new_like_dict[i])
+    print rate_list
+    return rate_list
 
 
 if __name__ == "__main__":
