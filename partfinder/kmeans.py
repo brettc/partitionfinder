@@ -209,10 +209,14 @@ def kmeans_split_subset(cfg, alignment, a_subset, number_of_ks = 2):
     # modfying of the commands in the analyse function
     processor = cfg.processor
 
-    # TO DO: still need to make this  call suitable to call RAxML as well
-    processor.analyse("GTR", str(phylip_file), 
-        "./analysis/start_tree/filtered_source.phy_phyml_tree.txt", 
-        "unlinked", "--print_site_lnl -m GTR")
+    try:
+        # TO DO: still need to make this  call suitable to call RAxML as well
+        processor.analyse("GTR", str(phylip_file), 
+            "./analysis/start_tree/filtered_source.phy_phyml_tree.txt", 
+            "unlinked", "--print_site_lnl -m GTR")
+    except Exception, e:
+        print e
+        return 1
 
     # os.path.join does nothing below. You should use it above. There
     # shouldn't be ANY forward slashes in the code (this will NOT work
@@ -224,6 +228,7 @@ def kmeans_split_subset(cfg, alignment, a_subset, number_of_ks = 2):
     # function
     likelihood_dictionary = phyml_likelihood_parser(
         phyml_lk_file)
+    print likelihood_dictionary
     split_categories = kmeans(likelihood_dictionary, 
         number_of_ks)[1]
     list_of_sites = []
