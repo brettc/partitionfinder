@@ -392,11 +392,60 @@ class KmeansAnalysisWrapper(Analysis):
         # Get first scheme
         best_scheme = start_scheme
         subset_index = 0
-        all_subsets = list(best_scheme.subsets)
 
+        split_subsets = []
         for a_subset in start_scheme:
             how_many = kmeans.kmeans_wrapper(self.cfg, self.alignment, a_subset)
-            log.info(how_many)
+            split_subsets += how_many
+        split_scheme = scheme.Scheme(self.cfg, "split_scheme", split_subsets)
+        best_score = self.analyse_scheme(best_scheme)
+        split_score = self.analyse_scheme(split_scheme)
+        if split_score.score < best_score.score:
+            best_scheme = split_scheme
+            log.info("Initial splits generated superior scheme")
+        all_subsets = list(best_scheme.subsets)
+
+        while subset_index < len(all_subsets):
+            current_subset = all_subsets[subset_index]
+            split_subsets = kmeans.kmeans_split_subset(self.cfg, self.alignment, current_subset)
+
+            if split_subsets == 1:
+                subset_index += 1
+
+            else:
+                # Take a copy
+                updated_subsets = all_subsets[:]
+
+                # Replace the current one with the split one
+                # Google "slice assignments"
+                # This list is the key to avoiding recursion. It expands to contain
+                # all of the split subsets by replacing them with the split ones
+                updated_subsets[subset_index:subset_index+1] = split_subsets
+
+                test_scheme = scheme.Scheme(self.cfg, "bla", updated_subsets)
+
+                try:
+                    best_score = self.analyse_scheme(best_scheme)
+                    new_score = self.analyse_scheme(test_scheme)
+
+                    log.info("Current best score is: " + str(best_score))
+                    log.info("Current new score is: " + str(new_score))
+                    if new_score.score < best_score.score:
+                        log.info("New score " + str(subset_index) + " is better and will be set to best score")
+                        best_scheme = test_scheme
+
+                        # Change this to the one with split subsets in it. Note that
+                        # the subset_index now points a NEW subset, one that was split
+                        all_subsets = updated_subsets
+                    else:
+                        # Move to the next subset in the all_subsets list
+                        subset_index += 1
+                except Exception, e:
+                    e = str(e)
+                    log.info("Bummer: %s" % e)
+                    subset_index += 1
+        self.cfg.reporter.write_best_scheme(self.results)
+
 
 def choose_method(search):
     if search == 'all':
