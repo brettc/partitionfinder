@@ -395,31 +395,8 @@ class KmeansAnalysisWrapper(Analysis):
         all_subsets = list(best_scheme.subsets)
 
         for a_subset in start_scheme:
-            a_subset = a_subset
-        a_subset.make_alignment(self.cfg, self.alignment)
-        phylip_file = a_subset.alignment_path
-
-        # Add option to output likelihoods, *raxml version takes more 
-        # modfying of the commands in the analyse function
-        processor = self.cfg.processor
-
-        try:
-            # TO DO: still need to make this  call suitable to call RAxML as well
-            processor.analyse("GTR", str(phylip_file), 
-                "./analysis/start_tree/filtered_source.phy_phyml_tree.txt", 
-                "unlinked", "--print_site_lnl -m GTR")
-        except Exception as e:
-            log.info("Total bummer: %s" % e)
-            return 1
-
-        # os.path.join does nothing below. You should use it above. There
-        # shouldn't be ANY forward slashes in the code (this will NOT work
-        # on windows)
-        phyml_lk_file = os.path.join(str(phylip_file) + 
-            "_phyml_lk_GTR.txt")
-        likelihood_list = kmeans.phyml_likelihood_parser(phyml_lk_file)
-        how_many = kmeans.kmeans_wrapper(likelihood_list)
-        log.info(how_many)
+            how_many = kmeans.kmeans_wrapper(self.cfg, self.alignment, a_subset)
+            log.info(how_many)
 
 def choose_method(search):
     if search == 'all':
