@@ -371,6 +371,56 @@ class KmeansAnalysis(Analysis):
         self.cfg.reporter.write_best_scheme(self.results)
 
 
+class KmeansAnalysisWrapper(Analysis):
+    def do_analysis(self):
+        # Copied and pasted from greedy analysis
+        partnum = len(self.cfg.user_subsets)
+        scheme_count = submodels.count_greedy_schemes(partnum)
+        subset_count = submodels.count_greedy_subsets(partnum)
+
+        self.cfg.progress.begin(scheme_count, subset_count)
+
+        # Start with the most partitioned scheme
+        start_description = range(partnum)
+        start_scheme = scheme.create_scheme(
+            self.cfg, "start_scheme", start_description)
+
+
+        log.info("Analysing starting scheme (scheme %s)" % start_scheme.name)
+        old_score = self.analyse_scheme(start_scheme)
+
+        # Get first scheme
+        best_scheme = start_scheme
+        subset_index = 0
+        all_subsets = list(best_scheme.subsets)
+
+        for a_subset in start_scheme:
+            a_subset = a_subset
+        a_subset.make_alignment(self.cfg, self.alignment)
+        phylip_file = a_subset.alignment_path
+
+        # Add option to output likelihoods, *raxml version takes more 
+        # modfying of the commands in the analyse function
+        processor = self.cfg.processor
+
+        try:
+            # TO DO: still need to make this  call suitable to call RAxML as well
+            processor.analyse("GTR", str(phylip_file), 
+                "./analysis/start_tree/filtered_source.phy_phyml_tree.txt", 
+                "unlinked", "--print_site_lnl -m GTR")
+        except Exception as e:
+            log.info("Total bummer: %s" % e)
+            return 1
+
+        # os.path.join does nothing below. You should use it above. There
+        # shouldn't be ANY forward slashes in the code (this will NOT work
+        # on windows)
+        phyml_lk_file = os.path.join(str(phylip_file) + 
+            "_phyml_lk_GTR.txt")
+        likelihood_list = kmeans.phyml_likelihood_parser(phyml_lk_file)
+        how_many = kmeans.kmeans_wrapper(likelihood_list)
+        log.info(how_many)
+
 def choose_method(search):
     if search == 'all':
         method = AllAnalysis
@@ -384,6 +434,8 @@ def choose_method(search):
         method = RelaxedClusteringAnalysis
     elif search == 'paul':
         method = KmeansAnalysis
+    elif search == 'paul2':
+        method = KmeansAnalysisWrapper
     else:
         log.error("Search algorithm '%s' is not yet implemented", search)
         raise AnalysisError
