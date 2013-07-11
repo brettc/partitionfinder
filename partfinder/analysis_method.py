@@ -365,7 +365,8 @@ class KmeansAnalysis(Analysis):
                         # Move to the next subset in the all_subsets list
                         subset_index += 1
                 except Exception, e:
-                    print e
+                    e = str(e)
+                    log.info("Bummer: %s" % e)
                     subset_index += 1
         self.cfg.reporter.write_best_scheme(self.results)
 
