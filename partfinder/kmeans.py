@@ -239,7 +239,7 @@ def kmeans_split_subset(cfg, alignment, a_subset, number_of_ks = 2):
     return new_subsets
 
 # TO DO: make these work with a likelihood list as input
-def kmeans_wrapper(likelihood_list, max_ks = 10):
+def kmeans_wrapper(cfg, alignment, a_subset, max_ks = 10):
     '''This function performs kmeans on
     a specified number of different k's on a dictionary parsed
     from a *_phyml_lk.txt file. It then calculates
@@ -254,6 +254,32 @@ def kmeans_wrapper(likelihood_list, max_ks = 10):
     # can be modified to start with two k's. This will results in
     # a slightly larger amount of clusters, we should check the change
     # in AIC scores of both methods and choose one.
+    a_subset.make_alignment(cfg, alignment)
+    phylip_file = a_subset.alignment_path
+
+    # Add option to output likelihoods, *raxml version takes more 
+    # modfying of the commands in the analyse function
+    processor = cfg.processor
+
+    try:
+        # TO DO: still need to make this  call suitable to call RAxML as well
+        processor.analyse("GTR", str(phylip_file), 
+            "./analysis/start_tree/filtered_source.phy_phyml_tree.txt", 
+            "unlinked", "--print_site_lnl -m GTR")
+    except Exception as e:
+        log.info("Total bummer: %s" % e)
+        return 1
+
+    # os.path.join does nothing below. You should use it above. There
+    # shouldn't be ANY forward slashes in the code (this will NOT work
+    # on windows)
+    phyml_lk_file = os.path.join(str(phylip_file) + 
+        "_phyml_lk_GTR.txt")
+
+    # Open the phyml output and parse for input into the kmeans
+    # function
+    likelihood_list = phyml_likelihood_parser(
+        phyml_lk_file)
     count = 1
     sum_wss = 0
     new_wss = 0
@@ -261,8 +287,8 @@ def kmeans_wrapper(likelihood_list, max_ks = 10):
     # Calculate a bunch of kmeans on however many max_ks are determined
     for i in range(max_ks):
         # Run kmeans with each count
-        site_categories = kmeans(likelihood_list, number_of_ks = count)
-        new_likelihood_lists = make_likelihood_list(likelihood_list, site_categories[1])
+        site_categories = kmeans(likelihood_list, number_of_ks = count)[1]
+        new_likelihood_lists = make_likelihood_list(likelihood_list, site_categories)
         # Set previous wss
         previous_wss = new_wss
         # Calculate new wss
@@ -282,10 +308,20 @@ def kmeans_wrapper(likelihood_list, max_ks = 10):
             decrease = previous_wss - new_wss
             # print "decrease: " + str(decrease)
             if decrease < ((0.1) * initial_decrease):
+                list_of_sites = []
+                for k in site_categories:
+                    list_of_sites.append(site_categories[k])
+                new_subsets = subset_ops.split_subset(a_subset, list_of_sites)
                 log.info("You're finished!")
-                return site_categories
+
+                return new_subsets
         count += 1
-    return site_categories
+    list_of_sites = []
+    for k in site_categories:
+        list_of_sites.append(site_categories[k])
+    # Make new subsets
+    new_subsets = subset_ops.split_subset(a_subset, list_of_sites)
+    return new_subsets
 
 def ss(list_of_likelihoods):
     '''Input a list of likelihoods, and returns the sum of squares
@@ -331,7 +367,6 @@ def make_likelihood_list(likelihood_list, site_categories):
             likelihood = (likelihood_list[site - 1])
             one_list.append(likelihood[0])
         rate_list.append(one_list)
-    print likelihood_list
     return rate_list
 
 
