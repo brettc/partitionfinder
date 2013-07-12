@@ -273,8 +273,7 @@ def kmeans_wrapper(cfg, alignment, a_subset, max_ks = 10):
     # os.path.join does nothing below. You should use it above. There
     # shouldn't be ANY forward slashes in the code (this will NOT work
     # on windows)
-    phyml_lk_file = os.path.join(str(phylip_file) + 
-        "_phyml_lk_GTR.txt")
+    phyml_lk_file = str(phylip_file) + "_phyml_lk_GTR.txt"
 
     # Open the phyml output and parse for input into the kmeans
     # function
@@ -300,7 +299,7 @@ def kmeans_wrapper(cfg, alignment, a_subset, max_ks = 10):
         # Find out the initial decrease
         if count == 2:
             initial_decrease = first_wss - new_wss
-            log.info("The initial decrease is " + str(initial_decrease) + "!")
+            log.info("The initial decrease is %s!" % initial_decrease)
         # Find out if the most recent decrease is less than 10% of the
         # initial decrease
         # print "New wss: " + str(new_wss)
@@ -312,7 +311,9 @@ def kmeans_wrapper(cfg, alignment, a_subset, max_ks = 10):
                 for k in site_categories:
                     list_of_sites.append(site_categories[k])
                 new_subsets = subset_ops.split_subset(a_subset, list_of_sites)
-                log.info("You're finished!")
+                log.info(
+                    "Found that %s categories minimizes within sum of squares"
+                     % count)
 
                 return new_subsets
         count += 1
