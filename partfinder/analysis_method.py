@@ -32,6 +32,9 @@ import raxml
 import phyml
 import subset_ops
 
+from util import PhylogenyProgramError
+
+
 class UserAnalysis(Analysis):
 
     def do_analysis(self):
@@ -364,8 +367,10 @@ class KmeansAnalysis(Analysis):
                     else:
                         # Move to the next subset in the all_subsets list
                         subset_index += 1
-                except Exception, e:
-                    e = str(e)
+
+                # In PhyML or RAxML, it is likely because of no alignment patterns,
+                # catch that and move to the next subset without splitting.
+                except PhylogenyProgramError as e:
                     log.info("Bummer: %s" % e)
                     subset_index += 1
         self.cfg.reporter.write_best_scheme(self.results)
@@ -440,8 +445,11 @@ class KmeansAnalysisWrapper(Analysis):
                     else:
                         # Move to the next subset in the all_subsets list
                         subset_index += 1
-                except Exception, e:
-                    e = str(e)
+
+                # RAxML and PhyML will choke on partitions that have all the
+                # same alignment patterns. This will move the analysis along
+                # without splitting that subset if that happens.
+                except PhylogenyProgramError, e:
                     log.info("Bummer: %s" % e)
                     subset_index += 1
         self.cfg.reporter.write_best_scheme(self.results)
