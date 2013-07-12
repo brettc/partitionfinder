@@ -454,6 +454,128 @@ class KmeansAnalysisWrapper(Analysis):
                     subset_index += 1
         self.cfg.reporter.write_best_scheme(self.results)
 
+class KmeansGreedy(Analysis):
+    def do_analysis(self):
+        # Copied and pasted from greedy analysis
+        partnum = len(self.cfg.user_subsets)
+        scheme_count = submodels.count_greedy_schemes(partnum)
+        subset_count = submodels.count_greedy_subsets(partnum)
+
+        self.cfg.progress.begin(scheme_count, subset_count)
+
+        # Start with the most partitioned scheme
+        start_description = range(partnum)
+        start_scheme = scheme.create_scheme(
+            self.cfg, "start_scheme", start_description)
+
+
+        log.info("Analysing starting scheme (scheme %s)" % start_scheme.name)
+        old_score = self.analyse_scheme(start_scheme)
+
+        # Get first scheme
+        best_scheme = start_scheme
+        subset_index = 0
+        all_subsets = list(best_scheme.subsets)
+
+
+        while subset_index < len(all_subsets):
+            current_subset = all_subsets[subset_index]
+            split_subsets = kmeans.kmeans_split_subset(self.cfg, self.alignment, current_subset)
+
+            if split_subsets == 1:
+                subset_index += 1
+
+            else:
+                # Take a copy
+                updated_subsets = all_subsets[:]
+
+                # Replace the current one with the split one
+                # Google "slice assignments"
+                # This list is the key to avoiding recursion. It expands to contain
+                # all of the split subsets by replacing them with the split ones
+                updated_subsets[subset_index:subset_index+1] = split_subsets
+
+                test_scheme = scheme.Scheme(self.cfg, "bla", updated_subsets)
+
+                try:
+                    best_score = self.analyse_scheme(best_scheme)
+                    new_score = self.analyse_scheme(test_scheme)
+
+                    log.info("Current best score is: " + str(best_score))
+                    log.info("Current new score is: " + str(new_score))
+                    if new_score.score < best_score.score:
+                        log.info("New score " + str(subset_index) + " is better and will be set to best score")
+                        best_scheme = test_scheme
+
+                        # Change this to the one with split subsets in it. Note that
+                        # the subset_index now points a NEW subset, one that was split
+                        all_subsets = updated_subsets
+                    else:
+                        # Move to the next subset in the all_subsets list
+                        subset_index += 1
+
+                # In PhyML or RAxML, it is likely because of no alignment patterns,
+                # catch that and move to the next subset without splitting.
+                except PhylogenyProgramError as e:
+                    log.info("Bummer: %s" % e)
+                    subset_index += 1
+        # Now start the Greedy Analysis: need to figure out how to make it go through more
+        # than one scheme...
+
+        start_scheme = best_scheme
+        self.analyse_scheme(start_scheme)
+
+        step = 1
+        cur_s = 2
+
+        # Now we try out all lumpings of the current scheme, to see if we can
+        # find a better one and if we do, we just keep going
+        while True:
+            log.info("***Greedy algorithm step %d***" % step)
+
+            # Get a list of all possible lumpings of the best_scheme
+            lumpings = algorithm.lumpings(start_description)
+
+            # Save the current best score we have in results
+            old_best_score = self.results.best_score
+            for lumped_description in lumpings:
+                lumped_scheme = scheme.create_scheme(self.cfg, cur_s, lumped_description)
+                cur_s += 1
+                # This is just checking to see if a scheme is any good, if it
+                # is, we remember and write it later
+                self.analyse_scheme(lumped_scheme)
+
+            # Did out best score change (It ONLY gets better -- see in
+            # results.py)
+            if self.results.best_score == old_best_score:
+                # It didn't, so we're done
+                break
+
+            # Let's look further. We use the description from our best scheme
+            # (which will be the one that just changed in the last lumpings
+            # iteration)
+            start_description = self.results.best_result.scheme.description
+
+            # Rename and record the best scheme for this step
+            self.results.best_scheme.name = "step_%d" % step
+            self.cfg.reporter.write_scheme_summary(
+                self.results.best_scheme, self.results.best_result)
+
+            # If it's the scheme with everything equal, quit
+            if len(set(start_description)) == 1:
+                break
+
+            # Go do the next round...
+            step += 1
+
+        log.info("Greedy algorithm finished after %d steps" % step)
+        log.info("Highest scoring scheme is scheme %s, with %s score of %.3f" %
+                 (self.results.best_scheme.name, self.cfg.model_selection,
+                  self.results.best_score))
+
+        self.cfg.reporter.write_best_scheme(self.results)
+
+
 
 def choose_method(search):
     if search == 'all':
@@ -470,6 +592,8 @@ def choose_method(search):
         method = KmeansAnalysis
     elif search == 'paul2':
         method = KmeansAnalysisWrapper
+    elif search == 'paul3':
+        method = KmeansGreedy
     else:
         log.error("Search algorithm '%s' is not yet implemented", search)
         raise AnalysisError
