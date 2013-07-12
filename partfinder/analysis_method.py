@@ -449,7 +449,7 @@ class KmeansAnalysisWrapper(Analysis):
                 # RAxML and PhyML will choke on partitions that have all the
                 # same alignment patterns. This will move the analysis along
                 # without splitting that subset if that happens.
-                except PhylogenyProgramError, e:
+                except PhylogenyProgramError as e:
                     log.info("Bummer: %s" % e)
                     subset_index += 1
         self.cfg.reporter.write_best_scheme(self.results)
