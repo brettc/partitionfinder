@@ -370,8 +370,8 @@ class KmeansAnalysis(Analysis):
 
                 # In PhyML or RAxML, it is likely because of no alignment patterns,
                 # catch that and move to the next subset without splitting.
-                except PhylogenyProgramError as e:
-                    log.info("Bummer: %s" % e)
+                except PhylogenyProgramError:
+                    log.info("Phylogeny program generated an error so this subset was not split, see error above")
                     subset_index += 1
         self.cfg.reporter.write_best_scheme(self.results)
 
@@ -449,8 +449,8 @@ class KmeansAnalysisWrapper(Analysis):
                 # RAxML and PhyML will choke on partitions that have all the
                 # same alignment patterns. This will move the analysis along
                 # without splitting that subset if that happens.
-                except PhylogenyProgramError as e:
-                    log.info("Bummer: %s" % e)
+                except PhylogenyProgramError:
+                    log.info("Phylogeny program generated an error so this subset was not split, see error above")
                     subset_index += 1
         self.cfg.reporter.write_best_scheme(self.results)
 
@@ -517,8 +517,8 @@ class KmeansGreedy(Analysis):
 
                 # In PhyML or RAxML, it is likely because of no alignment patterns,
                 # catch that and move to the next subset without splitting.
-                except PhylogenyProgramError as e:
-                    log.info("Bummer: %s" % e)
+                except PhylogenyProgramError:
+                    log.info("Phylogeny program generated an error so this subset was not split, see error above")
                     subset_index += 1
         self.cfg.reporter.write_best_scheme(self.results)
         # Now start the Greedy Analysis: need to figure out how to make it go through more
