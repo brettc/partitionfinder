@@ -465,6 +465,7 @@ class KmeansGreedy(Analysis):
 
         # Start with the most partitioned scheme
         start_description = range(partnum)
+        print start_description
         start_scheme = scheme.create_scheme(
             self.cfg, "start_scheme", start_description)
 
@@ -519,10 +520,18 @@ class KmeansGreedy(Analysis):
                 except PhylogenyProgramError as e:
                     log.info("Bummer: %s" % e)
                     subset_index += 1
+        self.cfg.reporter.write_best_scheme(self.results)
         # Now start the Greedy Analysis: need to figure out how to make it go through more
         # than one scheme...
 
         start_scheme = best_scheme
+        partnum = len(start_scheme.subsets)
+        print partnum
+        scheme_count = submodels.count_greedy_schemes(partnum)
+        subset_count = submodels.count_greedy_subsets(partnum)
+        self.cfg.progress.begin(scheme_count, subset_count)
+        start_description = range(partnum)
+
         self.analyse_scheme(start_scheme)
 
         step = 1
@@ -533,13 +542,18 @@ class KmeansGreedy(Analysis):
         while True:
             log.info("***Greedy algorithm step %d***" % step)
 
+            # TODO: create a different function for create_scheme, that can
+            # create schemes from the indexes given by the lumping and the 
+            # "start_scheme" (really the best scheme from the splitting step)
+
             # Get a list of all possible lumpings of the best_scheme
             lumpings = algorithm.lumpings(start_description)
 
             # Save the current best score we have in results
             old_best_score = self.results.best_score
+            print lumpings
             for lumped_description in lumpings:
-                lumped_scheme = scheme.create_scheme(self.cfg, cur_s, lumped_description)
+                lumped_scheme = scheme.Scheme(self.cfg, cur_s, lumped_description)
                 cur_s += 1
                 # This is just checking to see if a scheme is any good, if it
                 # is, we remember and write it later
