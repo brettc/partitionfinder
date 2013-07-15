@@ -238,7 +238,6 @@ def kmeans_split_subset(cfg, alignment, a_subset, number_of_ks = 2):
     new_subsets = subset_ops.split_subset(a_subset, list_of_sites)
     return new_subsets
 
-# TO DO: make these work with a likelihood list as input
 def kmeans_wrapper(cfg, alignment, a_subset, max_ks = 10):
     '''This function performs kmeans on
     a specified number of different k's on a dictionary parsed
@@ -333,9 +332,7 @@ def ss(list_of_likelihoods):
     log_list_of_likelihoods = []
     for i in list_of_likelihoods:
         log_list_of_likelihoods.append(logarithm(float(i)))
-    # Calculate mean
     mean_likelihood = sum(log_list_of_likelihoods)/len(log_list_of_likelihoods)
-    # Calculate and return sum of squares
     for i in log_list_of_likelihoods:
         sums_of_squares += (i - mean_likelihood)**2
     return sums_of_squares
@@ -352,15 +349,10 @@ def wss(likelihood_lists):
 
 def make_likelihood_list(likelihood_list, site_categories):
     '''Takes a likelihood_list and a dictionary with kmeans clusters
-    as keys and the a list of sites belonging to that cluster as values
-    as input and returns a list of lists of likelihoods 
+    as keys and a list of sites belonging to that cluster as values
+    as input and returns a list of lists of likelihoods belonging to
+    each cluster
     '''
-    # new_like_dict = {k: [likelihood_dict[i][0] for i in v] for k, v in site_categories.items()}
-    # rate_list = []
-    # for i in new_like_dict:
-    #     rate_list.append(new_like_dict[i])
-    # print rate_list
-    # return rate_list
     rate_list = []
     for cluster in site_categories:
         one_list = []
