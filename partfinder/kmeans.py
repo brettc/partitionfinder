@@ -13,6 +13,7 @@ import numpy as np
 from sklearn.preprocessing import scale
 from sklearn.cluster import KMeans
 from collections import defaultdict
+from util import PhylogenyProgramError
 
 import logging
 log = logging.getLogger("kmeans")
@@ -210,18 +211,19 @@ def kmeans_split_subset(cfg, alignment, a_subset, number_of_ks = 2):
     processor = cfg.processor
 
     try:
-        # TO DO: still need to make this  call suitable to call RAxML as well
+        # TO DO: still need to make this  call suitable to call RAxML as well,
+        # use os.path.join for the items with a slash to that it works on windows
         processor.analyse("GTR", str(phylip_file), 
             "./analysis/start_tree/filtered_source.phy_phyml_tree.txt", 
             "unlinked", "--print_site_lnl -m GTR")
-    except Exception as e:
+    except PhylogenyProgramError as e:
         log.info("Total bummer: %s" % e)
         return 1
 
     # os.path.join does nothing below. You should use it above. There
     # shouldn't be ANY forward slashes in the code (this will NOT work
     # on windows)
-    phyml_lk_file = os.path.join(str(phylip_file) + 
+    phyml_lk_file = (str(phylip_file) + 
         "_phyml_lk_GTR.txt")
 
     # Open the phyml output and parse for input into the kmeans
@@ -230,9 +232,18 @@ def kmeans_split_subset(cfg, alignment, a_subset, number_of_ks = 2):
         phyml_lk_file)
     split_categories = kmeans(likelihood_dictionary, 
         number_of_ks)[1]
+    print split_categories
     list_of_sites = []
     for k in split_categories:
         list_of_sites.append(split_categories[k])
+
+    # This is a quick fix for small clusters, probably can be more
+    # sophisticated
+    if number_of_ks == 2:
+        for i in split_categories:
+            print len(split_categories[i])
+            if len(split_categories[i]) < 10:
+                return 1
 
     # Make the new subsets
     new_subsets = subset_ops.split_subset(a_subset, list_of_sites)
