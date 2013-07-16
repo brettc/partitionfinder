@@ -334,9 +334,15 @@ class KmeansAnalysis(Analysis):
 
         while subset_index < len(all_subsets):
             current_subset = all_subsets[subset_index]
-            split_subsets = kmeans.kmeans_split_subset(self.cfg, self.alignment, current_subset)
+            split_subsets = kmeans.kmeans_split_subset(self.cfg, 
+                self.alignment, current_subset)
 
+            # kmeans_split_subset() will return a 1 if there is a subset of less 
+            # than 10 sites in this case we just move on to the next step and 
+            # don't worry about splitting that subset.
             if split_subsets == 1:
+                log.info("Subset split resulted in a subset of less than 10," + 
+                    " we will move to the next subset")
                 subset_index += 1
 
             else:
@@ -413,13 +419,18 @@ class KmeansAnalysisWrapper(Analysis):
         while subset_index < len(all_subsets):
             current_subset = all_subsets[subset_index]
             split_subsets = kmeans.kmeans_split_subset(self.cfg, self.alignment, current_subset)
+            print split_subsets
 
             if split_subsets == 1:
+                log.info(
+                    "Subset split generated a subset of less than 10," + 
+                    " discarded split and moved to next")
                 subset_index += 1
 
             else:
                 # Take a copy
                 updated_subsets = all_subsets[:]
+                print updated_subsets
 
                 # Replace the current one with the split one
                 # Google "slice assignments"
@@ -430,6 +441,7 @@ class KmeansAnalysisWrapper(Analysis):
                 test_scheme = scheme.Scheme(self.cfg, "bla", updated_subsets)
 
                 try:
+                    log.info("Analyzing scheme with new subset split")
                     best_score = self.analyse_scheme(best_scheme)
                     new_score = self.analyse_scheme(test_scheme)
 
@@ -452,6 +464,7 @@ class KmeansAnalysisWrapper(Analysis):
                 except PhylogenyProgramError:
                     log.info("Phylogeny program generated an error so this subset was not split, see error above")
                     subset_index += 1
+
         self.cfg.reporter.write_best_scheme(self.results)
 
 class KmeansGreedy(Analysis):
