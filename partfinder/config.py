@@ -40,7 +40,7 @@ class Configuration(object):
     options = {
         'branchlengths': ['linked', 'unlinked'],
         'model_selection': ['aic', 'aicc', 'bic'],
-        'search': ['all', 'user', 'greedy', 'hcluster', 'rcluster', 'paul', 'paul2', 'paul3']
+        'search': ['all', 'user', 'greedy', 'hcluster', 'rcluster', 'kmeans', 'kmeans_wss', 'kmeans_greedy']
     }
 
     def __init__(self, datatype="DNA", phylogeny_program='phyml',
