@@ -563,52 +563,54 @@ class KmeansGreedy(Analysis):
         while True:
             log.info("***Greedy algorithm step %d***" % step)
 
-            # TODO: create a different function for create_scheme, that can
-            # create schemes from the indexes given by the lumping and the 
-            # "start_scheme" (really the best scheme from the splitting step)
-
-            # Get a list of all possible lumpings of the best_scheme
-            lumpings = algorithm.lumpings(start_description)
-
-            # Save the current best score we have in results
             old_best_score = self.results.best_score
-            print lumpings
-            for lumped_description in lumpings:
-                lumped_scheme = scheme.Scheme(self.cfg, cur_s, lumped_description)
+
+            # Get an iterable of all possible pairs of subsets in best_scheme
+            lumped_subsets = itertools.combinations(start_scheme.subsets, 2)
+
+            for subset_grouping in lumped_subsets:
+                scheme_name = cur_s
+                lumped_scheme = neighbour.make_clustered_scheme(
+                    start_scheme, scheme_name, subset_grouping, self.cfg)
+
+                new_result = self.analyse_scheme(lumped_scheme)
+
+                log.debug("Difference in %s: %.1f",
+                          self.cfg.model_selection,
+                          (new_result.score-old_best_score))
+
                 cur_s += 1
-                # This is just checking to see if a scheme is any good, if it
-                # is, we remember and write it later
-                self.analyse_scheme(lumped_scheme)
 
-            # Did out best score change (It ONLY gets better -- see in
-            # results.py)
-            if self.results.best_score == old_best_score:
-                # It didn't, so we're done
+            if self.results.best_score != old_best_score:
+                log.info("Analysed all schemes for this step. The best "
+                         "scheme changed the %s score by %.1f units.",
+                         self.cfg.model_selection,
+                         (self.results.best_score - old_best_score))
+
+                self.results.best_scheme.name = "step_%d" % step
+                self.cfg.reporter.write_scheme_summary(
+                    self.results.best_scheme, self.results.best_result)
+
+                # Now we find out which is the best lumping we know of for this step
+                start_scheme = self.results.best_scheme
+            else:
+                log.info("Analysed all schemes for this step and found no schemes "
+                         "that improve the score, stopping")
                 break
 
-            # Let's look further. We use the description from our best scheme
-            # (which will be the one that just changed in the last lumpings
-            # iteration)
-            start_description = self.results.best_result.scheme.description
-
-            # Rename and record the best scheme for this step
-            self.results.best_scheme.name = "step_%d" % step
-            self.cfg.reporter.write_scheme_summary(
-                self.results.best_scheme, self.results.best_result)
-
-            # If it's the scheme with everything equal, quit
-            if len(set(start_description)) == 1:
+            # We're done if it's the scheme with everything together
+            if len(set(lumped_scheme.subsets)) == 1:
                 break
 
-            # Go do the next round...
             step += 1
 
         log.info("Greedy algorithm finished after %d steps" % step)
-        log.info("Highest scoring scheme is scheme %s, with %s score of %.3f" %
-                 (self.results.best_scheme.name, self.cfg.model_selection,
-                  self.results.best_score))
+        log.info("Best scoring scheme is scheme %s, with %s score of %.3f"
+                 % (self.results.best_scheme.name, self.cfg.model_selection, self.results.best_score))
 
         self.cfg.reporter.write_best_scheme(self.results)
+
+
 
 
 
