@@ -174,7 +174,6 @@ def kmeans(likelihood_list, number_of_ks = 2, n_jobs = 1):
     # Add all centroids to a list to return
     centroid_list = [list(centroid) for centroid in centroids]
     
-
     # Retrieve a list with the cluster number for each site
     rate_categories = kmeans_out.labels_
     rate_categories = list(rate_categories)
@@ -185,12 +184,6 @@ def kmeans(likelihood_list, number_of_ks = 2, n_jobs = 1):
     cluster_dict = defaultdict(list)
     for num in range(len(rate_categories)):
         cluster_dict[rate_categories[num]].append(num + 1)
-
-    # # Check if all k's are > 1
-    # for cat in cluster_dict:
-    #     print cluster_dict[cat]
-    #     if len(cluster_dict[cat]) <= 1:
-    #         array[cluster_dict[cat][0]] = 
 
     stop = time.clock()
     time_taken = "k-means took " + str(stop - start) + "seconds"
