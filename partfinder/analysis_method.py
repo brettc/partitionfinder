@@ -546,14 +546,13 @@ class KmeansGreedy(Analysis):
         # than one scheme...
 
         start_scheme = best_scheme
+        print start_scheme
         partnum = len(start_scheme.subsets)
         print partnum
         scheme_count = submodels.count_greedy_schemes(partnum)
         subset_count = submodels.count_greedy_subsets(partnum)
         self.cfg.progress.begin(scheme_count, subset_count)
         start_description = range(partnum)
-
-        self.analyse_scheme(start_scheme)
 
         step = 1
         cur_s = 2
@@ -625,11 +624,11 @@ def choose_method(search):
         method = StrictClusteringAnalysis
     elif search == 'rcluster':
         method = RelaxedClusteringAnalysis
-    elif search == 'paul':
+    elif search == 'kmeans':
         method = KmeansAnalysis
-    elif search == 'paul2':
+    elif search == 'kmeans_wss':
         method = KmeansAnalysisWrapper
-    elif search == 'paul3':
+    elif search == 'kmeans_greedy':
         method = KmeansGreedy
     else:
         log.error("Search algorithm '%s' is not yet implemented", search)
