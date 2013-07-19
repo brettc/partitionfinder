@@ -392,10 +392,8 @@ class KmeansAnalysis(Analysis):
         new_file = open("./analysis/RAxML_definition.txt", "a")
         subset_number = 0
         for each_s in best_scheme:
-            list_of_sites = each_s.columns
-            new_file.write("DNA, Subset%s = " % subset_number)
-            for site in list_of_sites:
-                new_file.write(str(site) + ", ")
+            list_of_sites = str(each_s.columns).strip("[]")
+            new_file.write("DNA, Subset%s = %s" % (subset_number, list_of_sites))
             new_file.write("\n")
             subset_number += 1
         new_file.close()
@@ -490,10 +488,8 @@ class KmeansAnalysisWrapper(Analysis):
         new_file = open("./analysis/RAxML_definition.txt", "a")
         subset_number = 0
         for each_s in best_scheme:
-            list_of_sites = each_s.columns
-            new_file.write("DNA, Subset%s = " % subset_number)
-            for site in list_of_sites:
-                new_file.write(str(site) + ", ")
+            list_of_sites = str(each_s.columns).strip("[]")
+            new_file.write("DNA, Subset%s = %s" % (subset_number, list_of_sites))
             new_file.write("\n")
             subset_number += 1
         new_file.close()
@@ -637,10 +633,8 @@ class KmeansGreedy(Analysis):
         new_file = open("./analysis/RAxML_definition.txt", "a")
         subset_number = 0
         for each_s in best_scheme:
-            list_of_sites = each_s.columns
-            new_file.write("DNA, Subset%s = " % subset_number)
-            for site in list_of_sites:
-                new_file.write(str(site) + ", ")
+            list_of_sites = str(each_s.columns).strip("[]")
+            new_file.write("DNA, Subset%s = %s" % (subset_number, list_of_sites))
             new_file.write("\n")
             subset_number += 1
         new_file.close()
