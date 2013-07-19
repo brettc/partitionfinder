@@ -387,6 +387,19 @@ class KmeansAnalysis(Analysis):
                 except PhylogenyProgramError:
                     log.info("Phylogeny program generated an error so this subset was not split, see error above")
                     subset_index += 1
+
+        # Write out the subsets to a RAxML style definition, this is just for testing purposes
+        new_file = open("./analysis/RAxML_definition.txt", "a")
+        subset_number = 0
+        for each_s in best_scheme:
+            list_of_sites = each_s.columns
+            new_file.write("DNA, Subset%s = " % subset_number)
+            for site in list_of_sites:
+                new_file.write(str(site) + ", ")
+            new_file.write("\n")
+            subset_number += 1
+        new_file.close()
+
         self.cfg.reporter.write_best_scheme(self.results)
 
 
@@ -472,6 +485,19 @@ class KmeansAnalysisWrapper(Analysis):
                 except PhylogenyProgramError:
                     log.info("Phylogeny program generated an error so this subset was not split, see error above")
                     subset_index += 1
+
+        # Write out the subsets to a RAxML style definition, this is just for testing purposes
+        new_file = open("./analysis/RAxML_definition.txt", "a")
+        subset_number = 0
+        for each_s in best_scheme:
+            list_of_sites = each_s.columns
+            new_file.write("DNA, Subset%s = " % subset_number)
+            for site in list_of_sites:
+                new_file.write(str(site) + ", ")
+            new_file.write("\n")
+            subset_number += 1
+        new_file.close()
+
 
         self.cfg.reporter.write_best_scheme(self.results)
 
@@ -606,6 +632,18 @@ class KmeansGreedy(Analysis):
         log.info("Greedy algorithm finished after %d steps" % step)
         log.info("Best scoring scheme is scheme %s, with %s score of %.3f"
                  % (self.results.best_scheme.name, self.cfg.model_selection, self.results.best_score))
+
+        # Write out the subsets to a RAxML style definition, this is just for testing purposes
+        new_file = open("./analysis/RAxML_definition.txt", "a")
+        subset_number = 0
+        for each_s in best_scheme:
+            list_of_sites = each_s.columns
+            new_file.write("DNA, Subset%s = " % subset_number)
+            for site in list_of_sites:
+                new_file.write(str(site) + ", ")
+            new_file.write("\n")
+            subset_number += 1
+        new_file.close()
 
         self.cfg.reporter.write_best_scheme(self.results)
 
