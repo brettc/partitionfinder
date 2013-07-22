@@ -32,6 +32,7 @@ import raxml
 import phyml
 import subset_ops
 import itertools
+import cluster
 
 from util import PhylogenyProgramError
 
@@ -388,11 +389,11 @@ class KmeansAnalysis(Analysis):
                     log.info("Phylogeny program generated an error so this subset was not split, see error above")
                     subset_index += 1
 
-        # Write out the subsets to a RAxML style definition, this is just for testing purposes
         new_file = open("./analysis/RAxML_definition.txt", "a")
         subset_number = 0
-        for each_s in best_scheme:
-            list_of_sites = str(each_s.columns).strip("[]")
+        for each_s in self.results.best_scheme:
+            list_of_sites = each_s.columns
+            list_of_sites = str([x + 1 for x in list_of_sites]).strip("[]")
             new_file.write("DNA, Subset%s = %s" % (subset_number, list_of_sites))
             new_file.write("\n")
             subset_number += 1
@@ -487,8 +488,9 @@ class KmeansAnalysisWrapper(Analysis):
         # Write out the subsets to a RAxML style definition, this is just for testing purposes
         new_file = open("./analysis/RAxML_definition.txt", "a")
         subset_number = 0
-        for each_s in best_scheme:
-            list_of_sites = str(each_s.columns).strip("[]")
+        for each_s in self.results.best_scheme:
+            list_of_sites = each_s.columns
+            list_of_sites = str([x + 1 for x in list_of_sites]).strip("[]")
             new_file.write("DNA, Subset%s = %s" % (subset_number, list_of_sites))
             new_file.write("\n")
             subset_number += 1
@@ -563,7 +565,6 @@ class KmeansGreedy(Analysis):
                 except PhylogenyProgramError:
                     log.info("Phylogeny program generated an error so this subset was not split, see error above")
                     subset_index += 1
-        self.cfg.reporter.write_best_scheme(self.results)
         # Now start the Greedy Analysis: need to figure out how to make it go through more
         # than one scheme...
 
@@ -629,11 +630,13 @@ class KmeansGreedy(Analysis):
         log.info("Best scoring scheme is scheme %s, with %s score of %.3f"
                  % (self.results.best_scheme.name, self.cfg.model_selection, self.results.best_score))
 
+        print self.results.best_scheme
         # Write out the subsets to a RAxML style definition, this is just for testing purposes
         new_file = open("./analysis/RAxML_definition.txt", "a")
         subset_number = 0
-        for each_s in best_scheme:
-            list_of_sites = str(each_s.columns).strip("[]")
+        for each_s in self.results.best_scheme:
+            list_of_sites = each_s.columns
+            list_of_sites = str([x + 1 for x in list_of_sites]).strip("[]")
             new_file.write("DNA, Subset%s = %s" % (subset_number, list_of_sites))
             new_file.write("\n")
             subset_number += 1
