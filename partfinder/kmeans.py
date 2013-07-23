@@ -219,11 +219,12 @@ def kmeans_split_subset(cfg, alignment, a_subset, number_of_ks = 2):
 
     if program_name == 'phyml':
         phyml_lk_file = (str(phylip_file) + 
-        "_phyml_lk_GTR.txt")
+        "_phyml_lk_GTRGAMMA.txt")
+        print phyml_lk_file
         # Open the phyml output and parse for input into the kmeans
         # function
         likelihood_dictionary = phyml_likelihood_parser(
-        phyml_lk_file)
+            phyml_lk_file)[0]
 
     elif program_name == 'raxml':
         print phylip_file
