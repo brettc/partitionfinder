@@ -275,6 +275,18 @@ def parse(text, datatype):
     the_parser = Parser(datatype)
     return the_parser.parse(text)
 
+program_name = "phyml"
+
+def program():
+    return program_name
+
+def get_likelihoods(model, alignment_path, tree_path):
+
+
+    command = "--run_id %s -b 0 -i '%s' -u '%s' -m GTR --print_site_lnl" % (
+    model, alignment_path, tree_path)
+    run_phyml(command)
+
 if __name__ == '__main__':
     logging.basicConfig(level=logging.DEBUG)
     import tempfile
