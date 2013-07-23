@@ -35,6 +35,10 @@ from pyparsing import (
 
 import raxml_models as models
 
+# This is set as the binary name because the previously compiled
+# raxml had a bug when calculating site likelihoods, this needs to
+# be changed back to "raxml" once a newer version without the bug
+# is compiled.
 _binary_name = 'raxmlHPC-SSE3'
 if sys.platform == 'win32':
     _binary_name += ".exe"
