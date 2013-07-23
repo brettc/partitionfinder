@@ -35,7 +35,7 @@ from pyparsing import (
 
 import raxml_models as models
 
-_binary_name = 'raxml'
+_binary_name = 'raxmlHPC-SSE3'
 if sys.platform == 'win32':
     _binary_name += ".exe"
 
@@ -350,6 +350,22 @@ class Parser(object):
 def parse(text, datatype):
     the_parser = Parser(datatype)
     return the_parser.parse(text)
+
+program_name = "raxml"
+
+def program():
+    return program_name
+
+def get_likelihoods(model, alignment_path, tree_path):
+    #raxml doesn't append alignment names automatically, like PhyML, let's do that here
+    analysis_ID = raxml_analysis_ID(alignment_path, model)
+
+    #force raxml to write to the dir with the alignment in it
+    #-e 1.0 sets the precision to 1 lnL unit. This is all that's required here, and helps with speed.
+    aln_dir, fname = os.path.split(alignment_path)
+    command = "-m %s -f g -s '%s' -z '%s' -n %s -w '%s'" % (
+        model, alignment_path, tree_path, analysis_ID, os.path.abspath(aln_dir))
+    run_raxml(command)
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.DEBUG)
