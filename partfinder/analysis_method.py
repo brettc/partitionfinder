@@ -32,7 +32,6 @@ import raxml
 import phyml
 import subset_ops
 import itertools
-import cluster
 
 from util import PhylogenyProgramError
 
