@@ -377,10 +377,10 @@ def get_likelihood_list(cfg, phylip_file):
         # Once the os.path.split is fixed, will need to change some of the
         # indexes into those lists
         subset_code = phylip_file_split[1].split(".")[0]
-        raxml_tree_puzzler_file = os.path.join(phylip_file_split[0], 
+        raxml_lnl_file = os.path.join(phylip_file_split[0], 
             ("RAxML_perSiteLLs.%s_GTRGAMMA.txt" % subset_code))
         likelihood_list = raxml_likelihood_parser(
-            raxml_tree_puzzler_file)
+            raxml_lnl_file)
     return likelihood_list
 
 
