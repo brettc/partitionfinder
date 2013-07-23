@@ -198,34 +198,46 @@ def kmeans_split_subset(cfg, alignment, a_subset, number_of_ks = 2):
     # pass
     a_subset.make_alignment(cfg, alignment)
     phylip_file = a_subset.alignment_path
+    phylip_file_split = os.path.split(phylip_file)
+    print phylip_file_split
+
 
     # Add option to output likelihoods, *raxml version takes more 
     # modfying of the commands in the analyse function
     processor = cfg.processor
+    program_name = processor.program()
+    print program_name
 
     try:
         # TO DO: still need to make this  call suitable to call RAxML as well,
         # use os.path.join for the items with a slash to that it works on windows
-        processor.analyse("GTR", str(phylip_file), 
-            "./analysis/start_tree/filtered_source.phy_phyml_tree.txt", 
-            "unlinked", "--print_site_lnl -m GTR")
+        processor.get_likelihoods("GTRGAMMA", str(phylip_file), 
+            "./analysis/start_tree/topology_tree.phy")
     except PhylogenyProgramError as e:
         log.info("Total bummer: %s" % e)
         return 1
 
-    # os.path.join does nothing below. You should use it above. There
-    # shouldn't be ANY forward slashes in the code (this will NOT work
-    # on windows)
-    phyml_lk_file = (str(phylip_file) + 
+    if program_name == 'phyml':
+        phyml_lk_file = (str(phylip_file) + 
         "_phyml_lk_GTR.txt")
-
-    # Open the phyml output and parse for input into the kmeans
-    # function
-    likelihood_dictionary = phyml_likelihood_parser(
+        # Open the phyml output and parse for input into the kmeans
+        # function
+        likelihood_dictionary = phyml_likelihood_parser(
         phyml_lk_file)
+
+    elif program_name == 'raxml':
+        print phylip_file
+        subset_code = phylip_file_split[1].split(".")[0]
+        print subset_code
+        raxml_tree_puzzler_file = os.path.join(phylip_file_split[0], 
+            ("RAxML_perSiteLLs." + str(subset_code) + "_GTRGAMMA.txt"))
+        print raxml_tree_puzzler_file
+        likelihood_dictionary = raxml_likelihood_parser(raxml_tree_puzzler_file)
+
     split_categories = kmeans(likelihood_dictionary, 
         number_of_ks)[1]
     print split_categories
+    
     list_of_sites = []
     for k in split_categories:
         list_of_sites.append(split_categories[k])
@@ -263,12 +275,12 @@ def kmeans_wrapper(cfg, alignment, a_subset, max_ks = 10):
     # Add option to output likelihoods, *raxml version takes more 
     # modfying of the commands in the analyse function
     processor = cfg.processor
+    print processor
 
     try:
         # TO DO: still need to make this  call suitable to call RAxML as well
-        processor.analyse("GTR", str(phylip_file), 
-            "./analysis/start_tree/filtered_source.phy_phyml_tree.txt", 
-            "unlinked", "--print_site_lnl -m GTR")
+        processor.get_likelihoods("GTR", str(phylip_file), 
+            "./analysis/start_tree/filtered_source.phy_phyml_tree.txt")
     except Exception as e:
         log.info("Total bummer: %s" % e)
         return 1
@@ -365,7 +377,6 @@ def make_likelihood_list(likelihood_list, site_categories):
             one_list.append(likelihood[0])
         rate_list.append(one_list)
     return rate_list
-
 
 
 
