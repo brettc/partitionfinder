@@ -14,8 +14,6 @@ from sklearn.preprocessing import scale
 from sklearn.cluster import KMeans
 from collections import defaultdict
 from util import PhylogenyProgramError
-from phyml import phyml_likelihood_parser
-from raxml import raxml_likelihood_parser
 
 import logging
 log = logging.getLogger("kmeans")
@@ -250,7 +248,7 @@ def get_likelihood_list(cfg, phylip_file):
         phyml_lk_file = ("%s_phyml_lk_GTRGAMMA.txt" % phylip_file)
         # Open the phyml output and parse for input into the kmeans
         # function
-        likelihood_list = phyml_likelihood_parser(
+        likelihood_list = processor.likelihood_parser(
             phyml_lk_file)[0]
     elif program_name == 'raxml':
         # Once the os.path.split is fixed, will need to change some of the
@@ -258,7 +256,7 @@ def get_likelihood_list(cfg, phylip_file):
         subset_code = phylip_file_split[1].split(".")[0]
         raxml_lnl_file = os.path.join(phylip_file_split[0], 
             ("RAxML_perSiteLLs.%s_GTRGAMMA.txt" % subset_code))
-        likelihood_list = raxml_likelihood_parser(
+        likelihood_list = processor.likelihood_parser(
             raxml_lnl_file)
     return likelihood_list
 
