@@ -355,7 +355,7 @@ def parse(text, datatype):
     the_parser = Parser(datatype)
     return the_parser.parse(text)
 
-def raxml_likelihood_parser(raxml_lnl_file):
+def likelihood_parser(raxml_lnl_file):
     '''
     This function takes as input the RAxML_perSiteLLs* file from a RAxML -f g
     run, and returns a dictionary of sites and likelihoods to feed into kmeans.

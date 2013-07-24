@@ -276,7 +276,7 @@ def parse(text, datatype):
     the_parser = Parser(datatype)
     return the_parser.parse(text)
 
-def phyml_likelihood_parser(phyml_lk_file):
+def likelihood_parser(phyml_lk_file):
     '''
     Takes a *_phyml_lk.txt file and returns a dictionary of sites and site
     likelihoods and a dictionary of sites and lists of likelihoods under
