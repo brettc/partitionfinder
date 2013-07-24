@@ -32,6 +32,7 @@ import raxml
 import phyml
 import subset_ops
 import itertools
+import operator
 
 from util import PhylogenyProgramError
 
@@ -387,13 +388,25 @@ class KmeansAnalysis(Analysis):
                 except PhylogenyProgramError:
                     log.info("Phylogeny program generated an error so this subset was not split, see error above")
                     subset_index += 1
-
+        # Quick fix for printing out a RAxML style partition definition.
         new_file = open("./analysis/RAxML_definition.txt", "a")
         subset_number = 0
         for each_s in self.results.best_scheme:
             list_of_sites = each_s.columns
-            list_of_sites = str([x + 1 for x in list_of_sites]).strip("[]")
-            new_file.write("DNA, Subset%s = %s" % (subset_number, list_of_sites))
+            big_list = []
+            # Took this solution for grouping consecutive sites from 
+            # http://stackoverflow.com/questions/2361945/detecting-consecutive-integers-in-a-list
+            for k, g in itertools.groupby(enumerate(list_of_sites), lambda (i,x):i-x):
+                consec_sites = map(operator.itemgetter(1), g)
+                if len(consec_sites) > 2:
+                    the_range = str(min(consec_sites) + 1) + "-" + str(max(consec_sites) + 1)
+                    big_list.append(the_range)
+                else:
+                    consec_sites = [x + 1 for x in consec_sites]
+                    big_list += consec_sites
+            big_list = str(big_list).strip("[]")
+            big_list = big_list.translate(None, "'")
+            new_file.write("DNA, Subset%s = %s" % (subset_number, big_list))
             new_file.write("\n")
             subset_number += 1
         new_file.close()
@@ -484,13 +497,25 @@ class KmeansAnalysisWrapper(Analysis):
                     log.info("Phylogeny program generated an error so this subset was not split, see error above")
                     subset_index += 1
 
-        # Write out the subsets to a RAxML style definition, this is just for testing purposes
+        # Quick fix for printing out a RAxML style partition definition.
         new_file = open("./analysis/RAxML_definition.txt", "a")
         subset_number = 0
         for each_s in self.results.best_scheme:
             list_of_sites = each_s.columns
-            list_of_sites = str([x + 1 for x in list_of_sites]).strip("[]")
-            new_file.write("DNA, Subset%s = %s" % (subset_number, list_of_sites))
+            big_list = []
+            # Took this solution for grouping consecutive sites from 
+            # http://stackoverflow.com/questions/2361945/detecting-consecutive-integers-in-a-list
+            for k, g in itertools.groupby(enumerate(list_of_sites), lambda (i,x):i-x):
+                consec_sites = map(operator.itemgetter(1), g)
+                if len(consec_sites) > 2:
+                    the_range = str(min(consec_sites) + 1) + "-" + str(max(consec_sites) + 1)
+                    big_list.append(the_range)
+                else:
+                    consec_sites = [x + 1 for x in consec_sites]
+                    big_list += consec_sites
+            big_list = str(big_list).strip("[]")
+            big_list = big_list.translate(None, "'")
+            new_file.write("DNA, Subset%s = %s" % (subset_number, big_list))
             new_file.write("\n")
             subset_number += 1
         new_file.close()
@@ -629,14 +654,26 @@ class KmeansGreedy(Analysis):
         log.info("Best scoring scheme is scheme %s, with %s score of %.3f"
                  % (self.results.best_scheme.name, self.cfg.model_selection, self.results.best_score))
 
-        print self.results.best_scheme
-        # Write out the subsets to a RAxML style definition, this is just for testing purposes
+
+        # Quick fix for printing out a RAxML style partition definition.
         new_file = open("./analysis/RAxML_definition.txt", "a")
         subset_number = 0
         for each_s in self.results.best_scheme:
             list_of_sites = each_s.columns
-            list_of_sites = str([x + 1 for x in list_of_sites]).strip("[]")
-            new_file.write("DNA, Subset%s = %s" % (subset_number, list_of_sites))
+            big_list = []
+            # Took this solution for grouping consecutive sites from 
+            # http://stackoverflow.com/questions/2361945/detecting-consecutive-integers-in-a-list
+            for k, g in itertools.groupby(enumerate(list_of_sites), lambda (i,x):i-x):
+                consec_sites = map(operator.itemgetter(1), g)
+                if len(consec_sites) > 2:
+                    the_range = str(min(consec_sites) + 1) + "-" + str(max(consec_sites) + 1)
+                    big_list.append(the_range)
+                else:
+                    consec_sites = [x + 1 for x in consec_sites]
+                    big_list += consec_sites
+            big_list = str(big_list).strip("[]")
+            big_list = big_list.translate(None, "'")
+            new_file.write("DNA, Subset%s = %s" % (subset_number, big_list))
             new_file.write("\n")
             subset_number += 1
         new_file.close()
