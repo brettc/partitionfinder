@@ -355,6 +355,40 @@ def parse(text, datatype):
     the_parser = Parser(datatype)
     return the_parser.parse(text)
 
+def raxml_likelihood_parser(raxml_lnl_file):
+    '''
+    This function takes as input the RAxML_perSiteLLs* file from a RAxML -f g
+    run, and returns a dictionary of sites and likelihoods to feed into kmeans.
+
+    Note: the likelihoods are already logged, so either we should change the
+    kmeans function and tell the PhyML parser to return log likelihoods or we
+    should convert these log likelihoods back to regular likelihood scores
+    '''
+    # See if you can locate the file, then parse the second line
+    # that contains the log likelihoods. If it isn't found
+    # raise an error
+    try:
+        with open(str(raxml_lnl_file)) as raxml_lnl_file:
+            line_num = 1
+            for line in raxml_lnl_file.readlines():
+                if line_num == 2:
+                    site_lnl_list = line.split(" ")
+                line_num += 1
+    except IOError:
+        raise IOError("Could not locate per site log likelihood file")
+
+    # Get rid of the new line character and the first "tr1" from
+    # the first element in the list
+    site_lnl_list[0] = site_lnl_list[0].strip("tr1\t")
+    site_lnl_list.pop(-1)
+
+    # You have to take the antilog the output will be likelihoods
+    # like the output from PhyML
+    site_lk_list = [[10**float(site)] for site in site_lnl_list]
+
+    raxml_lnl_file.close()
+    return site_lk_list
+
 program_name = "raxml"
 
 def program():
