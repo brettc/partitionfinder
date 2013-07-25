@@ -32,8 +32,7 @@ def kmeans(likelihood_list, number_of_ks = 2, n_jobs = 1):
     all_rates_list = []
     for site in likelihood_list:
         lk_list = site
-        log_rate_cat_list = [logarithm(lk) for lk in lk_list]
-        all_rates_list.append(log_rate_cat_list)
+        all_rates_list.append(lk_list)
 
     # Create and scale an array for input into kmeans function
     array = np.array(all_rates_list)
@@ -90,6 +89,8 @@ def kmeans_split_subset(cfg, alignment, a_subset, number_of_ks = 2):
         log.info("Total bummer: %s" % e)
         return 1
 
+    # Call processor to calculate site likelihoods and parse them
+    # from the output file.
     likelihood_list = get_likelihood_list(cfg, phylip_file)
 
     split_categories = kmeans(likelihood_list, 
