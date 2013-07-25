@@ -382,9 +382,9 @@ def likelihood_parser(raxml_lnl_file):
     site_lnl_list[0] = site_lnl_list[0].strip("tr1\t")
     site_lnl_list.pop(-1)
 
-    # You have to take the antilog the output will be likelihoods
-    # like the output from PhyML
-    site_lk_list = [[10**float(site)] for site in site_lnl_list]
+    # Have to format into individual "lists" for each site for
+    # input into the numpy array
+    site_lk_list = [[float(site)] for site in site_lnl_list]
 
     raxml_lnl_file.close()
     return site_lk_list
