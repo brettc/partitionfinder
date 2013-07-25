@@ -347,10 +347,10 @@ class KmeansAnalysis(Analysis):
                 self.alignment, current_subset)
 
             # kmeans_split_subset() will return a 1 if there is a subset of less 
-            # than 10 sites in this case we just move on to the next step and 
+            # than 2 sites in this case we just move on to the next step and 
             # don't worry about splitting that subset.
             if split_subsets == 1:
-                log.info("Subset split resulted in a subset of less than 10," + 
+                log.info("Subset split resulted in a subset of less than 2," + 
                     " we will move to the next subset")
                 subset_index += 1
 
@@ -388,6 +388,7 @@ class KmeansAnalysis(Analysis):
                 except PhylogenyProgramError:
                     log.info("Phylogeny program generated an error so this subset was not split, see error above")
                     subset_index += 1
+
         # Quick fix for printing out a RAxML style partition definition.
         new_file = open("./analysis/RAxML_definition.txt", "a")
         subset_number = 0
@@ -653,7 +654,6 @@ class KmeansGreedy(Analysis):
         log.info("Greedy algorithm finished after %d steps" % step)
         log.info("Best scoring scheme is scheme %s, with %s score of %.3f"
                  % (self.results.best_scheme.name, self.cfg.model_selection, self.results.best_score))
-
 
         # Quick fix for printing out a RAxML style partition definition.
         new_file = open("./analysis/RAxML_definition.txt", "a")
