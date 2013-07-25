@@ -32,6 +32,7 @@ from pyparsing import (
     Word, Literal, nums, Suppress, ParseException,
     SkipTo,
 )
+from math import log as logarithm
 
 import phyml_models as models
 
@@ -341,13 +342,13 @@ def likelihood_parser(phyml_lk_file):
     # just return the likelihood scores for each site, otherwise, return
     # site likelihoods and likelihoods under each rate category
     if len(headers) < 4:
-        # Make a list of site likelihoods
-        likelihood_list = [[float(site[headers[1]])] for site in list_of_dicts]
+        # Make a list of site log likelihoods
+        likelihood_list = [[logarithm(float(site[headers[1]]))] for site in list_of_dicts]
         return likelihood_list
 
     else:
-        # Make a list of site likelihoods
-        likelihood_list = [[float(site[headers[1]])] for site in list_of_dicts]
+        # Make a list of site log ikelihoods
+        likelihood_list = [[logarithm(float(site[headers[1]]))] for site in list_of_dicts]
 
         # Now make a list of lists of site likelihoods under different 
         # rate categories
@@ -357,7 +358,7 @@ def likelihood_parser(phyml_lk_file):
             # Pull the likelihood from each rate category by calling the 
             # appropriate key from "headers"
             for num in range(2, len(headers) - 3):
-                ind_lk_list.append(float(i[headers[num]]))
+                ind_lk_list.append(logarithm(float(i[headers[num]])))
             # Now add the list of likelihoods for the site to a master list
             lk_rate_list.append(ind_lk_list)
 
