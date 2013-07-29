@@ -62,7 +62,7 @@ def kmeans(likelihood_list, number_of_ks = 2, n_jobs = 1):
         cluster_dict[rate_categories[num]].append(num + 1)
 
     stop = time.clock()
-    time_taken = "k-means took " + str(stop - start) + "seconds"
+    time_taken = "k-means splitting complete"
     log.info(time_taken)
 
     # Return centroids and dictionary with lists of sites for each k
@@ -83,16 +83,19 @@ def kmeans_split_subset(cfg, alignment, a_subset, number_of_ks = 2):
     try:
         # TO DO: still need to make this  call suitable to call RAxML as well,
         # use os.path.join for the items with a slash to that it works on windows
+        # Also, which starting tree should I use here? BLTREE?
         processor.get_likelihoods("GTRGAMMA", str(phylip_file), 
             "./analysis/start_tree/topology_tree.phy")
     except PhylogenyProgramError as e:
-        log.info("Total bummer: %s" % e)
+        log.info("There was a phylogeny program error when analyzing this" +
+        "subset, will move onto next subset")
         return 1
 
     # Call processor to calculate site likelihoods and parse them
     # from the output file.
     likelihood_list = get_likelihood_list(cfg, phylip_file)
 
+    # Perform kmeans clustering on the likelihoods
     split_categories = kmeans(likelihood_list, 
         number_of_ks)[1]
     
@@ -144,15 +147,8 @@ def kmeans_wrapper(cfg, alignment, a_subset, max_ks = 10):
         log.info("Total bummer: %s" % e)
         return 1
 
-    # os.path.join does nothing below. You should use it above. There
-    # shouldn't be ANY forward slashes in the code (this will NOT work
-    # on windows)
-    phyml_lk_file = str(phylip_file) + "_phyml_lk_GTR.txt"
-
-    # Open the phyml output and parse for input into the kmeans
-    # function
-    likelihood_list = phyml_likelihood_parser(
-        phyml_lk_file)
+    likelihood_list = get_likelihood_list(cfg, phylip_file)
+    
     count = 1
     sum_wss = 0
     new_wss = 0
