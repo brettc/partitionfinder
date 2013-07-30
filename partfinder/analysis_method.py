@@ -373,7 +373,8 @@ class KmeansAnalysis(Analysis):
                     log.info("Current best score is: " + str(best_score))
                     log.info("Current new score is: " + str(new_score))
                     if new_score.score < best_score.score:
-                        log.info("New score " + str(subset_index) + " is better and will be set to best score")
+                        log.info("New score " + str(subset_index) + 
+                            " is better and will be set to best score")
                         best_scheme = test_scheme
 
                         # Change this to the one with split subsets in it. Note that
@@ -386,7 +387,8 @@ class KmeansAnalysis(Analysis):
                 # In PhyML or RAxML, it is likely because of no alignment patterns,
                 # catch that and move to the next subset without splitting.
                 except PhylogenyProgramError:
-                    log.info("Phylogeny program generated an error so this subset was not split, see error above")
+                    log.info("Phylogeny program generated an error so this" +
+                        " subset was not split, see error above")
                     subset_index += 1
 
         # Quick fix for printing out a RAxML style partition definition.
@@ -397,10 +399,12 @@ class KmeansAnalysis(Analysis):
             big_list = []
             # Took this solution for grouping consecutive sites from 
             # http://stackoverflow.com/questions/2361945/detecting-consecutive-integers-in-a-list
-            for k, g in itertools.groupby(enumerate(list_of_sites), lambda (i,x):i-x):
+            for k, g in itertools.groupby(enumerate(list_of_sites), 
+                lambda (i,x):i-x):
                 consec_sites = map(operator.itemgetter(1), g)
                 if len(consec_sites) > 2:
-                    the_range = str(min(consec_sites) + 1) + "-" + str(max(consec_sites) + 1)
+                    the_range = (str(min(consec_sites) + 1) + "-" + 
+                        str(max(consec_sites) + 1))
                     big_list.append(the_range)
                 else:
                     consec_sites = [x + 1 for x in consec_sites]
@@ -439,7 +443,8 @@ class KmeansAnalysisWrapper(Analysis):
 
         split_subsets = []
         for a_subset in start_scheme:
-            how_many = kmeans.kmeans_wrapper(self.cfg, self.alignment, a_subset)
+            how_many = kmeans.kmeans_wrapper(self.cfg, self.alignment, 
+                a_subset)
             split_subsets += how_many
         split_scheme = scheme.Scheme(self.cfg, "split_scheme", split_subsets)
         best_score = self.analyse_scheme(best_scheme)
@@ -451,13 +456,14 @@ class KmeansAnalysisWrapper(Analysis):
 
         while subset_index < len(all_subsets):
             current_subset = all_subsets[subset_index]
-            split_subsets = kmeans.kmeans_split_subset(self.cfg, self.alignment, current_subset)
+            split_subsets = kmeans.kmeans_split_subset(self.cfg, 
+                self.alignment, current_subset)
             print split_subsets
 
             if split_subsets == 1:
                 log.info(
-                    "Subset split generated a subset of less than 10," + 
-                    " discarded split and moved to next")
+                    "Subset split generated a subset of less than 2," + 
+                        " discarded split and moved to next")
                 subset_index += 1
 
             else:
@@ -481,7 +487,8 @@ class KmeansAnalysisWrapper(Analysis):
                     log.info("Current best score is: " + str(best_score))
                     log.info("Current new score is: " + str(new_score))
                     if new_score.score < best_score.score:
-                        log.info("New score " + str(subset_index) + " is better and will be set to best score")
+                        log.info("New score " + str(subset_index) + 
+                            " is better and will be set to best score")
                         best_scheme = test_scheme
 
                         # Change this to the one with split subsets in it. Note that
@@ -495,7 +502,8 @@ class KmeansAnalysisWrapper(Analysis):
                 # same alignment patterns. This will move the analysis along
                 # without splitting that subset if that happens.
                 except PhylogenyProgramError:
-                    log.info("Phylogeny program generated an error so this subset was not split, see error above")
+                    log.info("Phylogeny program generated an error so this " +
+                        "subset was not split, see error above")
                     subset_index += 1
 
         # Quick fix for printing out a RAxML style partition definition.
