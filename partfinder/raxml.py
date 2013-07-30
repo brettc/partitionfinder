@@ -234,11 +234,17 @@ def raxml_analysis_ID(alignment_path, model):
     return analysis_ID
 
 
+# def make_tree_path(alignment_path):
+#     dir, aln = os.path.split(alignment_path)
+#     tree_path = os.path.join(dir, "RAxML_result.BLTREE")
+#     return tree_path
+
 def make_tree_path(alignment_path):
     dir, aln = os.path.split(alignment_path)
-    tree_path = os.path.join(dir, "RAxML_result.BLTREE")
+    n_dir, o_dir = os.path.split(dir)
+    tree_path = os.path.join(n_dir, "start_tree")
+    tree_path = os.path.join(tree_path, "RAxML_result.BLTREE")
     return tree_path
-
 
 def make_output_path(alignment_path, model):
     analysis_ID = raxml_analysis_ID(alignment_path, model)
