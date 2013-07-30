@@ -339,6 +339,7 @@ class KmeansAnalysis(Analysis):
         best_scheme = start_scheme
         subset_index = 0
         all_subsets = list(best_scheme.subsets)
+
         processor = self.cfg.processor
         alignment_path = self.filtered_alignment_path
         tree_path = processor.make_tree_path(alignment_path)
@@ -367,7 +368,7 @@ class KmeansAnalysis(Analysis):
                 # all of the split subsets by replacing them with the split ones
                 updated_subsets[subset_index:subset_index+1] = split_subsets
 
-                test_scheme = scheme.Scheme(self.cfg, "bla", updated_subsets)
+                test_scheme = scheme.Scheme(self.cfg, "Current Scheme", updated_subsets)
 
                 try:
                     best_score = self.analyse_scheme(best_scheme)
@@ -484,7 +485,7 @@ class KmeansAnalysisWrapper(Analysis):
                 # all of the split subsets by replacing them with the split ones
                 updated_subsets[subset_index:subset_index+1] = split_subsets
 
-                test_scheme = scheme.Scheme(self.cfg, "bla", updated_subsets)
+                test_scheme = scheme.Scheme(self.cfg, "Current Scheme", updated_subsets)
 
                 try:
                     log.info("Analyzing scheme with new subset split")
@@ -584,7 +585,7 @@ class KmeansGreedy(Analysis):
                 # all of the split subsets by replacing them with the split ones
                 updated_subsets[subset_index:subset_index+1] = split_subsets
 
-                test_scheme = scheme.Scheme(self.cfg, "bla", updated_subsets)
+                test_scheme = scheme.Scheme(self.cfg, "Current Scheme", updated_subsets)
 
                 try:
                     best_score = self.analyse_scheme(best_scheme)

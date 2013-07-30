@@ -82,7 +82,7 @@ def kmeans_split_subset(cfg, alignment, a_subset, tree_path, number_of_ks = 2):
 
     try:
         # Try to run the likelihood calc on this alignment, if it doesn't
-        # work, throw an error
+        # work, throw an error by returning 1 (better way to do this, Brett?)
         processor.get_likelihoods("GTRGAMMA", str(phylip_file), 
             str(tree_path))
     except PhylogenyProgramError as e:
@@ -234,6 +234,7 @@ def get_likelihood_list(cfg, phylip_file):
     phylip_file_split = os.path.split(phylip_file)
     processor = cfg.processor
     program_name = processor.program()
+
     # Figure out which program to use to calculate site likelihoods
     if program_name == 'phyml':
         phyml_lk_file = ("%s_phyml_lk_GTRGAMMA.txt" % phylip_file)
@@ -241,14 +242,14 @@ def get_likelihood_list(cfg, phylip_file):
         # function
         likelihood_list = processor.likelihood_parser(
             phyml_lk_file)[0]
+
     elif program_name == 'raxml':
-        # Once the os.path.split is fixed, will need to change some of the
-        # indexes into those lists
         subset_code = phylip_file_split[1].split(".")[0]
         raxml_lnl_file = os.path.join(phylip_file_split[0], 
             ("RAxML_perSiteLLs.%s_GTRGAMMA.txt" % subset_code))
         likelihood_list = processor.likelihood_parser(
             raxml_lnl_file)
+
     return likelihood_list
 
 
