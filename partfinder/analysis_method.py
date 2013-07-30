@@ -444,10 +444,14 @@ class KmeansAnalysisWrapper(Analysis):
         best_scheme = start_scheme
         subset_index = 0
 
+        processor = self.cfg.processor
+        alignment_path = self.filtered_alignment_path
+        tree_path = processor.make_tree_path(alignment_path)
+
         split_subsets = []
         for a_subset in start_scheme:
             how_many = kmeans.kmeans_wrapper(self.cfg, self.alignment, 
-                a_subset)
+                a_subset, tree_path)
             split_subsets += how_many
         split_scheme = scheme.Scheme(self.cfg, "split_scheme", split_subsets)
         best_score = self.analyse_scheme(best_scheme)
@@ -460,7 +464,7 @@ class KmeansAnalysisWrapper(Analysis):
         while subset_index < len(all_subsets):
             current_subset = all_subsets[subset_index]
             split_subsets = kmeans.kmeans_split_subset(self.cfg, 
-                self.alignment, current_subset)
+                self.alignment, current_subset, tree_path)
             print split_subsets
 
             if split_subsets == 1:
@@ -558,11 +562,14 @@ class KmeansGreedy(Analysis):
         best_scheme = start_scheme
         subset_index = 0
         all_subsets = list(best_scheme.subsets)
+        processor = self.cfg.processor
+        alignment_path = self.filtered_alignment_path
+        tree_path = processor.make_tree_path(alignment_path)
 
 
         while subset_index < len(all_subsets):
             current_subset = all_subsets[subset_index]
-            split_subsets = kmeans.kmeans_split_subset(self.cfg, self.alignment, current_subset)
+            split_subsets = kmeans.kmeans_split_subset(self.cfg, self.alignment, current_subset, tree_path)
 
             if split_subsets == 1:
                 subset_index += 1
