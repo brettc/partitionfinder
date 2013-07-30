@@ -140,15 +140,14 @@ def kmeans_wrapper(cfg, alignment, a_subset, max_ks = 10):
     print processor
 
     try:
-        # TO DO: still need to make this  call suitable to call RAxML as well
-        processor.get_likelihoods("GTR", str(phylip_file), 
-            "./analysis/start_tree/filtered_source.phy_phyml_tree.txt")
+        processor.get_likelihoods("GTRGAMMA", str(phylip_file), 
+            "./analysis/start_tree/topology_tree.phy")
     except Exception as e:
         log.info("Total bummer: %s" % e)
         return 1
 
     likelihood_list = get_likelihood_list(cfg, phylip_file)
-    
+
     count = 1
     sum_wss = 0
     new_wss = 0
@@ -199,12 +198,8 @@ def ss(list_of_likelihoods):
     of the list
     '''
     sums_of_squares = 0
-    # Need to log transform the data as you do during kmeans
-    log_list_of_likelihoods = []
+    mean_likelihood = sum(list_of_likelihoods)/len(list_of_likelihoods)
     for i in list_of_likelihoods:
-        log_list_of_likelihoods.append(logarithm(float(i)))
-    mean_likelihood = sum(log_list_of_likelihoods)/len(log_list_of_likelihoods)
-    for i in log_list_of_likelihoods:
         sums_of_squares += (i - mean_likelihood)**2
     return sums_of_squares
 
