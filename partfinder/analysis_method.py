@@ -339,12 +339,15 @@ class KmeansAnalysis(Analysis):
         best_scheme = start_scheme
         subset_index = 0
         all_subsets = list(best_scheme.subsets)
+        processor = self.cfg.processor
+        alignment_path = self.filtered_alignment_path
+        tree_path = processor.make_tree_path(alignment_path)
 
 
         while subset_index < len(all_subsets):
             current_subset = all_subsets[subset_index]
             split_subsets = kmeans.kmeans_split_subset(self.cfg, 
-                self.alignment, current_subset)
+                self.alignment, current_subset, tree_path)
 
             # kmeans_split_subset() will return a 1 if there is a subset of less 
             # than 2 sites in this case we just move on to the next step and 
