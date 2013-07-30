@@ -350,7 +350,7 @@ class KmeansAnalysis(Analysis):
             # than 2 sites in this case we just move on to the next step and 
             # don't worry about splitting that subset.
             if split_subsets == 1:
-                log.info("Subset split resulted in a subset of less than 2," + 
+                log.error("Subset split resulted in a subset of less than 2," + 
                     " we will move to the next subset")
                 subset_index += 1
 
@@ -387,7 +387,7 @@ class KmeansAnalysis(Analysis):
                 # In PhyML or RAxML, it is likely because of no alignment patterns,
                 # catch that and move to the next subset without splitting.
                 except PhylogenyProgramError:
-                    log.info("Phylogeny program generated an error so this" +
+                    log.error("Phylogeny program generated an error so this" +
                         " subset was not split, see error above")
                     subset_index += 1
 
@@ -502,7 +502,7 @@ class KmeansAnalysisWrapper(Analysis):
                 # same alignment patterns. This will move the analysis along
                 # without splitting that subset if that happens.
                 except PhylogenyProgramError:
-                    log.info("Phylogeny program generated an error so this " +
+                    log.error("Phylogeny program generated an error so this " +
                         "subset was not split, see error above")
                     subset_index += 1
 
