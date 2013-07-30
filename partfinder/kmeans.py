@@ -115,7 +115,7 @@ def kmeans_split_subset(cfg, alignment, a_subset, tree_path, number_of_ks = 2):
     new_subsets = subset_ops.split_subset(a_subset, list_of_sites)
     return new_subsets
 
-def kmeans_wrapper(cfg, alignment, a_subset, max_ks = 10):
+def kmeans_wrapper(cfg, alignment, a_subset, tree_path, max_ks = 10):
     '''This function performs kmeans on
     a specified number of different k's on a dictionary parsed
     from a *_phyml_lk.txt file. It then calculates
@@ -140,7 +140,7 @@ def kmeans_wrapper(cfg, alignment, a_subset, max_ks = 10):
 
     try:
         processor.get_likelihoods("GTRGAMMA", str(phylip_file), 
-            "./analysis/start_tree/topology_tree.phy")
+            str(tree_path))
     except Exception as e:
         log.error("Total bummer: %s" % e)
         return 1
