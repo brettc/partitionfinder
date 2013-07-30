@@ -70,8 +70,8 @@ def kmeans(likelihood_list, number_of_ks = 2, n_jobs = 1):
 
 def kmeans_split_subset(cfg, alignment, a_subset, number_of_ks = 2):
     """Takes a subset and number of k's and returns
-    subsets for however many k's are specified"""
-    # pass
+    subsets for however many k's are specified
+    """
     a_subset.make_alignment(cfg, alignment)
     phylip_file = a_subset.alignment_path
 
@@ -79,15 +79,15 @@ def kmeans_split_subset(cfg, alignment, a_subset, number_of_ks = 2):
     # modfying of the commands in the analyse function
     processor = cfg.processor
     program_name = processor.program()
+    tree_path = processor.make_tree_path(phylip_file)
 
     try:
-        # TO DO: still need to make this  call suitable to call RAxML as well,
-        # use os.path.join for the items with a slash to that it works on windows
-        # Also, which starting tree should I use here? BLTREE?
+        # Try to run the likelihood calc on this alignment, if it doesn't
+        # work, throw an error
         processor.get_likelihoods("GTRGAMMA", str(phylip_file), 
-            "./analysis/start_tree/topology_tree.phy")
+            str(tree_path))
     except PhylogenyProgramError as e:
-        log.info("There was a phylogeny program error when analyzing this" +
+        log.error("There was a phylogeny program error when analyzing this " +
         "subset, will move onto next subset")
         return 1
 
@@ -143,7 +143,7 @@ def kmeans_wrapper(cfg, alignment, a_subset, max_ks = 10):
         processor.get_likelihoods("GTRGAMMA", str(phylip_file), 
             "./analysis/start_tree/topology_tree.phy")
     except Exception as e:
-        log.info("Total bummer: %s" % e)
+        log.error("Total bummer: %s" % e)
         return 1
 
     likelihood_list = get_likelihood_list(cfg, phylip_file)
