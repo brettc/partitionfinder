@@ -68,7 +68,7 @@ def kmeans(likelihood_list, number_of_ks = 2, n_jobs = 1):
     # Return centroids and dictionary with lists of sites for each k
     return centroid_list, dict(cluster_dict)
 
-def kmeans_split_subset(cfg, alignment, a_subset, number_of_ks = 2):
+def kmeans_split_subset(cfg, alignment, a_subset, tree_path, number_of_ks = 2):
     """Takes a subset and number of k's and returns
     subsets for however many k's are specified
     """
@@ -79,7 +79,6 @@ def kmeans_split_subset(cfg, alignment, a_subset, number_of_ks = 2):
     # modfying of the commands in the analyse function
     processor = cfg.processor
     program_name = processor.program()
-    tree_path = processor.make_tree_path(phylip_file)
 
     try:
         # Try to run the likelihood calc on this alignment, if it doesn't
