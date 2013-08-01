@@ -57,6 +57,32 @@ class UserAnalysis(Analysis):
             raise AnalysisError
 
         self.cfg.progress.end()
+
+                # Quick fix for printing out a RAxML style partition definition.
+        new_file = open("./analysis/RAxML_definition.txt", "a")
+        subset_number = 0
+        for each_s in self.results.best_scheme:
+            list_of_sites = each_s.columns
+            big_list = []
+            # Took this solution for grouping consecutive sites from 
+            # http://stackoverflow.com/questions/2361945/detecting-consecutive-integers-in-a-list
+            for k, g in itertools.groupby(enumerate(list_of_sites), 
+                lambda (i,x):i-x):
+                consec_sites = map(operator.itemgetter(1), g)
+                if len(consec_sites) > 2:
+                    the_range = (str(min(consec_sites) + 1) + "-" + 
+                        str(max(consec_sites) + 1))
+                    big_list.append(the_range)
+                else:
+                    consec_sites = [x + 1 for x in consec_sites]
+                    big_list += consec_sites
+            big_list = str(big_list).strip("[]")
+            big_list = big_list.translate(None, "'")
+            new_file.write("DNA, Subset%s = %s" % (subset_number, big_list))
+            new_file.write("\n")
+            subset_number += 1
+        new_file.close()
+        
         self.cfg.reporter.write_best_scheme(self.results)
 
 
@@ -355,7 +381,8 @@ class KmeansAnalysis(Analysis):
             # don't worry about splitting that subset.
             if split_subsets == 1:
                 log.error("Subset split resulted in a subset of less than 2," + 
-                    " we will move to the next subset")
+                    " since we cannot split the subset, we will move to the" +
+                    " next subset")
                 subset_index += 1
 
             else:
@@ -368,7 +395,8 @@ class KmeansAnalysis(Analysis):
                 # all of the split subsets by replacing them with the split ones
                 updated_subsets[subset_index:subset_index+1] = split_subsets
 
-                test_scheme = scheme.Scheme(self.cfg, "Current Scheme", updated_subsets)
+                test_scheme = scheme.Scheme(self.cfg, "Current Scheme", 
+                    updated_subsets)
 
                 try:
                     best_score = self.analyse_scheme(best_scheme)
@@ -377,8 +405,8 @@ class KmeansAnalysis(Analysis):
                     log.info("Current best score is: " + str(best_score))
                     log.info("Current new score is: " + str(new_score))
                     if new_score.score < best_score.score:
-                        log.info("New score " + str(subset_index) + 
-                            " is better and will be set to best score")
+                        log.info("New score is better and will be set to " + 
+                            "best score")
                         best_scheme = test_scheme
 
                         # Change this to the one with split subsets in it. Note that
