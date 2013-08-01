@@ -90,8 +90,7 @@ def kmeans_split_subset(cfg, alignment, a_subset, tree_path, number_of_ks = 2):
         "subset, will move onto next subset")
         return 1
 
-    # Call processor to calculate site likelihoods and parse them
-    # from the output file.
+    # Call processor to parse them likelihoods from the output file.
     likelihood_list = get_likelihood_list(cfg, phylip_file)
 
     # Perform kmeans clustering on the likelihoods
@@ -107,7 +106,8 @@ def kmeans_split_subset(cfg, alignment, a_subset, tree_path, number_of_ks = 2):
     # clusters makes much of a difference during testing
     if number_of_ks == 2:
         for i in split_categories:
-            print len(split_categories[i])
+            log.debug("Split subset is " + str(len(split_categories[i])) +
+                " characters long")
             if len(split_categories[i]) < 2:
                 return 1
 
