@@ -1,5 +1,6 @@
 from phyml import likelihood_parser
 from math import log
+import py.test
 
 phyml_file_4 = "free_rates_4_cat.phy_phyml_lk.txt"
 phyml_file_8 = "gamma_8_cat.phy_phyml_lk.txt"
@@ -52,3 +53,7 @@ def test_1_cat():
         [log(0.00728218)], [log(0.0569829)], [log(0.0580009)], [log(0.0565097)], \
         [log(0.0565097)], [log(0.0565097)], [log(0.00722309)]]
     assert likelihood_parser(phyml_file_likelihoods) == likelihood_list
+
+def test_error():
+    with py.test.raises(IOError):
+        likelihood_parser("no_file_name")
