@@ -350,6 +350,9 @@ def likelihood_parser(phyml_lk_file):
         # Make a list of site log ikelihoods
         likelihood_list = [[logarithm(float(site[headers[1]]))] for site in list_of_dicts]
 
+        # Make a rate list
+        rate_list = [[(float(site[headers[len(headers) - 3]]))] for site in list_of_dicts]
+
         # Now make a list of lists of site likelihoods under different 
         # rate categories
         lk_rate_list = []
@@ -364,7 +367,7 @@ def likelihood_parser(phyml_lk_file):
 
         # Return both the list of site likelihoods and the list of lists of
         # likelihoods under different rate categories
-        return likelihood_list, lk_rate_list
+        return likelihood_list, lk_rate_list, rate_list
 
 program_name = "phyml"
 
