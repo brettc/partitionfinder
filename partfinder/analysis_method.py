@@ -344,6 +344,7 @@ class KmeansAnalysis(Analysis):
         processor = self.cfg.processor
         alignment_path = self.filtered_alignment_path
         tree_path = processor.make_tree_path(alignment_path)
+        best_score = self.analyse_scheme(best_scheme)
 
 
         while subset_index < len(all_subsets):
@@ -374,22 +375,7 @@ class KmeansAnalysis(Analysis):
                     updated_subsets)
 
                 try:
-                    best_score = self.analyse_scheme(best_scheme)
                     new_score = self.analyse_scheme(test_scheme)
-
-                    log.info("Current best score is: " + str(best_score))
-                    log.info("Current new score is: " + str(new_score))
-                    if new_score.score < best_score.score:
-                        log.info("New score is better and will be set to " + 
-                            "best score")
-                        best_scheme = test_scheme
-
-                        # Change this to the one with split subsets in it. Note that
-                        # the subset_index now points a NEW subset, one that was split
-                        all_subsets = updated_subsets
-                    else:
-                        # Move to the next subset in the all_subsets list
-                        subset_index += 1
 
                 # In PhyML or RAxML, it is likely because of no alignment patterns,
                 # catch that and move to the next subset without splitting.
@@ -398,6 +384,21 @@ class KmeansAnalysis(Analysis):
                 except PhylogenyProgramError:
                     log.error("Phylogeny program generated an error so this" +
                         " subset was not split, see error above")
+                    subset_index += 1
+
+                log.info("Current best score is: " + str(best_score))
+                log.info("Current new score is: " + str(new_score))
+                if new_score.score < best_score.score:
+                    log.info("New score is better and will be set to " + 
+                        "best score")
+                    best_scheme = test_scheme
+                    best_score = new_score
+
+                    # Change this to the one with split subsets in it. Note that
+                    # the subset_index now points a NEW subset, one that was split
+                    all_subsets = updated_subsets
+                else:
+                    # Move to the next subset in the all_subsets list
                     subset_index += 1
         self.cfg.reporter.write_best_scheme(self.results)
 
@@ -445,7 +446,6 @@ class KmeansAnalysisWrapper(Analysis):
             current_subset = all_subsets[subset_index]
             split_subsets = kmeans.kmeans_split_subset(self.cfg, 
                 self.alignment, current_subset, tree_path)
-            print split_subsets
 
             if split_subsets == 1:
                 log.info(
