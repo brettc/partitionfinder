@@ -5,7 +5,7 @@ dat <- read.csv("~/Documents/Projects_Current/partitionfinder/docs/downloadstats
 dat.org <- dat
 
 #the version changes in march and may need to be fixed up
-dat <- dat[,-c(4, 5)]
+dat <- dat[,-c(4, 5, 6)]
 
 dat <- aggregate(. ~ date, data=dat, FUN=sum)
 
