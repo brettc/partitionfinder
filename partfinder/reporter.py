@@ -154,39 +154,6 @@ class TextReporter(object):
             output.write("\n")
             subset_number += 1
 
-        # for sub in sorted_subsets:
-
-            # desc = {}
-            # names = []
-            # for part in sub:
-                # names.append(part.name)
-                # for subpart in part.description:  # loop through each sub-part of the partition
-                    # desc[subpart[0]] = subpart
-
-            # # Pretty print the sites in the scheme
-            # desc_starts = desc.keys()
-            # desc_starts.sort()
-            # parts = []
-            # for key in desc_starts:
-                # part = desc[key]
-                # if part[2] == 1:
-                    # text = "%s-%s" % (part[0], part[1])
-                # else:
-                    # text = "%s-%s\\%s" % tuple(part)
-                # parts.append(text)
-            # parts = ', '.join(parts)
-
-            # if self.cfg.datatype == "DNA":
-                # model = "DNA"
-            # elif self.cfg.datatype == "protein":
-                # model = get_raxml_protein_modelstring(sub.best_model)
-            # else:
-                # raise RuntimeError
-
-            # line = "%s, p%s = %s\n" % (model, number, parts)
-            # output.write(line)
-
-            # number += 1
 
     def write_best_scheme(self, result):
         pth = os.path.join(self.cfg.output_path, 'best_scheme.txt')
