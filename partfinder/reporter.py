@@ -19,6 +19,8 @@ import logging
 log = logging.getLogger("reporter")
 
 import os
+import itertools
+import operator
 
 scheme_header_template = "%-18s: %s\n"
 scheme_subset_template = "%-6s | %-10s | %-30s | %-30s | %-40s\n"
@@ -121,6 +123,37 @@ class TextReporter(object):
         from raxml_models import get_raxml_protein_modelstring
         output.write("\n\nRaxML-style partition definitions\n")
         number = 1
+
+        subset_number = 0
+        for each_s in sorted_subsets:
+            list_of_sites = each_s.columns
+            big_list = []
+            # Took this solution for grouping consecutive sites from 
+            # http://stackoverflow.com/questions/2361945/detecting-consecutive-integers-in-a-list
+            for k, g in itertools.groupby(enumerate(list_of_sites), 
+                lambda (i,x):i-x):
+                consec_sites = map(operator.itemgetter(1), g)
+                if len(consec_sites) > 2:
+                    the_range = (str(min(consec_sites) + 1) + "-" + 
+                        str(max(consec_sites) + 1))
+                    big_list.append(the_range)
+                else:
+                    consec_sites = [x + 1 for x in consec_sites]
+                    big_list += consec_sites
+            big_list = str(big_list).strip("[]")
+            big_list = big_list.translate(None, "'")
+
+            if self.cfg.datatype == "DNA":
+                model = 'DNA'
+            elif self.cfg.datatype == "protein":
+                model = get_raxml_protein_modelstring(each_s.best_model)
+            else:
+                raise RuntimeError
+
+            output.write("%s, Subset%s = %s" % (model, subset_number, big_list))
+            output.write("\n")
+            subset_number += 1
+
         # for sub in sorted_subsets:
 
             # desc = {}
