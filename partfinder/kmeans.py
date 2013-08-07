@@ -1,14 +1,8 @@
+'''functions for k-means splitting'''
 
 import time
-import sys
-import re
 import os
-# import util
-import subprocess
-import shlex
-import csv
 
-from math import log as logarithm
 import numpy as np
 from sklearn.preprocessing import scale
 from sklearn.cluster import KMeans
@@ -22,7 +16,7 @@ import subset_ops
 
 # You can run kmeans in parallel, specify n_jobs as -1 and it will run
 # on all cores available.
-def kmeans(likelihood_list, number_of_ks = 2, n_jobs = 1):
+def kmeans(likelihood_list, number_of_ks=2, n_jobs=1):
     '''Take as input a dictionary made up of site numbers as keys
     and lists of rates as values, performs k-means clustering on
     sites and returns k centroids and a dictionary with k's as keys
@@ -40,8 +34,8 @@ def kmeans(likelihood_list, number_of_ks = 2, n_jobs = 1):
 
     # Call scikit_learn's k-means, use "k-means++" to find centroids
     # kmeans_out = KMeans(init='k-means++', n_init = 100)
-    kmeans_out = KMeans(init='k-means++', n_clusters = number_of_ks,
-        n_init = 100)
+    kmeans_out = KMeans(init='k-means++', n_clusters=number_of_ks,
+            n_init=100, n_jobs=n_jobs)
     # Perform k-means clustering on the array of site likelihoods
     kmeans_out.fit(array)
 
@@ -49,7 +43,7 @@ def kmeans(likelihood_list, number_of_ks = 2, n_jobs = 1):
     centroids = kmeans_out.cluster_centers_
     # Add all centroids to a list to return
     centroid_list = [list(centroid) for centroid in centroids]
-    
+
     # Retrieve a list with the cluster number for each site
     rate_categories = kmeans_out.labels_
     rate_categories = list(rate_categories)
@@ -62,8 +56,8 @@ def kmeans(likelihood_list, number_of_ks = 2, n_jobs = 1):
         cluster_dict[rate_categories[num]].append(num + 1)
 
     stop = time.clock()
-    time_taken = "k-means splitting complete"
-    log.info(time_taken)
+    time_taken = "k-means splitting took %s seconds" % (stop - start)
+    log.debug(time_taken)
 
     # Return centroids and dictionary with lists of sites for each k
     return centroid_list, dict(cluster_dict)
@@ -82,17 +76,16 @@ def kmeans_split_subset(cfg, alignment, a_subset, tree_path, number_of_ks = 2):
             "it cannot be split by kmeans")
         return 1
 
-    # Add option to output likelihoods, *raxml version takes more 
+    # Add option to output likelihoods, *raxml version takes more
     # modfying of the commands in the analyse function
     processor = cfg.processor
-    program_name = processor.program()
 
     try:
         # Try to run the likelihood calc on this alignment, if it doesn't
         # work, throw an error by returning 1 (better way to do this, Brett?)
-        processor.get_likelihoods("GTRGAMMA", str(phylip_file), 
+        processor.get_likelihoods("GTRGAMMA", str(phylip_file),
             str(tree_path))
-    except PhylogenyProgramError as e:
+    except PhylogenyProgramError:
         log.error("There was a phylogeny program error when analyzing this " +
         "subset, will move onto next subset")
         return 1
@@ -101,9 +94,9 @@ def kmeans_split_subset(cfg, alignment, a_subset, tree_path, number_of_ks = 2):
     likelihood_list = get_likelihood_list(cfg, phylip_file)
 
     # Perform kmeans clustering on the likelihoods
-    split_categories = kmeans(likelihood_list, 
+    split_categories = kmeans(likelihood_list,
         number_of_ks)[1]
-    
+
     list_of_sites = []
     for k in split_categories:
         list_of_sites.append(split_categories[k])
@@ -140,13 +133,13 @@ def kmeans_wrapper(cfg, alignment, a_subset, tree_path, max_ks = 10):
     a_subset.make_alignment(cfg, alignment)
     phylip_file = a_subset.alignment_path
 
-    # Add option to output likelihoods, *raxml version takes more 
+    # Add option to output likelihoods, *raxml version takes more
     # modfying of the commands in the analyse function
     processor = cfg.processor
     print processor
 
     try:
-        processor.get_likelihoods("GTRGAMMA", str(phylip_file), 
+        processor.get_likelihoods("GTRGAMMA", str(phylip_file),
             str(tree_path))
     except Exception as e:
         log.error("Total bummer: %s" % e)
@@ -155,18 +148,18 @@ def kmeans_wrapper(cfg, alignment, a_subset, tree_path, max_ks = 10):
     likelihood_list = get_likelihood_list(cfg, phylip_file)
 
     count = 1
-    sum_wss = 0
     new_wss = 0
     list_of_wss = []
     # Calculate a bunch of kmeans on however many max_ks are determined
     for i in range(max_ks):
         # Run kmeans with each count
         site_categories = kmeans(likelihood_list, number_of_ks = count)[1]
-        new_likelihood_lists = make_likelihood_list(likelihood_list, site_categories)
+        new_likelihood_lists = make_likelihood_list(likelihood_list,
+            site_categories)
         # Set previous wss
         previous_wss = new_wss
         # Calculate new wss
-        new_wss = wss(new_likelihood_lists)
+        new_wss = within_sum_of_squares(new_likelihood_lists)
         list_of_wss.append(new_wss)
         # Keep the first wss value
         if count == 1:
@@ -199,7 +192,7 @@ def kmeans_wrapper(cfg, alignment, a_subset, tree_path, max_ks = 10):
     new_subsets = subset_ops.split_subset(a_subset, list_of_sites)
     return new_subsets
 
-def ss(list_of_likelihoods):
+def sum_of_squares(list_of_likelihoods):
     '''Input a list of likelihoods, and returns the sum of squares
     of the list
     '''
@@ -209,15 +202,15 @@ def ss(list_of_likelihoods):
         sums_of_squares += (i - mean_likelihood)**2
     return sums_of_squares
 
-def wss(likelihood_lists):
+def within_sum_of_squares(likelihood_lists):
     '''Inputs a list that contains lists of likelihoods from different
     clusters, outputs the within sum of squares
     '''
-    within_sum_of_squares = 0
-    # Call ss on each list to get global wss
+    wss = 0
+    # Call sum_of_squares on each list to get global wss
     for i in likelihood_lists:
-        within_sum_of_squares += ss(i)
-    return within_sum_of_squares
+        wss += sum_of_squares(i)
+    return wss
 
 def make_likelihood_list(likelihood_list, site_categories):
     '''Takes a likelihood_list and a dictionary with kmeans clusters
@@ -248,45 +241,15 @@ def get_likelihood_list(cfg, phylip_file):
         # Open the phyml output and parse for input into the kmeans
         # function
         likelihood_list = processor.likelihood_parser(
-            phyml_lk_file)[0]
+            phyml_lk_file)[2]
 
     elif program_name == 'raxml':
         subset_code = phylip_file_split[1].split(".")[0]
-        raxml_lnl_file = os.path.join(phylip_file_split[0], 
+        raxml_lnl_file = os.path.join(phylip_file_split[0],
             ("RAxML_perSiteLLs.%s_GTRGAMMA.txt" % subset_code))
         likelihood_list = processor.likelihood_parser(
             raxml_lnl_file)
 
     return likelihood_list
-
-
-
-if __name__ == "__main__":
-    # phylip_filename = sys.argv[1]
-    # start = time.clock()
-    # run_phyml("-i " + str(phylip_filename) + " -m GTR -o r --print_site_lnl -c 4")
-    # stop = time.clock()
-    # print "PhyML took " + str(stop-start) + " seconds!"
-    # phyml_lk_file = str(phylip_filename) + "_phyml_lk.txt"
-    # # rate_cat_likelhood_parser(phyml_lk_file)
-    # phyml_likelihood_parser(phyml_lk_file)
-    # likelihood_dictionary = phyml_likelihood_parser(phyml_lk_file)
-    # print kmeans(likelihood_dictionary[1], number_of_ks = 4)
-
-    # phylip_filename = sys.argv[1]
-    # outfile_command = "testing"
-    # run_raxml("-s " + str(phylip_filename) + " -m GTRGAMMA -n " + outfile_command + " -y -p 23456")
-    # outfile_command2 = "testing2"
-    # start = time.clock()
-    # run_raxml("-s " + str(phylip_filename) + " -m GTRGAMMA -n " + outfile_command2 + " -f g -p 23456 -z RAxML_parsimonyTree." + outfile_command)
-    # stop = time.clock()
-    # print "RAxML took " + str(stop-start) + " seconds!"
-    # likelihood_dict = raxml_likelihood_parser("RAxML_perSiteLLs." + outfile_command2)
-    # print kmeans(likelihood_dict, number_of_ks = 5)
-
-    phhml_lk_file = sys.argv[1]
-    likelihood_list = phyml_likelihood_parser(phyml_lk_file)
-    kmeans_wrapper(likelihood_list)
-
 
 
