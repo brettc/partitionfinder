@@ -44,7 +44,9 @@ from util import PhylogenyProgramError
 
 
 class PhymlError(PhylogenyProgramError):
-    pass
+    def __init__(self, stderr, stdout):
+        self.stderr = stderr
+        self.stdout = stdout
 
 def find_program():
     """Locate the binary ..."""
@@ -89,7 +91,7 @@ def run_phyml(command):
         log.error("Phyml output follows, in case it's helpful for finding the problem")
         log.error("%s", stdout)
         log.error("%s", stderr)
-        raise PhymlError
+        raise PhymlError(stdout, stderr)
 
 
 def dupfile(src, dst):
