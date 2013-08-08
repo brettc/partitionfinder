@@ -62,6 +62,7 @@ def kmeans(likelihood_list, number_of_ks=2, n_jobs=1):
     # Return centroids and dictionary with lists of sites for each k
     return centroid_list, dict(cluster_dict)
 
+
 def kmeans_split_subset(cfg, alignment, a_subset, tree_path, number_of_ks = 2):
     """Takes a subset and number of k's and returns
     subsets for however many k's are specified
@@ -85,10 +86,20 @@ def kmeans_split_subset(cfg, alignment, a_subset, tree_path, number_of_ks = 2):
         # work, throw an error by returning 1 (better way to do this, Brett?)
         processor.get_likelihoods("GTRGAMMA", str(phylip_file),
             str(tree_path))
-    except PhylogenyProgramError:
-        log.error("There was a phylogeny program error when analyzing this " +
-        "subset, will move onto next subset")
-        return 1
+    except PhylogenyProgramError as e:
+        error1 = ("Empirical base frequency for state number 0" + \
+            " is equal to zero in DNA data partition")
+        if e.stdout.find(error1) != -1:
+            log.error("Phylogeny program generated an error so" +
+            " this subset was not split, see error above")
+            subset_index += 1
+        elif e.stderr.find("1 patterns found") != -1:
+            log.error("Phylogeny program generated an error so" +
+            " this subset was not split, see error above")
+            subset_index += 1
+        # elif e.stdout.find("")
+        else:
+            raise PhylogenyProgramError
 
     # Call processor to parse them likelihoods from the output file.
     likelihood_list = get_likelihood_list(cfg, phylip_file)
@@ -114,6 +125,7 @@ def kmeans_split_subset(cfg, alignment, a_subset, tree_path, number_of_ks = 2):
     # Make the new subsets
     new_subsets = subset_ops.split_subset(a_subset, list_of_sites)
     return new_subsets
+
 
 def kmeans_wrapper(cfg, alignment, a_subset, tree_path, max_ks = 10):
     '''This function performs kmeans on
@@ -141,7 +153,7 @@ def kmeans_wrapper(cfg, alignment, a_subset, tree_path, max_ks = 10):
     try:
         processor.get_likelihoods("GTRGAMMA", str(phylip_file),
             str(tree_path))
-    except Exception as e:
+    except PhylogenyProgramError as e:
         log.error("Total bummer: %s" % e)
         return 1
 
@@ -192,6 +204,7 @@ def kmeans_wrapper(cfg, alignment, a_subset, tree_path, max_ks = 10):
     new_subsets = subset_ops.split_subset(a_subset, list_of_sites)
     return new_subsets
 
+
 def sum_of_squares(list_of_likelihoods):
     '''Input a list of likelihoods, and returns the sum of squares
     of the list
@@ -202,6 +215,7 @@ def sum_of_squares(list_of_likelihoods):
         sums_of_squares += (i - mean_likelihood)**2
     return sums_of_squares
 
+
 def within_sum_of_squares(likelihood_lists):
     '''Inputs a list that contains lists of likelihoods from different
     clusters, outputs the within sum of squares
@@ -211,6 +225,7 @@ def within_sum_of_squares(likelihood_lists):
     for i in likelihood_lists:
         wss += sum_of_squares(i)
     return wss
+
 
 def make_likelihood_list(likelihood_list, site_categories):
     '''Takes a likelihood_list and a dictionary with kmeans clusters
@@ -226,6 +241,7 @@ def make_likelihood_list(likelihood_list, site_categories):
             one_list.append(likelihood[0])
         rate_list.append(one_list)
     return rate_list
+
 
 def get_likelihood_list(cfg, phylip_file):
     '''Runs the appropriate processor to generate the site likelihood
@@ -251,5 +267,3 @@ def get_likelihood_list(cfg, phylip_file):
             raxml_lnl_file)
 
     return likelihood_list
-
-

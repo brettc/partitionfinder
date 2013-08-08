@@ -371,10 +371,20 @@ class KmeansAnalysis(Analysis):
                 # catch that and move to the next subset without splitting.
                 # ToDo: find where the error prints out and parse it to be sure that
                 # it is what we want to catch before allowing it to move forward.
-                except PhylogenyProgramError:
-                    log.error("Phylogeny program generated an error so this" +
-                         " subset was not split, see error above")
-                     subset_index += 1
+                except PhylogenyProgramError as e:
+                    error1 = ("Empirical base frequency for state number 0" + \
+                        " is equal to zero in DNA data partition")
+                    if e.stdout.find(error1) != -1:
+                        log.error("Phylogeny program generated an error so" +
+                        " this subset was not split, see error above")
+                        subset_index += 1
+                    elif e.stderr.find("1 patterns found") != -1:
+                        log.error("Phylogeny program generated an error so" +
+                        " this subset was not split, see error above")
+                        subset_index += 1
+                    # elif e.stdout.find("")
+                    else:
+                        raise PhylogenyProgramError
 
                 log.info("Current best score is: " + str(best_score))
                 log.info("Current new score is: " + str(new_score))
