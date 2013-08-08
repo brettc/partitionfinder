@@ -19,20 +19,13 @@
 import logging
 log = logging.getLogger("method")
 
-import os
 import math
 import scheme
-import algorithm
 import submodels
-import subset
 from analysis import Analysis, AnalysisError
 import neighbour
 import kmeans
-import raxml
-import phyml
-import subset_ops
 import itertools
-import operator
 
 from util import PhylogenyProgramError
 
@@ -322,10 +315,7 @@ class KmeansAnalysis(Analysis):
     def do_analysis(self):
         # Copied and pasted from greedy analysis
         partnum = len(self.cfg.user_subsets)
-        scheme_count = submodels.count_greedy_schemes(partnum)
-        subset_count = submodels.count_greedy_subsets(partnum)
-
-        self.cfg.progress.begin(scheme_count, subset_count)
+        self.cfg.progress.begin(1, 1)
 
         # Start with the most partitioned scheme
         start_description = range(partnum)
@@ -353,7 +343,7 @@ class KmeansAnalysis(Analysis):
                 self.alignment, current_subset, tree_path)
 
             # kmeans_split_subset() will return a 1 if there is a subset of less 
-            # than 2 sites in this case we just move on to the next step and 
+            # than 2 sites. In this case we just move on to the next step and 
             # don't worry about splitting that subset.
             if split_subsets == 1:
                 log.error("Subset split resulted in a subset of less than 2," + 
@@ -383,8 +373,8 @@ class KmeansAnalysis(Analysis):
                 # it is what we want to catch before allowing it to move forward.
                 except PhylogenyProgramError:
                     log.error("Phylogeny program generated an error so this" +
-                        " subset was not split, see error above")
-                    subset_index += 1
+                         " subset was not split, see error above")
+                     subset_index += 1
 
                 log.info("Current best score is: " + str(best_score))
                 log.info("Current new score is: " + str(new_score))
