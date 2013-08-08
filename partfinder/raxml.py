@@ -47,7 +47,9 @@ from util import PhylogenyProgramError
 
 
 class RaxmlError(PhylogenyProgramError):
-    pass
+    def __init__(self, stderr, stdout):
+        self.stderr = stderr
+        self.stdout = stdout
 
 
 def find_program():
@@ -96,7 +98,7 @@ def run_raxml(command):
         log.error("RAxML output follows, in case it's helpful for finding the problem")
         log.error("%s", stdout)
         log.error("%s", stderr)
-        raise RaxmlError
+        raise RaxmlError(stderr, stdout)
 
 
 def dupfile(src, dst):
