@@ -87,16 +87,16 @@ def kmeans_split_subset(cfg, alignment, a_subset, tree_path, number_of_ks = 2):
         processor.get_likelihoods("GTRGAMMA", str(phylip_file),
             str(tree_path))
     except PhylogenyProgramError as e:
-        error1 = ("Empirical base frequency for state number 0" + \
+        error1 = ("Empirical base frequency for state number 0" + 
             " is equal to zero in DNA data partition")
         if e.stdout.find(error1) != -1:
             log.error("Phylogeny program generated an error so" +
             " this subset was not split, see error above")
-            subset_index += 1
+            return 1
         elif e.stderr.find("1 patterns found") != -1:
             log.error("Phylogeny program generated an error so" +
             " this subset was not split, see error above")
-            subset_index += 1
+            return 1
         # elif e.stdout.find("")
         else:
             raise PhylogenyProgramError
