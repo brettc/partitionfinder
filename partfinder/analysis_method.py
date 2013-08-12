@@ -369,10 +369,8 @@ class KmeansAnalysis(Analysis):
 
                 # In PhyML or RAxML, it is likely because of no alignment patterns,
                 # catch that and move to the next subset without splitting.
-                # ToDo: find where the error prints out and parse it to be sure that
-                # it is what we want to catch before allowing it to move forward.
                 except PhylogenyProgramError as e:
-                    error1 = ("Empirical base frequency for state number 0" + \
+                    error1 = ("Empirical base frequency for state number 0" +
                         " is equal to zero in DNA data partition")
                     if e.stdout.find(error1) != -1:
                         log.error("Phylogeny program generated an error so" +
