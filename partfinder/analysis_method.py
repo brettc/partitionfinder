@@ -372,15 +372,19 @@ class KmeansAnalysis(Analysis):
                 except PhylogenyProgramError as e:
                     error1 = ("Empirical base frequency for state number 0" +
                         " is equal to zero in DNA data partition")
+                    error2 = ("consists entirely of undetermined values")
                     if e.stdout.find(error1) != -1:
                         log.error("Phylogeny program generated an error so" +
-                        " this subset was not split, see error above")
+                            " this subset was not split, see error above")
                         subset_index += 1
                     elif e.stderr.find("1 patterns found") != -1:
                         log.error("Phylogeny program generated an error so" +
-                        " this subset was not split, see error above")
+                            " this subset was not split, see error above")
                         subset_index += 1
-                    # elif e.stdout.find("")
+                    elif e.stdout.find(error2) != -1:
+                        log.error("Phylogeny program generated an error so" +
+                            "this subset was not split, see error above")
+                        subset_index += 1
                     else:
                         raise PhylogenyProgramError
 

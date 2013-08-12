@@ -83,7 +83,7 @@ def kmeans_split_subset(cfg, alignment, a_subset, tree_path, number_of_ks = 2):
 
     try:
         # Try to run the likelihood calc on this alignment, if it doesn't
-        # work, throw an error by returning 1 (better way to do this, Brett?)
+        # work, throw an error by returning 1
         processor.get_likelihoods("GTRGAMMA", str(phylip_file),
             str(tree_path))
     except PhylogenyProgramError as e:
@@ -91,13 +91,16 @@ def kmeans_split_subset(cfg, alignment, a_subset, tree_path, number_of_ks = 2):
             " is equal to zero in DNA data partition")
         if e.stdout.find(error1) != -1:
             log.error("Phylogeny program generated an error so" +
-            " this subset was not split, see error above")
+                " this subset was not split, see error above")
             return 1
         elif e.stderr.find("1 patterns found") != -1:
             log.error("Phylogeny program generated an error so" +
-            " this subset was not split, see error above")
+                " this subset was not split, see error above")
             return 1
-        # elif e.stdout.find("")
+        elif e.stdout.find("consists entirely of undetermined values") != -1:
+            log.error("Phylogeny program generated an error so" +
+                " this subset was not split, see error above")
+            return 1
         else:
             raise PhylogenyProgramError
 
