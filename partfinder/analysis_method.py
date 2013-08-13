@@ -339,11 +339,16 @@ class KmeansAnalysis(Analysis):
 
         while subset_index < len(all_subsets):
             current_subset = all_subsets[subset_index]
+            # First check if the subset is large enough to split, if it isn't,
+            # just go to the next subset
+            if current_subset.columns == 1:
+                subset_index += 1
+                continue
             split_subsets = kmeans.kmeans_split_subset(self.cfg, 
                 self.alignment, current_subset, tree_path)
 
-            # kmeans_split_subset() will return a 1 if there is a subset of less 
-            # than 2 sites. In this case we just move on to the next step and 
+            # kmeans_split_subset() will return a 1 if there is a subset of less
+            # than 2 sites. In this case we just move on to the next step and
             # don't worry about splitting that subset.
             if split_subsets == 1:
                 log.error("Subset split resulted in a subset of less than 2," + 
