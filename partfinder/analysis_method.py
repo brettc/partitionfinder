@@ -341,13 +341,9 @@ class KmeansAnalysis(Analysis):
             current_subset = all_subsets[subset_index]
             # First check if the subset is large enough to split, if it isn't,
             # just go to the next subset
-<<<<<<< HEAD
-            if current_subset.columns == 1:
-=======
             if len(current_subset.columns) == 1:
                 log.debug("Subset consists of only one site, we will move to" +
                     " the next")
->>>>>>> dummy_subset
                 subset_index += 1
                 continue
             split_subsets = kmeans.kmeans_split_subset(self.cfg, 
