@@ -70,13 +70,6 @@ def kmeans_split_subset(cfg, alignment, a_subset, tree_path, number_of_ks = 2):
     a_subset.make_alignment(cfg, alignment)
     phylip_file = a_subset.alignment_path
 
-    # This check will catch user-defined datablocks of 1 and prevent
-    # the error from scikit-learn's kmeans
-    if len(a_subset.columns) < 2:
-        log.error("This subset has only 1 nucleotide, " +
-            "it cannot be split by kmeans")
-        return 1
-
     # Add option to output likelihoods, *raxml version takes more
     # modfying of the commands in the analyse function
     processor = cfg.processor
