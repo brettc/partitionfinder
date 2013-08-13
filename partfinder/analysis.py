@@ -159,6 +159,7 @@ class Analysis(object):
         log.info("Starting tree with branch lengths is here: %s", self.tree_path)
 
     def run_task(self, m, sub):
+        analysis_error = None
         # This bit should run in parallel (forking the processor)
         self.cfg.processor.analyse(
             m,
