@@ -187,11 +187,10 @@ class Analysis(object):
                 sub.unanalysable = True
                 print sub.unanalysable
                 sub.fabricate_result(self.cfg, m)
-                print "what the hell?"
+                
             # Try finalising, then the result will get written out earlier...
             sub.finalise(self.cfg)
         finally:
-            print "whatever"
             self.lock.release()
 
     def add_tasks_for_sub(self, tasks, sub):
