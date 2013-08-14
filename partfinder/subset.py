@@ -250,6 +250,7 @@ class Subset(object):
         output = open(pth, 'rb').read()
         try:
             result = cfg.processor.parse(output, cfg.datatype)
+            print str(result)
             self.add_result(cfg, model, result)
             # Remove the current model from remaining ones
             self.models_not_done.remove(model)
@@ -279,11 +280,11 @@ class Subset(object):
         # will have to mimic the results from the processor.
         the_processor = cfg.processor.program()
         if the_processor == 'raxml':
-            the_processor = 'RAxML'
+            result = "RaxmlResult(lnl:0, tree_size:4.242472, secs:0.011164, alphs:135.946712)"
         elif the_processor == 'phyml':
-            the_processor = 'PhyML'
+            result = "PhymlResult(lnl:0, tree_size:2.91238, secs:0)"
         print the_processor
-        result = 0 
+
         self.status = DONE
         self.models_not_done.remove(model)
 
