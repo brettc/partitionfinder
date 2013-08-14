@@ -347,9 +347,7 @@ class KmeansAnalysis(Analysis):
                 subset_index += 1
                 continue
 
-            print "Yes!"
-            print current_subset.unanalysable
-            if current_subset.unanalysable == True:
+            if current_subset.unanalysable:
                 print "unanalysable"
                 subset_index += 1
                 continue
@@ -385,6 +383,11 @@ class KmeansAnalysis(Analysis):
             else:
                 # Move to the next subset in the all_subsets list
                 subset_index += 1
+
+        for s in best_scheme:
+            if s.unanalysable:
+                pass
+
         self.cfg.reporter.write_best_scheme(self.results)
 
 
