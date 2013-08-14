@@ -347,7 +347,9 @@ class KmeansAnalysis(Analysis):
                 subset_index += 1
                 continue
 
-            if current_subset.unanalysable:
+            print "Yes!"
+            print current_subset.unanalysable
+            if current_subset.unanalysable == True:
                 print "unanalysable"
                 subset_index += 1
                 continue
@@ -355,66 +357,34 @@ class KmeansAnalysis(Analysis):
             split_subsets = kmeans.kmeans_split_subset(self.cfg, 
                 self.alignment, current_subset, tree_path)
 
-            # kmeans_split_subset() will return a 1 if there is a subset of less 
-            # than 2 sites. In this case we just move on to the next step and 
-            # don't worry about splitting that subset.
-            if split_subsets == 1:
-                log.error("Subset split resulted in a subset of less than 2," + 
-                    " since we cannot split the subset, we will move to the" +
-                    " next subset")
-                subset_index += 1
+            # Take a copy
+            updated_subsets = all_subsets[:]
 
+            # Replace the current one with the split one
+            # Google "slice assignments"
+            # This list is the key to avoiding recursion. It expands to contain
+            # all of the split subsets by replacing them with the split ones
+            updated_subsets[subset_index:subset_index+1] = split_subsets
+
+            test_scheme = scheme.Scheme(self.cfg, "Current Scheme", 
+                updated_subsets)
+
+            new_score = self.analyse_scheme(test_scheme)
+
+            log.info("Current best score is: " + str(best_score))
+            log.info("Current new score is: " + str(new_score))
+            if new_score.score < best_score.score:
+                log.info("New score is better and will be set to " + 
+                    "best score")
+                best_scheme = test_scheme
+                best_score = new_score
+
+                # Change this to the one with split subsets in it. Note that
+                # the subset_index now points a NEW subset, one that was split
+                all_subsets = updated_subsets
             else:
-                # Take a copy
-                updated_subsets = all_subsets[:]
-
-                # Replace the current one with the split one
-                # Google "slice assignments"
-                # This list is the key to avoiding recursion. It expands to contain
-                # all of the split subsets by replacing them with the split ones
-                updated_subsets[subset_index:subset_index+1] = split_subsets
-
-                test_scheme = scheme.Scheme(self.cfg, "Current Scheme", 
-                    updated_subsets)
-
-                try:
-                    new_score = self.analyse_scheme(test_scheme)
-
-                # In PhyML or RAxML, it is likely because of no alignment patterns,
-                # catch that and move to the next subset without splitting.
-                except PhylogenyProgramError as e:
-                    error1 = ("Empirical base frequency for state number 0" +
-                        " is equal to zero in DNA data partition")
-                    error2 = ("consists entirely of undetermined values")
-                    if e.stdout.find(error1) != -1:
-                        log.error("Phylogeny program generated an error so" +
-                            " this subset was not split, see error above")
-                        subset_index += 1
-                    elif e.stderr.find("1 patterns found") != -1:
-                        log.error("Phylogeny program generated an error so" +
-                            " this subset was not split, see error above")
-                        subset_index += 1
-                    elif e.stdout.find(error2) != -1:
-                        log.error("Phylogeny program generated an error so" +
-                            "this subset was not split, see error above")
-                        subset_index += 1
-                    else:
-                        raise PhylogenyProgramError
-
-                log.info("Current best score is: " + str(best_score))
-                log.info("Current new score is: " + str(new_score))
-                if new_score.score < best_score.score:
-                    log.info("New score is better and will be set to " + 
-                        "best score")
-                    best_scheme = test_scheme
-                    best_score = new_score
-
-                    # Change this to the one with split subsets in it. Note that
-                    # the subset_index now points a NEW subset, one that was split
-                    all_subsets = updated_subsets
-                else:
-                    # Move to the next subset in the all_subsets list
-                    subset_index += 1
+                # Move to the next subset in the all_subsets list
+                subset_index += 1
         self.cfg.reporter.write_best_scheme(self.results)
 
 

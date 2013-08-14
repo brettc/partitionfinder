@@ -74,28 +74,8 @@ def kmeans_split_subset(cfg, alignment, a_subset, tree_path, number_of_ks = 2):
     # modfying of the commands in the analyse function
     processor = cfg.processor
 
-    try:
-        # Try to run the likelihood calc on this alignment, if it doesn't
-        # work, throw an error by returning 1
-        processor.get_likelihoods("GTRGAMMA", str(phylip_file),
+    processor.get_likelihoods("GTRGAMMA", str(phylip_file),
             str(tree_path))
-    except PhylogenyProgramError as e:
-        error1 = ("Empirical base frequency for state number 0" + 
-            " is equal to zero in DNA data partition")
-        if e.stdout.find(error1) != -1:
-            log.error("Phylogeny program generated an error so" +
-                " this subset was not split, see error above")
-            return 1
-        elif e.stderr.find("1 patterns found") != -1:
-            log.error("Phylogeny program generated an error so" +
-                " this subset was not split, see error above")
-            return 1
-        elif e.stdout.find("consists entirely of undetermined values") != -1:
-            log.error("Phylogeny program generated an error so" +
-                " this subset was not split, see error above")
-            return 1
-        else:
-            raise PhylogenyProgramError
 
     # Call processor to parse them likelihoods from the output file.
     likelihood_list = get_likelihood_list(cfg, phylip_file)
@@ -107,16 +87,6 @@ def kmeans_split_subset(cfg, alignment, a_subset, tree_path, number_of_ks = 2):
     list_of_sites = []
     for k in split_categories:
         list_of_sites.append(split_categories[k])
-
-    # This is a quick fix for small clusters, probably can be more
-    # sophisticated, it is for testing whether watching for small
-    # clusters makes much of a difference during testing
-    if number_of_ks == 2:
-        for i in split_categories:
-            log.debug("Split subset is " + str(len(split_categories[i])) +
-                " characters long")
-            if len(split_categories[i]) < 2:
-                return 1
 
     # Make the new subsets
     new_subsets = subset_ops.split_subset(a_subset, list_of_sites)
