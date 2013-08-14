@@ -66,6 +66,7 @@ class Subset(object):
         self.columns = list(column_set)
         self.columns.sort()
         self.status = FRESH
+        self.unanalysable = False
 
         self.results = {}
         self.best_info_score = None  # e.g. AIC, BIC, AICc
@@ -133,6 +134,7 @@ class Subset(object):
             log.error("Can't add model result %s, it already exists in %s",
                       model, self)
         self.results[model] = result
+
 
     def model_selection(self, cfg):
         # Model selection is done after we've added all the models
@@ -271,6 +273,19 @@ class Subset(object):
                     "Failed to run models %s; not sure why",
                     ", ".join(list(self.models_not_done)))
                 raise
+
+    def fabricate_result(self, cfg, model):
+        # Need to figure out what the result should look like, probably
+        # will have to mimic the results from the processor.
+        the_processor = cfg.processor.program()
+        if the_processor == 'raxml':
+            the_processor = 'RAxML'
+        elif the_processor == 'phyml':
+            the_processor = 'PhyML'
+        print the_processor
+        result = 0 
+        self.status = DONE
+        self.models_not_done.remove(model)
 
     FORCE_RESTART_MESSAGE = make_warning("""
     It looks like you have changed one or more of the data_blocks in the
