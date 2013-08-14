@@ -162,7 +162,6 @@ class Analysis(object):
 
     def run_task(self, m, sub):
         analysis_error = None
-        # try and except around analyse, then store the errors that occurs, if error occurs, then if there is an error set analysis_error to your exception
         # This bit should run in parallel (forking the processor)
         try:
             self.cfg.processor.analyse(
@@ -172,22 +171,22 @@ class Analysis(object):
                 self.cfg.branchlengths,
                 self.cfg.cmdline_extras
             )
-        except RaxmlError or PhymlError as e:
-            analysis_error = e
+        except (RaxmlError, PhymlError) as e:
+            # TODO: probably should do something smart with these "errors" so
+            # that we can pull them up and see what went wrong
+            analysis_error = e.stdout, e.stderr
 
         # Not entirely sure that WE NEED to block here, but it is safer to do
         # It shouldn't hold things up toooo long...
         self.lock.acquire()
         try:
             if analysis_error == None:
-            # add if the error == None parse the model result, else: sub.fabricate_result(), but the subset also asks the processor to fabricate the results, you can make both a PhyML result with some details about the error still let it go on to finalize, also turn on a variable in the subset that says "failed_analysis". It is the result class that gets saved into the cache files.
                 sub.parse_model_result(self.cfg, m)
 
             else:
                 sub.unanalysable = True
-                print sub.unanalysable
                 sub.fabricate_result(self.cfg, m)
-                
+
             # Try finalising, then the result will get written out earlier...
             sub.finalise(self.cfg)
         finally:
