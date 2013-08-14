@@ -279,11 +279,24 @@ class Subset(object):
         # Need to figure out what the result should look like, probably
         # will have to mimic the results from the processor.
         the_processor = cfg.processor.program()
+
+        # Now make up some results for whatever processor we're using
+        # TODO: get the real added lnl from the site likelihoods before the split and put that as the lnl
         if the_processor == 'raxml':
-            result = "RaxmlResult(lnl:0, tree_size:4.242472, secs:0.011164, alphs:135.946712)"
+            result = cfg.processor.Parser('DNA')
+            result.result = cfg.processor.RaxmlResult()
+            result.lnl = 0
+            result.tree_size = 0
+            result.seconds = 0
+
         elif the_processor == 'phyml':
-            result = "PhymlResult(lnl:0, tree_size:2.91238, secs:0)"
+            result = cfg.processor.PhymlResult(0, 0, 0)
         print the_processor
+
+        self.add_result(cfg, model, result)
+
+        self.best_params = cfg.processor.models.get_num_params(model)
+        self.best_lnl = result.lnl
 
         self.status = DONE
         self.models_not_done.remove(model)
