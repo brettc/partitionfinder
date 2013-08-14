@@ -30,6 +30,8 @@ import results
 import threading
 from util import PartitionFinderError
 import util
+from raxml import RaxmlError
+from phyml import PhymlError
 
 class AnalysisError(PartitionFinderError):
     pass
@@ -162,23 +164,34 @@ class Analysis(object):
         analysis_error = None
         # try and except around analyse, then store the errors that occurs, if error occurs, then if there is an error set analysis_error to your exception
         # This bit should run in parallel (forking the processor)
-        self.cfg.processor.analyse(
-            m,
-            sub.alignment_path,
-            self.tree_path,
-            self.cfg.branchlengths,
-            self.cfg.cmdline_extras
-        )
+        try:
+            self.cfg.processor.analyse(
+                m,
+                sub.alignment_path,
+                self.tree_path,
+                self.cfg.branchlengths,
+                self.cfg.cmdline_extras
+            )
+        except RaxmlError or PhymlError as e:
+            analysis_error = e
 
         # Not entirely sure that WE NEED to block here, but it is safer to do
         # It shouldn't hold things up toooo long...
         self.lock.acquire()
         try:
+            if analysis_error == None:
             # add if the error == None parse the model result, else: sub.fabricate_result(), but the subset also asks the processor to fabricate the results, you can make both a PhyML result with some details about the error still let it go on to finalize, also turn on a variable in the subset that says "failed_analysis". It is the result class that gets saved into the cache files.
-            sub.parse_model_result(self.cfg, m)
+                sub.parse_model_result(self.cfg, m)
+
+            else:
+                sub.unanalysable = True
+                print sub.unanalysable
+                sub.fabricate_result(self.cfg, m)
+                print "what the hell?"
             # Try finalising, then the result will get written out earlier...
             sub.finalise(self.cfg)
         finally:
+            print "whatever"
             self.lock.release()
 
     def add_tasks_for_sub(self, tasks, sub):
