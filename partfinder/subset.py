@@ -291,14 +291,12 @@ class Subset(object):
 
         elif the_processor == 'phyml':
             result = cfg.processor.PhymlResult(0, 0, 0)
-        print the_processor
 
         self.add_result(cfg, model, result)
 
         self.best_params = cfg.processor.models.get_num_params(model)
         self.best_lnl = result.lnl
 
-        self.status = DONE
         self.models_not_done.remove(model)
 
     FORCE_RESTART_MESSAGE = make_warning("""
