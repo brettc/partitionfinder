@@ -66,7 +66,7 @@ class Subset(object):
         self.columns = list(column_set)
         self.columns.sort()
         self.status = FRESH
-        self.unanalysable = False
+        self.fabricated = False
 
         self.results = {}
         self.best_info_score = None  # e.g. AIC, BIC, AICc
@@ -276,25 +276,17 @@ class Subset(object):
                 raise
 
     def fabricate_result(self, cfg, model):
-        # Need to figure out what the result should look like, probably
-        # will have to mimic the results from the processor.
-        the_processor = cfg.processor.program()
+        # Need to figure out what the result should look like, probably will
+        # have to mimic the results from the processor.
+        processor = cfg.processor
+        self.fabricated = True
 
-        # Now make up some results for whatever processor we're using
-        # TODO: get the real added lnl from the site likelihoods before the split and put that as the lnl
-        #
-        # TODO: Don't do this. Just defer it to two separate functions within
-        # raxml.py and phyml.py. Then:
-        # result = the_processor.fabricate(...)
-        if the_processor == 'raxml':
-            result = cfg.processor.Parser('DNA')
-            result.result = cfg.processor.RaxmlResult()
-            result.lnl = 0
-            result.tree_size = 0
-            result.seconds = 0
+        # At some point we need to be able to pull the lnl from the subset
+        # site likelihoods and add them to this variable. Right now it is
+        # zero.
+        lnl = 0
 
-        elif the_processor == 'phyml':
-            result = cfg.processor.PhymlResult(0, 0, 0)
+        result = processor.fabricate(lnl)
 
         self.add_result(cfg, model, result)
 
