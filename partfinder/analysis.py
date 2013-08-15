@@ -30,8 +30,7 @@ import results
 import threading
 from util import PartitionFinderError
 import util
-from raxml import RaxmlError
-from phyml import PhymlError
+from util import PhylogenyProgramError
 
 class AnalysisError(PartitionFinderError):
     pass
@@ -172,9 +171,7 @@ class Analysis(object):
                 self.cfg.cmdline_extras
             )
 
-        # TODO:  Both errors derive from PhylogenyProgramError -- so just use
-        # that! Google "Exception Hierarchy"
-        except (RaxmlError, PhymlError) as e:
+        except PhylogenyProgramError as e:
             # TODO: probably should do something smart with these "errors" so
             # that we can pull them up and see what went wrong
             analysis_error = e.stdout, e.stderr
@@ -187,10 +184,6 @@ class Analysis(object):
                 sub.parse_model_result(self.cfg, m)
 
             else:
-                # The following line should be in sub.fabricate_result
-                # Also, maybe we can call the variable "fabricated" rather than
-                # unanalysable
-                sub.unanalysable = True
                 sub.fabricate_result(self.cfg, m)
 
             # Try finalising, then the result will get written out earlier...
