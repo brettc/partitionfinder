@@ -346,10 +346,8 @@ class KmeansAnalysis(Analysis):
                 subset_index += 1
                 continue
 
-            if current_subset.unanalysable:
-                # TODO: Maybe start using log.warning statements, this looks like
-                # something we might want to know about
-                print "unanalysable"
+            if current_subset.fabricated:
+                log.warning("This subset is unanalysable, moving to the next")
                 subset_index += 1
                 continue
 
@@ -386,7 +384,7 @@ class KmeansAnalysis(Analysis):
                 subset_index += 1
 
         for s in best_scheme:
-            if s.unanalysable:
+            if s.fabricated:
                 pass
 
         self.cfg.reporter.write_best_scheme(self.results)
