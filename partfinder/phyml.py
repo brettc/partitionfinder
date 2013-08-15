@@ -397,6 +397,10 @@ def get_likelihood_list(phylip_file):
     likelihood_list = likelihood_parser(phyml_lk_file)[2]
     return likelihood_list
 
+def fabricate(lnl):
+    result = PhymlResult(lnl, 0, 0)
+    return result
+
 if __name__ == '__main__':
     logging.basicConfig(level=logging.DEBUG)
     import tempfile
