@@ -69,6 +69,7 @@ class Subset(object):
         self.fabricated = False
 
         self.results = {}
+        self.site_lnls = []
         self.best_info_score = None  # e.g. AIC, BIC, AICc
         self.best_model = None
         self.best_params = None
