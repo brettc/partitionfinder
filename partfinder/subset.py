@@ -282,18 +282,12 @@ class Subset(object):
         processor = cfg.processor
         self.fabricated = True
 
-        # At some point we need to be able to pull the lnl from the subset
-        # site likelihoods and add them to this variable. Right now it is
-        # zero.
-        lnl = 0
-
+        lnl = sum(self.site_lnls)
         result = processor.fabricate(lnl)
 
         self.add_result(cfg, model, result)
-
         self.best_params = cfg.processor.models.get_num_params(model)
         self.best_lnl = result.lnl
-
         self.models_not_done.remove(model)
 
     FORCE_RESTART_MESSAGE = make_warning("""
