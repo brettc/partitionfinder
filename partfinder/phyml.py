@@ -68,7 +68,7 @@ def run_phyml(command):
         _phyml_binary = find_program()
 
     #turn off any memory checking in PhyML - thanks Jess Thomas for pointing out this problem
-    command = "%s --no_memory_check" % (command)
+    command = "%s --no_memory_check --print_site_lnl" % (command)
 
     # Add in the command file
     log.debug("Running 'phyml %s'", command)
@@ -388,6 +388,14 @@ def get_likelihoods(model, alignment_path, tree_path):
     command = "--run_id %s -b 0 -i '%s' -u '%s' -m GTR --print_site_lnl" % (
     model, alignment_path, tree_path)
     run_phyml(command)
+
+def get_likelihood_list(phylip_file):
+    # Retreive a list of the site likelihoods
+    phyml_lk_file = ("%s_phyml_lk_GTRGAMMA.txt" % phylip_file)
+    # Open the phyml output and parse for input into the kmeans
+    # function
+    likelihood_list = likelihood_parser(phyml_lk_file)[2]
+    return likelihood_list
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.DEBUG)

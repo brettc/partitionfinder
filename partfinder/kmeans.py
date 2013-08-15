@@ -78,7 +78,7 @@ def kmeans_split_subset(cfg, alignment, a_subset, tree_path, number_of_ks = 2):
             str(tree_path))
 
     # Call processor to parse them likelihoods from the output file.
-    likelihood_list = get_likelihood_list(cfg, phylip_file)
+    likelihood_list = processor.get_likelihood_list(phylip_file)
 
     # Perform kmeans clustering on the likelihoods
     split_categories = kmeans(likelihood_list,
@@ -123,7 +123,7 @@ def kmeans_wrapper(cfg, alignment, a_subset, tree_path, max_ks = 10):
         log.error("Total bummer: %s" % e)
         return 1
 
-    likelihood_list = get_likelihood_list(cfg, phylip_file)
+    likelihood_list = processor.get_likelihood_list(phylip_file)
 
     count = 1
     new_wss = 0
@@ -207,29 +207,3 @@ def make_likelihood_list(likelihood_list, site_categories):
             one_list.append(likelihood[0])
         rate_list.append(one_list)
     return rate_list
-
-
-def get_likelihood_list(cfg, phylip_file):
-    '''Runs the appropriate processor to generate the site likelihood
-    file, then parses the site likelihoods and returns them as a list
-    '''
-    phylip_file_split = os.path.split(phylip_file)
-    processor = cfg.processor
-    program_name = processor.program()
-
-    # Figure out which program to use to calculate site likelihoods
-    if program_name == 'phyml':
-        phyml_lk_file = ("%s_phyml_lk_GTRGAMMA.txt" % phylip_file)
-        # Open the phyml output and parse for input into the kmeans
-        # function
-        likelihood_list = processor.likelihood_parser(
-            phyml_lk_file)[2]
-
-    elif program_name == 'raxml':
-        subset_code = phylip_file_split[1].split(".")[0]
-        raxml_lnl_file = os.path.join(phylip_file_split[0],
-            ("RAxML_perSiteLLs.%s_GTRGAMMA.txt" % subset_code))
-        likelihood_list = processor.likelihood_parser(
-            raxml_lnl_file)
-
-    return likelihood_list

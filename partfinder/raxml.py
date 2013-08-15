@@ -407,6 +407,17 @@ def get_likelihoods(model, alignment_path, tree_path):
         model, alignment_path, tree_path, analysis_ID, os.path.abspath(aln_dir))
     run_raxml(command)
 
+def get_likelihood_list(phylip_file):
+    # Retrieve a list of the site likelihoods
+    phylip_file_split = os.path.split(phylip_file)
+    subset_code = phylip_file_split[1].split(".")[0]
+    raxml_lnl_file = os.path.join(phylip_file_split[0],
+        ("RAxML_perSiteLLs.%s_GTRGAMMA.txt" % subset_code))
+
+    likelihood_list = likelihood_parser(raxml_lnl_file)
+    
+    return likelihood_list
+
 if __name__ == '__main__':
     logging.basicConfig(level=logging.DEBUG)
     pth = "./tests/misc/raxml_nucleotide.output"
