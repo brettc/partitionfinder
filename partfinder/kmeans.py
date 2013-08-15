@@ -30,7 +30,7 @@ def kmeans(likelihood_list, number_of_ks=2, n_jobs=1):
 
     # Create and scale an array for input into kmeans function
     array = np.array(all_rates_list)
-    array = scale(array)
+    # array = scale(array)
 
     # Call scikit_learn's k-means, use "k-means++" to find centroids
     # kmeans_out = KMeans(init='k-means++', n_init = 100)
@@ -82,15 +82,25 @@ def kmeans_split_subset(cfg, alignment, a_subset, tree_path, number_of_ks = 2):
     a_subset.site_lnls = likelihood_list
 
     # Perform kmeans clustering on the likelihoods
-    split_categories = kmeans(likelihood_list,
-        number_of_ks)[1]
+    kmeans_results = kmeans(likelihood_list,
+        number_of_ks)
+
+    centroids = kmeans_results[0]
+    split_categories = kmeans_results[1]
 
     list_of_sites = []
-    for k in split_categories:
+    for k in range(len(split_categories)):
         list_of_sites.append(split_categories[k])
 
     # Make the new subsets
     new_subsets = subset_ops.split_subset(a_subset, list_of_sites)
+
+    # Now add the site_lnl centroid to each new subset
+    marker = 0
+    for s in new_subsets:
+        s.centroids = centroids[marker]
+        marker += 1
+
     return new_subsets
 
 
