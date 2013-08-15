@@ -394,7 +394,7 @@ def get_likelihood_list(phylip_file):
     phyml_lk_file = ("%s_phyml_lk_GTRGAMMA.txt" % phylip_file)
     # Open the phyml output and parse for input into the kmeans
     # function
-    likelihood_list = likelihood_parser(phyml_lk_file)[2]
+    likelihood_list = likelihood_parser(phyml_lk_file)[0]
     return likelihood_list
 
 def fabricate(lnl):
