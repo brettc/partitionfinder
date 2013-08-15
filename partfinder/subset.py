@@ -282,6 +282,10 @@ class Subset(object):
 
         # Now make up some results for whatever processor we're using
         # TODO: get the real added lnl from the site likelihoods before the split and put that as the lnl
+        #
+        # TODO: Don't do this. Just defer it to two separate functions within
+        # raxml.py and phyml.py. Then:
+        # result = the_processor.fabricate(...)
         if the_processor == 'raxml':
             result = cfg.processor.Parser('DNA')
             result.result = cfg.processor.RaxmlResult()

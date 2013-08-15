@@ -171,6 +171,9 @@ class Analysis(object):
                 self.cfg.branchlengths,
                 self.cfg.cmdline_extras
             )
+
+        # TODO:  Both errors derive from PhylogenyProgramError -- so just use
+        # that! Google "Exception Hierarchy"
         except (RaxmlError, PhymlError) as e:
             # TODO: probably should do something smart with these "errors" so
             # that we can pull them up and see what went wrong
@@ -184,6 +187,9 @@ class Analysis(object):
                 sub.parse_model_result(self.cfg, m)
 
             else:
+                # The following line should be in sub.fabricate_result
+                # Also, maybe we can call the variable "fabricated" rather than
+                # unanalysable
                 sub.unanalysable = True
                 sub.fabricate_result(self.cfg, m)
 

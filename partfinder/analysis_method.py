@@ -211,8 +211,6 @@ class GreedyAnalysis(Analysis):
         self.cfg.reporter.write_best_scheme(self.results)
 
 
-
-
 class RelaxedClusteringAnalysis(Analysis):
     '''
     A relaxed clustering algorithm for heuristic partitioning searches
@@ -311,6 +309,7 @@ class RelaxedClusteringAnalysis(Analysis):
 
         self.cfg.reporter.write_best_scheme(self.results)
 
+
 class KmeansAnalysis(Analysis):
     def do_analysis(self):
         # Copied and pasted from greedy analysis
@@ -348,11 +347,13 @@ class KmeansAnalysis(Analysis):
                 continue
 
             if current_subset.unanalysable:
+                # TODO: Maybe start using log.warning statements, this looks like
+                # something we might want to know about
                 print "unanalysable"
                 subset_index += 1
                 continue
 
-            split_subsets = kmeans.kmeans_split_subset(self.cfg, 
+            split_subsets = kmeans.kmeans_split_subset(self.cfg,
                 self.alignment, current_subset, tree_path)
 
             # Take a copy
@@ -364,7 +365,7 @@ class KmeansAnalysis(Analysis):
             # all of the split subsets by replacing them with the split ones
             updated_subsets[subset_index:subset_index+1] = split_subsets
 
-            test_scheme = scheme.Scheme(self.cfg, "Current Scheme", 
+            test_scheme = scheme.Scheme(self.cfg, "Current Scheme",
                 updated_subsets)
 
             new_score = self.analyse_scheme(test_scheme)
@@ -372,7 +373,7 @@ class KmeansAnalysis(Analysis):
             log.info("Current best score is: " + str(best_score))
             log.info("Current new score is: " + str(new_score))
             if new_score.score < best_score.score:
-                log.info("New score is better and will be set to " + 
+                log.info("New score is better and will be set to " +
                     "best score")
                 best_scheme = test_scheme
                 best_score = new_score
@@ -419,7 +420,7 @@ class KmeansAnalysisWrapper(Analysis):
 
         split_subsets = []
         for a_subset in start_scheme:
-            how_many = kmeans.kmeans_wrapper(self.cfg, self.alignment, 
+            how_many = kmeans.kmeans_wrapper(self.cfg, self.alignment,
                 a_subset, tree_path)
             split_subsets += how_many
         split_scheme = scheme.Scheme(self.cfg, "split_scheme", split_subsets)
@@ -432,12 +433,12 @@ class KmeansAnalysisWrapper(Analysis):
 
         while subset_index < len(all_subsets):
             current_subset = all_subsets[subset_index]
-            split_subsets = kmeans.kmeans_split_subset(self.cfg, 
+            split_subsets = kmeans.kmeans_split_subset(self.cfg,
                 self.alignment, current_subset, tree_path)
 
             if split_subsets == 1:
                 log.info(
-                    "Subset split generated a subset of less than 2," + 
+                    "Subset split generated a subset of less than 2," +
                         " discarded split and moved to next")
                 subset_index += 1
 
@@ -462,7 +463,7 @@ class KmeansAnalysisWrapper(Analysis):
                     log.info("Current best score is: " + str(best_score))
                     log.info("Current new score is: " + str(new_score))
                     if new_score.score < best_score.score:
-                        log.info("New score " + str(subset_index) + 
+                        log.info("New score " + str(subset_index) +
                             " is better and will be set to best score")
                         best_scheme = test_scheme
 
@@ -482,6 +483,7 @@ class KmeansAnalysisWrapper(Analysis):
                     subset_index += 1
 
         self.cfg.reporter.write_best_scheme(self.results)
+
 
 class KmeansGreedy(Analysis):
     def do_analysis(self):
@@ -618,9 +620,6 @@ class KmeansGreedy(Analysis):
                  % (self.results.best_scheme.name, self.cfg.model_selection, self.results.best_score))
 
         self.cfg.reporter.write_best_scheme(self.results)
-
-
-
 
 
 def choose_method(search):
