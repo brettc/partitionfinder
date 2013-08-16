@@ -22,6 +22,7 @@ def kmeans(likelihood_list, number_of_ks=2, n_jobs=1):
     sites and returns k centroids and a dictionary with k's as keys
     and lists of sites belonging to that k as values
     '''
+    log.debug("Beginning k-means splitting")
     start = time.clock()
     all_rates_list = []
     for site in likelihood_list:
@@ -67,6 +68,7 @@ def kmeans_split_subset(cfg, alignment, a_subset, tree_path, number_of_ks = 2):
     """Takes a subset and number of k's and returns
     subsets for however many k's are specified
     """
+    log.debug("Received subset, now gathering likelihoods")
     a_subset.make_alignment(cfg, alignment)
     phylip_file = a_subset.alignment_path
 
@@ -92,13 +94,14 @@ def kmeans_split_subset(cfg, alignment, a_subset, tree_path, number_of_ks = 2):
     for k in range(len(split_categories)):
         list_of_sites.append(split_categories[k])
 
+    log.debug("Creating new subsets from k-means split")
     # Make the new subsets
     new_subsets = subset_ops.split_subset(a_subset, list_of_sites)
 
     # Now add the site_lnl centroid to each new subset
     marker = 0
     for s in new_subsets:
-        s.centroids = centroids[marker]
+        s.centroid = centroids[marker]
         marker += 1
 
     return new_subsets
