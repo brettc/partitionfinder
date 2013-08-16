@@ -68,7 +68,7 @@ def run_phyml(command):
         _phyml_binary = find_program()
 
     #turn off any memory checking in PhyML - thanks Jess Thomas for pointing out this problem
-    command = "%s --no_memory_check --print_site_lnl" % (command)
+    command = "%s --no_memory_check" % (command)
 
     # Add in the command file
     log.debug("Running 'phyml %s'", command)
