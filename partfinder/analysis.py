@@ -174,13 +174,13 @@ class Analysis(object):
         except PhylogenyProgramError as e:
             # TODO: probably should do something smart with these "errors" so
             # that we can pull them up and see what went wrong
-            analysis_error = e.stdout, e.stderr
+            sub.analysis_error = e.stdout, e.stderr
 
         # Not entirely sure that WE NEED to block here, but it is safer to do
         # It shouldn't hold things up toooo long...
         self.lock.acquire()
         try:
-            if analysis_error == None:
+            if sub.analysis_error == None:
                 sub.parse_model_result(self.cfg, m)
 
             else:
