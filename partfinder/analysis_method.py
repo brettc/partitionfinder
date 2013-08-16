@@ -334,6 +334,7 @@ class KmeansAnalysis(Analysis):
         alignment_path = self.filtered_alignment_path
         tree_path = processor.make_tree_path(alignment_path)
         best_score = self.analyse_scheme(best_scheme)
+        fabricated_subsets =[]
 
 
         while subset_index < len(all_subsets):
@@ -349,6 +350,7 @@ class KmeansAnalysis(Analysis):
             if current_subset.fabricated:
                 log.warning("This subset is unanalysable, moving to the next")
                 subset_index += 1
+                fabricated_subsets.append(current_subset)
                 continue
 
             split_subsets = kmeans.kmeans_split_subset(self.cfg,
@@ -383,9 +385,17 @@ class KmeansAnalysis(Analysis):
                 # Move to the next subset in the all_subsets list
                 subset_index += 1
 
-        for s in best_scheme:
-            if s.fabricated:
-                pass
+        # Now join the fabricated subsets back up with other subsets TODO:
+        # finish this section so that the closest match can be pulled up and
+        # replaced with merged subsets, also...remove the fabricated subset
+        for s in fabricated_subsets:
+            centroid = s.centroid
+            best_match = abs(best_scheme[0].centroid - centroid)
+            for sub in best_scheme:
+                euclid_dist = (sub.centroid-centroid)
+                if euclid_dist < best_match:
+                    best_match = euclid_dist
+
 
         self.cfg.reporter.write_best_scheme(self.results)
 
