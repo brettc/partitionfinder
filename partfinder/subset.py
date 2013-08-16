@@ -67,7 +67,9 @@ class Subset(object):
         self.columns.sort()
         self.status = FRESH
         self.fabricated = False
+        self.analysis_error = None
 
+        self.centroid
         self.results = {}
         self.site_lnls = []
         self.best_info_score = None  # e.g. AIC, BIC, AICc
