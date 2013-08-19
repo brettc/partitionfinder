@@ -26,6 +26,7 @@ from analysis import Analysis, AnalysisError
 import neighbour
 import kmeans
 import itertools
+import subset_ops
 
 from util import PhylogenyProgramError
 
@@ -387,12 +388,14 @@ class KmeansAnalysis(Analysis):
 
         # Now join the fabricated subsets back up with other subsets TODO:
         # Figure out what to do if the subset remains fabricated after you
-        # have joined it with another subset
+        # have joined it with another subset. What if the new subset is also
+        # unanalyzable, should this be a recursive function?
         for s in fabricated_subsets:
+            print s
             centroid = s.centroid
-            best_match = abs(best_scheme[0].centroid - centroid)
+            best_match = None
             for sub in best_scheme:
-                euclid_dist = (sub.centroid - centroid)
+                euclid_dist = (sub.centroid[0] - centroid[0])
                 if euclid_dist < best_match:
                     best_match = euclid_dist
                     closest_sub = sub
