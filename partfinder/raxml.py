@@ -420,10 +420,11 @@ def get_likelihood_list(phylip_file):
 def fabricate(lnl):
     result = Parser('DNA')
     result.result = RaxmlResult()
-    result.lnl = lnl
-    result.tree_size = 0
-    result.seconds = 0
-    return result
+    result.result.lnl = lnl
+    result.result.tree_size = 0
+    result.result.seconds = 0
+    result.result.alpha = 0
+    return result.result
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.DEBUG)
