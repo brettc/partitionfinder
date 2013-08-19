@@ -279,8 +279,8 @@ class Subset(object):
                 raise
 
     def fabricate_result(self, cfg, model):
-        # Need to figure out what the result should look like, probably will
-        # have to mimic the results from the processor.
+        '''If the subset fails to be analyzed, we throw some "fabricated"
+        results'''
         processor = cfg.processor
         self.fabricated = True
 
