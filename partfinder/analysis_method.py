@@ -342,7 +342,7 @@ class KmeansAnalysis(Analysis):
             # First check if the subset is large enough to split, if it isn't,
             # move to the next subset
             if len(current_subset.columns) == 1:
-                log.debug("Subset consists of only one site, we will move to" +
+                log.warning("Subset consists of only one site, we will move to" +
                     " the next")
                 subset_index += 1
                 continue
@@ -386,15 +386,21 @@ class KmeansAnalysis(Analysis):
                 subset_index += 1
 
         # Now join the fabricated subsets back up with other subsets TODO:
-        # finish this section so that the closest match can be pulled up and
-        # replaced with merged subsets, also...remove the fabricated subset
+        # Figure out what to do if the subset remains fabricated after you
+        # have joined it with another subset
         for s in fabricated_subsets:
             centroid = s.centroid
             best_match = abs(best_scheme[0].centroid - centroid)
             for sub in best_scheme:
-                euclid_dist = (sub.centroid-centroid)
+                euclid_dist = (sub.centroid - centroid)
                 if euclid_dist < best_match:
                     best_match = euclid_dist
+                    closest_sub = sub
+            merged_sub = subset_ops.merge_subsets(s, closest_sub)
+            best_scheme.remove(s)
+            best_scheme.remove(closest_sub)
+            best_scheme += merged_sub
+
 
 
         self.cfg.reporter.write_best_scheme(self.results)
