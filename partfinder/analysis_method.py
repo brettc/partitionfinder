@@ -391,16 +391,16 @@ class KmeansAnalysis(Analysis):
         # have joined it with another subset. What if the new subset is also
         # unanalyzable, should this be a recursive function?
         while len(fabricated_subsets) > 0:
-            # Take the first subset to be "popped" off later
+            # Take the first subset in the list (to be "popped" off later)
             s = fabricated_subsets[0]
             centroid = s.centroid
-            # Set best match as some ridiculous number
+            # Set best match as some ridiculous number so that all matches are better
             best_match = 100000
 
             # Loop through the subsets in the best scheme and find the one
             # with the nearest centroid
             for sub in best_scheme:
-                euclid_dist = (sub.centroid[0] - centroid[0])
+                euclid_dist = abs(sub.centroid[0] - centroid[0])
                 if euclid_dist < best_match:
                     best_match = euclid_dist
                     closest_sub = sub
