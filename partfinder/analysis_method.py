@@ -393,13 +393,14 @@ class KmeansAnalysis(Analysis):
         for s in fabricated_subsets:
             print s
             centroid = s.centroid
-            best_match = None
+            best_match = 100000
             for sub in best_scheme:
                 euclid_dist = (sub.centroid[0] - centroid[0])
                 if euclid_dist < best_match:
                     best_match = euclid_dist
                     closest_sub = sub
-            merged_sub = subset_ops.merge_subsets(s, closest_sub)
+            merged_sub = subset_ops.merge_subsets([s, closest_sub])
+            print type(best_scheme)
             best_scheme.remove(s)
             best_scheme.remove(closest_sub)
             best_scheme += merged_sub
