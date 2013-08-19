@@ -69,7 +69,7 @@ class Subset(object):
         self.fabricated = False
         self.analysis_error = None
 
-        self.centroid
+        self.centroid = None
         self.results = {}
         self.site_lnls = []
         self.best_info_score = None  # e.g. AIC, BIC, AICc
