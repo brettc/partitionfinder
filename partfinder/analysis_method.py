@@ -390,20 +390,31 @@ class KmeansAnalysis(Analysis):
         # Figure out what to do if the subset remains fabricated after you
         # have joined it with another subset. What if the new subset is also
         # unanalyzable, should this be a recursive function?
-        for s in fabricated_subsets:
-            print s
+        while len(fabricated_subsets) > 0:
+            # Take the first subset to be "popped" off later
+            s = fabricated_subsets[0]
             centroid = s.centroid
+            # Set best match as some ridiculous number
             best_match = 100000
+
+            # Loop through the subsets in the best scheme and find the one
+            # with the nearest centroid
             for sub in best_scheme:
                 euclid_dist = (sub.centroid[0] - centroid[0])
                 if euclid_dist < best_match:
                     best_match = euclid_dist
                     closest_sub = sub
+            # Now merge those subsets
             merged_sub = subset_ops.merge_subsets([s, closest_sub])
-            print type(best_scheme)
-            best_scheme.remove(s)
-            best_scheme.remove(closest_sub)
-            best_scheme += merged_sub
+            # Remove the offending subset from the fabricated subset list
+            fabricated_subsets.pop(0)
+            # Get rid of the two subsets that were merged from the best_scheme
+
+            # Now add the new subset to the scheme and see if the new subset can be analyzed
+
+            # If it can be analyzed, move the algorithm forward
+
+            # If it can't be analyzed add it to the list of fabricated_subsets
 
 
 
