@@ -386,10 +386,7 @@ class KmeansAnalysis(Analysis):
                 # Move to the next subset in the all_subsets list
                 subset_index += 1
 
-        # Now join the fabricated subsets back up with other subsets TODO:
-        # Figure out what to do if the subset remains fabricated after you
-        # have joined it with another subset. What if the new subset is also
-        # unanalyzable, should this be a recursive function?
+        # Now join the fabricated subsets back up with other subsets
         while fabricated_subsets:
             # Take the first subset in the list (to be "popped" off later)
             s = fabricated_subsets[0]
@@ -430,8 +427,10 @@ class KmeansAnalysis(Analysis):
             for new_subs in merged_scheme:
                 if new_subs.fabricated:
                     fabricated_subsets.append(new_subs)
+            best_scheme = merged_scheme
             # If it can't be analyzed add it to the list of fabricated_subsets
-        self.results.best_scheme = merged_scheme
+        self.results.best_scheme = best_scheme
+        print len(best_scheme.subsets)
 
         self.cfg.reporter.write_best_scheme(self.results)
 
