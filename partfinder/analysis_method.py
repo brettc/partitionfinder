@@ -390,33 +390,48 @@ class KmeansAnalysis(Analysis):
         # Figure out what to do if the subset remains fabricated after you
         # have joined it with another subset. What if the new subset is also
         # unanalyzable, should this be a recursive function?
-        while len(fabricated_subsets) > 0:
+        while fabricated_subsets:
             # Take the first subset in the list (to be "popped" off later)
             s = fabricated_subsets[0]
+            print("Fabricated subset is %s" % s)
             centroid = s.centroid
-            # Set best match as some ridiculous number so that all matches are better
-            best_match = 100000
+            # Set best match as some ridiculous number so that all matches are
+            # better
+            best_match = 10000000
 
+            # Take a list copy of the best scheme
+            scheme_list = list(best_scheme)
+            print("Scheme list is: %s" % scheme_list)
+            scheme_list.remove(s)
+            print("Scheme list minus fabricated subset is: %s" % scheme_list)
             # Loop through the subsets in the best scheme and find the one
             # with the nearest centroid
-            for sub in best_scheme:
+            for sub in scheme_list:
                 euclid_dist = abs(sub.centroid[0] - centroid[0])
                 if euclid_dist < best_match:
                     best_match = euclid_dist
                     closest_sub = sub
+            print("Closest subset is: %s" % closest_sub)
             # Now merge those subsets
             merged_sub = subset_ops.merge_subsets([s, closest_sub])
+            print("Merged subset is: %s" % merged_sub)
             # Remove the offending subset from the fabricated subset list
             fabricated_subsets.pop(0)
             # Get rid of the two subsets that were merged from the best_scheme
-
-            # Now add the new subset to the scheme and see if the new subset can be analyzed
-
+            scheme_list.remove(closest_sub)
+            print("Scheme list minus fabricated sub and it's closest sub is %s" % scheme_list)
+            # Now add the new subset to the scheme and see if the new subset
+            # can be analyzed
+            scheme_list.append(merged_sub)
+            merged_scheme = scheme.Scheme(self.cfg, "Merged Scheme", scheme_list)
+            print("New merged Scheme: %s" % merged_scheme)
+            self.analyse_scheme(merged_scheme)
             # If it can be analyzed, move the algorithm forward
-
+            for new_subs in merged_scheme:
+                if new_subs.fabricated:
+                    fabricated_subsets.append(new_subs)
             # If it can't be analyzed add it to the list of fabricated_subsets
-
-
+        self.results.best_scheme = merged_scheme
 
         self.cfg.reporter.write_best_scheme(self.results)
 
