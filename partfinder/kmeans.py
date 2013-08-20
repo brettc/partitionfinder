@@ -68,12 +68,12 @@ def kmeans_split_subset(cfg, alignment, a_subset, tree_path, number_of_ks = 2):
     """Takes a subset and number of k's and returns
     subsets for however many k's are specified
     """
-    log.debug("Received subset, now gathering likelihoods")
     a_subset.make_alignment(cfg, alignment)
     phylip_file = a_subset.alignment_path
-
+    print a_subset.fabricated
     # Add option to output likelihoods, *raxml version takes more
     # modfying of the commands in the analyse function
+    log.debug("Received subset, now gathering likelihoods")
     processor = cfg.processor
 
     processor.get_likelihoods("GTRGAMMA", str(phylip_file),
