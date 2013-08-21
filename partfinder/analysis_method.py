@@ -349,13 +349,22 @@ class KmeansAnalysis(Analysis):
                 continue
 
             if current_subset.fabricated:
-                log.warning("This subset is unanalysable, moving to the next")
+                log.warning("This subset is unanalysable and will be dealt" +
+                    " with later, moving to the next")
                 subset_index += 1
                 fabricated_subsets.append(current_subset)
                 continue
 
             split_subsets = kmeans.kmeans_split_subset(self.cfg,
                 self.alignment, current_subset, tree_path)
+
+            # kmeans_split_subset will return a 1 and flag the subset as
+            # fabricated if for some reason it raises a PhylogenyProgramError,
+            # this it to catch those fabricated subsets
+            if split_subsets == 1:
+                subset_index += 1
+                fabricated_subsets.append(current_subset)
+                continue
 
             # Take a copy
             updated_subsets = all_subsets[:]
@@ -388,6 +397,7 @@ class KmeansAnalysis(Analysis):
 
         # Now join the fabricated subsets back up with other subsets
         while fabricated_subsets:
+            log.debug("Rejoining fabricated subsets with existing subsets")
             # Take the first subset in the list (to be "popped" off later)
             s = fabricated_subsets[0]
             print("Fabricated subset is %s" % s)
@@ -423,14 +433,14 @@ class KmeansAnalysis(Analysis):
             merged_scheme = scheme.Scheme(self.cfg, "Merged Scheme", scheme_list)
             print("New merged Scheme: %s" % merged_scheme)
             self.analyse_scheme(merged_scheme)
-            # If it can be analyzed, move the algorithm forward
+            # If it can be analyzed, move the algorithm forward, if it can't
+            # be analyzed add it to the list of fabricated_subsets
             for new_subs in merged_scheme:
                 if new_subs.fabricated:
                     fabricated_subsets.append(new_subs)
             best_scheme = merged_scheme
-            # If it can't be analyzed add it to the list of fabricated_subsets
+
         self.results.best_scheme = best_scheme
-        print len(best_scheme.subsets)
 
         self.cfg.reporter.write_best_scheme(self.results)
 
