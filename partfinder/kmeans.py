@@ -70,14 +70,30 @@ def kmeans_split_subset(cfg, alignment, a_subset, tree_path, number_of_ks = 2):
     """
     a_subset.make_alignment(cfg, alignment)
     phylip_file = a_subset.alignment_path
-    print a_subset.fabricated
+
     # Add option to output likelihoods, *raxml version takes more
     # modfying of the commands in the analyse function
     log.debug("Received subset, now gathering likelihoods")
     processor = cfg.processor
 
-    processor.get_likelihoods("GTRGAMMA", str(phylip_file),
+    # For some reason some instances can be analyzed using -f B but not -f g
+    # in RAxML, this is to catch those instances and flag the subset as
+    # fabricated to add to others later.
+    try:
+        processor.get_likelihoods("GTRGAMMA", str(phylip_file),
             str(tree_path))
+    except PhylogenyProgramError as e:
+        print e.stdout
+        error1 = "that consist entirely of undetermined values"
+        if e.stdout.find(error1) != -1:
+            log.warning("The program was unable to calculate site" +
+                " likelihoods because of undetermined values for one or" +
+                " more taxon, we will move to the next subset")
+            a_subset.fabricated = True
+            a_subset.analysis_error = "entirely undetermined values"
+            return 1
+        else:
+            raise PhylogenyProgramError
 
     # Call processor to parse them likelihoods from the output file.
     likelihood_list = processor.get_likelihood_list(phylip_file)
