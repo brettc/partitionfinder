@@ -97,7 +97,7 @@ def kmeans_split_subset(cfg, alignment, a_subset, tree_path, number_of_ks = 2):
 
     # Call processor to parse them likelihoods from the output file.
     likelihood_list = processor.get_likelihood_list(phylip_file)
-    a_subset.site_lnls = likelihood_list
+    a_subset.site_lnls_GTRG = likelihood_list
 
     # Perform kmeans clustering on the likelihoods
     kmeans_results = kmeans(likelihood_list,

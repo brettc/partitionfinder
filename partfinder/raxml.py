@@ -407,7 +407,9 @@ def get_likelihoods(model, alignment_path, tree_path):
     run_raxml(command)
 
 def get_likelihood_list(phylip_file):
-    # Retrieve a list of the site likelihoods
+    # Retrieve a list of the site likelihoods. The phylip files are called
+    # e.g. "67e2419ede57ae4032c534fe97ba408a.phy" we want the the number
+    # before the full stop
     phylip_file_split = os.path.split(phylip_file)
     subset_code = phylip_file_split[1].split(".")[0]
     

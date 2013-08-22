@@ -71,7 +71,9 @@ class Subset(object):
 
         self.centroid = None
         self.results = {}
-        self.site_lnls = []
+        # Site likelihoods calculated using GTR+G from the
+        # processor.get_likelihoods()
+        self.site_lnls_GTRG = []
         self.best_info_score = None  # e.g. AIC, BIC, AICc
         self.best_model = None
         self.best_params = None
@@ -284,7 +286,7 @@ class Subset(object):
         processor = cfg.processor
         self.fabricated = True
 
-        lnl = sum(self.site_lnls)
+        lnl = sum(self.site_lnls_GTRG)
         result = processor.fabricate(lnl)
 
         self.add_result(cfg, model, result)

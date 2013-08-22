@@ -391,10 +391,10 @@ def get_likelihoods(model, alignment_path, tree_path):
 
 def get_likelihood_list(phylip_file):
     # Retreive a list of the site likelihoods
-    phyml_lk_file = ("%s_phyml_lk_GTRGAMMA.txt" % phylip_file)
+    phyml_lk_fname = ("%s_phyml_lk_GTRGAMMA.txt" % phylip_file)
     # Open the phyml output and parse for input into the kmeans
     # function
-    likelihood_list = likelihood_parser(phyml_lk_file)[0]
+    likelihood_list = likelihood_parser(phyml_lk_fname)[0]
     return likelihood_list
 
 def fabricate(lnl):

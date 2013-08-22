@@ -66,7 +66,7 @@ def split_subset(a_subset, cluster_list):
      then returns the subsets resulting from the split"""
     # Take each site from the first list and add it to a new
     subset_list = a_subset.columns
-    likelihood_list = a_subset.site_lnls
+    likelihood_list = a_subset.site_lnls_GTRG
     subset_columns = []
     site_likelihoods = []
     list_of_subsets = []
@@ -83,7 +83,7 @@ def split_subset(a_subset, cluster_list):
     for column_set in subset_columns:
         new_subset = subset.Subset(a_subset.cfg, column_set)
         list_of_subsets.append(new_subset)
-        new_subset.site_lnls = site_likelihoods[tracker]
+        new_subset.site_lnls_GTRG = site_likelihoods[tracker]
         tracker += 1
 
     return list_of_subsets
