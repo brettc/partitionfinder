@@ -402,9 +402,8 @@ class KmeansAnalysis(Analysis):
             s = fabricated_subsets[0]
             print("Fabricated subset is %s" % s)
             centroid = s.centroid
-            # Set best match as some ridiculous number so that all matches are
-            # better
-            best_match = 10000000
+
+            best_match = None
 
             # Take a list copy of the best scheme
             scheme_list = list(best_scheme)
@@ -415,7 +414,7 @@ class KmeansAnalysis(Analysis):
             # with the nearest centroid
             for sub in scheme_list:
                 euclid_dist = abs(sub.centroid[0] - centroid[0])
-                if euclid_dist < best_match:
+                if euclid_dist < best_match or best_match == None:
                     best_match = euclid_dist
                     closest_sub = sub
             print("Closest subset is: %s" % closest_sub)
