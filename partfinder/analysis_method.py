@@ -431,7 +431,7 @@ class KmeansAnalysis(Analysis):
             scheme_list.append(merged_sub)
             merged_scheme = scheme.Scheme(self.cfg, "Merged Scheme", scheme_list)
             print("New merged Scheme: %s" % merged_scheme)
-            self.analyse_scheme(merged_scheme)
+            merged_result = self.analyse_scheme(merged_scheme)
             # If it can be analyzed, move the algorithm forward, if it can't
             # be analyzed add it to the list of fabricated_subsets
             for new_subs in merged_scheme:
@@ -439,7 +439,13 @@ class KmeansAnalysis(Analysis):
                     fabricated_subsets.append(new_subs)
             best_scheme = merged_scheme
 
+        # Since the AIC will likely be better before we dealt with the
+        # fabricated subsets, we need to set the best scheme and best result
+        # to those from the last merged_scheme. TODO: add a variable to scheme
+        # to take care of this problem so that the best AND analysable scheme
+        # is the one that gets automatically flagged as the best scheme
         self.results.best_scheme = best_scheme
+        self.results.best_result = merged_result
 
         self.cfg.reporter.write_best_scheme(self.results)
 
