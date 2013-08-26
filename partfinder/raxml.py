@@ -366,9 +366,8 @@ def likelihood_parser(raxml_lnl_file):
     kmeans function and tell the PhyML parser to return log likelihoods or we
     should convert these log likelihoods back to regular likelihood scores
     '''
-    # See if you can locate the file, then parse the second line
-    # that contains the log likelihoods. If it isn't found
-    # raise an error
+    # See if you can locate the file, then parse the second line that contains
+    # the log likelihoods. If it isn't found raise an error
     try:
         with open(str(raxml_lnl_file)) as raxml_lnl_file:
             line_num = 1
@@ -379,13 +378,13 @@ def likelihood_parser(raxml_lnl_file):
     except IOError:
         raise IOError("Could not locate per site log likelihood file")
 
-    # Get rid of the new line character and the first "tr1" from
-    # the first element in the list
+    # Get rid of the new line character and the first "tr1" from the first
+    # element in the list
     site_lnl_list[0] = site_lnl_list[0].strip("tr1\t")
     site_lnl_list.pop(-1)
 
-    # Have to format into individual "lists" for each site for
-    # input into the numpy array
+    # Have to format into individual "lists" for each site for input into the
+    # numpy array
     site_lk_list = [[float(site)] for site in site_lnl_list]
 
     raxml_lnl_file.close()
@@ -406,6 +405,28 @@ def get_likelihoods(model, alignment_path, tree_path):
     command = "-m %s -f g -s '%s' -z '%s' -n %s -w '%s'" % (
         model, alignment_path, tree_path, analysis_ID, os.path.abspath(aln_dir))
     run_raxml(command)
+
+def get_likelihood_list(phylip_file):
+    # Retrieve a list of the site likelihoods. The phylip files are called
+    # e.g. "67e2419ede57ae4032c534fe97ba408a.phy" we want the the number
+    # before the full stop
+    phylip_file_split = os.path.split(phylip_file)
+    subset_code = phylip_file_split[1].split(".")[0]
+    
+    raxml_lnl_file = os.path.join(phylip_file_split[0],
+        ("RAxML_perSiteLLs.%s_GTRGAMMA.txt" % subset_code))
+
+    likelihood_list = likelihood_parser(raxml_lnl_file)
+    return likelihood_list
+
+def fabricate(lnl):
+    result = Parser('DNA')
+    result.result = RaxmlResult()
+    result.result.lnl = lnl
+    result.result.tree_size = 0
+    result.result.seconds = 0
+    result.result.alpha = 0
+    return result.result
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.DEBUG)

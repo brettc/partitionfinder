@@ -22,6 +22,7 @@ def kmeans(likelihood_list, number_of_ks=2, n_jobs=1):
     sites and returns k centroids and a dictionary with k's as keys
     and lists of sites belonging to that k as values
     '''
+    log.debug("Beginning k-means splitting")
     start = time.clock()
     all_rates_list = []
     for site in likelihood_list:
@@ -30,7 +31,7 @@ def kmeans(likelihood_list, number_of_ks=2, n_jobs=1):
 
     # Create and scale an array for input into kmeans function
     array = np.array(all_rates_list)
-    array = scale(array)
+    # array = scale(array)
 
     # Call scikit_learn's k-means, use "k-means++" to find centroids
     # kmeans_out = KMeans(init='k-means++', n_init = 100)
@@ -72,54 +73,53 @@ def kmeans_split_subset(cfg, alignment, a_subset, tree_path, number_of_ks = 2):
 
     # Add option to output likelihoods, *raxml version takes more
     # modfying of the commands in the analyse function
+    log.debug("Received subset, now gathering likelihoods")
     processor = cfg.processor
 
+    # For some reason some instances can be analyzed using -f B but not -f g
+    # in RAxML, this is to catch those instances and flag the subset as
+    # fabricated to add to others later.
     try:
-        # Try to run the likelihood calc on this alignment, if it doesn't
-        # work, throw an error by returning 1
         processor.get_likelihoods("GTRGAMMA", str(phylip_file),
             str(tree_path))
     except PhylogenyProgramError as e:
-        error1 = ("Empirical base frequency for state number 0" + 
-            " is equal to zero in DNA data partition")
+        print e.stdout
+        error1 = "that consist entirely of undetermined values"
         if e.stdout.find(error1) != -1:
-            log.error("Phylogeny program generated an error so" +
-                " this subset was not split, see error above")
-            return 1
-        elif e.stderr.find("1 patterns found") != -1:
-            log.error("Phylogeny program generated an error so" +
-                " this subset was not split, see error above")
-            return 1
-        elif e.stdout.find("consists entirely of undetermined values") != -1:
-            log.error("Phylogeny program generated an error so" +
-                " this subset was not split, see error above")
+            log.warning("The program was unable to calculate site" +
+                " likelihoods because of undetermined values for one or" +
+                " more taxon, we will move to the next subset")
+            a_subset.fabricated = True
+            a_subset.analysis_error = "entirely undetermined values"
             return 1
         else:
             raise PhylogenyProgramError
 
     # Call processor to parse them likelihoods from the output file.
-    likelihood_list = get_likelihood_list(cfg, phylip_file)
+    likelihood_list = processor.get_likelihood_list(phylip_file)
+    a_subset.site_lnls_GTRG = likelihood_list
 
     # Perform kmeans clustering on the likelihoods
-    split_categories = kmeans(likelihood_list,
-        number_of_ks)[1]
+    kmeans_results = kmeans(likelihood_list,
+        number_of_ks)
+
+    centroids = kmeans_results[0]
+    split_categories = kmeans_results[1]
 
     list_of_sites = []
-    for k in split_categories:
+    for k in range(len(split_categories)):
         list_of_sites.append(split_categories[k])
 
-    # This is a quick fix for small clusters, probably can be more
-    # sophisticated, it is for testing whether watching for small
-    # clusters makes much of a difference during testing
-    if number_of_ks == 2:
-        for i in split_categories:
-            log.debug("Split subset is " + str(len(split_categories[i])) +
-                " characters long")
-            if len(split_categories[i]) < 2:
-                return 1
-
+    log.debug("Creating new subsets from k-means split")
     # Make the new subsets
     new_subsets = subset_ops.split_subset(a_subset, list_of_sites)
+
+    # Now add the site_lnl centroid to each new subset
+    marker = 0
+    for s in new_subsets:
+        s.centroid = centroids[marker]
+        marker += 1
+
     return new_subsets
 
 
@@ -153,7 +153,7 @@ def kmeans_wrapper(cfg, alignment, a_subset, tree_path, max_ks = 10):
         log.error("Total bummer: %s" % e)
         return 1
 
-    likelihood_list = get_likelihood_list(cfg, phylip_file)
+    likelihood_list = processor.get_likelihood_list(phylip_file)
 
     count = 1
     new_wss = 0
@@ -237,29 +237,3 @@ def make_likelihood_list(likelihood_list, site_categories):
             one_list.append(likelihood[0])
         rate_list.append(one_list)
     return rate_list
-
-
-def get_likelihood_list(cfg, phylip_file):
-    '''Runs the appropriate processor to generate the site likelihood
-    file, then parses the site likelihoods and returns them as a list
-    '''
-    phylip_file_split = os.path.split(phylip_file)
-    processor = cfg.processor
-    program_name = processor.program()
-
-    # Figure out which program to use to calculate site likelihoods
-    if program_name == 'phyml':
-        phyml_lk_file = ("%s_phyml_lk_GTRGAMMA.txt" % phylip_file)
-        # Open the phyml output and parse for input into the kmeans
-        # function
-        likelihood_list = processor.likelihood_parser(
-            phyml_lk_file)[2]
-
-    elif program_name == 'raxml':
-        subset_code = phylip_file_split[1].split(".")[0]
-        raxml_lnl_file = os.path.join(phylip_file_split[0],
-            ("RAxML_perSiteLLs.%s_GTRGAMMA.txt" % subset_code))
-        likelihood_list = processor.likelihood_parser(
-            raxml_lnl_file)
-
-    return likelihood_list

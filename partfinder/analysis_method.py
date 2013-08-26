@@ -26,6 +26,7 @@ from analysis import Analysis, AnalysisError
 import neighbour
 import kmeans
 import itertools
+import subset_ops
 
 from util import PhylogenyProgramError
 
@@ -211,8 +212,6 @@ class GreedyAnalysis(Analysis):
         self.cfg.reporter.write_best_scheme(self.results)
 
 
-
-
 class RelaxedClusteringAnalysis(Analysis):
     '''
     A relaxed clustering algorithm for heuristic partitioning searches
@@ -311,6 +310,7 @@ class RelaxedClusteringAnalysis(Analysis):
 
         self.cfg.reporter.write_best_scheme(self.results)
 
+
 class KmeansAnalysis(Analysis):
     def do_analysis(self):
         # Copied and pasted from greedy analysis
@@ -335,80 +335,124 @@ class KmeansAnalysis(Analysis):
         alignment_path = self.filtered_alignment_path
         tree_path = processor.make_tree_path(alignment_path)
         best_score = self.analyse_scheme(best_scheme)
+        fabricated_subsets =[]
 
 
         while subset_index < len(all_subsets):
             current_subset = all_subsets[subset_index]
             # First check if the subset is large enough to split, if it isn't,
-            # just go to the next subset
+            # move to the next subset
             if len(current_subset.columns) == 1:
-                log.debug("Subset consists of only one site, we will move to" +
+                log.warning("Subset consists of only one site, we will move to" +
                     " the next")
                 subset_index += 1
                 continue
-            split_subsets = kmeans.kmeans_split_subset(self.cfg, 
+
+            if current_subset.fabricated:
+                log.warning("This subset is unanalysable and will be dealt" +
+                    " with later, moving to the next")
+                subset_index += 1
+                fabricated_subsets.append(current_subset)
+                continue
+
+            split_subsets = kmeans.kmeans_split_subset(self.cfg,
                 self.alignment, current_subset, tree_path)
 
+<<<<<<< HEAD
             # kmeans_split_subset() will return a 1 if there is a subset of less
             # than 2 sites. In this case we just move on to the next step and
             # don't worry about splitting that subset.
+=======
+            # kmeans_split_subset will return a 1 and flag the subset as
+            # fabricated if for some reason it raises a PhylogenyProgramError,
+            # this it to catch those fabricated subsets
+>>>>>>> dummy_subset
             if split_subsets == 1:
-                log.error("Subset split resulted in a subset of less than 2," + 
-                    " since we cannot split the subset, we will move to the" +
-                    " next subset")
+                subset_index += 1
+                fabricated_subsets.append(current_subset)
+                continue
+
+            # Take a copy
+            updated_subsets = all_subsets[:]
+
+            # Replace the current one with the split one
+            # Google "slice assignments"
+            # This list is the key to avoiding recursion. It expands to contain
+            # all of the split subsets by replacing them with the split ones
+            updated_subsets[subset_index:subset_index+1] = split_subsets
+
+            test_scheme = scheme.Scheme(self.cfg, "Current Scheme",
+                updated_subsets)
+
+            new_score = self.analyse_scheme(test_scheme)
+
+            log.info("Current best score is: " + str(best_score))
+            log.info("Current new score is: " + str(new_score))
+            if new_score.score < best_score.score:
+                log.info("New score is better and will be set to " +
+                    "best score")
+                best_scheme = test_scheme
+                best_score = new_score
+
+                # Change this to the one with split subsets in it. Note that
+                # the subset_index now points a NEW subset, one that was split
+                all_subsets = updated_subsets
+            else:
+                # Move to the next subset in the all_subsets list
                 subset_index += 1
 
-            else:
-                # Take a copy
-                updated_subsets = all_subsets[:]
+        # Now join the fabricated subsets back up with other subsets
+        while fabricated_subsets:
+            log.debug("Rejoining fabricated subsets with existing subsets")
+            # Take the first subset in the list (to be "popped" off later)
+            s = fabricated_subsets[0]
+            print("Fabricated subset is %s" % s)
+            centroid = s.centroid
 
-                # Replace the current one with the split one
-                # Google "slice assignments"
-                # This list is the key to avoiding recursion. It expands to contain
-                # all of the split subsets by replacing them with the split ones
-                updated_subsets[subset_index:subset_index+1] = split_subsets
+            best_match = None
 
-                test_scheme = scheme.Scheme(self.cfg, "Current Scheme", 
-                    updated_subsets)
+            # Take a list copy of the best scheme
+            scheme_list = list(best_scheme)
+            print("Scheme list is: %s" % scheme_list)
+            scheme_list.remove(s)
+            print("Scheme list minus fabricated subset is: %s" % scheme_list)
+            # Loop through the subsets in the best scheme and find the one
+            # with the nearest centroid
+            for sub in scheme_list:
+                euclid_dist = abs(sub.centroid[0] - centroid[0])
+                if euclid_dist < best_match or best_match == None:
+                    best_match = euclid_dist
+                    closest_sub = sub
+            print("Closest subset is: %s" % closest_sub)
+            # Now merge those subsets
+            merged_sub = subset_ops.merge_subsets([s, closest_sub])
+            print("Merged subset is: %s" % merged_sub)
+            # Remove the offending subset from the fabricated subset list
+            fabricated_subsets.pop(0)
+            # Get rid of the two subsets that were merged from the best_scheme
+            scheme_list.remove(closest_sub)
+            print("Scheme list minus fabricated sub and it's closest sub is %s" % scheme_list)
+            # Now add the new subset to the scheme and see if the new subset
+            # can be analyzed
+            scheme_list.append(merged_sub)
+            merged_scheme = scheme.Scheme(self.cfg, "Merged Scheme", scheme_list)
+            print("New merged Scheme: %s" % merged_scheme)
+            merged_result = self.analyse_scheme(merged_scheme)
+            # If it can be analyzed, move the algorithm forward, if it can't
+            # be analyzed add it to the list of fabricated_subsets
+            for new_subs in merged_scheme:
+                if new_subs.fabricated:
+                    fabricated_subsets.append(new_subs)
+            best_scheme = merged_scheme
 
-                try:
-                    new_score = self.analyse_scheme(test_scheme)
+        # Since the AIC will likely be better before we dealt with the
+        # fabricated subsets, we need to set the best scheme and best result
+        # to those from the last merged_scheme. TODO: add a variable to scheme
+        # to take care of this problem so that the best AND analysable scheme
+        # is the one that gets automatically flagged as the best scheme
+        self.results.best_scheme = best_scheme
+        self.results.best_result = merged_result
 
-                # In PhyML or RAxML, it is likely because of no alignment patterns,
-                # catch that and move to the next subset without splitting.
-                except PhylogenyProgramError as e:
-                    error1 = ("Empirical base frequency for state number 0" +
-                        " is equal to zero in DNA data partition")
-                    error2 = ("consists entirely of undetermined values")
-                    if e.stdout.find(error1) != -1:
-                        log.error("Phylogeny program generated an error so" +
-                            " this subset was not split, see error above")
-                        subset_index += 1
-                    elif e.stderr.find("1 patterns found") != -1:
-                        log.error("Phylogeny program generated an error so" +
-                            " this subset was not split, see error above")
-                        subset_index += 1
-                    elif e.stdout.find(error2) != -1:
-                        log.error("Phylogeny program generated an error so" +
-                            "this subset was not split, see error above")
-                        subset_index += 1
-                    else:
-                        raise PhylogenyProgramError
-
-                log.info("Current best score is: " + str(best_score))
-                log.info("Current new score is: " + str(new_score))
-                if new_score.score < best_score.score:
-                    log.info("New score is better and will be set to " + 
-                        "best score")
-                    best_scheme = test_scheme
-                    best_score = new_score
-
-                    # Change this to the one with split subsets in it. Note that
-                    # the subset_index now points a NEW subset, one that was split
-                    all_subsets = updated_subsets
-                else:
-                    # Move to the next subset in the all_subsets list
-                    subset_index += 1
         self.cfg.reporter.write_best_scheme(self.results)
 
 
@@ -440,7 +484,7 @@ class KmeansAnalysisWrapper(Analysis):
 
         split_subsets = []
         for a_subset in start_scheme:
-            how_many = kmeans.kmeans_wrapper(self.cfg, self.alignment, 
+            how_many = kmeans.kmeans_wrapper(self.cfg, self.alignment,
                 a_subset, tree_path)
             split_subsets += how_many
         split_scheme = scheme.Scheme(self.cfg, "split_scheme", split_subsets)
@@ -453,12 +497,12 @@ class KmeansAnalysisWrapper(Analysis):
 
         while subset_index < len(all_subsets):
             current_subset = all_subsets[subset_index]
-            split_subsets = kmeans.kmeans_split_subset(self.cfg, 
+            split_subsets = kmeans.kmeans_split_subset(self.cfg,
                 self.alignment, current_subset, tree_path)
 
             if split_subsets == 1:
                 log.info(
-                    "Subset split generated a subset of less than 2," + 
+                    "Subset split generated a subset of less than 2," +
                         " discarded split and moved to next")
                 subset_index += 1
 
@@ -483,7 +527,7 @@ class KmeansAnalysisWrapper(Analysis):
                     log.info("Current best score is: " + str(best_score))
                     log.info("Current new score is: " + str(new_score))
                     if new_score.score < best_score.score:
-                        log.info("New score " + str(subset_index) + 
+                        log.info("New score " + str(subset_index) +
                             " is better and will be set to best score")
                         best_scheme = test_scheme
 
@@ -503,6 +547,7 @@ class KmeansAnalysisWrapper(Analysis):
                     subset_index += 1
 
         self.cfg.reporter.write_best_scheme(self.results)
+
 
 class KmeansGreedy(Analysis):
     def do_analysis(self):
@@ -639,9 +684,6 @@ class KmeansGreedy(Analysis):
                  % (self.results.best_scheme.name, self.cfg.model_selection, self.results.best_score))
 
         self.cfg.reporter.write_best_scheme(self.results)
-
-
-
 
 
 def choose_method(search):

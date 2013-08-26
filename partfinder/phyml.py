@@ -389,6 +389,18 @@ def get_likelihoods(model, alignment_path, tree_path):
     model, alignment_path, tree_path)
     run_phyml(command)
 
+def get_likelihood_list(phylip_file):
+    # Retreive a list of the site likelihoods
+    phyml_lk_fname = ("%s_phyml_lk_GTRGAMMA.txt" % phylip_file)
+    # Open the phyml output and parse for input into the kmeans
+    # function
+    likelihood_list = likelihood_parser(phyml_lk_fname)[0]
+    return likelihood_list
+
+def fabricate(lnl):
+    result = PhymlResult(lnl, 0, 0)
+    return result
+
 if __name__ == '__main__':
     logging.basicConfig(level=logging.DEBUG)
     import tempfile

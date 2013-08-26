@@ -30,6 +30,7 @@ import results
 import threading
 from util import PartitionFinderError
 import util
+from util import PhylogenyProgramError
 
 class AnalysisError(PartitionFinderError):
     pass
@@ -161,24 +162,37 @@ class Analysis(object):
     def run_task(self, m, sub):
         analysis_error = None
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
         # try and except around analyse, then store the errors that occurs, if error occurs, then if there is an error set analysis_error to your exception
 >>>>>>> dummy_subset
+=======
+>>>>>>> dummy_subset
         # This bit should run in parallel (forking the processor)
-        self.cfg.processor.analyse(
-            m,
-            sub.alignment_path,
-            self.tree_path,
-            self.cfg.branchlengths,
-            self.cfg.cmdline_extras
-        )
+        try:
+            self.cfg.processor.analyse(
+                m,
+                sub.alignment_path,
+                self.tree_path,
+                self.cfg.branchlengths,
+                self.cfg.cmdline_extras
+            )
+
+        except PhylogenyProgramError as e:
+            # TODO: probably should do something smart with these "errors" so
+            # that we can pull them up and see what went wrong
+            sub.analysis_error = e.stdout, e.stderr
 
         # Not entirely sure that WE NEED to block here, but it is safer to do
         # It shouldn't hold things up toooo long...
         self.lock.acquire()
         try:
-            # add if the error == None parse the model result, else: sub.fabricate_result(), but the subset also asks the processor to fabricate the results, you can make both a PhyML result with some details about the error still let it go on to finalize, also turn on a variable in the subset that says "failed_analysis". It is the result class that gets saved into the cache files.
-            sub.parse_model_result(self.cfg, m)
+            if sub.analysis_error == None:
+                sub.parse_model_result(self.cfg, m)
+
+            else:
+                sub.fabricate_result(self.cfg, m)
+
             # Try finalising, then the result will get written out earlier...
             sub.finalise(self.cfg)
         finally:
