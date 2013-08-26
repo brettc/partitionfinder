@@ -358,15 +358,9 @@ class KmeansAnalysis(Analysis):
             split_subsets = kmeans.kmeans_split_subset(self.cfg,
                 self.alignment, current_subset, tree_path)
 
-<<<<<<< HEAD
-            # kmeans_split_subset() will return a 1 if there is a subset of less
-            # than 2 sites. In this case we just move on to the next step and
-            # don't worry about splitting that subset.
-=======
             # kmeans_split_subset will return a 1 and flag the subset as
             # fabricated if for some reason it raises a PhylogenyProgramError,
             # this it to catch those fabricated subsets
->>>>>>> dummy_subset
             if split_subsets == 1:
                 subset_index += 1
                 fabricated_subsets.append(current_subset)

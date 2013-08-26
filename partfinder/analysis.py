@@ -161,13 +161,6 @@ class Analysis(object):
 
     def run_task(self, m, sub):
         analysis_error = None
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
-        # try and except around analyse, then store the errors that occurs, if error occurs, then if there is an error set analysis_error to your exception
->>>>>>> dummy_subset
-=======
->>>>>>> dummy_subset
         # This bit should run in parallel (forking the processor)
         try:
             self.cfg.processor.analyse(
