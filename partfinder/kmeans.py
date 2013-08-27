@@ -83,7 +83,6 @@ def kmeans_split_subset(cfg, alignment, a_subset, tree_path, number_of_ks = 2):
         processor.get_likelihoods("GTRGAMMA", str(phylip_file),
             str(tree_path))
     except PhylogenyProgramError as e:
-        print e.stdout
         error1 = "that consist entirely of undetermined values"
         if e.stdout.find(error1) != -1:
             log.warning("The program was unable to calculate site" +
@@ -92,11 +91,20 @@ def kmeans_split_subset(cfg, alignment, a_subset, tree_path, number_of_ks = 2):
             a_subset.fabricated = True
             a_subset.analysis_error = "entirely undetermined values"
             return 1
+        elif e.stdout.find("base frequency for state number") != 1:
+            log.warning("The program was unable to calculate site" +
+                " likelihoods because the frequency for one of the" +
+                " nucleotides is equal to zero")
+            a_subset.fabricated = True
+            a_subset.analysis_error = "state frequency equal to zero"
+            return 1
         else:
             raise PhylogenyProgramError
 
     # Call processor to parse them likelihoods from the output file.
     likelihood_list = processor.get_likelihood_list(phylip_file)
+    log.info("Likehood list for subset %s is %s" % (a_subset.name, likelihood_list))
+
     a_subset.site_lnls_GTRG = likelihood_list
 
     # Perform kmeans clustering on the likelihoods
