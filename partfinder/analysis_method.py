@@ -407,9 +407,7 @@ class KmeansAnalysis(Analysis):
 
             # Take a list copy of the best scheme
             scheme_list = list(best_scheme)
-            print("Scheme list is: %s" % scheme_list)
             scheme_list.remove(s)
-            print("Scheme list minus fabricated subset is: %s" % scheme_list)
             # Loop through the subsets in the best scheme and find the one
             # with the nearest centroid
             for sub in scheme_list:
@@ -417,20 +415,19 @@ class KmeansAnalysis(Analysis):
                 if euclid_dist < best_match or best_match == None:
                     best_match = euclid_dist
                     closest_sub = sub
-            print("Closest subset is: %s" % closest_sub)
+
             # Now merge those subsets
             merged_sub = subset_ops.merge_subsets([s, closest_sub])
-            print("Merged subset is: %s" % merged_sub)
             # Remove the offending subset from the fabricated subset list
             fabricated_subsets.pop(0)
             # Get rid of the two subsets that were merged from the best_scheme
             scheme_list.remove(closest_sub)
-            print("Scheme list minus fabricated sub and it's closest sub is %s" % scheme_list)
+
             # Now add the new subset to the scheme and see if the new subset
             # can be analyzed
             scheme_list.append(merged_sub)
             merged_scheme = scheme.Scheme(self.cfg, "Merged Scheme", scheme_list)
-            print("New merged Scheme: %s" % merged_scheme)
+
             merged_result = self.analyse_scheme(merged_scheme)
             # If it can be analyzed, move the algorithm forward, if it can't
             # be analyzed add it to the list of fabricated_subsets
@@ -438,6 +435,7 @@ class KmeansAnalysis(Analysis):
                 if new_subs.fabricated:
                     fabricated_subsets.append(new_subs)
             best_scheme = merged_scheme
+            best_score = merged_result
 
         # Since the AIC will likely be better before we dealt with the
         # fabricated subsets, we need to set the best scheme and best result
@@ -445,7 +443,7 @@ class KmeansAnalysis(Analysis):
         # to take care of this problem so that the best AND analysable scheme
         # is the one that gets automatically flagged as the best scheme
         self.results.best_scheme = best_scheme
-        self.results.best_result = merged_result
+        self.results.best_result = best_score
 
         self.cfg.reporter.write_best_scheme(self.results)
 
