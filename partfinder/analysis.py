@@ -30,6 +30,7 @@ import results
 import threading
 from util import PartitionFinderError
 import util
+from util import PhylogenyProgramError
 
 class AnalysisError(PartitionFinderError):
     pass
@@ -159,20 +160,32 @@ class Analysis(object):
         log.info("Starting tree with branch lengths is here: %s", self.tree_path)
 
     def run_task(self, m, sub):
+        analysis_error = None
         # This bit should run in parallel (forking the processor)
-        self.cfg.processor.analyse(
-            m,
-            sub.alignment_path,
-            self.tree_path,
-            self.cfg.branchlengths,
-            self.cfg.cmdline_extras
-        )
+        try:
+            self.cfg.processor.analyse(
+                m,
+                sub.alignment_path,
+                self.tree_path,
+                self.cfg.branchlengths,
+                self.cfg.cmdline_extras
+            )
+
+        except PhylogenyProgramError as e:
+            # TODO: probably should do something smart with these "errors" so
+            # that we can pull them up and see what went wrong
+            sub.analysis_error = e.stdout, e.stderr
 
         # Not entirely sure that WE NEED to block here, but it is safer to do
         # It shouldn't hold things up toooo long...
         self.lock.acquire()
         try:
-            sub.parse_model_result(self.cfg, m)
+            if sub.analysis_error == None:
+                sub.parse_model_result(self.cfg, m)
+
+            else:
+                sub.fabricate_result(self.cfg, m)
+
             # Try finalising, then the result will get written out earlier...
             sub.finalise(self.cfg)
         finally:
