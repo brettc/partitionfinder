@@ -26,11 +26,13 @@ import os
 import shutil
 import sys
 import util
+import csv
 
 from pyparsing import (
     Word, Literal, nums, Suppress, ParseException,
     SkipTo,
 )
+from math import log as logarithm
 
 import phyml_models as models
 
@@ -42,7 +44,9 @@ from util import PhylogenyProgramError
 
 
 class PhymlError(PhylogenyProgramError):
-    pass
+    def __init__(self, stderr, stdout):
+        self.stderr = stderr
+        self.stdout = stdout
 
 def find_program():
     """Locate the binary ..."""
@@ -87,7 +91,7 @@ def run_phyml(command):
         log.error("Phyml output follows, in case it's helpful for finding the problem")
         log.error("%s", stdout)
         log.error("%s", stderr)
-        raise PhymlError
+        raise PhymlError(stdout, stderr)
 
 
 def dupfile(src, dst):
@@ -274,6 +278,128 @@ class Parser(object):
 def parse(text, datatype):
     the_parser = Parser(datatype)
     return the_parser.parse(text)
+
+def likelihood_parser(phyml_lk_file):
+    '''
+    Takes a *_phyml_lk.txt file and returns a dictionary of sites and site
+    likelihoods and a dictionary of sites and lists of likelihoods under
+    different rate categories. If no rate categories are specified, it will
+    return a dictionary with sites and likelihoods P(D|M) for each site.
+
+    Here is an example of the first few lines of the file that it takes:
+
+    Note : P(D|M) is the probability of site D given the model M (i.e., the
+    site likelihood) P(D|M,rr[x]) is the probability of site D given the model
+    M and the relative rate of evolution rr[x], where x is the class of rate to
+    be considered.  We have P(D|M) = \sum_x P(x) x P(D|M,rr[x]).
+
+    Site   P(D|M)          P(D|M,rr[1]=2.6534)   P(D|M,rr[2]=0.2289)   P(D|M,rr[3]=0.4957)   P(D|M,rr[4]=1.0697)   Posterior mean
+    1      2.07027e-12     1.3895e-19            6.2676e-12            1.2534e-12            1.21786e-15           0.273422
+    2      1.8652e-07      2.05811e-19           6.73481e-07           4.14575e-09           7.97623e-14           0.23049
+    3      4.48873e-15     1.37274e-19           7.11221e-15           9.11826e-15           9.21848e-17           0.382265
+    4      3.38958e-10     1.31413e-19           1.18939e-09           4.20659e-11           5.86537e-15           0.237972
+    5      8.29969e-17     1.11587e-19           3.1672e-17            2.52183e-16           1.9722e-17            0.502077
+    6      9.24579e-09     1.59891e-19           3.31101e-08           4.79946e-10           2.59524e-14           0.232669
+    7      3.43996e-10     2.1917e-19            1.19544e-09           5.43128e-11           1.22969e-14           0.240455
+    8      4.43262e-13     1.1447e-19            1.32148e-12           2.8874e-13            3.7386e-16            0.27685
+    9      3.42513e-11     1.70149e-19           1.14227e-10           1.02103e-11           4.05239e-15           0.250765
+    10     1.15506e-11     1.28107e-19           3.86378e-11           3.32642e-12           1.46151e-15           0.250024
+    '''
+    try:
+        with open(str(phyml_lk_file)) as phyml_lk_file:
+            # The phyml_lk files differ based on whether different rate
+            # categories are estimated or not, this figures out which
+            # file we are dealing with
+            phyml_lk_file.next()
+            line2 = phyml_lk_file.next()
+            # Check to see if the file contains rate categories
+            if line2[0] != "P":
+                phyml_lk_file.next()
+
+            # If it contains rate categories, we need to skip a few more lines
+            else:
+                for _ in xrange(4):
+                    phyml_lk_file.next()
+            # Read in the contents of the file and get rid of whitespace
+            list_of_dicts = list(csv.DictReader(phyml_lk_file,
+                delimiter = " ", skipinitialspace = True))
+    except IOError:
+        raise IOError("Could not find the likelihood file!")
+    phyml_lk_file.close()
+
+    # Right now, when the alignment is over 1,000,000 sites, PhyML
+    # merges the site number with the site likelihood, catch that and
+    # throw an error
+    if len(list_of_dicts) > 999999:
+        raise IOError("PhyML file cannot process more than 1 M sites")
+
+    # The headers values change with each run so we need a list of them
+    headers = []
+    for k in list_of_dicts[0]:
+        headers.append(k)
+    # Sort the headers into alphabetical order
+    headers.sort()
+
+    # Check if the rate cateogories were estimated, if they weren't
+    # just return the likelihood scores for each site, otherwise, return
+    # site likelihoods and likelihoods under each rate category
+    if len(headers) < 4:
+        # Make a list of site log likelihoods
+        likelihood_list = [[logarithm(float(site[headers[1]]))] for site in list_of_dicts]
+        return likelihood_list
+
+    else:
+        # Make a list of site log ikelihoods
+        likelihood_list = [[logarithm(float(site[headers[1]]))] for site in list_of_dicts]
+
+        # Make a rate list
+        rate_list = [[(logarithm(float(site[headers[len(headers) - 3]])))] for site in list_of_dicts]
+
+        # Now make a list of lists of site likelihoods under different 
+        # rate categories
+        lk_rate_list = []
+        for i in list_of_dicts:
+            ind_lk_list = []
+            # Pull the likelihood from each rate category by calling the 
+            # appropriate key from "headers"
+            for num in range(2, len(headers) - 3):
+                ind_lk_list.append(logarithm(float(i[headers[num]])))
+            # Now add the list of likelihoods for the site to a master list
+            lk_rate_list.append(ind_lk_list)
+
+        # Now pull likelihoods and rates for a two dimensional list
+        lk_site_rate_list = []
+        for i in list_of_dicts:
+            ind_lk_r_list = []
+            ind_lk_r_list.append(logarithm(float(i[headers[1]])))
+            ind_lk_r_list.append(logarithm(float(i[headers[len(headers) - 3]])))
+            lk_site_rate_list.append(ind_lk_r_list)
+
+        # Return both the list of site likelihoods and the list of lists of
+        # likelihoods under different rate categories
+        return likelihood_list, lk_rate_list, rate_list, lk_site_rate_list
+
+program_name = "phyml"
+
+def program():
+    return program_name
+
+def get_likelihoods(model, alignment_path, tree_path):
+    command = "--run_id %s -b 0 -i '%s' -u '%s' -m GTR --print_site_lnl" % (
+    model, alignment_path, tree_path)
+    run_phyml(command)
+
+def get_likelihood_list(phylip_file):
+    # Retreive a list of the site likelihoods
+    phyml_lk_fname = ("%s_phyml_lk_GTRGAMMA.txt" % phylip_file)
+    # Open the phyml output and parse for input into the kmeans
+    # function
+    likelihood_list = likelihood_parser(phyml_lk_fname)[0]
+    return likelihood_list
+
+def fabricate(lnl):
+    result = PhymlResult(lnl, 0, 0)
+    return result
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.DEBUG)

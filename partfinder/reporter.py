@@ -19,6 +19,8 @@ import logging
 log = logging.getLogger("reporter")
 
 import os
+import itertools
+import operator
 
 scheme_header_template = "%-18s: %s\n"
 scheme_subset_template = "%-6s | %-10s | %-30s | %-30s | %-40s\n"
@@ -121,39 +123,37 @@ class TextReporter(object):
         from raxml_models import get_raxml_protein_modelstring
         output.write("\n\nRaxML-style partition definitions\n")
         number = 1
-        # for sub in sorted_subsets:
 
-            # desc = {}
-            # names = []
-            # for part in sub:
-                # names.append(part.name)
-                # for subpart in part.description:  # loop through each sub-part of the partition
-                    # desc[subpart[0]] = subpart
+        subset_number = 0
+        for each_s in sorted_subsets:
+            list_of_sites = each_s.columns
+            big_list = []
+            # Took this solution for grouping consecutive sites from 
+            # http://stackoverflow.com/questions/2361945/detecting-consecutive-integers-in-a-list
+            for k, g in itertools.groupby(enumerate(list_of_sites), 
+                lambda (i,x):i-x):
+                consec_sites = map(operator.itemgetter(1), g)
+                if len(consec_sites) > 2:
+                    the_range = (str(min(consec_sites) + 1) + "-" + 
+                        str(max(consec_sites) + 1))
+                    big_list.append(the_range)
+                else:
+                    consec_sites = [x + 1 for x in consec_sites]
+                    big_list += consec_sites
+            big_list = str(big_list).strip("[]")
+            big_list = big_list.translate(None, "'")
 
-            # # Pretty print the sites in the scheme
-            # desc_starts = desc.keys()
-            # desc_starts.sort()
-            # parts = []
-            # for key in desc_starts:
-                # part = desc[key]
-                # if part[2] == 1:
-                    # text = "%s-%s" % (part[0], part[1])
-                # else:
-                    # text = "%s-%s\\%s" % tuple(part)
-                # parts.append(text)
-            # parts = ', '.join(parts)
+            if self.cfg.datatype == "DNA":
+                model = 'DNA'
+            elif self.cfg.datatype == "protein":
+                model = get_raxml_protein_modelstring(each_s.best_model)
+            else:
+                raise RuntimeError
 
-            # if self.cfg.datatype == "DNA":
-                # model = "DNA"
-            # elif self.cfg.datatype == "protein":
-                # model = get_raxml_protein_modelstring(sub.best_model)
-            # else:
-                # raise RuntimeError
+            output.write("%s, Subset%s = %s" % (model, subset_number, big_list))
+            output.write("\n")
+            subset_number += 1
 
-            # line = "%s, p%s = %s\n" % (model, number, parts)
-            # output.write(line)
-
-            # number += 1
 
     def write_best_scheme(self, result):
         pth = os.path.join(self.cfg.output_path, 'best_scheme.txt')

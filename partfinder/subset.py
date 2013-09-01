@@ -66,8 +66,14 @@ class Subset(object):
         self.columns = list(column_set)
         self.columns.sort()
         self.status = FRESH
+        self.fabricated = False
+        self.analysis_error = None
 
+        self.centroid = None
         self.results = {}
+        # Site likelihoods calculated using GTR+G from the
+        # processor.get_likelihoods()
+        self.site_lnls_GTRG = []
         self.best_info_score = None  # e.g. AIC, BIC, AICc
         self.best_model = None
         self.best_params = None
@@ -133,6 +139,7 @@ class Subset(object):
             log.error("Can't add model result %s, it already exists in %s",
                       model, self)
         self.results[model] = result
+
 
     def model_selection(self, cfg):
         # Model selection is done after we've added all the models
@@ -248,6 +255,7 @@ class Subset(object):
         output = open(pth, 'rb').read()
         try:
             result = cfg.processor.parse(output, cfg.datatype)
+            print str(result)
             self.add_result(cfg, model, result)
             # Remove the current model from remaining ones
             self.models_not_done.remove(model)
@@ -271,6 +279,20 @@ class Subset(object):
                     "Failed to run models %s; not sure why",
                     ", ".join(list(self.models_not_done)))
                 raise
+
+    def fabricate_result(self, cfg, model):
+        '''If the subset fails to be analyzed, we throw some "fabricated"
+        results'''
+        processor = cfg.processor
+        self.fabricated = True
+
+        lnl = sum(self.site_lnls_GTRG)
+        result = processor.fabricate(lnl)
+
+        self.add_result(cfg, model, result)
+        self.best_params = cfg.processor.models.get_num_params(model)
+        self.best_lnl = result.lnl
+        self.models_not_done.remove(model)
 
     FORCE_RESTART_MESSAGE = make_warning("""
     It looks like you have changed one or more of the data_blocks in the

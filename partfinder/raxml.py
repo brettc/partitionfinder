@@ -35,7 +35,11 @@ from pyparsing import (
 
 import raxml_models as models
 
-_binary_name = 'raxml'
+# This is set as the binary name because the previously compiled
+# raxml had a bug when calculating site likelihoods, this needs to
+# be changed back to "raxml" once a newer version without the bug
+# is compiled.
+_binary_name = 'raxmlHPC-SSE3'
 if sys.platform == 'win32':
     _binary_name += ".exe"
 
@@ -43,7 +47,9 @@ from util import PhylogenyProgramError
 
 
 class RaxmlError(PhylogenyProgramError):
-    pass
+    def __init__(self, stderr, stdout):
+        self.stderr = stderr
+        self.stdout = stdout
 
 
 def find_program():
@@ -92,7 +98,7 @@ def run_raxml(command):
         log.error("RAxML output follows, in case it's helpful for finding the problem")
         log.error("%s", stdout)
         log.error("%s", stderr)
-        raise RaxmlError
+        raise RaxmlError(stderr, stdout)
 
 
 def dupfile(src, dst):
@@ -350,6 +356,77 @@ class Parser(object):
 def parse(text, datatype):
     the_parser = Parser(datatype)
     return the_parser.parse(text)
+
+def likelihood_parser(raxml_lnl_file):
+    '''
+    This function takes as input the RAxML_perSiteLLs* file from a RAxML -f g
+    run, and returns a dictionary of sites and likelihoods to feed into kmeans.
+
+    Note: the likelihoods are already logged, so either we should change the
+    kmeans function and tell the PhyML parser to return log likelihoods or we
+    should convert these log likelihoods back to regular likelihood scores
+    '''
+    # See if you can locate the file, then parse the second line that contains
+    # the log likelihoods. If it isn't found raise an error
+    try:
+        with open(str(raxml_lnl_file)) as raxml_lnl_file:
+            line_num = 1
+            for line in raxml_lnl_file.readlines():
+                if line_num == 2:
+                    site_lnl_list = line.split(" ")
+                line_num += 1
+    except IOError:
+        raise IOError("Could not locate per site log likelihood file")
+
+    # Get rid of the new line character and the first "tr1" from the first
+    # element in the list
+    site_lnl_list[0] = site_lnl_list[0].strip("tr1\t")
+    site_lnl_list.pop(-1)
+
+    # Have to format into individual "lists" for each site for input into the
+    # numpy array
+    site_lk_list = [[float(site)] for site in site_lnl_list]
+
+    raxml_lnl_file.close()
+    return site_lk_list
+
+program_name = "raxml"
+
+def program():
+    return program_name
+
+def get_likelihoods(model, alignment_path, tree_path):
+    #raxml doesn't append alignment names automatically, like PhyML, let's do that here
+    analysis_ID = raxml_analysis_ID(alignment_path, model)
+
+    #force raxml to write to the dir with the alignment in it
+    #-e 1.0 sets the precision to 1 lnL unit. This is all that's required here, and helps with speed.
+    aln_dir, fname = os.path.split(alignment_path)
+    command = "-m %s -f g -s '%s' -z '%s' -n %s -w '%s'" % (
+        model, alignment_path, tree_path, analysis_ID, os.path.abspath(aln_dir))
+    run_raxml(command)
+
+def get_likelihood_list(phylip_file):
+    # Retrieve a list of the site likelihoods. The phylip files are called
+    # e.g. "67e2419ede57ae4032c534fe97ba408a.phy" we want the the number
+    # before the full stop
+    phylip_file_split = os.path.split(phylip_file)
+    subset_code = phylip_file_split[1].split(".")[0]
+    
+    raxml_lnl_file = os.path.join(phylip_file_split[0],
+        ("RAxML_perSiteLLs.%s_GTRGAMMA.txt" % subset_code))
+
+    likelihood_list = likelihood_parser(raxml_lnl_file)
+    return likelihood_list
+
+def fabricate(lnl):
+    result = Parser('DNA')
+    result.result = RaxmlResult()
+    result.result.lnl = lnl
+    result.result.tree_size = 0
+    result.result.seconds = 0
+    result.result.alpha = 0
+    return result.result
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.DEBUG)
