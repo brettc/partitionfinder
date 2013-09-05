@@ -400,7 +400,6 @@ class KmeansAnalysis(Analysis):
             log.debug("Rejoining fabricated subsets with existing subsets")
             # Take the first subset in the list (to be "popped" off later)
             s = fabricated_subsets[0]
-            print("Fabricated subset is %s" % s)
             centroid = s.centroid
 
             best_match = None
@@ -417,9 +416,15 @@ class KmeansAnalysis(Analysis):
                     closest_sub = sub
 
             # Now merge those subsets
-            merged_sub = subset_ops.merge_subsets([s, closest_sub])
+            merged_sub = subset_ops.merge_fabricated_subsets([s, closest_sub])
+
             # Remove the offending subset from the fabricated subset list
             fabricated_subsets.pop(0)
+            # If the closest subset happens to be "fabricated" as well, take
+            # it out of the fabricated_subsets list
+            if closest_sub in fabricated_subsets:
+                fabricated_subsets.remove(closest_sub)
+
             # Get rid of the two subsets that were merged from the best_scheme
             scheme_list.remove(closest_sub)
 
@@ -432,7 +437,7 @@ class KmeansAnalysis(Analysis):
             # If it can be analyzed, move the algorithm forward, if it can't
             # be analyzed add it to the list of fabricated_subsets
             for new_subs in merged_scheme:
-                if new_subs.fabricated:
+                if new_subs.fabricated and new_subs not in fabricated_subsets:
                     fabricated_subsets.append(new_subs)
             best_scheme = merged_scheme
             best_score = merged_result
