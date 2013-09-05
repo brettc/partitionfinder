@@ -87,3 +87,36 @@ def split_subset(a_subset, cluster_list):
         tracker += 1
 
     return list_of_subsets
+
+def merge_fabricated_subsets(subset_list):
+    '''Allows the merging of fabricated subsets and the preservation of their
+    centroids and lnls'''
+    columns = set()
+    lnl = 0
+    centroid = []
+
+    # Figure out how many dimensions the centroid is
+    centroid_dim = len(subset_list[0].centroid)
+    for i in range(centroid_dim):
+        centroid.append(0)
+
+    for sub in subset_list:
+        columns |= sub.column_set
+        lnl += sub.best_lnl
+        number = 0
+        for observation in centroid:
+            observation += sub.centroid[number]
+            number += 1
+
+    # Now just take the average of each centroid to be the centroid of the new
+    # subset
+    centroid = [x/len(subset_list) for x in centroid]
+
+    new_sub = subset.Subset(sub.cfg, columns)
+
+    # Add the centroid and sum of the lnls to the subset. TODO: create
+    # functions to update these variables in the subset rather than messing
+    # with them directly
+    new_sub.centroid = centroid
+    new_sub.lnl = lnl
+    return new_sub
