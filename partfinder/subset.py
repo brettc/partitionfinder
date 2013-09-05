@@ -255,7 +255,6 @@ class Subset(object):
         output = open(pth, 'rb').read()
         try:
             result = cfg.processor.parse(output, cfg.datatype)
-            print str(result)
             self.add_result(cfg, model, result)
             # Remove the current model from remaining ones
             self.models_not_done.remove(model)
@@ -293,6 +292,9 @@ class Subset(object):
         self.best_params = cfg.processor.models.get_num_params(model)
         self.best_lnl = result.lnl
         self.models_not_done.remove(model)
+
+    def add_centroid(self, centroid):
+        self.centroid = centroid
 
     FORCE_RESTART_MESSAGE = make_warning("""
     It looks like you have changed one or more of the data_blocks in the
