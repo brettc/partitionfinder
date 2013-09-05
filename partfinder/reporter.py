@@ -82,7 +82,7 @@ class TextReporter(object):
         pf_scheme_description = []
             # a way to print out the scheme in PF format
 
-        # for sub in sorted_subsets:
+        for sub in sorted_subsets:
             # desc = {}
             # names = []
             # for part in sub:
@@ -107,13 +107,14 @@ class TextReporter(object):
             # names = ', '.join(names)
 
             # pf_scheme_description.append("(%s)" % names)
+            num_sites = len(sub.columns)
+            
+            output.write(scheme_subset_template % (
+                number, sub.best_model, 0, num_sites, sub.alignment_path))
+            number += 1
 
-            # output.write(scheme_subset_template % (
-                # number, sub.best_model, names, parts, sub.alignment_path))
-            # number += 1
-
-        # pf_scheme_description = " ".join(pf_scheme_description)
-        # output.write("\n\nScheme Description in PartitionFinder format\n")
+        pf_scheme_description = " ".join(pf_scheme_description)
+        output.write("\n\nScheme Description in PartitionFinder format\n")
         output.write("Scheme_%s = %s;" % (sch.name, pf_scheme_description))
 
     def write_raxml(self, sch, result, output, sorted_subsets):
@@ -122,9 +123,8 @@ class TextReporter(object):
         """
         from raxml_models import get_raxml_protein_modelstring
         output.write("\n\nRaxML-style partition definitions\n")
-        number = 1
 
-        subset_number = 0
+        subset_number = 1
         for each_s in sorted_subsets:
             list_of_sites = each_s.columns
             big_list = []
