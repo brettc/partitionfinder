@@ -15,3 +15,11 @@ example/results.bin
 .ropeproject
 analysis
 .cache
+
+examples/nucleotide/best_scheme_GTR+G.txt
+
+examples/nucleotide/best_scheme_GTR+I+G.txt
+
+examples/nucleotide/best_scheme_JC.txt
+
+examples/nucleotide/best_scheme_all_models.txt
