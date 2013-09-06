@@ -27,6 +27,7 @@ import neighbour
 import kmeans
 import itertools
 import subset_ops
+from scipy import spatial
 
 from util import PhylogenyProgramError
 
@@ -410,7 +411,12 @@ class KmeansAnalysis(Analysis):
             # Loop through the subsets in the best scheme and find the one
             # with the nearest centroid
             for sub in scheme_list:
-                euclid_dist = abs(sub.centroid[0] - centroid[0])
+                centroid_array = [sub.centroid, centroid]
+                print centroid_array
+                # euclid_dist = abs(sub.centroid[0] - centroid[0])
+                euclid_dist = spatial.distance.pdist(centroid_array,
+                    'euclidean')
+                print euclid_dist
                 if euclid_dist < best_match or best_match == None:
                     best_match = euclid_dist
                     closest_sub = sub
