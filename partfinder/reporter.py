@@ -127,19 +127,19 @@ class TextReporter(object):
         subset_number = 1
         for each_s in sorted_subsets:
             list_of_sites = each_s.columns
-            big_list = []
+            big_list = [x + 1 for x in list_of_sites]
             # Took this solution for grouping consecutive sites from 
             # http://stackoverflow.com/questions/2361945/detecting-consecutive-integers-in-a-list
-            for k, g in itertools.groupby(enumerate(list_of_sites), 
-                lambda (i,x):i-x):
-                consec_sites = map(operator.itemgetter(1), g)
-                if len(consec_sites) > 2:
-                    the_range = (str(min(consec_sites) + 1) + "-" + 
-                        str(max(consec_sites) + 1))
-                    big_list.append(the_range)
-                else:
-                    consec_sites = [x + 1 for x in consec_sites]
-                    big_list += consec_sites
+            #for k, g in itertools.groupby(enumerate(list_of_sites), 
+            #    lambda (i,x):i-x):
+            #    consec_sites = map(operator.itemgetter(1), g)
+            #    if len(consec_sites) > 2:
+            #        the_range = (str(min(consec_sites) + 1) + "-" + 
+            #            str(max(consec_sites) + 1))
+            #        big_list.append(the_range)
+            #    else:
+            #        consec_sites = [x + 1 for x in consec_sites]
+            #        big_list += consec_sites
             big_list = str(big_list).strip("[]")
             big_list = big_list.translate(None, "'")
 
