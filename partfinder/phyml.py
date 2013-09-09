@@ -389,13 +389,26 @@ def get_likelihoods(model, alignment_path, tree_path):
     model, alignment_path, tree_path)
     run_phyml(command)
 
-def get_likelihood_list(phylip_file):
+def get_likelihood_list(phylip_file, cfg):
     # Retreive a list of the site likelihoods
     phyml_lk_fname = ("%s_phyml_lk_GTRGAMMA.txt" % phylip_file)
     # Open the phyml output and parse for input into the kmeans
     # function
-    likelihood_list = likelihood_parser(phyml_lk_fname)[0]
-    return likelihood_list
+
+    if cfg.kmeans_opt == 1:
+        # return the site likelihoods only
+        return likelihood_parser(phyml_lk_fname)[0]
+    if cfg.kmeans_opt == 2:
+        # return the site rates only
+        return likelihood_parser(phyml_lk_fname)[2]
+    if cfg.kmeans_opt == 3:
+        # return the site rates and likelihoods together
+        return likelihood_parser(phyml_lk_fname)[3]
+    if cfg.kmeans_opt == 4:
+        # return the likelihoods under each gamma rate category
+        return likelihood_parser(phyml_lk_fname)[1]
+
+    
 
 def fabricate(lnl):
     result = PhymlResult(lnl, 0, 0)
