@@ -52,11 +52,12 @@ class TextProgress(Progress):
         self.schemes_analysed = 0
         self.subsets_analysed = set()
 
-        log.info("PartitionFinder will have to analyse %d subsets to complete this analysis", subset_count)
-        log.info("This will result in %s schemes being created", scheme_count)
-        if subset_count > 10000:
-            log.warning("%d is a lot of subsets, this might take a long time to analyse", subset_count)
-            log.warning("Perhaps consider using a different search scheme instead (see Manual)")
+        if "kmeans" not in self.cfg.search:
+            log.info("PartitionFinder will have to analyse %d subsets to complete this analysis", subset_count)
+            log.info("This will result in %s schemes being created", scheme_count)
+            if subset_count > 10000:
+                log.warning("%d is a lot of subsets, this might take a long time to analyse", subset_count)
+                log.warning("Perhaps consider using a different search scheme instead (see Manual)")
 
     def next_scheme(self):
         self.schemes_analysed += 1
@@ -73,7 +74,7 @@ class TextProgress(Progress):
         if old_num_done != num_subs_done:
 
             if "kmeans" in self.cfg.search:
-                log.info("Finished subset %d", num_subs_done)                
+                pass
             else:    
                 percent_done = (
                     float(num_subs_done) * 100.0) / float(self.subset_count)
