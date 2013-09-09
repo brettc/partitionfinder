@@ -45,7 +45,7 @@ class Configuration(object):
 
     def __init__(self, datatype="DNA", phylogeny_program='phyml',
         save_phylofiles=False, cmdline_extras = "", cluster_weights = None,
-        cluster_percent=10):
+        cluster_percent=10, kmeans_opt=1):
 
         log.info("------------- Configuring Parameters -------------")
         # Only required if user adds them
@@ -57,6 +57,9 @@ class Configuration(object):
         self.progress = progress.NoProgress(self)
         self.cmdline_extras = cmdline_extras
         self.cluster_percent = float(cluster_percent)
+        self.kmeans_opt = kmeans_opt
+
+        print kmeans_opt, self.kmeans_opt
 
         # Record this
         self.base_path = '.'
@@ -126,7 +129,12 @@ class Configuration(object):
             self.cluster_weights["model"] = float(eval(cluster_weights[2]))
             self.cluster_weights["alpha"] = float(eval(cluster_weights[3]))
 
-        #check that cluster_percent is 0-100
+        # Set the defaults into the class. These can be reset by calling
+        # set_option(...)
+        for o, v in self.options.items():
+            # Could call self.set_option here -- but it might confuse users
+            setattr(self, o, v[0])
+
         try:
             assert self.cluster_percent >= 0.0
             assert self.cluster_percent <= 100.0
@@ -136,13 +144,9 @@ class Configuration(object):
                       "is %.2f. Please check and try again." % self.cluster_percent)
             raise ConfigurationError
 
-        log.info("Setting rcluster-percent to %.2f" % self.cluster_percent)
+        log.debug("Setting rcluster-percent to %.2f" % self.cluster_percent)
 
-        # Set the defaults into the class. These can be reset by calling
-        # set_option(...)
-        for o, v in self.options.items():
-            # Could call self.set_option here -- but it might confuse users
-            setattr(self, o, v[0])
+
 
     def find_programs(self):
         pth = os.path.abspath(__file__)
@@ -292,7 +296,18 @@ class Configuration(object):
             log.error("Clustering methods are only available when using raxml"
                       " (the --raxml commandline option). Please check and try again."
                       " See the manual for more details.")
+            raise ConfigurationError        
+
+        print option, value, self.phylogeny_program, self.kmeans_opt
+
+        if option == "search" and "kmeans" in value and self.phylogeny_program != 'phyml' and self.kmeans_opt != 1:
+            log.error("You have chosen a kmeans option (--kmeans_opt) that does not work "
+                "with the --raxml option. Please re-run your analysis in one of two ways: "
+                "\n 1. Remove the --raxml commandline option, so that PhyML is used, or "
+                "\n 2. Change the --kmeans_opt commandline option to 1 (or remove it) and leave the "
+                "--raxml option in place.")
             raise ConfigurationError
+
 
         log.info("Setting '%s' to '%s'", option, value)
         setattr(self, option, value)
