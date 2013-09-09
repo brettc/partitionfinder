@@ -406,7 +406,7 @@ def get_likelihoods(model, alignment_path, tree_path):
         model, alignment_path, tree_path, analysis_ID, os.path.abspath(aln_dir))
     run_raxml(command)
 
-def get_likelihood_list(phylip_file):
+def get_likelihood_list(phylip_file, cfg):
     # Retrieve a list of the site likelihoods. The phylip files are called
     # e.g. "67e2419ede57ae4032c534fe97ba408a.phy" we want the the number
     # before the full stop
