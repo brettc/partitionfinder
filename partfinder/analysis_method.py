@@ -341,28 +341,26 @@ class KmeansAnalysis(Analysis):
 
 
         while subset_index < len(all_subsets):
-            log.info("%s score of best scheme: %.2f" 
-                     %(self.cfg.model_selection.upper(), best_result.score))
+            log.info("Best scheme has %s score of %.2f and %d subset(s)" 
+                     %(self.cfg.model_selection.upper(), best_result.score, len(best_scheme.subsets)))
 
             log.info("***Kmeans algorithm step %d***" % step)
             step += 1
 
-            log.info("Subsets to analyse: %d", len(all_subsets))
-
             current_subset = all_subsets[subset_index]
 
-            log.info("Subsets analysed: %d", step-1)
-            log.info("Subset index: %d", subset_index)
+            log.info("Analysing subset of %d sites", len(current_subset.columns))
 
             # First check if the subset is large enough to split, if it isn't,
             # move to the next subset
             if len(current_subset.columns) == 1:
-                log.debug("Subset consists of only one site, not splitting")
+                log.info("This subset cannot be split further")
                 subset_index += 1
                 continue
 
             if current_subset.fabricated:
-                log.debug("Fabricated subset, not splitting")
+                log.info("This subset cannot be split further because %s cannot analyse it",
+                        self.cfg.phylogeny_program)
                 subset_index += 1
                 fabricated_subsets.append(current_subset)
                 continue
@@ -379,15 +377,7 @@ class KmeansAnalysis(Analysis):
                 fabricated_subsets.append(current_subset)
                 continue
 
-            log.info("current subset has %d sites", len(current_subset.columns))
-            if len(split_subsets)==2:
-                log.info("Split subset of %d sites into %d and %d sites"
-                          %(len(current_subset.columns), 
-                            len(split_subsets[0].columns), 
-                            len(split_subsets[1].columns)))
-            elif len(split_subsets)==1:
-                log.info("EH WHAT")
-
+ 
             # Take a copy
             updated_subsets = all_subsets[:]
 
@@ -414,17 +404,32 @@ class KmeansAnalysis(Analysis):
                 self.cfg.reporter.write_scheme_summary(
                     self.results.best_scheme, self.results.best_result)
 
+                if len(split_subsets)==2:
+                    log.info("Splitting subset into %d:%d sites improve %s score"
+                              %(len(split_subsets[0].columns), 
+                                len(split_subsets[1].columns),
+                                self.cfg.model_selection))
+ 
+
+
             else:
+                log.info("Splitting subset did not improve the %s score", 
+                         self.cfg.model_selection.upper())
                 # Move to the next subset in the all_subsets list
                 subset_index += 1
 
-        log.info("%s score of best scheme: %.2f" 
-                 %(self.cfg.model_selection.upper(), best_result.score))
+        log.info("Best scheme has %s score of %.2f and %d subset(s)" 
+                 %(self.cfg.model_selection.upper(), best_result.score, len(best_scheme.subsets)))
 
+
+        if fabricated_subsets:
+            log.info("Finalising partitioning scheme")
+            log.info("This involves cleaning up small subsets which %s "
+                     "can't analyse", self.cfg.phylogeny_program)
 
         # Now join the fabricated subsets back up with other subsets
         while fabricated_subsets:
-            log.info("Finalising partitioning scheme")
+            log.info("***Kmeans algorithm step %d***" % step)
             step += 1
 
             # Take the first subset in the list (to be "popped" off later)
