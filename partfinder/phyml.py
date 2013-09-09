@@ -385,9 +385,11 @@ def program():
     return program_name
 
 def get_likelihoods(model, alignment_path, tree_path):
+    log.info("Calculating site likelihoods")
     command = "--run_id %s -b 0 -i '%s' -u '%s' -m GTR --print_site_lnl" % (
     model, alignment_path, tree_path)
     run_phyml(command)
+    log.info("Finished calculating site likelihoods")
 
 def get_likelihood_list(phylip_file, cfg):
     # Retreive a list of the site likelihoods
