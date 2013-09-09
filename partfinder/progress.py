@@ -71,9 +71,13 @@ class TextProgress(Progress):
         self.subsets_analysed.add(sub.name)
         num_subs_done = len(self.subsets_analysed)
         if old_num_done != num_subs_done:
-            percent_done = (
-                float(num_subs_done) * 100.0) / float(self.subset_count)
-            log.info("Finished subset %d/%d, %.2f percent done", num_subs_done, self.subset_count, percent_done)
+
+            if "kmeans" in self.cfg.search:
+                log.info("Finished subset %d", num_subs_done)                
+            else:    
+                percent_done = (
+                    float(num_subs_done) * 100.0) / float(self.subset_count)
+                log.info("Finished subset %d/%d, %.2f percent done", num_subs_done, self.subset_count, percent_done)
 
     def end(self):
         pass
