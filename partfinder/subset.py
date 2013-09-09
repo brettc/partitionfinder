@@ -123,7 +123,7 @@ class Subset(object):
         result.bic = (-2.0 * lnL) + (K * logarithm(n))
 
         if n < (K + 2):
-            log.warning(self.SMALL_WARNING % (self, n, model, K, self.name))
+            log.debug(self.SMALL_WARNING % (self, n, model, K, self.name))
             n = K + 2
 
         result.aicc = (-2.0 * lnL) + ((2.0 * K) * (n / (n - K - 1.0)))
