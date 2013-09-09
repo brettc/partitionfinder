@@ -249,21 +249,21 @@ def check_options(op, options):
         options.phylogeny_program = 'phyml'
 
     #A warning for people using the Pthreads version of RAxML
-    # if options.cmdline_extras.count("-T") > 0:
-        # log.warning("It looks like you're using a Pthreads version of RAxML. Be aware "
-        # "that the default behaviour of PartitionFinder is to run one version of RAxML per "
-        # "available processor. This might not be what you want with Pthreads - since the "
-        # "minimum number of threads per RAxML run is 2 (i.e. -T 2). Make sure to limit the "
-        # "total number of RAxML runs you start using the -p option in PartitionFinder. "
-        # "Specifically, the total number of processors you will use with the Pthreads "
-        # "version is the number you set via the -T option in --cmdline-extras, multiplied "
-        # "by the number of processors you set via the -p option in PartitionFinder. "
-        # "You should also be aware that the Pthreads version of RAxML has a rare but "
-        # "known bug on some platforms. This bug results in infinite liklelihood values "
-        # "if it happens on your dataset, PartitionFinder will give an error. In that case "
-        # "you should switch back to using a single-threaded version of RAxML, e.g. the "
-        # "SSE3 or AVX version."
-        # "See the manual for more info.")
+    if options.cmdline_extras.count("-T") > 0:
+        log.warning("It looks like you're using a Pthreads version of RAxML. Be aware "
+        "that the default behaviour of PartitionFinder is to run one version of RAxML per "
+        "available processor. This might not be what you want with Pthreads - since the "
+        "minimum number of threads per RAxML run is 2 (i.e. -T 2). Make sure to limit the "
+        "total number of RAxML runs you start using the -p option in PartitionFinder. "
+        "Specifically, the total number of processors you will use with the Pthreads "
+        "version is the number you set via the -T option in --cmdline-extras, multiplied "
+        "by the number of processors you set via the -p option in PartitionFinder. "
+        "You should also be aware that the Pthreads version of RAxML has a rare but "
+        "known bug on some platforms. This bug results in infinite liklelihood values "
+        "if it happens on your dataset, PartitionFinder will give an error. In that case "
+        "you should switch back to using a single-threaded version of RAxML, e.g. the "
+        "SSE3 or AVX version."
+        "See the manual for more info.")
 
 
 def check_python_version():
