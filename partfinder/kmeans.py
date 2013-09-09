@@ -101,9 +101,10 @@ def kmeans_split_subset(cfg, alignment, a_subset, tree_path, number_of_ks = 2):
         else:
             raise PhylogenyProgramError
 
-    # Call processor to parse them likelihoods from the output file.
-    likelihood_list = processor.get_likelihood_list(phylip_file)
-    log.info("Likehood list for subset %s is %s" % (a_subset.name, likelihood_list))
+    # Call processor to parse them likelihoods from the output file. 
+    # NB these can be site rates as well as likelihoods
+    likelihood_list = processor.get_likelihood_list(phylip_file, cfg)
+    log.debug("Site info list for subset %s is %s" % (a_subset.name, likelihood_list))
 
     a_subset.site_lnls_GTRG = likelihood_list
 
@@ -161,7 +162,7 @@ def kmeans_wrapper(cfg, alignment, a_subset, tree_path, max_ks = 10):
         log.error("Total bummer: %s" % e)
         return 1
 
-    likelihood_list = processor.get_likelihood_list(phylip_file)
+    likelihood_list = processor.get_likelihood_list(phylip_file, cfg)
 
     count = 1
     new_wss = 0
