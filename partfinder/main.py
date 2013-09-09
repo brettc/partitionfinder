@@ -194,6 +194,16 @@ def parse_args(datatype, cmdargs=None):
         "more, and the alpha parameter the same as the model rate"
     )
     op.add_option(
+        "--kmeans-opt",
+        type="int", dest="kmeans_opt", default=1, metavar="N",
+        help="This defines which version of the kmeans algorithm to use. Different options "
+        "use differt measurements of sites to define which sites are similar. Currently: "
+        "\n--kmeans-opt 1: use site likelihoods only (works with PhyML and RAxML)"
+        "\n--kmeans-opt 2: use site rates only (only works with PhyML)"
+        "\n--kmeans-opt 3: use site likelihoods and site rates (only works with PhyML)"
+        "\n--kmeans-opt 4: use site likelihoods from gamma rate categories (only works with PhyML)"
+    )   
+    op.add_option(
         "--rcluster-percent",
         type="float", dest="cluster_percent", default=10.0, metavar="N",
         help="This defines the proportion of possible schemes that the relaxed clustering"
