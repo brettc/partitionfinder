@@ -405,10 +405,16 @@ class KmeansAnalysis(Analysis):
                     self.results.best_scheme, self.results.best_result)
 
                 if len(split_subsets)==2:
-                    log.info("Splitting subset into %d:%d sites improve %s score"
+                    log.info("Splitting subset into %d:%d sites improved the %s score"
                               %(len(split_subsets[0].columns), 
                                 len(split_subsets[1].columns),
                                 self.cfg.model_selection))
+
+                    for s in split_subsets:
+                       m = [x%3 for x in s.columns]
+                       l = float(len(s.columns))
+                       props = [(float(m.count(1))/l), (float(m.count(2))/l), (float(m.count(0))/l)]
+                       log.info("%d subset has 1st, 2nd, 3rd props: %s" %(len(s.columns), str(props)))
  
 
 
