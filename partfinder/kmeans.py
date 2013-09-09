@@ -153,7 +153,6 @@ def kmeans_wrapper(cfg, alignment, a_subset, tree_path, max_ks = 10):
     # Add option to output likelihoods, *raxml version takes more
     # modfying of the commands in the analyse function
     processor = cfg.processor
-    print processor
 
     try:
         processor.get_likelihoods("GTRGAMMA", str(phylip_file),
