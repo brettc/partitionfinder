@@ -102,7 +102,7 @@ class Analysis(object):
                 log.info("Starting tree file found but incomplete. Re-estimating")
                 redo_tree = True
         else:
-            log.info("No starting tree file found.")
+            log.info("Starting tree will be estimated from the data.")
             redo_tree = True
 
         return redo_tree
