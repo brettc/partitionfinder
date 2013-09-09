@@ -275,6 +275,15 @@ def check_options(op, options):
         "SSE3 or AVX version."
         "See the manual for more info.")
 
+    # some of the kmeans options don't work with raxml (yet)
+    if options.phylogeny_program == 'raxml':
+        if kmeans_opt != 1:
+            log.error("You have chosen a kmeans option (--kmenas_opt) that does not work "
+                "with the --raxml option. Please re-run your analysis in one of two ways: "
+                "\n 1. Remove the --raxml command, so that PhyML is used, or "
+                "\n 2. Change the --kmeans_opt argument to 1 (or remove it) and leave the "
+                "--raxml command in place.")
+            raise PartitionFinderError
 
 def check_python_version():
     """Check the python version is above 2.7 but lower than 3.0"""
