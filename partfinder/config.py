@@ -59,8 +59,6 @@ class Configuration(object):
         self.cluster_percent = float(cluster_percent)
         self.kmeans_opt = kmeans_opt
 
-        print kmeans_opt, self.kmeans_opt
-
         # Record this
         self.base_path = '.'
         self.alignment = None
@@ -146,6 +144,10 @@ class Configuration(object):
 
         log.debug("Setting rcluster-percent to %.2f" % self.cluster_percent)
 
+
+        if kmeans_opt < 1 or kmeans_opt > 4:
+            log.error("The --kmeans-opt setting must be 1, 2, 3, or 4. Please check and restart")
+            raise ConfigurationError
 
 
     def find_programs(self):
