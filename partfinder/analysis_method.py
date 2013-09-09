@@ -335,29 +335,41 @@ class KmeansAnalysis(Analysis):
         processor = self.cfg.processor
         alignment_path = self.filtered_alignment_path
         tree_path = processor.make_tree_path(alignment_path)
-        best_score = self.analyse_scheme(best_scheme)
+        best_result = self.analyse_scheme(best_scheme)
         fabricated_subsets =[]
+        step = 1
 
 
         while subset_index < len(all_subsets):
+            log.info("%s score of best scheme: %.2f" 
+                     %(self.cfg.model_selection.upper(), best_result.score))
+
+            log.info("***Kmeans algorithm step %d***" % step)
+            step += 1
+
             current_subset = all_subsets[subset_index]
+
             # First check if the subset is large enough to split, if it isn't,
             # move to the next subset
             if len(current_subset.columns) == 1:
-                log.warning("Subset consists of only one site, we will move to" +
-                    " the next")
+                log.debug("Subset consists of only one site, not splitting")
                 subset_index += 1
                 continue
 
             if current_subset.fabricated:
-                log.warning("This subset is unanalysable and will be dealt" +
-                    " with later, moving to the next")
+                log.debug("Fabricated subset, not splitting")
                 subset_index += 1
                 fabricated_subsets.append(current_subset)
                 continue
 
             split_subsets = kmeans.kmeans_split_subset(self.cfg,
                 self.alignment, current_subset, tree_path)
+
+
+            log.info("Split subset of %d sites into %d and %d sites"
+                      %(len(current_subset.columns), 
+                        len(split_subsets[0].columns), 
+                        len(split_subsets[1].columns)))
 
             # kmeans_split_subset will return a 1 and flag the subset as
             # fabricated if for some reason it raises a PhylogenyProgramError,
@@ -376,18 +388,14 @@ class KmeansAnalysis(Analysis):
             # all of the split subsets by replacing them with the split ones
             updated_subsets[subset_index:subset_index+1] = split_subsets
 
-            test_scheme = scheme.Scheme(self.cfg, "Current Scheme",
+            test_scheme = scheme.Scheme(self.cfg, step-1,
                 updated_subsets)
 
-            new_score = self.analyse_scheme(test_scheme)
+            new_result = self.analyse_scheme(test_scheme)
 
-            log.info("Current best score is: " + str(best_score))
-            log.info("Current new score is: " + str(new_score))
-            if new_score.score < best_score.score:
-                log.info("New score is better and will be set to " +
-                    "best score")
+            if new_result.score < best_result.score:
                 best_scheme = test_scheme
-                best_score = new_score
+                best_result = new_result
 
                 # Change this to the one with split subsets in it. Note that
                 # the subset_index now points a NEW subset, one that was split
@@ -398,7 +406,9 @@ class KmeansAnalysis(Analysis):
 
         # Now join the fabricated subsets back up with other subsets
         while fabricated_subsets:
-            log.debug("Rejoining fabricated subsets with existing subsets")
+            log.info("Finalising partitioning scheme")
+            step += 1
+
             # Take the first subset in the list (to be "popped" off later)
             s = fabricated_subsets[0]
             centroid = s.centroid
@@ -437,7 +447,7 @@ class KmeansAnalysis(Analysis):
             # Now add the new subset to the scheme and see if the new subset
             # can be analyzed
             scheme_list.append(merged_sub)
-            merged_scheme = scheme.Scheme(self.cfg, "Merged Scheme", scheme_list)
+            merged_scheme = scheme.Scheme(self.cfg, step-1, scheme_list)
 
             merged_result = self.analyse_scheme(merged_scheme)
             # If it can be analyzed, move the algorithm forward, if it can't
@@ -446,7 +456,7 @@ class KmeansAnalysis(Analysis):
                 if new_subs.fabricated and new_subs not in fabricated_subsets:
                     fabricated_subsets.append(new_subs)
             best_scheme = merged_scheme
-            best_score = merged_result
+            best_result = merged_result
 
         # Since the AIC will likely be better before we dealt with the
         # fabricated subsets, we need to set the best scheme and best result
@@ -454,9 +464,16 @@ class KmeansAnalysis(Analysis):
         # to take care of this problem so that the best AND analysable scheme
         # is the one that gets automatically flagged as the best scheme
         self.results.best_scheme = best_scheme
-        self.results.best_result = best_score
+        self.results.best_result = best_result
+
+        log.info("Kmeans algorithm finished after %d steps" % step)
+        log.info("Best scoring scheme is scheme %s, with %s score of %.3f"
+                 % (self.results.best_scheme.name, self.cfg.model_selection, self.results.best_score))
+
 
         self.cfg.reporter.write_best_scheme(self.results)
+
+
 
 
 class KmeansAnalysisWrapper(Analysis):
@@ -491,9 +508,9 @@ class KmeansAnalysisWrapper(Analysis):
                 a_subset, tree_path)
             split_subsets += how_many
         split_scheme = scheme.Scheme(self.cfg, "split_scheme", split_subsets)
-        best_score = self.analyse_scheme(best_scheme)
+        best_result = self.analyse_scheme(best_scheme)
         split_score = self.analyse_scheme(split_scheme)
-        if split_score.score < best_score.score:
+        if split_score.score < best_result.score:
             best_scheme = split_scheme
             log.info("Initial splits generated superior scheme")
         all_subsets = list(best_scheme.subsets)
@@ -524,12 +541,12 @@ class KmeansAnalysisWrapper(Analysis):
 
                 try:
                     log.info("Analyzing scheme with new subset split")
-                    best_score = self.analyse_scheme(best_scheme)
-                    new_score = self.analyse_scheme(test_scheme)
+                    best_result = self.analyse_scheme(best_scheme)
+                    new_result = self.analyse_scheme(test_scheme)
 
-                    log.info("Current best score is: " + str(best_score))
-                    log.info("Current new score is: " + str(new_score))
-                    if new_score.score < best_score.score:
+                    log.info("Current best score is: " + str(best_result.score))
+                    log.info("Current new score is: " + str(new_result.score))
+                    if new_result.score < best_result.score:
                         log.info("New score " + str(subset_index) +
                             " is better and will be set to best score")
                         best_scheme = test_scheme
@@ -600,12 +617,12 @@ class KmeansGreedy(Analysis):
                 test_scheme = scheme.Scheme(self.cfg, "Current Scheme", updated_subsets)
 
                 try:
-                    best_score = self.analyse_scheme(best_scheme)
-                    new_score = self.analyse_scheme(test_scheme)
+                    best_result = self.analyse_scheme(best_scheme)
+                    new_result = self.analyse_scheme(test_scheme)
 
-                    log.info("Current best score is: " + str(best_score))
-                    log.info("Current new score is: " + str(new_score))
-                    if new_score.score < best_score.score:
+                    log.info("Current best score is: " + str(best_result))
+                    log.info("Current new score is: " + str(new_result))
+                    if new_result.score < best_result.score:
                         log.info("New score " + str(subset_index) + " is better and will be set to best score")
                         best_scheme = test_scheme
 
