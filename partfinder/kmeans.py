@@ -80,7 +80,7 @@ def kmeans_split_subset(cfg, alignment, a_subset, tree_path, number_of_ks = 2):
     # in RAxML, this is to catch those instances and flag the subset as
     # fabricated to add to others later.
     try:
-        processor.get_likelihoods("GTRGAMMA", str(phylip_file),
+        processor.get_likelihoods(cfg, str(phylip_file),
             str(tree_path))
     except PhylogenyProgramError as e:
         error1 = "that consist entirely of undetermined values"

@@ -385,17 +385,24 @@ program_name = "phyml"
 def program():
     return program_name
 
-def get_likelihoods(model, alignment_path, tree_path):
-    command = "--run_id %s -b 0 -i '%s' -u '%s' -m GTR --print_site_lnl" % (
-    model, alignment_path, tree_path)
+def get_likelihoods(cfg, alignment_path, tree_path):
+    if cfg.datatype == 'DNA':
+        command = "--run_id GTRGAMMA -b 0 -i '%s' -u '%s' -m GTR --print_site_lnl" % (
+            alignment_path, tree_path)
 
+    elif cfg.datatype == 'protein':
+        command = "--run_id LGGAMMA -b 0 -d aa -i '%s' -u '%s' -m LG --print_site_lnl" % (
+            alignment_path, tree_path)
     # when we run phyml we don't report errors, because we don't want to clutter the output
     # the errors are still raised though. This is particular to running the kmeans output.
-    run_phyml(command, report_errors=False)
+    run_phyml(command, report_errors=True)
 
 def get_likelihood_list(phylip_file, cfg):
     # Retreive a list of the site likelihoods
-    phyml_lk_fname = ("%s_phyml_lk_GTRGAMMA.txt" % phylip_file)
+    if cfg.datatype == 'DNA':
+        phyml_lk_fname = ("%s_phyml_lk_GTRGAMMA.txt" % phylip_file)
+    elif cfg.datatype == 'protein':
+        phyml_lk_fname = ("%s_phyml_lk_LGGAMMA.txt" % phylip_file)
     # Open the phyml output and parse for input into the kmeans
     # function
 

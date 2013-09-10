@@ -395,15 +395,25 @@ program_name = "raxml"
 def program():
     return program_name
 
-def get_likelihoods(model, alignment_path, tree_path):
+def get_likelihoods(cfg, alignment_path, tree_path):
     #raxml doesn't append alignment names automatically, like PhyML, let's do that here
-    analysis_ID = raxml_analysis_ID(alignment_path, model)
+    if cfg.datatype == 'DNA':
+        analysis_ID = raxml_analysis_ID(alignment_path, 'GTRGAMMA')
 
-    #force raxml to write to the dir with the alignment in it
-    #-e 1.0 sets the precision to 1 lnL unit. This is all that's required here, and helps with speed.
-    aln_dir, fname = os.path.split(alignment_path)
-    command = "-m %s -f g -s '%s' -z '%s' -n %s -w '%s'" % (
-        model, alignment_path, tree_path, analysis_ID, os.path.abspath(aln_dir))
+        #force raxml to write to the dir with the alignment in it
+        #-e 1.0 sets the precision to 1 lnL unit. This is all that's required here, and helps with speed.
+        aln_dir, fname = os.path.split(alignment_path)
+        command = "-m GTRGAMMA -f g -s '%s' -z '%s' -n %s -w '%s'" % (
+            alignment_path, tree_path, analysis_ID, os.path.abspath(aln_dir))
+    elif cfg.datatype == 'protein':
+        analysis_ID = raxml_analysis_ID(alignment_path, 'LGGAMMA')
+
+        aln_dir, gname = os.path.split(alignment_path)
+        # log.error("RAxML kmeans splitting does not currently work with protein analyses")
+        # raise RaxmlError(0,0)
+        command = "-m PROTGAMMALG -f g -s '%s' -z '%s' -n '%s' -w '%s'" % (
+            alignment_path, tree_path, analysis_ID, os.path.abspath(aln_dir))
+
     run_raxml(command)
 
 def get_likelihood_list(phylip_file, cfg):
@@ -413,8 +423,13 @@ def get_likelihood_list(phylip_file, cfg):
     phylip_file_split = os.path.split(phylip_file)
     subset_code = phylip_file_split[1].split(".")[0]
     
-    raxml_lnl_file = os.path.join(phylip_file_split[0],
-        ("RAxML_perSiteLLs.%s_GTRGAMMA.txt" % subset_code))
+    if cfg.datatype == 'DNA':
+        raxml_lnl_file = os.path.join(phylip_file_split[0],
+            ("RAxML_perSiteLLs.%s_GTRGAMMA.txt" % subset_code))
+
+    elif cfg.datatype == 'protein':
+        raxml_lnl_file = os.path.join(phylip_file_split[0],
+            ("RAxML_perSiteLLs.%s_LGGAMMA.txt" % subset_code))
 
     likelihood_list = likelihood_parser(raxml_lnl_file)
     return likelihood_list
