@@ -431,7 +431,10 @@ def get_likelihood_list(phylip_file, cfg):
         raxml_lnl_file = os.path.join(phylip_file_split[0],
             ("RAxML_perSiteLLs.%s_LGGAMMA.txt" % subset_code))
 
-    likelihood_list = likelihood_parser(raxml_lnl_file)
+    # Now we return a likelihood list with three empty slots. This is to
+    # maintain consistency with the PhyML method which returns lists of rates
+    # and other things as well
+    likelihood_list = [likelihood_parser(raxml_lnl_file), None, None, None]
     return likelihood_list
 
 def fabricate(lnl):

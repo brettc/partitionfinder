@@ -395,7 +395,7 @@ def get_likelihoods(cfg, alignment_path, tree_path):
             alignment_path, tree_path)
     # when we run phyml we don't report errors, because we don't want to clutter the output
     # the errors are still raised though. This is particular to running the kmeans output.
-    run_phyml(command, report_errors=True)
+    run_phyml(command, report_errors=False)
 
 def get_likelihood_list(phylip_file, cfg):
     # Retreive a list of the site likelihoods
@@ -403,23 +403,10 @@ def get_likelihood_list(phylip_file, cfg):
         phyml_lk_fname = ("%s_phyml_lk_GTRGAMMA.txt" % phylip_file)
     elif cfg.datatype == 'protein':
         phyml_lk_fname = ("%s_phyml_lk_LGGAMMA.txt" % phylip_file)
-    # Open the phyml output and parse for input into the kmeans
-    # function
-
-    if cfg.kmeans_opt == 1:
-        # return the site likelihoods only
-        return likelihood_parser(phyml_lk_fname)[0]
-    if cfg.kmeans_opt == 2:
-        # return the site rates only
-        return likelihood_parser(phyml_lk_fname)[2]
-    if cfg.kmeans_opt == 3:
-        # return the site rates and likelihoods together
-        return likelihood_parser(phyml_lk_fname)[3]
-    if cfg.kmeans_opt == 4:
-        # return the likelihoods under each gamma rate category
-        return likelihood_parser(phyml_lk_fname)[1]
-
-    
+    # Open the phyml output and return the list of four lists (likelihoods,
+    # rates, likelihoods_and_rates, and likelihoods under different rate
+    # categories)
+    return likelihood_parser(phyml_lk_fname)
 
 def fabricate(lnl):
     result = PhymlResult(lnl, 0, 0)

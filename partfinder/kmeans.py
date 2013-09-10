@@ -104,12 +104,29 @@ def kmeans_split_subset(cfg, alignment, a_subset, tree_path, number_of_ks = 2):
     # Call processor to parse them likelihoods from the output file. 
     # NB these can be site rates as well as likelihoods
     likelihood_list = processor.get_likelihood_list(phylip_file, cfg)
-    log.debug("Site info list for subset %s is %s" % (a_subset.name, likelihood_list))
 
-    a_subset.site_lnls_GTRG = likelihood_list
+    # Now figure out which list the user wants and use that for the kmeans
+    # splitting
+    if cfg.kmeans_opt == 1:
+        # Set the per_site_stat_list to site likelihoods only
+        per_site_stat_list = likelihood_list[0]
+    if cfg.kmeans_opt == 2:
+        # Set the per_site_stat_list to site rates only
+        per_site_stat_list = likelihood_list[2]
+    if cfg.kmeans_opt == 3:
+        # Set the per_site_stat_list to site rates and likelihoods together
+        per_site_stat_list = likelihood_list[3]
+    if cfg.kmeans_opt == 4:
+        # Set the per_site_stat_list to likelihoods under each gamma rate
+        # category
+        per_site_stat_list = likelihood_list[1]
+    
+    log.debug("Site info list for subset %s is %s" % (a_subset.name, per_site_stat_list))
+
+    a_subset.site_lnls_GTRG = likelihood_list[0]
 
     # Perform kmeans clustering on the likelihoods
-    kmeans_results = kmeans(likelihood_list,
+    kmeans_results = kmeans(per_site_stat_list,
         number_of_ks)
 
     centroids = kmeans_results[0]
@@ -155,7 +172,7 @@ def kmeans_wrapper(cfg, alignment, a_subset, tree_path, max_ks = 10):
     processor = cfg.processor
 
     try:
-        processor.get_likelihoods("GTRGAMMA", str(phylip_file),
+        processor.get_likelihoods(cfg, str(phylip_file),
             str(tree_path))
     except PhylogenyProgramError as e:
         log.error("Total bummer: %s" % e)
