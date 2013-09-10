@@ -385,7 +385,7 @@ program_name = "phyml"
 def program():
     return program_name
 
-def get_likelihoods(cfg, alignment_path, tree_path):
+def gen_per_site_stats(cfg, alignment_path, tree_path):
     if cfg.datatype == 'DNA':
         command = "--run_id GTRGAMMA -b 0 -i '%s' -u '%s' -m GTR --print_site_lnl" % (
             alignment_path, tree_path)
@@ -397,7 +397,7 @@ def get_likelihoods(cfg, alignment_path, tree_path):
     # the errors are still raised though. This is particular to running the kmeans output.
     run_phyml(command, report_errors=False)
 
-def get_likelihood_list(phylip_file, cfg):
+def get_per_site_stats(phylip_file, cfg):
     # Retreive a list of the site likelihoods
     if cfg.datatype == 'DNA':
         phyml_lk_fname = ("%s_phyml_lk_GTRGAMMA.txt" % phylip_file)

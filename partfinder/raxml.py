@@ -395,7 +395,7 @@ program_name = "raxml"
 def program():
     return program_name
 
-def get_likelihoods(cfg, alignment_path, tree_path):
+def gen_per_site_stats(cfg, alignment_path, tree_path):
     #raxml doesn't append alignment names automatically, like PhyML, let's do that here
     if cfg.datatype == 'DNA':
         analysis_ID = raxml_analysis_ID(alignment_path, 'GTRGAMMA')
@@ -416,8 +416,8 @@ def get_likelihoods(cfg, alignment_path, tree_path):
 
     run_raxml(command)
 
-def get_likelihood_list(phylip_file, cfg):
-    # Retrieve a list of the site likelihoods. The phylip files are called
+def get_per_site_stats(phylip_file, cfg):
+    # Retrieve a list the per site stats. The phylip files are called
     # e.g. "67e2419ede57ae4032c534fe97ba408a.phy" we want the the number
     # before the full stop
     phylip_file_split = os.path.split(phylip_file)

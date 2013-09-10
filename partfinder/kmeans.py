@@ -80,7 +80,7 @@ def kmeans_split_subset(cfg, alignment, a_subset, tree_path, number_of_ks = 2):
     # in RAxML, this is to catch those instances and flag the subset as
     # fabricated to add to others later.
     try:
-        processor.get_likelihoods(cfg, str(phylip_file),
+        processor.gen_per_site_stats(cfg, str(phylip_file),
             str(tree_path))
     except PhylogenyProgramError as e:
         error1 = "that consist entirely of undetermined values"
@@ -101,29 +101,38 @@ def kmeans_split_subset(cfg, alignment, a_subset, tree_path, number_of_ks = 2):
         else:
             raise PhylogenyProgramError
 
-    # Call processor to parse them likelihoods from the output file. 
-    # NB these can be site rates as well as likelihoods
-    likelihood_list = processor.get_likelihood_list(phylip_file, cfg)
+    # Call processor to parse them likelihoods from the output file. NB these
+    # can be site rates as well as likelihoods ToDo: Change the name of this
+    # to something other than "likelihood_list" since this isn't really the
+    # best description of what it is...
+    per_site_statistics = processor.get_per_site_stats(phylip_file, cfg)
+    
+    # Now store all of the per_site_stats with the subset
+    a_subset.add_per_site_statistics(per_site_statistics)
 
     # Now figure out which list the user wants and use that for the kmeans
     # splitting
     if cfg.kmeans_opt == 1:
         # Set the per_site_stat_list to site likelihoods only
-        per_site_stat_list = likelihood_list[0]
+        per_site_stat_list = per_site_statistics[0]
     if cfg.kmeans_opt == 2:
         # Set the per_site_stat_list to site rates only
-        per_site_stat_list = likelihood_list[2]
+        per_site_stat_list = per_site_statistics[2]
     if cfg.kmeans_opt == 3:
         # Set the per_site_stat_list to site rates and likelihoods together
-        per_site_stat_list = likelihood_list[3]
+        per_site_stat_list = per_site_statistics[3]
     if cfg.kmeans_opt == 4:
         # Set the per_site_stat_list to likelihoods under each gamma rate
         # category
-        per_site_stat_list = likelihood_list[1]
+        per_site_stat_list = per_site_statistics[1]
     
     log.debug("Site info list for subset %s is %s" % (a_subset.name, per_site_stat_list))
 
-    a_subset.site_lnls_GTRG = likelihood_list[0]
+    # We use this variable in the case that, as a result of the split with
+    # kmeans, the subset becomes unanalysable. In that instance, these will be
+    # transferred to the new subset and the sum taken as a proxy for the
+    # overal lnl
+    a_subset.site_lnls_GTRG = per_site_statistics[0]
 
     # Perform kmeans clustering on the likelihoods
     kmeans_results = kmeans(per_site_stat_list,
@@ -172,13 +181,13 @@ def kmeans_wrapper(cfg, alignment, a_subset, tree_path, max_ks = 10):
     processor = cfg.processor
 
     try:
-        processor.get_likelihoods(cfg, str(phylip_file),
+        processor.gen_per_site_stats(cfg, str(phylip_file),
             str(tree_path))
     except PhylogenyProgramError as e:
         log.error("Total bummer: %s" % e)
         return 1
 
-    likelihood_list = processor.get_likelihood_list(phylip_file, cfg)
+    likelihood_list = processor.get_per_site_stats(phylip_file, cfg)
 
     count = 1
     new_wss = 0

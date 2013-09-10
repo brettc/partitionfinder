@@ -72,7 +72,7 @@ class Subset(object):
         self.centroid = None
         self.results = {}
         # Site likelihoods calculated using GTR+G from the
-        # processor.get_likelihoods()
+        # processor.gen_per_site_stats()
         self.site_lnls_GTRG = []
         self.best_info_score = None  # e.g. AIC, BIC, AICc
         self.best_model = None
@@ -278,6 +278,12 @@ class Subset(object):
                     "Failed to run models %s; not sure why",
                     ", ".join(list(self.models_not_done)))
                 raise
+
+    def add_per_site_statistics(self, per_site_stats):
+        self.site_lnls = per_site_stats[0]
+        self.site_rates = per_site_stats[2]
+        self.lnls_rates = per_site_stats[3]
+        self.lnls_rate_cats = per_site_stats[1]
 
     def fabricate_result(self, cfg, model):
         '''If the subset fails to be analyzed, we throw some "fabricated"
