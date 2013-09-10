@@ -41,3 +41,5 @@ examples/aminoacid/filtered_source.phy_phyml_tree.txt
 examples/nucleotide/best_scheme_greedy_codon_genes.txt
 
 examples/nucleotide/best_scheme_greedy_genes.txt
+
+examples/aminoacid/best_scheme_raxml_site_lnl_genes.txt
