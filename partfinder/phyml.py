@@ -62,7 +62,7 @@ def find_program():
 
 _phyml_binary = None
 
-def run_phyml(command):
+def run_phyml(command, report_errors=True):
     global _phyml_binary
     if _phyml_binary is None:
         _phyml_binary = find_program()
@@ -87,10 +87,11 @@ def run_phyml(command):
     # p.terminate()
 
     if p.returncode != 0:
-        log.error("Phyml did not execute successfully")
-        log.error("Phyml output follows, in case it's helpful for finding the problem")
-        log.error("%s", stdout)
-        log.error("%s", stderr)
+        if report_errors == True:
+            log.error("Phyml did not execute successfully")
+            log.error("Phyml output follows, in case it's helpful for finding the problem")
+            log.error("%s", stdout)
+            log.error("%s", stderr)
         raise PhymlError(stdout, stderr)
 
 
