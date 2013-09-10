@@ -388,7 +388,10 @@ def program():
 def get_likelihoods(model, alignment_path, tree_path):
     command = "--run_id %s -b 0 -i '%s' -u '%s' -m GTR --print_site_lnl" % (
     model, alignment_path, tree_path)
-    run_phyml(command)
+
+    # when we run phyml we don't report errors, because we don't want to clutter the output
+    # the errors are still raised though. This is particular to running the kmeans output.
+    run_phyml(command, report_errors=False)
 
 def get_likelihood_list(phylip_file, cfg):
     # Retreive a list of the site likelihoods
