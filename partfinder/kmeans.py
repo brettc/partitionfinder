@@ -17,8 +17,7 @@ import subset_ops
 # You can run kmeans in parallel, specify n_jobs as -1 and it will run
 # on all cores available.
 def kmeans(likelihood_list, number_of_ks=2, n_jobs=1):
-    '''Take as input a dictionary made up of site numbers as keys
-    and lists of rates as values, performs k-means clustering on
+    '''Take as input a list of sites, performs k-means clustering on
     sites and returns k centroids and a dictionary with k's as keys
     and lists of sites belonging to that k as values
     '''
@@ -187,7 +186,23 @@ def kmeans_wrapper(cfg, alignment, a_subset, tree_path, max_ks = 10):
         log.error("Total bummer: %s" % e)
         return 1
 
-    likelihood_list = processor.get_per_site_stats(phylip_file, cfg)
+    per_site_statistics = processor.get_per_site_stats(phylip_file, cfg)
+    a_subset.add_per_site_statistics(per_site_statistics)
+    likelihood_list = per_site_statistics[0]
+    a_subset.site_lnls_GTRG = likelihood_list
+
+    if cfg.kmeans_opt == 1:
+        # Set likelihood_list to site likelihoods
+        likelihood_list = per_site_statistics[0]
+    elif cfg.kmeans_opt == 2:
+        # Set likelihood_list to site rates
+        likelihood_list = per_site_statistics[2]
+    elif cfg.kmeans_opt == 3:
+        raise ValueError("Search kmeans_wss cannot be used with kmeans" + 
+            " option 3. Use option 1 or 2")
+    elif cfg.kmeans_opt == 4:
+        raise ValueError("Search kmeans_wss cannot be used with kmeans" + 
+            " option 4. Use option 1 or 2")
 
     count = 1
     new_wss = 0
@@ -196,6 +211,7 @@ def kmeans_wrapper(cfg, alignment, a_subset, tree_path, max_ks = 10):
     for i in range(max_ks):
         # Run kmeans with each count
         site_categories = kmeans(likelihood_list, number_of_ks = count)[1]
+
         new_likelihood_lists = make_likelihood_list(likelihood_list,
             site_categories)
         # Set previous wss
