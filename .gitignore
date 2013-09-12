@@ -43,3 +43,13 @@ examples/nucleotide/best_scheme_greedy_codon_genes.txt
 examples/nucleotide/best_scheme_greedy_genes.txt
 
 examples/aminoacid/best_scheme_raxml_site_lnl_genes.txt
+
+examples/nucleotide/test.phy.GENE.8
+
+examples/nucleotide/test.phy.reduced
+
+examples/nucleotide/RAxML_info.partitions
+
+examples/nucleotide/best_scheme_all_models_kmeans_wss.txt
+
+examples/nucleotide/raxml_def_all_models_wss.txt
