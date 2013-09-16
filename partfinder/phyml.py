@@ -386,7 +386,6 @@ def program():
     return program_name
 
 def gen_per_site_stats(cfg, alignment_path, tree_path):
-    print cfg.branchlengths
     if cfg.datatype == 'DNA':
         if cfg.branchlengths == 'linked':
             command = "--run_id GTRGAMMA -b 0 -i '%s' -u '%s' -m GTR --print_site_lnl --constrained_lens" % (
