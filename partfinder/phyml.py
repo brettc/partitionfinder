@@ -386,13 +386,22 @@ def program():
     return program_name
 
 def gen_per_site_stats(cfg, alignment_path, tree_path):
+    print cfg.branchlengths
     if cfg.datatype == 'DNA':
-        command = "--run_id GTRGAMMA -b 0 -i '%s' -u '%s' -m GTR --print_site_lnl" % (
-            alignment_path, tree_path)
+        if cfg.branchlengths == 'linked':
+            command = "--run_id GTRGAMMA -b 0 -i '%s' -u '%s' -m GTR --print_site_lnl --constrained_lens" % (
+                alignment_path, tree_path)
+        elif cfg.branchlengths == 'unlinked':
+            command = "--run_id GTRGAMMA -b 0 -i '%s' -u '%s' -m GTR --print_site_lnl" % (
+                alignment_path, tree_path)
 
     elif cfg.datatype == 'protein':
-        command = "--run_id LGGAMMA -b 0 -d aa -i '%s' -u '%s' -m LG --print_site_lnl" % (
-            alignment_path, tree_path)
+        if cfg.branchlengths == 'linked':
+            command = "--run_id LGGAMMA -b 0 -d aa -i '%s' -u '%s' -m LG --print_site_lnl --constrained_lens" % (
+                alignment_path, tree_path)
+        elif cfg.branchlengths == 'unlinked':
+            command = "--run_id LGGAMMA -b 0 -d aa -i '%s' -u '%s' -m LG --print_site_lnl" % (
+                alignment_path, tree_path)
     # when we run phyml we don't report errors, because we don't want to clutter the output
     # the errors are still raised though. This is particular to running the kmeans output.
     run_phyml(command, report_errors=False)
