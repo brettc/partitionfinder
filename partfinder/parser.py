@@ -214,9 +214,15 @@ class Parser(object):
                 else:
                     log.error("The models option 'all_protein_gammaI' is only available with raxml"
                               ", (the --raxml commandline option). Please check and try again")
-                    raise ParserError
+                    raise ParserError            
             else:
                 pass
+
+            # never include the LG4X model in predefined model lists
+            # because it can't (yet) be used for partitionined analyses
+            modlist = filter(lambda x: x.count("LG4X")==0, modlist)
+
+
             log.info("Setting 'models' to '%s'", modsgroup)
 
         self.cfg.models = set()
