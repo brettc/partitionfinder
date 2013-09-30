@@ -40,6 +40,8 @@ _base_protein_models = {
     "BLOSUM62"  :   (0, ""),
     "MTMAM"     :   (0, ""),
     "LG"        :   (0, ""),
+    "LG4M"      :   (0, ""),
+    "LG4X"      :   (5, ""), # it has 6 params, but one gets added automatically later
  }
 
 # All the functions in here return the same thing with the same parameters, 
@@ -70,13 +72,19 @@ def get_protein_models_gammaI():
     Return a list of all implemented _base__protein_models in RAxML with invariant sites
     '''
     model_list = []
-    for model in _base_protein_models.keys():
+
+    base = _base_protein_models.keys()
+    base.remove("LG4M") #doesn't work with +I
+    base.remove("LG4X") #doesn't work with +I
+
+    for model in base:
         model_list.append("%s+I+G"     %(model))
         model_list.append("%s+I+G+F"    %(model))
     return model_list
 
 def get_all_protein_models():
     model_list = get_protein_models_gamma() + get_protein_models_gammaI()
+
     return model_list
 
 @memoize
@@ -146,7 +154,7 @@ def get_num_params(modelstring):
         if "F" in elements[1:]:
             model_params = model_params+19-1 #the -1 here is to account for the fact we add 1 for the + in '+F' below
     
-    extras = modelstring.count("+")
+    extras = modelstring.count("+") # this accounts for +I and +G
     total = model_params+extras
     log.debug("Model: %s Params: %d" %(modelstring, total))
 
