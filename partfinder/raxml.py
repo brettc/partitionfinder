@@ -30,7 +30,7 @@ import util
 
 from pyparsing import (
     Word, Literal, nums, Suppress, ParseException,
-    SkipTo, OneOrMore, Regex
+    SkipTo, OneOrMore, Regex, restOfLine
 )
 
 import raxml_models as models
@@ -313,6 +313,8 @@ class Parser(object):
 
         # Just look for these things
         self.root_parser = seconds + lnl + alpha + tree_size + rates + freqs
+        self.root_parser.ignore("LGM" + restOfLine)
+
 
     def set_seconds(self, tokens):
         self.result.seconds = tokens[0]
