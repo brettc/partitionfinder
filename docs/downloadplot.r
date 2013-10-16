@@ -2,26 +2,31 @@ library(ggplot2)
 library(reshape)
 
 dat <- read.csv("~/Documents/Projects_Current/partitionfinder/docs/downloadstats.csv")
-dat.org <- dat
-
-#the version changes in march and may need to be fixed up
-dat <- dat[,-c(4, 5, 6)]
-
-dat <- aggregate(. ~ date, data=dat, FUN=sum)
-
+dat <- aggregate(. ~ date, data=dat, FUN=sum, na.action=na.pass)
 dat <- dat[order(as.Date(dat$date, format="%d/%m/%Y")),]
-
 
 dat$Mac <- cumsum(dat$Mac)
 dat$Windows <- cumsum(dat$Windows)
  
-dat <- melt(dat)
 
-colnames(dat) <- c("date", "OS", "downloads")
+# Download plot
+dl <- melt(dat[,c(1, 2, 3)])
+colnames(dl) <- c("date", "OS", "downloads")
+dl$date <- as.Date(dl$date, format = "%d/%m/%Y")
 
-dat$date <- as.Date(dat$date, format = "%d/%m/%Y")
-
-
-p <- ggplot(dat, aes(date, downloads))
-
+p <- ggplot(dl, aes(date, downloads))
 p + geom_area(aes(colour = OS, fill= OS), position = 'stack')
+dev.copy2pdf(file="~/Documents/Projects_Current/partitionfinder/docs/downloadplot.pdf")
+dev.off()
+
+
+# Citation plot
+c <- dat[,c(1,5)]
+c$date <- as.Date(c$date, format = "%d/%m/%Y")
+c <- c[complete.cases(c),]
+
+p <- ggplot(c, aes(date, citations.googlescholar))
+p + geom_point() + geom_smooth(stat="identity")
+dev.copy2pdf(file="~/Documents/Projects_Current/partitionfinder/docs/citationsplot.pdf")
+dev.off()
+
