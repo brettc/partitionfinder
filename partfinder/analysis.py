@@ -54,7 +54,8 @@ class Analysis(object):
 
         # Make some folders for the analysis
         self.cfg.make_output_folders()
-        self.cfg.subset_database = shelve.open(os.path.join(self.cfg.subsets_path, 'subsets'))
+        self.cfg.subset_database = shelve.open(
+            os.path.join(self.cfg.subsets_path, 'subsets'), protocol=-1)
         self.make_alignment(cfg.alignment_path)
         self.make_tree(cfg.user_tree_topology_path)
 
@@ -159,11 +160,11 @@ class Analysis(object):
         self.tree_path = tree_path
         log.info("Starting tree with branch lengths is here: %s", self.tree_path)
 
-    def run_task(self, m, sub):
+    def run_task(self, model_name, sub):
         # This bit should run in parallel (forking the processor)
         try:
             self.cfg.processor.analyse(
-                m,
+                model_name,
                 sub.alignment_path,
                 self.tree_path,
                 self.cfg.branchlengths,
@@ -180,10 +181,10 @@ class Analysis(object):
         self.lock.acquire()
         try:
             if sub.analysis_error == None:
-                sub.parse_model_result(self.cfg, m)
+                sub.parse_model_result(self.cfg, model_name)
 
             else:
-                sub.fabricate_result(self.cfg, m)
+                sub.fabricate_result(self.cfg, model_name)
 
             # Try finalising, then the result will get written out earlier...
             sub.finalise(self.cfg)
