@@ -20,6 +20,7 @@ log = logging.getLogger("analysis")
 
 import os
 import shutil
+import shelve
 
 from alignment import Alignment, SubsetAlignment
 import threadpool
@@ -53,6 +54,7 @@ class Analysis(object):
 
         # Make some folders for the analysis
         self.cfg.make_output_folders()
+        self.cfg.subset_database = shelve.open(os.path.join(self.cfg.subsets_path, 'subsets'))
         self.make_alignment(cfg.alignment_path)
         self.make_tree(cfg.user_tree_topology_path)
 
@@ -117,8 +119,6 @@ class Analysis(object):
             self.cfg.start_tree_path,  'filtered_source.phy')
         self.filtered_alignment.write(self.filtered_alignment_path)
 
-        # Now we've written this alignment, we need to lock everything in
-        # place, no more adding partitions, or changing them from now on.
         # TODO: This checking should still be done...
         # self.cfg.partitions.check_against_alignment(self.alignment)
         # self.cfg.partitions.finalise()
