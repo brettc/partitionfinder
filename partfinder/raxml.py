@@ -1,21 +1,19 @@
-#Copyright (C) 2012 Robert Lanfear and Brett Calcott
+# Copyright (C) 2012 Robert Lanfear and Brett Calcott
 #
-#This program is free software: you can redistribute it and/or modify it
-#under the terms of the GNU General Public License as published by the
-#Free Software Foundation, either version 3 of the License, or (at your
-#option) any later version.
+# This program is free software: you can redistribute it and/or modify it under
+# the terms of the GNU General Public License as published by the Free Software
+# Foundation, either version 3 of the License, or (at your option) any later
+# version.
 #
-#This program is distributed in the hope that it will be useful, but
-#WITHOUT ANY WARRANTY; without even the implied warranty of
-#MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-#General Public License for more details. You should have received a copy
-#of the GNU General Public License along with this program.  If not, see
-#<http://www.gnu.org/licenses/>. PartitionFinder also includes the PhyML
-#program, the RAxML program, the PyParsing library, and the python-cluster library
-#all of which are protected by their own licenses and conditions, using
-#PartitionFinder implies that you agree with those licences and conditions as well.
-
-"""Run raxml and parse the output"""
+# This program is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+# details. You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+# PartitionFinder also includes the PhyML program, the RAxML program, and the
+# PyParsing library, all of which are protected by their own licenses and
+# conditions, using PartitionFinder implies that you agree with those licences
+# and conditions as well.
 
 import logging
 log = logging.getLogger("raxml")
@@ -35,10 +33,9 @@ from pyparsing import (
 
 import raxml_models as models
 
-# This is set as the binary name because the previously compiled
-# raxml had a bug when calculating site likelihoods, this needs to
-# be changed back to "raxml" once a newer version without the bug
-# is compiled.
+# This is set as the binary name because the previously compiled raxml had a
+# bug when calculating site likelihoods, this needs to be changed back to
+# "raxml" once a newer version without the bug is compiled.
 _binary_name = 'raxmlHPC-SSE3'
 if sys.platform == 'win32':
     _binary_name += ".exe"
@@ -424,7 +421,7 @@ def get_per_site_stats(phylip_file, cfg):
     # before the full stop
     phylip_file_split = os.path.split(phylip_file)
     subset_code = phylip_file_split[1].split(".")[0]
-    
+
     if cfg.datatype == 'DNA':
         raxml_lnl_file = os.path.join(phylip_file_split[0],
             ("RAxML_perSiteLLs.%s_GTRGAMMA.txt" % subset_code))

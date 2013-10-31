@@ -336,8 +336,6 @@ def main(name, datatype, passed_args=None):
         else:
             try:
                 # Now try processing everything....
-                if not cfg.save_phylofiles:
-                    clean_folder(cfg.phylofiles_path)
                 method = analysis_method.choose_method(cfg.search)
                 reporter.TextReporter(cfg)
                 anal = method(cfg,
