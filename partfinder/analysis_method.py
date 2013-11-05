@@ -1,20 +1,19 @@
 # Copyright (C) 2012 Robert Lanfear and Brett Calcott
 #
-#This program is free software: you can redistribute it and/or modify it
-#under the terms of the GNU General Public License as published by the
-#Free Software Foundation, either version 3 of the License, or (at your
-#option) any later version.
+# This program is free software: you can redistribute it and/or modify it under
+# the terms of the GNU General Public License as published by the Free Software
+# Foundation, either version 3 of the License, or (at your option) any later
+# version.
 #
-#This program is distributed in the hope that it will be useful, but
-#WITHOUT ANY WARRANTY; without even the implied warranty of
-#MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-#General Public License for more details. You should have received a copy
-#of the GNU General Public License along with this program.  If not, see
-#<http://www.gnu.org/licenses/>. PartitionFinder also includes the PhyML
-#program, the RAxML program, the PyParsing library, and the python-cluster library
-#all of which are protected by their own licenses and conditions, using
-#PartitionFinder implies that you agree with those licences and conditions as well.
-
+# This program is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+# details. You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+# PartitionFinder also includes the PhyML program, the RAxML program, and the
+# PyParsing library, all of which are protected by their own licenses and
+# conditions, using PartitionFinder implies that you agree with those licences
+# and conditions as well.
 
 import logtools
 
@@ -140,11 +139,10 @@ class AllAnalysis(Analysis):
 
 
 class GreedyAnalysis(Analysis):
+
+    @logtools.log_info(log, "Performing Greedy Analysis")
     def do_analysis(self):
         '''A greedy algorithm for heuristic partitioning searches'''
-
-        log.info("Performing greedy analysis")
-        log.push()
 
         partnum = len(self.cfg.user_subsets)
         scheme_count = submodels.count_greedy_schemes(partnum)
@@ -200,12 +198,12 @@ class GreedyAnalysis(Analysis):
                 self.cfg.reporter.write_scheme_summary(
                     self.results.best_scheme, self.results.best_result)
 
-                # Now we find out which is the best lumping we know of for this step
+                # Now we find out which is the best lumping we know of for
+                # this step
                 start_scheme = self.results.best_scheme
             else:
-                log.info(
-                    "Analysed all schemes for this step and found no schemes "
-                    "that improve the score, stopping")
+                log.info("""Analysed all schemes for this step and found no
+                    schemes that improve the score, stopping""")
                 break
 
             # We're done if it's the scheme with everything together

@@ -4,9 +4,12 @@ import re
 import textwrap
 
 _log_depth = 0
-_max_width = 100
+_max_width = 80
 _tab_width = 4
 
+# These should be the same size as the _tab_width
+_bullet       = ""
+_continuation = "   "
 
 def get_logger(fname):
     """Pass in the __file__"""
@@ -53,11 +56,8 @@ class Logger(object):
         return msg
 
     def post_message(self, msg, log_function):
-        self.piecemeal_message(msg, log_function)
-
-    def piecemeal_message(self, msg, log_function):
         # How much room have we got?
-        indent_amount = _log_depth * _tab_width
+        indent_amount = _log_depth * (_tab_width + 1)
         local_max_width = _max_width - indent_amount
         spaces = " " * indent_amount
 
@@ -66,16 +66,16 @@ class Logger(object):
         assert local_max_width > 30
 
         if len(msg) <= local_max_width:
-            log_function(spaces + msg)
+            log_function(spaces + _bullet + msg)
             return
 
-        continuation = '   ...'
-        lines = textwrap.wrap(msg, local_max_width - len(continuation))
+        # Add an extra for the hanging indent
+        lines = textwrap.wrap(msg, local_max_width)
         line_iterator = iter(lines)
         first = line_iterator.next()
-        log_function(spaces + first)
+        log_function(spaces + _bullet + first)
         for next_line in line_iterator:
-            log_function(spaces + continuation + next_line)
+            log_function(spaces + _continuation + next_line)
 
     def format_message(self, msg):
         """Strip multiline comments down to a single line"""
@@ -96,3 +96,30 @@ class Logger(object):
     def pop():
         global _log_depth
         _log_depth -= 1
+
+
+class LogIndented(object):
+    def __init__(self, logger=None, msg=None):
+        self.logger = logger
+        self.msg = msg
+
+    def __enter__(self):
+        if self.logger and self.msg:
+            self.logger.info(self.msg)
+        Logger.push()
+
+    def __exit__(self, type, value, traceback):
+        Logger.pop()
+
+
+class log_info(object):
+    """Decorator for wrapping functions indented"""
+    def __init__(self, logger, msg):
+        self.logger = logger
+        self.msg = msg
+
+    def __call__(self, fn):
+        def indented_fn(*args, **kwargs):
+            with LogIndented(self.logger, self.msg) as nothing:
+                fn(*args, **kwargs)
+        return indented_fn
