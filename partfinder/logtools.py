@@ -4,7 +4,7 @@ import re
 import textwrap
 
 _log_depth = 0
-_max_width = 80
+_max_width = 100
 _tab_width = 4
 
 
@@ -17,6 +17,9 @@ def get_logger(fname):
 
     log_name = base_ext[0]
 
+    # Trim it max 10 characters
+    log_name = log_name[:10]
+
     # Now wrap it and return it
     return Logger(logging.getLogger(log_name))
 
@@ -25,20 +28,31 @@ class Logger(object):
     def __init__(self, logger):
         self.log = logger
 
-    def debug(self, msg):
+    def debug(self, *args):
+        msg = self.compose_message(*args)
         self.post_message(msg, self.log.debug)
 
-    def info(self, msg):
+    def info(self, *args):
+        msg = self.compose_message(*args)
         self.post_message(msg, self.log.info)
 
-    def warning(self, msg):
+    def warning(self, *args):
+        msg = self.compose_message(*args)
         self.post_message(msg, self.log.warning)
 
-    def error(self, msg):
+    def error(self, *args):
+        msg = self.compose_message(*args)
         self.post_message(msg, self.log.error)
 
-    def post_message(self, msg, log_function):
+    def compose_message(self, *args):
+        if len(args) > 1:
+            msg = args[0] % args[1:]
+        else:
+            msg = args[0]
         msg = self.format_message(msg)
+        return msg
+
+    def post_message(self, msg, log_function):
         self.piecemeal_message(msg, log_function)
 
     def piecemeal_message(self, msg, log_function):
@@ -55,9 +69,13 @@ class Logger(object):
             log_function(spaces + msg)
             return
 
-        lines = textwrap.wrap(msg, local_max_width)
-        for l in lines:
-            log_function(spaces + l)
+        continuation = '   ...'
+        lines = textwrap.wrap(msg, local_max_width - len(continuation))
+        line_iterator = iter(lines)
+        first = line_iterator.next()
+        log_function(spaces + first)
+        for next_line in line_iterator:
+            log_function(spaces + continuation + next_line)
 
     def format_message(self, msg):
         """Strip multiline comments down to a single line"""

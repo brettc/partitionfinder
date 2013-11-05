@@ -1,24 +1,24 @@
-#Copyright (C) 2012 Robert Lanfear and Brett Calcott
+# Copyright (C) 2012 Robert Lanfear and Brett Calcott
 #
-#This program is free software: you can redistribute it and/or modify it
-#under the terms of the GNU General Public License as published by the
-#Free Software Foundation, either version 3 of the License, or (at your
-#option) any later version.
+# This program is free software: you can redistribute it and/or modify it under
+# the terms of the GNU General Public License as published by the Free Software
+# Foundation, either version 3 of the License, or (at your option) any later
+# version.
 #
-#This program is distributed in the hope that it will be useful, but
-#WITHOUT ANY WARRANTY; without even the implied warranty of
-#MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-#General Public License for more details. You should have received a copy
-#of the GNU General Public License along with this program.  If not, see
-#<http://www.gnu.org/licenses/>. PartitionFinder also includes the PhyML
-#program, the RAxML program, and the PyParsing library,
-#all of which are protected by their own licenses and conditions, using
-#PartitionFinder implies that you agree with those licences and conditions as well.
+# This program is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+# details. You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+# PartitionFinder also includes the PhyML program, the RAxML program, and the
+# PyParsing library, all of which are protected by their own licenses and
+# conditions, using PartitionFinder implies that you agree with those licences
+# and conditions as well.
 
-import logging
+import logtools
+log = logtools.get_logger(__file__)
+
 from partfinder import subset_ops
-
-log = logging.getLogger("scheme")
 import subset
 import submodels
 
@@ -42,15 +42,16 @@ class SchemeResult(object):
         self.nsubs = len(sch.subsets)  # number of subsets
         sum_subset_k = sum([s.best_params for s in sch])  # sum of number of parameters in the best model of each subset
 
-        log.debug("Calculating number of parameters in scheme:")
-        log.debug("Total parameters from subset models: %d" % (sum_subset_k))
+        log.debug("""Calculating number of parameters in scheme.
+                  Total parameters from subset models: %d""" % (sum_subset_k))
 
         if branchlengths == 'linked':  # linked brlens - only one extra parameter per subset
             self.sum_k = sum_subset_k + (self.nsubs - 1) + (
                 (2 * nseq) - 3)  # number of parameters in a scheme
-            log.debug("Total parameters from brlens: %d" % ((2 * nseq) - 3))
-            log.debug(
-                "Parameters from subset multipliers: %d" % (self.nsubs - 1))
+            log.debug("Total parameters from brlens: %d" %
+                      ((2 * nseq) - 3))
+            log.debug("Parameters from subset multipliers: %d" %
+                      (self.nsubs - 1))
 
         elif branchlengths == 'unlinked':  # unlinked brlens - every subset has its own set of brlens
             self.sum_k = sum_subset_k + (self.nsubs * (
@@ -81,11 +82,12 @@ class SchemeResult(object):
         self.bic = (-2.0 * lnL) + (K * logarithm(n))
 
         if n < (K + 2):
-            log.warning("Scheme '%s' has a very small"
-                        " number of sites (%d) compared to the number of parameters"
-                        " in the models that make up the subsets"
-                        " This may give misleading AICc results, so please check carefully"
-                        " if you are using the AICc for your analyses." % (sch.name, n,))
+            log.warning(
+                """Scheme '%s' has a very small number of sites (%d) compared
+                to the number of parameters in the models that make up the
+                subsets This may give misleading AICc results, so please check
+                carefully if you are using the AICc for your analyses.""" %
+                (sch.name, n,))
             n = K + 2
 
         self.aicc = (-2.0 * lnL) + ((2.0 * K) * (n / (n - K - 1.0)))
@@ -113,7 +115,7 @@ class Scheme(object):
             log.error("Scheme '%s' has missing subsets", name)
             raise SchemeError
 
-        log.debug("Created %s", self)
+        log.debug("Created %s" % self)
 
     def __iter__(self):
         return iter(self.subsets)

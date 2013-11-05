@@ -85,7 +85,7 @@ class Subset(object):
         self.description = description
 
     def __repr__(self):
-        return "Subset(%s)" % self.name
+        return "Subset(%s..)" % self.name[:5]
 
     @property
     def name(self):

@@ -17,6 +17,7 @@
 
 
 import logtools
+
 log = logtools.get_logger(__file__)
 
 import math
@@ -34,7 +35,6 @@ from util import PhylogenyProgramError
 
 
 class UserAnalysis(Analysis):
-
     def do_analysis(self):
         log.info("Performing User analysis")
         current_schemes = self.cfg.user_schemes
@@ -49,7 +49,8 @@ class UserAnalysis(Analysis):
                 # Write out the scheme
                 self.cfg.reporter.write_scheme_summary(s, res)
         else:
-            log.error("Search set to 'user', but no user schemes detected in .cfg file. Please check.")
+            log.error(
+                "Search set to 'user', but no user schemes detected in .cfg file. Please check.")
             raise AnalysisError
 
         self.cfg.progress.end()
@@ -103,7 +104,8 @@ class StrictClusteringAnalysis(Analysis):
             self.analyse_scheme(clustered_scheme)
 
             # Stop when we've anlaysed the scheme with all subsets combined
-            if len(set(clustered_scheme.subsets)) == 1:  # then it's the scheme with everything together
+            if len(set(
+                    clustered_scheme.subsets)) == 1:  # then it's the scheme with everything together
                 break
             else:
                 start_scheme = clustered_scheme
@@ -114,7 +116,6 @@ class StrictClusteringAnalysis(Analysis):
 
 
 class AllAnalysis(Analysis):
-
     def do_analysis(self):
         log.info("Performing complete analysis")
         partnum = len(self.cfg.user_subsets)
@@ -184,15 +185,15 @@ class GreedyAnalysis(Analysis):
 
                 log.debug("Difference in %s: %.1f" %
                           (self.cfg.model_selection,
-                          (new_result.score - old_best_score)))
+                           (new_result.score - old_best_score)))
 
                 cur_s += 1
 
             if self.results.best_score != old_best_score:
                 log.info("""Analysed all schemes for this step. The best
                     scheme changed the %s score by %.1f units.""" % (
-                     self.cfg.model_selection,
-                     self.results.best_score - old_best_score
+                    self.cfg.model_selection,
+                    self.results.best_score - old_best_score
                 ))
 
                 self.results.best_scheme.name = "step_%d" % step
@@ -202,8 +203,9 @@ class GreedyAnalysis(Analysis):
                 # Now we find out which is the best lumping we know of for this step
                 start_scheme = self.results.best_scheme
             else:
-                log.info("Analysed all schemes for this step and found no schemes "
-                         "that improve the score, stopping")
+                log.info(
+                    "Analysed all schemes for this step and found no schemes "
+                    "that improve the score, stopping")
                 break
 
             # We're done if it's the scheme with everything together
@@ -216,7 +218,8 @@ class GreedyAnalysis(Analysis):
         log.pop()
         log.info("Greedy algorithm finished after %d steps" % step)
         log.info("Best scoring scheme is scheme %s, with %s score of %.3f"
-                 % (self.results.best_scheme.name, self.cfg.model_selection, self.results.best_score))
+                 % (self.results.best_scheme.name, self.cfg.model_selection,
+                    self.results.best_score))
 
         self.cfg.reporter.write_best_scheme(self.results)
         log.pop()
@@ -261,7 +264,8 @@ class RelaxedClusteringAnalysis(Analysis):
         step = 1
         while True:
 
-            log.info("***Relaxed clustering algorithm step %d of %d***" % (step, partnum - 1))
+            log.info("***Relaxed clustering algorithm step %d of %d***" % (
+            step, partnum - 1))
             name_prefix = "step_%d" % (step)
 
             # Get a list of all possible lumpings of the best_scheme, ordered
@@ -271,7 +275,7 @@ class RelaxedClusteringAnalysis(Analysis):
 
             # Reduce the size of the lumped subsets to cluster_percent long
             # Round up to stop zeros
-            cutoff = int(math.ceil(len(lumped_subsets)*stop_at))
+            cutoff = int(math.ceil(len(lumped_subsets) * stop_at))
             lumped_subsets = lumped_subsets[:cutoff]
 
             # Now analyse the lumped schemes
@@ -287,15 +291,16 @@ class RelaxedClusteringAnalysis(Analysis):
 
                 log.debug("Difference in %s: %.1f",
                           self.cfg.model_selection,
-                          (new_result.score-old_best_score))
+                          (new_result.score - old_best_score))
 
                 lumpings_done += 1
 
             if self.results.best_score != old_best_score:
-                log.info("Analysed %.1f percent of the schemes for this step. The best "
-                         "scheme changed the %s score by %.1f units.",
-                         self.cfg.cluster_percent, self.cfg.model_selection,
-                         (self.results.best_score - old_best_score))
+                log.info(
+                    "Analysed %.1f percent of the schemes for this step. The best "
+                    "scheme changed the %s score by %.1f units.",
+                    self.cfg.cluster_percent, self.cfg.model_selection,
+                    (self.results.best_score - old_best_score))
 
                 self.results.best_scheme.name = "step_%d" % step
                 self.cfg.reporter.write_scheme_summary(
@@ -304,8 +309,10 @@ class RelaxedClusteringAnalysis(Analysis):
                 # Now we find out which is the best lumping we know of for this step
                 start_scheme = self.results.best_scheme
             else:
-                log.info("Analysed %.1f percent of the schemes for this step and found no schemes "
-                         "that improve the score, stopping" , self.cfg.cluster_percent)
+                log.info(
+                    "Analysed %.1f percent of the schemes for this step and found no schemes "
+                    "that improve the score, stopping",
+                    self.cfg.cluster_percent)
                 break
 
             # We're done if it's the scheme with everything together
@@ -316,7 +323,8 @@ class RelaxedClusteringAnalysis(Analysis):
 
         log.info("Relaxed clustering algorithm finished after %d steps" % step)
         log.info("Best scoring scheme is scheme %s, with %s score of %.3f"
-                 % (self.results.best_scheme.name, model_selection, self.results.best_score))
+                 % (self.results.best_scheme.name, model_selection,
+                    self.results.best_score))
 
         self.cfg.reporter.write_best_scheme(self.results)
 
@@ -332,7 +340,6 @@ class KmeansAnalysis(Analysis):
         start_scheme = scheme.create_scheme(
             self.cfg, "start_scheme", start_description)
 
-
         log.info("Analysing starting scheme (scheme %s)" % start_scheme.name)
         old_score = self.analyse_scheme(start_scheme)
 
@@ -345,13 +352,13 @@ class KmeansAnalysis(Analysis):
         alignment_path = self.filtered_alignment_path
         tree_path = processor.make_tree_path(alignment_path)
         best_result = self.analyse_scheme(best_scheme)
-        fabricated_subsets =[]
+        fabricated_subsets = []
         step = 1
 
-
         while subset_index < len(all_subsets):
-            log.info("Best scheme has %s score of %.2f and %d subset(s)" 
-                     %(self.cfg.model_selection.upper(), best_result.score, len(best_scheme.subsets)))
+            log.info("Best scheme has %s score of %.2f and %d subset(s)"
+                     % (self.cfg.model_selection.upper(), best_result.score,
+                        len(best_scheme.subsets)))
 
             log.info("***Kmeans algorithm step %d***" % step)
             step += 1
@@ -359,7 +366,7 @@ class KmeansAnalysis(Analysis):
             current_subset = all_subsets[subset_index]
 
             log.info("Analysing subset of %d sites" %
-                     len(current_subset .columns))
+                     len(current_subset.columns))
 
             # First check if the subset is large enough to split, if it isn't,
             # move to the next subset
@@ -369,14 +376,17 @@ class KmeansAnalysis(Analysis):
                 continue
 
             if current_subset.fabricated:
-                log.info("This subset cannot be split further because %s cannot analyse it",
-                        self.cfg.phylogeny_program)
+                log.info(
+                    "This subset cannot be split further because %s cannot analyse it",
+                    self.cfg.phylogeny_program)
                 subset_index += 1
                 fabricated_subsets.append(current_subset)
                 continue
 
             split_subsets = kmeans.kmeans_split_subset(self.cfg,
-                self.alignment, current_subset, tree_path)
+                                                       self.alignment,
+                                                       current_subset,
+                                                       tree_path)
 
 
             # kmeans_split_subset will return a 1 and flag the subset as
@@ -387,7 +397,7 @@ class KmeansAnalysis(Analysis):
                 fabricated_subsets.append(current_subset)
                 continue
 
- 
+
             # Take a copy
             updated_subsets = all_subsets[:]
 
@@ -395,10 +405,10 @@ class KmeansAnalysis(Analysis):
             # Google "slice assignments"
             # This list is the key to avoiding recursion. It expands to contain
             # all of the split subsets by replacing them with the split ones
-            updated_subsets[subset_index:subset_index+1] = split_subsets
+            updated_subsets[subset_index:subset_index + 1] = split_subsets
 
-            test_scheme = scheme.Scheme(self.cfg, str(step-1),
-                updated_subsets)
+            test_scheme = scheme.Scheme(self.cfg, str(step - 1),
+                                        updated_subsets)
 
             new_result = self.analyse_scheme(test_scheme)
 
@@ -414,29 +424,33 @@ class KmeansAnalysis(Analysis):
                 self.cfg.reporter.write_scheme_summary(
                     self.results.best_scheme, self.results.best_result)
 
-                if len(split_subsets)==2:
-                    log.info("Splitting subset into %d:%d sites improved the %s score"
-                              %(len(split_subsets[0].columns), 
-                                len(split_subsets[1].columns),
-                                self.cfg.model_selection))
+                if len(split_subsets) == 2:
+                    log.info(
+                        "Splitting subset into %d:%d sites improved the %s score"
+                        % (len(split_subsets[0].columns),
+                           len(split_subsets[1].columns),
+                           self.cfg.model_selection))
 
                     for s in split_subsets:
-                       m = [x%3 for x in s.columns]
-                       l = float(len(s.columns))
-                       props = [(float(m.count(1))/l), (float(m.count(2))/l), (float(m.count(0))/l)]
-                       log.info("%d subset has 1st, 2nd, 3rd props: %s" %(len(s.columns), str(props)))
- 
+                        m = [x % 3 for x in s.columns]
+                        l = float(len(s.columns))
+                        props = [(float(m.count(1)) / l),
+                                 (float(m.count(2)) / l),
+                                 (float(m.count(0)) / l)]
+                        log.info("%d subset has 1st, 2nd, 3rd props: %s" % (
+                        len(s.columns), str(props)))
+
 
 
             else:
-                log.info("Splitting this subset did not improve the %s score", 
+                log.info("Splitting this subset did not improve the %s score",
                          self.cfg.model_selection.upper())
                 # Move to the next subset in the all_subsets list
                 subset_index += 1
 
-        log.info("Best scheme has %s score of %.2f and %d subset(s)" 
-                 %(self.cfg.model_selection.upper(), best_result.score, len(best_scheme.subsets)))
-
+        log.info("Best scheme has %s score of %.2f and %d subset(s)"
+                 % (self.cfg.model_selection.upper(), best_result.score,
+                    len(best_scheme.subsets)))
 
         if fabricated_subsets:
             log.info("Finalising partitioning scheme")
@@ -484,7 +498,7 @@ class KmeansAnalysis(Analysis):
             # Now add the new subset to the scheme and see if the new subset
             # can be analyzed
             scheme_list.append(merged_sub)
-            merged_scheme = scheme.Scheme(self.cfg, str(step-1), scheme_list)
+            merged_scheme = scheme.Scheme(self.cfg, str(step - 1), scheme_list)
 
             merged_result = self.analyse_scheme(merged_scheme)
             # If it can be analyzed, move the algorithm forward, if it can't
@@ -508,10 +522,10 @@ class KmeansAnalysis(Analysis):
 
         log.info("** Kmeans algorithm finished after %d steps **" % (step - 1))
         log.info("Best scoring scheme is scheme %s, with %s score of %.3f"
-                 % (self.results.best_scheme.name, self.cfg.model_selection, self.results.best_score))
+                 % (self.results.best_scheme.name, self.cfg.model_selection,
+                    self.results.best_score))
 
         self.cfg.reporter.write_best_scheme(self.results)
-
 
 
 class KmeansAnalysisWrapper(Analysis):
@@ -528,7 +542,6 @@ class KmeansAnalysisWrapper(Analysis):
         start_scheme = scheme.create_scheme(
             self.cfg, "start_scheme", start_description)
 
-
         log.info("Analysing starting scheme (scheme %s)" % start_scheme.name)
         old_score = self.analyse_scheme(start_scheme)
 
@@ -543,7 +556,7 @@ class KmeansAnalysisWrapper(Analysis):
         split_subsets = []
         for a_subset in start_scheme:
             how_many = kmeans.kmeans_wrapper(self.cfg, self.alignment,
-                a_subset, tree_path)
+                                             a_subset, tree_path)
             split_subsets += how_many
         split_scheme = scheme.Scheme(self.cfg, "split_scheme", split_subsets)
         best_result = self.analyse_scheme(best_scheme)
@@ -553,20 +566,21 @@ class KmeansAnalysisWrapper(Analysis):
             log.info("Initial splits generated superior scheme")
         all_subsets = list(best_scheme.subsets)
 
-        fabricated_subsets =[]
+        fabricated_subsets = []
         step = 1
 
-
         while subset_index < len(all_subsets):
-            log.info("Best scheme has %s score of %.2f and %d subset(s)" 
-                     %(self.cfg.model_selection.upper(), best_result.score, len(best_scheme.subsets)))
+            log.info("Best scheme has %s score of %.2f and %d subset(s)"
+                     % (self.cfg.model_selection.upper(), best_result.score,
+                        len(best_scheme.subsets)))
 
             log.info("***Kmeans algorithm step %d***" % step)
             step += 1
 
             current_subset = all_subsets[subset_index]
 
-            log.info("Analysing subset of %d sites", len(current_subset.columns))
+            log.info("Analysing subset of %d sites",
+                     len(current_subset.columns))
 
             # First check if the subset is large enough to split, if it isn't,
             # move to the next subset
@@ -576,14 +590,17 @@ class KmeansAnalysisWrapper(Analysis):
                 continue
 
             if current_subset.fabricated:
-                log.info("This subset cannot be split further because %s cannot analyse it",
-                        self.cfg.phylogeny_program)
+                log.info(
+                    "This subset cannot be split further because %s cannot analyse it",
+                    self.cfg.phylogeny_program)
                 subset_index += 1
                 fabricated_subsets.append(current_subset)
                 continue
 
             split_subsets = kmeans.kmeans_split_subset(self.cfg,
-                self.alignment, current_subset, tree_path)
+                                                       self.alignment,
+                                                       current_subset,
+                                                       tree_path)
 
 
             # kmeans_split_subset will return a 1 and flag the subset as
@@ -595,8 +612,9 @@ class KmeansAnalysisWrapper(Analysis):
                 continue
 
             for each_subset in split_subsets:
-                log.info("Subset resulting from split is %d sites long", len(each_subset.columns))
- 
+                log.info("Subset resulting from split is %d sites long",
+                         len(each_subset.columns))
+
             # Take a copy
             updated_subsets = all_subsets[:]
 
@@ -604,10 +622,10 @@ class KmeansAnalysisWrapper(Analysis):
             # Google "slice assignments"
             # This list is the key to avoiding recursion. It expands to contain
             # all of the split subsets by replacing them with the split ones
-            updated_subsets[subset_index:subset_index+1] = split_subsets
+            updated_subsets[subset_index:subset_index + 1] = split_subsets
 
-            test_scheme = scheme.Scheme(self.cfg, str(step-1),
-                updated_subsets)
+            test_scheme = scheme.Scheme(self.cfg, str(step - 1),
+                                        updated_subsets)
 
             new_result = self.analyse_scheme(test_scheme)
 
@@ -623,29 +641,33 @@ class KmeansAnalysisWrapper(Analysis):
                 self.cfg.reporter.write_scheme_summary(
                     self.results.best_scheme, self.results.best_result)
 
-                if len(split_subsets)==2:
-                    log.info("Splitting subset into %d:%d sites improved the %s score"
-                              %(len(split_subsets[0].columns), 
-                                len(split_subsets[1].columns),
-                                self.cfg.model_selection))
+                if len(split_subsets) == 2:
+                    log.info(
+                        "Splitting subset into %d:%d sites improved the %s score"
+                        % (len(split_subsets[0].columns),
+                           len(split_subsets[1].columns),
+                           self.cfg.model_selection))
 
                     for s in split_subsets:
-                       m = [x%3 for x in s.columns]
-                       l = float(len(s.columns))
-                       props = [(float(m.count(1))/l), (float(m.count(2))/l), (float(m.count(0))/l)]
-                       log.info("%d subset has 1st, 2nd, 3rd props: %s" %(len(s.columns), str(props)))
- 
+                        m = [x % 3 for x in s.columns]
+                        l = float(len(s.columns))
+                        props = [(float(m.count(1)) / l),
+                                 (float(m.count(2)) / l),
+                                 (float(m.count(0)) / l)]
+                        log.info("%d subset has 1st, 2nd, 3rd props: %s" % (
+                        len(s.columns), str(props)))
+
 
 
             else:
-                log.info("Splitting this subset did not improve the %s score", 
+                log.info("Splitting this subset did not improve the %s score",
                          self.cfg.model_selection.upper())
                 # Move to the next subset in the all_subsets list
                 subset_index += 1
 
-        log.info("Best scheme has %s score of %.2f and %d subset(s)" 
-                 %(self.cfg.model_selection.upper(), best_result.score, len(best_scheme.subsets)))
-
+        log.info("Best scheme has %s score of %.2f and %d subset(s)"
+                 % (self.cfg.model_selection.upper(), best_result.score,
+                    len(best_scheme.subsets)))
 
         if fabricated_subsets:
             log.info("Finalising partitioning scheme")
@@ -693,7 +715,7 @@ class KmeansAnalysisWrapper(Analysis):
             # Now add the new subset to the scheme and see if the new subset
             # can be analyzed
             scheme_list.append(merged_sub)
-            merged_scheme = scheme.Scheme(self.cfg, str(step-1), scheme_list)
+            merged_scheme = scheme.Scheme(self.cfg, str(step - 1), scheme_list)
 
             merged_result = self.analyse_scheme(merged_scheme)
             # If it can be analyzed, move the algorithm forward, if it can't
@@ -717,7 +739,8 @@ class KmeansAnalysisWrapper(Analysis):
 
         log.info("** Kmeans algorithm finished after %d steps **" % (step - 1))
         log.info("Best scoring scheme is scheme %s, with %s score of %.3f"
-                 % (self.results.best_scheme.name, self.cfg.model_selection, self.results.best_score))
+                 % (self.results.best_scheme.name, self.cfg.model_selection,
+                    self.results.best_score))
 
         self.cfg.reporter.write_best_scheme(self.results)
 
@@ -736,7 +759,6 @@ class KmeansGreedy(Analysis):
         start_scheme = scheme.create_scheme(
             self.cfg, "start_scheme", start_description)
 
-
         log.info("Analysing starting scheme (scheme %s)" % start_scheme.name)
         old_score = self.analyse_scheme(start_scheme)
 
@@ -748,10 +770,11 @@ class KmeansGreedy(Analysis):
         alignment_path = self.filtered_alignment_path
         tree_path = processor.make_tree_path(alignment_path)
 
-
         while subset_index < len(all_subsets):
             current_subset = all_subsets[subset_index]
-            split_subsets = kmeans.kmeans_split_subset(self.cfg, self.alignment, current_subset, tree_path)
+            split_subsets = kmeans.kmeans_split_subset(self.cfg, self.alignment,
+                                                       current_subset,
+                                                       tree_path)
 
             if split_subsets == 1:
                 subset_index += 1
@@ -764,9 +787,10 @@ class KmeansGreedy(Analysis):
                 # Google "slice assignments"
                 # This list is the key to avoiding recursion. It expands to contain
                 # all of the split subsets by replacing them with the split ones
-                updated_subsets[subset_index:subset_index+1] = split_subsets
+                updated_subsets[subset_index:subset_index + 1] = split_subsets
 
-                test_scheme = scheme.Scheme(self.cfg, "Current Scheme", updated_subsets)
+                test_scheme = scheme.Scheme(self.cfg, "Current Scheme",
+                                            updated_subsets)
 
                 try:
                     best_result = self.analyse_scheme(best_scheme)
@@ -775,7 +799,8 @@ class KmeansGreedy(Analysis):
                     log.info("Current best score is: " + str(best_result))
                     log.info("Current new score is: " + str(new_result))
                     if new_result.score < best_result.score:
-                        log.info("New score " + str(subset_index) + " is better and will be set to best score")
+                        log.info("New score " + str(
+                            subset_index) + " is better and will be set to best score")
                         best_scheme = test_scheme
 
                         # Change this to the one with split subsets in it. Note that
@@ -788,9 +813,10 @@ class KmeansGreedy(Analysis):
                 # In PhyML or RAxML, it is likely because of no alignment patterns,
                 # catch that and move to the next subset without splitting.
                 except PhylogenyProgramError:
-                    log.info("Phylogeny program generated an error so this subset was not split, see error above")
+                    log.info(
+                        "Phylogeny program generated an error so this subset was not split, see error above")
                     subset_index += 1
-        # Now start the Greedy Analysis: need to figure out how to make it go through more
+            # Now start the Greedy Analysis: need to figure out how to make it go through more
         # than one scheme...
 
         start_scheme = best_scheme
@@ -822,7 +848,7 @@ class KmeansGreedy(Analysis):
 
                 log.debug("Difference in %s: %.1f",
                           self.cfg.model_selection,
-                          (new_result.score-old_best_score))
+                          (new_result.score - old_best_score))
 
                 cur_s += 1
 
@@ -839,8 +865,9 @@ class KmeansGreedy(Analysis):
                 # Now we find out which is the best lumping we know of for this step
                 start_scheme = self.results.best_scheme
             else:
-                log.info("Analysed all schemes for this step and found no schemes "
-                         "that improve the score, stopping")
+                log.info(
+                    "Analysed all schemes for this step and found no schemes "
+                    "that improve the score, stopping")
                 break
 
             # We're done if it's the scheme with everything together
@@ -851,7 +878,8 @@ class KmeansGreedy(Analysis):
 
         log.info("Greedy algorithm finished after %d steps" % step)
         log.info("Best scoring scheme is scheme %s, with %s score of %.3f"
-                 % (self.results.best_scheme.name, self.cfg.model_selection, self.results.best_score))
+                 % (self.results.best_scheme.name, self.cfg.model_selection,
+                    self.results.best_score))
 
         self.cfg.reporter.write_best_scheme(self.results)
 
