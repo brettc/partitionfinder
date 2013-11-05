@@ -1,22 +1,22 @@
-#Copyright (C) 2012 Robert Lanfear and Brett Calcott
+# Copyright (C) 2012-2013 Robert Lanfear and Brett Calcott
 #
-#This program is free software: you can redistribute it and/or modify it
-#under the terms of the GNU General Public License as published by the
-#Free Software Foundation, either version 3 of the License, or (at your
-#option) any later version.
+# This program is free software: you can redistribute it and/or modify it under
+# the terms of the GNU General Public License as published by the Free Software
+# Foundation, either version 3 of the License, or (at your option) any later
+# version.
 #
-#This program is distributed in the hope that it will be useful, but
-#WITHOUT ANY WARRANTY; without even the implied warranty of
-#MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-#General Public License for more details. You should have received a copy
-#of the GNU General Public License along with this program.  If not, see
-#<http://www.gnu.org/licenses/>. PartitionFinder also includes the PhyML
-#program, the RAxML program, and the PyParsing library,
-#all of which are protected by their own licenses and conditions, using
-#PartitionFinder implies that you agree with those licences and conditions as well.
+# This program is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+# details. You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+# PartitionFinder also includes the PhyML program, the RAxML program, and the
+# PyParsing library, all of which are protected by their own licenses and
+# conditions, using PartitionFinder implies that you agree with those licences
+# and conditions as well.
 
-import logging
-log = logging.getLogger("analysis")
+import logtools
+log = logtools.get_logger(__file__)
 
 import os
 import shutil
@@ -42,36 +42,45 @@ class Analysis(object):
     def __init__(self, cfg, force_restart=False, threads=-1):
         cfg.validate()
         self.cfg = cfg
+
+        # TODO: Remove -- put this all into "options"
         self.threads = threads
 
-        self.results = results.AnalysisResults(self.cfg.model_selection)
-
+        # TODO: Move these to the config validate and prepare
         log.info("Beginning Analysis")
         self.process_restart(force_restart)
 
         # Check for old analyses to see if we can use the old data
-        self.cfg.check_for_old_config()
+        # restart.check_for_old_config(cfg)
 
         # Make some folders for the analysis
         self.cfg.make_output_folders()
+
         self.cfg.subset_database = shelve.open(
             os.path.join(self.cfg.subsets_path, 'subsets'), protocol=-1)
+
+        # TODO: This is going to be in "Prepare"
         self.make_alignment(cfg.alignment_path)
         self.make_tree(cfg.user_tree_topology_path)
 
         # We need this to block the threads for critical stuff
         self.lock = threading.Condition(threading.Lock())
 
+        # Store the result in here
+        self.results = results.AnalysisResults(self.cfg.model_selection)
+
     def process_restart(self, force_restart):
         if force_restart:
             # Remove everything
             if os.path.exists(self.cfg.output_path):
-                log.warning("Deleting all previous workings in '%s'", self.cfg.output_path)
+                log.warning("Deleting all previous workings in '%s'" %
+                            self.cfg.output_path)
                 shutil.rmtree(self.cfg.output_path)
         else:
             # Just remove the schemes folder
             if os.path.exists(self.cfg.schemes_path):
-                log.info("Removing Schemes in '%s' (they will be recalculated from existing subset data)", self.cfg.schemes_path)
+                log.info("""Removing Schemes in '%s' (they will be  recalculated
+                from  the existing subset data)""" % self.cfg.schemes_path)
                 shutil.rmtree(self.cfg.schemes_path)
 
     def analyse(self):
@@ -83,6 +92,7 @@ class Analysis(object):
         self.alignment = Alignment()
         self.alignment.read(source_alignment_path)
 
+        # TODO REMOVE -- this should be part of the checking procedure
         # We start by copying the alignment
         self.alignment_path = os.path.join(self.cfg.start_tree_path, 'source.phy')
         if os.path.exists(self.alignment_path):
@@ -90,7 +100,8 @@ class Analysis(object):
             old_align = Alignment()
             old_align.read(self.alignment_path)
             if not old_align.same_as(self.alignment):
-                log.error("Alignment file has changed since previous run. You need to use the force-restart option.")
+                log.error("""Alignment file has changed since previous run. You
+                     need to use the force-restart option.""")
                 raise AnalysisError
 
         else:
@@ -102,7 +113,8 @@ class Analysis(object):
                 log.info("Starting tree file found.")
                 redo_tree = False
             else:
-                log.info("Starting tree file found but incomplete. Re-estimating")
+                log.info("""Starting tree file found but it is incomplete.
+                             Re-estimating""")
                 redo_tree = True
         else:
             log.info("Starting tree will be estimated from the data.")
@@ -141,7 +153,7 @@ class Analysis(object):
 
             if user_path is not None and user_path != "":
                 # Copy it into the start tree folder
-                log.info("Using user supplied topology at %s", user_path)
+                log.info("Using user supplied topology at %s" % user_path)
                 topology_path = os.path.join(self.cfg.start_tree_path, 'user_topology.phy')
                 self.cfg.processor.dupfile(user_path, topology_path)
             else:
@@ -158,7 +170,8 @@ class Analysis(object):
                 self.cfg.cmdline_extras)
 
         self.tree_path = tree_path
-        log.info("Starting tree with branch lengths is here: %s", self.tree_path)
+        log.info("Starting tree with branch lengths is here: %s" %
+                 self.tree_path)
 
     def run_task(self, model_name, sub):
         # This bit should run in parallel (forking the processor)
@@ -226,7 +239,8 @@ class Analysis(object):
             # ALL subsets should already be finalised in the task. We just
             # check again here
             if not sub.finalise(self.cfg):
-                log.error("Failed to run models %s; not sure why", ", ".join(list(sub.models_to_do)))
+                log.error("Failed to run models %s; not sure why" %
+                          ", " "".join(list(sub.models_to_do)))
                 raise AnalysisError
 
         # AIC needs the number of sequences

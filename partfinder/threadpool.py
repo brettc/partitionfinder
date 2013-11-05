@@ -27,7 +27,6 @@ import multiprocessing
 
 _cpus = None
 
-
 def get_cpu_count():
     global _cpus
     if _cpus is not None:
@@ -35,11 +34,11 @@ def get_cpu_count():
 
     try:
         _cpus = multiprocessing.cpu_count()
-    except:
+    except NotImplementedError:
         _cpus = 1
-        log.info("I cannot detect the number of processors...")
+        log.warning('I cannot detect the number of processors...')
+    log.info("Using %s cpus", _cpus)
 
-    log.info("Found %s cpus", _cpus)
     return _cpus
 
 

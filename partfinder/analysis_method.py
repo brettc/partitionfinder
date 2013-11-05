@@ -16,8 +16,8 @@
 #PartitionFinder implies that you agree with those licences and conditions as well.
 
 
-import logging
-log = logging.getLogger("method")
+import logtools
+log = logtools.get_logger(__file__)
 
 import math
 import scheme
@@ -143,6 +143,7 @@ class GreedyAnalysis(Analysis):
         '''A greedy algorithm for heuristic partitioning searches'''
 
         log.info("Performing greedy analysis")
+        log.push()
 
         partnum = len(self.cfg.user_subsets)
         scheme_count = submodels.count_greedy_schemes(partnum)
@@ -156,7 +157,9 @@ class GreedyAnalysis(Analysis):
             self.cfg, "start_scheme", start_description)
 
         log.info("Analysing starting scheme (scheme %s)" % start_scheme.name)
+        log.push()
         self.analyse_scheme(start_scheme)
+        log.pop()
 
         step = 1
         cur_s = 2
@@ -165,6 +168,7 @@ class GreedyAnalysis(Analysis):
         # find a better one and if we do, we just keep going
         while True:
             log.info("***Greedy algorithm step %d***" % step)
+            log.push()
 
             old_best_score = self.results.best_score
 
@@ -178,17 +182,18 @@ class GreedyAnalysis(Analysis):
 
                 new_result = self.analyse_scheme(lumped_scheme)
 
-                log.debug("Difference in %s: %.1f",
-                          self.cfg.model_selection,
-                          (new_result.score-old_best_score))
+                log.debug("Difference in %s: %.1f" %
+                          (self.cfg.model_selection,
+                          (new_result.score - old_best_score)))
 
                 cur_s += 1
 
             if self.results.best_score != old_best_score:
-                log.info("Analysed all schemes for this step. The best "
-                         "scheme changed the %s score by %.1f units.",
-                         self.cfg.model_selection,
-                         (self.results.best_score - old_best_score))
+                log.info("""Analysed all schemes for this step. The best
+                    scheme changed the %s score by %.1f units.""" % (
+                     self.cfg.model_selection,
+                     self.results.best_score - old_best_score
+                ))
 
                 self.results.best_scheme.name = "step_%d" % step
                 self.cfg.reporter.write_scheme_summary(
@@ -205,13 +210,16 @@ class GreedyAnalysis(Analysis):
             if len(set(lumped_scheme.subsets)) == 1:
                 break
 
+            log.pop()
             step += 1
 
+        log.pop()
         log.info("Greedy algorithm finished after %d steps" % step)
         log.info("Best scoring scheme is scheme %s, with %s score of %.3f"
                  % (self.results.best_scheme.name, self.cfg.model_selection, self.results.best_score))
 
         self.cfg.reporter.write_best_scheme(self.results)
+        log.pop()
 
 
 class RelaxedClusteringAnalysis(Analysis):
@@ -350,7 +358,8 @@ class KmeansAnalysis(Analysis):
 
             current_subset = all_subsets[subset_index]
 
-            log.info("Analysing subset of %d sites", len(current_subset.columns))
+            log.info("Analysing subset of %d sites" %
+                     len(current_subset .columns))
 
             # First check if the subset is large enough to split, if it isn't,
             # move to the next subset

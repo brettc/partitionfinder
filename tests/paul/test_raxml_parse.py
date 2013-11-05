@@ -1,4 +1,4 @@
-from raxml import likelihood_parser
+from partfinder.raxml import likelihood_parser
 import py.test
 
 raxml_likelihood_file = "RAxML_perSiteLLs.testing"

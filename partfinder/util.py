@@ -115,15 +115,6 @@ def remove_runID_files(aln_pth):
             pass
 
 
-def make_warning(warning):
-    """Strip multiline comments down to a single line"""
-    # First, get rid of tabs and newlines
-    warning = re.sub('\s', ' ', warning)
-
-    # Now get rid of all extra spaces
-    # http://stackoverflow.com/questions/1546226/
-    # the-shortest-way-to-remove-multiple-spaces-in-a-string-in-python
-    return ' '.join(warning.split())
 
 
 def memoize(f):

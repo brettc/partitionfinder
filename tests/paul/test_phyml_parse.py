@@ -1,4 +1,4 @@
-from phyml import likelihood_parser
+from partfinder.phyml import likelihood_parser
 from math import log
 import py.test
 

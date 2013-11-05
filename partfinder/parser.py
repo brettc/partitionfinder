@@ -342,7 +342,7 @@ class Parser(object):
                 else:
                     log.error("The models option 'all_protein_gammaI' is only available with raxml"
                               ", (the --raxml commandline option). Please check and try again")
-                    raise ParserError            
+                    raise ParserError
             else:
                 pass
 
