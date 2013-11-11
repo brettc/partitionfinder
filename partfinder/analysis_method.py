@@ -155,10 +155,9 @@ class GreedyAnalysis(Analysis):
         start_scheme = scheme.create_scheme(
             self.cfg, "start_scheme", start_description)
 
-        log.info("Analysing starting scheme (scheme %s)" % start_scheme.name)
-        log.push()
-        self.analyse_scheme(start_scheme)
-        log.pop()
+        with logtools.LogIndented(log, "Analysing starting scheme (scheme %s)" %
+                start_scheme.name):
+            self.analyse_scheme(start_scheme)
 
         step = 1
         cur_s = 2
