@@ -181,8 +181,7 @@ def get_num_params(modelstring):
         log.error("Unrecognised datatype: '%s'" % (datatype))
         raise(RaxmlError)
 
-    extras = modelstring.count("+")
-
+    extras = modelstring.count("+") # this accounts for +I and +G
     total = model_params+extras
     log.debug("Model: %s Params: %d" %(modelstring, total))
 
