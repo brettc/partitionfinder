@@ -302,13 +302,8 @@ class Parser(object):
 
         all_dna_mods = set(self.phylo_models.get_all_dna_models())
         all_protein_mods = set(self.phylo_models.get_all_protein_models())
-<<<<<<< HEAD
-        total_mods = all_dna_mods | all_protein_mods
-=======
         all_morphology_mods = set(self.phylo_models.get_all_morphology_models())
-        total_mods = all_dna_mods.union(all_protein_mods)
-        total_mods = total_mods.union(all_morphology_mods)
->>>>>>> feature/morphology
+        total_mods = all_dna_mods | all_protein_mods | all_morphology_mods
 
         mods = tokens[1]
         DNA_mods = 0
