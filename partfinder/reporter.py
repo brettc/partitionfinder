@@ -146,13 +146,9 @@ class TextReporter(object):
             if self.cfg.datatype == "DNA":
                 model = 'DNA'
             elif self.cfg.datatype == "protein":
-<<<<<<< HEAD
                 model = get_raxml_protein_modelstring(each_s.best_model)
-=======
-                model = get_raxml_protein_modelstring(sub.best_model)
             elif self.cfg.datatype == "morphology":
                 model = "MK"
->>>>>>> feature/morphology
             else:
                 raise RuntimeError
 
