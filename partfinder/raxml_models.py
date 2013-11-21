@@ -175,10 +175,6 @@ def get_num_params(modelstring):
         model_params = _base_protein_models[model_name][0]
         if "F" in elements[1:]:
             model_params = model_params+19-1 #the -1 here is to account for the fact we add 1 for the + in '+F' below
-<<<<<<< HEAD
-    
-    extras = modelstring.count("+") # this accounts for +I and +G
-=======
     elif model_name in _base_morphology_models.keys():
         model_params = _base_morphology_models[model_name][0]
     else:
@@ -186,7 +182,7 @@ def get_num_params(modelstring):
         raise(RaxmlError)
 
     extras = modelstring.count("+")
->>>>>>> feature/morphology
+
     total = model_params+extras
     log.debug("Model: %s Params: %d" %(modelstring, total))
 
