@@ -123,6 +123,10 @@ def get_beast_models():
         model_list.append("%s+I+G" % model)
     return model_list
 
+@memoize
+def get_all_morphology_models():
+    # phyml doesn't do morphology models...
+    return []
 
 @memoize
 def get_raxml_models():

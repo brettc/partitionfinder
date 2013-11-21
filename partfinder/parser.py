@@ -302,7 +302,13 @@ class Parser(object):
 
         all_dna_mods = set(self.phylo_models.get_all_dna_models())
         all_protein_mods = set(self.phylo_models.get_all_protein_models())
+<<<<<<< HEAD
         total_mods = all_dna_mods | all_protein_mods
+=======
+        all_morphology_mods = set(self.phylo_models.get_all_morphology_models())
+        total_mods = all_dna_mods.union(all_protein_mods)
+        total_mods = total_mods.union(all_morphology_mods)
+>>>>>>> feature/morphology
 
         mods = tokens[1]
         DNA_mods = 0
@@ -386,6 +392,7 @@ class Parser(object):
                            " The models line in the .cfg file is")
         elif DNA_mods > 0 and protein_mods == 0 and self.cfg.datatype == "protein":
             raise ParserError(
+<<<<<<< HEAD
                 text, loc, "The models list contains only models of nucleotide change."
                            " PartitionFinderProtein.py only works with amino acid models (like the WAG model)."
                            " If you're analysing a nucleotide dataset, please use PartitionFinder.py,"
@@ -398,3 +405,107 @@ class Parser(object):
                            " If you're analysing an amino acid dataset, please use PartitionFinderProtein."
                            " You can download both of these programs from here: www.robertlanfear.com/partitionfinder"
                            " The models line in the .cfg file is")
+=======
+                text, loc, "The models list contains only models of nucelotide change."
+                " PartitionFinderProtein.py only works with amino acid models (like the WAG model)."
+                " If you're analysing a nucelotide dataset, please use PartitionFinder.py,"
+                " which you can download here: www.robertlanfear.com/partitionfinder"
+                " The models line in the .cfg file is")
+        #else:  # we've got a mixture of models.
+            #raise ParserError(
+            #    text, loc, "The models list contains a mixture of protein and nucelotide models."
+            #    " If you're analysing a nucelotide dataset, please use PartitionFinder."
+            #    " If you're analysing an amino acid dataset, please use PartitionFinderProtein."
+            #    " You can download both of these programs from here: www.robertlanfear.com/partitionfinder"
+            #    " The models line in the .cfg file is")
+
+    def define_range(self, part):
+        """Turn the 1, 2 or 3 tokens into integers, supplying a default if needed"""
+        fromc = int(part.start)
+
+        if part.end:
+            toc = int(part.end)
+        else:
+            toc = fromc
+
+        if part.step:
+            stepc = int(part.step)
+        else:
+            stepc = 1
+        return [fromc, toc, stepc]
+
+    def define_partition(self, text, loc, part_def):
+        """We have everything we need here to make a partition"""
+        try:
+            # Creation adds it to set
+            p = partition.Partition(
+                self.cfg, part_def.name, *tuple(part_def.parts))
+        except partition.PartitionError:
+            raise ParserError(
+                text, loc, "Error in '%s' can be found" % part_def.name)
+
+    def check_part_exists(self, text, loc, partref):
+        if partref.name not in self.cfg.partitions:
+            raise ParserError(text, loc, "Partition %s not defined" %
+                              partref.name)
+
+    def define_subset(self, text, loc, subset_def):
+        try:
+            # Get the partitions from the names
+            parts = [self.cfg.partitions[nm] for nm in subset_def[0]]
+
+            # Keep a running list of these till we define the schema below
+            self.subsets.append(subset.Subset(*tuple(parts)))
+        except subset.SubsetError:
+            raise ParserError(text, loc, "Error creating subset...")
+
+    def define_schema(self, text, loc, scheme_def):
+        try:
+            # Clear out the subsets as we need to reuse it
+            subs = tuple(self.subsets)
+            self.subsets = []
+
+            if self.ignore_schemes == False:
+                sch = scheme.Scheme(self.cfg, scheme_def.name, subs)
+                self.cfg.user_schemes.add_scheme(sch)
+
+        except (scheme.SchemeError, subset.SubsetError):
+            raise ParserError(text, loc, "Error in '%s' can be found" %
+                              scheme_def.name)
+
+    def parse_file(self, fname):
+        #this just reads in the config file into 's'
+        s = open(fname, 'rU').read()
+        self.parse_configuration(s)
+
+    def parse_configuration(self, s):
+        #parse the config cfg
+        try:
+            self.result = self.config_parser.ignore(
+                pythonStyleComment).parseString(s)
+        except ParserError, p:
+            log.error(p.format_message())
+            raise PartitionFinderError
+        except ParseException, p:
+            log.error("There was a problem loading your .cfg file, please check and try again")
+            log.error(p)
+
+            #let's see if there was something missing fro the input file
+            expectations = ["models", "search", "[schemes]", "[data_blocks]",
+                            "model_selection", "branchlengths", "alignment"]
+            missing = None
+            for e in expectations:
+                if p.msg.count(e):
+                    missing = e
+
+            if missing:
+                log.info("It looks like the '%s' option might be missing or in the wrong place" % (missing))
+                log.info("Or perhaps something is wrong in the lines just before the '%s' option" % (missing))
+                log.info("Please double check the .cfg file and try again")
+            else:
+                log.info(
+                    "The line causing the problem is this: '%s'" % (p.line))
+                log.info("Please check that line, and make sure it appears in the right place in the .cfg file.")
+                log.info("If it looks OK, try double-checking the semi-colons on other lines in the .cfg file")
+            raise PartitionFinderError
+>>>>>>> feature/morphology

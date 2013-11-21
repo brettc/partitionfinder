@@ -122,8 +122,20 @@ class Subset(object):
         result.aic = (-2.0 * lnL) + (2.0 * K)
         result.bic = (-2.0 * lnL) + (K * logarithm(n))
 
+
         if n < (K + 2):
+<<<<<<< HEAD
             log.debug(self.SMALL_WARNING % (self, n, model, K, self.name))
+=======
+            if cfg.model_selection.lower() == "aicc":
+                log.warning("The subset containing the following data_blocks: %s, has a very small"
+                        " number of sites (%d) compared to the number of parameters"
+                        " in the model being estimated (the %s model which has %d parameters)."
+                        " This may give misleading AICc results, so please check carefully"
+                        " if you are using the AICc for your analyses."
+                        " The model selection results for this subset are in the following file:"
+                        " /analysis/subsets/%s.txt\n" % (self, n, model, K, self.name))
+>>>>>>> feature/morphology
             n = K + 2
 
         result.aicc = (-2.0 * lnL) + ((2.0 * K) * (n / (n - K - 1.0)))
