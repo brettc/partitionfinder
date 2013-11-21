@@ -32,7 +32,7 @@ import subset_ops
 import phyml_models
 import raxml_models
 import config
-from util import PartitionFinderError
+from util import PartitionFinderError, make_warning
 
 
 class ParserError(Exception):
@@ -305,6 +305,7 @@ class Parser(object):
         all_morphology_mods = set(self.phylo_models.get_all_morphology_models())
         total_mods = all_dna_mods | all_protein_mods | all_morphology_mods
 
+
         mods = tokens[1]
         DNA_mods = 0
         protein_mods = 0
@@ -314,24 +315,23 @@ class Parser(object):
         else:
             modsgroup = mods.predefined
             if modsgroup.lower() == "all":
-                modlist = list(all_dna_mods)
-                DNA_mods += 1
+                if self.cfg.datatype == "DNA":
+                    modlist = list(all_dna_mods)
+                if self.cfg.datatype == "protein":
+                    modlist = list(all_protein_mods)
+                if self.cfg.datatype == "morphology":
+                    modlist = list(all_morphology_mods)
             elif modsgroup.lower() == "mrbayes":
                 modlist = set(phyml_models.get_mrbayes_models())
-                DNA_mods += 1
             elif modsgroup.lower() == "beast":
                 modlist = set(phyml_models.get_beast_models())
-                DNA_mods += 1
             elif modsgroup.lower() == "raxml":
                 modlist = set(phyml_models.get_raxml_models())
-                DNA_mods += 1
             elif modsgroup.lower() == "all_protein":
                 modlist = set(self.phylo_models.get_all_protein_models())
-                protein_mods += 1
             elif modsgroup.lower() == "all_protein_gamma":
                 if self.cfg.phylogeny_program == "raxml":
                     modlist = set(raxml_models.get_protein_models_gamma())
-                    protein_mods += 1
                 else:
                     log.error("The models option 'all_protein_gamma' is only available with raxml"
                               ", (the --raxml commandline option). Please check and try again")
@@ -339,7 +339,6 @@ class Parser(object):
             elif modsgroup.lower() == "all_protein_gammaI":
                 if self.cfg.phylogeny_program == "raxml":
                     modlist = set(raxml_models.get_protein_models_gammaI())
-                    protein_mods += 1
                 else:
                     log.error("The models option 'all_protein_gammaI' is only available with raxml"
                               ", (the --raxml commandline option). Please check and try again")
@@ -353,6 +352,9 @@ class Parser(object):
 
 
             log.info("Setting 'models' to '%s'", modsgroup)
+
+        if len(modlist) < 1:
+            raise PartitionFinderError("No models specified, quitting")
 
         self.cfg.models = set()
         for m in modlist:
@@ -374,31 +376,24 @@ class Parser(object):
 
         # Check data type against the model list that we've got a sensible
         # model list
-        if DNA_mods > 0 and protein_mods == 0 and self.cfg.datatype == "DNA":
-            log.info("Setting datatype to 'DNA'")
-        elif DNA_mods == 0 and protein_mods > 0 and self.cfg.datatype == "protein":
-            log.info("Setting datatype to 'protein'")
-        elif DNA_mods == 0 and protein_mods > 0 and self.cfg.datatype == "DNA":
-            raise ParserError(
-                text, loc, "The models list contains only models of amino acid change."
-                           " PartitionFinder.py only works with nucleotide models (like the GTR model)."
-                           " If you're analysing an amino acid dataset, please use PartitionFinderProtein,"
-                           " which you can download here: www.robertlanfear.com/partitionfinder."
-                           " The models line in the .cfg file is")
-        elif DNA_mods > 0 and protein_mods == 0 and self.cfg.datatype == "protein":
-            raise ParserError(
-                text, loc, "The models list contains only models of nucleotide change."
-                           " PartitionFinderProtein.py only works with amino acid models (like the WAG model)."
-                           " If you're analysing a nucleotide dataset, please use PartitionFinder.py,"
-                           " which you can download here: www.robertlanfear.com/partitionfinder"
-                           " The models line in the .cfg file is")
-        else:  # we've got a mixture of models.
-            raise ParserError(
-                text, loc, "The models list contains a mixture of protein and nucleotide models."
-                           " If you're analysing a nucleotide dataset, please use PartitionFinder."
-                           " If you're analysing an amino acid dataset, please use PartitionFinderProtein."
-                           " You can download both of these programs from here: www.robertlanfear.com/partitionfinder"
-                           " The models line in the .cfg file is")
+        GENERIC_MODEL_LIST_WARNING = make_warning("Your model list "
+        "contains models that do not apply to your data type (%s) "
+        "please check and try again.")
+
+        modset = set(modlist)            
+
+        if self.cfg.datatype == "DNA":
+            # check that we only have models from the DNA list
+            if not modset.issubset(all_DNA_mods):
+                raise ParserError(text, loc, GENERIC_MODEL_LIST_WARNING %(self.cfg.datatype))
+        if self.cfg.datatype == "protein":
+            # check that we only have models from the DNA list
+            if not modset.issubset(all_protein_mods):
+                raise ParserError(text, loc, GENERIC_MODEL_LIST_WARNING %(self.cfg.datatype))
+        if self.cfg.datatype == "morphology":
+            # check that we only have models from the DNA list
+            if not modset.issubset(all_morphology_mods):
+                raise ParserError(text, loc, GENERIC_MODEL_LIST_WARNING %(self.cfg.datatype))
 
     def define_range(self, part):
         """Turn the 1, 2 or 3 tokens into integers, supplying a default if needed"""
