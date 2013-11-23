@@ -193,7 +193,7 @@ class Analysis(object):
         # It shouldn't hold things up toooo long...
         self.lock.acquire()
         try:
-            if sub.analysis_error == None:
+            if sub.analysis_error is None:
                 sub.parse_model_result(self.cfg, model_name)
 
             else:

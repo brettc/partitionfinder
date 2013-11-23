@@ -102,15 +102,15 @@ class StrictClusteringAnalysis(Analysis):
             cur_s += 1
             self.analyse_scheme(clustered_scheme)
 
-            # Stop when we've anlaysed the scheme with all subsets combined
-            if len(set(
-                    clustered_scheme.subsets)) == 1:  # then it's the scheme with everything together
+            # Stop when we've analysed the scheme with all subsets combined...
+            if len(set(clustered_scheme.subsets)) == 1:
+                # ... then it's the scheme with everything together
                 break
             else:
+                # We keep going
                 start_scheme = clustered_scheme
 
         self.cfg.progress.end()
-
         self.cfg.reporter.write_best_scheme(self.results)
 
 
@@ -475,7 +475,7 @@ class KmeansAnalysis(Analysis):
                 # euclid_dist = abs(sub.centroid[0] - centroid[0])
                 warnings.simplefilter('ignore', DeprecationWarning)
                 euclid_dist = spatial.distance.pdist(centroid_array)
-                if euclid_dist < best_match or best_match == None:
+                if euclid_dist < best_match or best_match is None:
                     best_match = euclid_dist
                     closest_sub = sub
 
@@ -588,7 +588,8 @@ class KmeansAnalysisWrapper(Analysis):
 
             if current_subset.fabricated:
                 log.info(
-                    "This subset cannot be split further because %s cannot analyse it",
+                    "This subset cannot be split further because %s cannot "
+                    "analyse it",
                     self.cfg.phylogeny_program)
                 subset_index += 1
                 fabricated_subsets.append(current_subset)
@@ -692,7 +693,7 @@ class KmeansAnalysisWrapper(Analysis):
                 # euclid_dist = abs(sub.centroid[0] - centroid[0])
                 warnings.simplefilter('ignore', DeprecationWarning)
                 euclid_dist = spatial.distance.pdist(centroid_array)
-                if euclid_dist < best_match or best_match == None:
+                if euclid_dist < best_match or best_match is None:
                     best_match = euclid_dist
                     closest_sub = sub
 

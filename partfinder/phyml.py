@@ -87,7 +87,7 @@ def run_phyml(command, report_errors=True):
     # p.terminate()
 
     if p.returncode != 0:
-        if report_errors == True:
+        if report_errors:
             log.error("Phyml did not execute successfully")
             log.error("Phyml output follows, in case it's helpful for finding the problem")
             log.error("%s", stdout)
@@ -371,9 +371,8 @@ def likelihood_parser(phyml_lk_file):
         # Now pull likelihoods and rates for a two dimensional list
         lk_site_rate_list = []
         for i in list_of_dicts:
-            ind_lk_r_list = []
-            ind_lk_r_list.append(logarithm(float(i[headers[1]])))
-            ind_lk_r_list.append(logarithm(float(i[headers[len(headers) - 3]])))
+            ind_lk_r_list = [logarithm(float(i[headers[1]])),
+                             logarithm(float(i[headers[len(headers) - 3]]))]
             lk_site_rate_list.append(ind_lk_r_list)
 
         # Return both the list of site likelihoods and the list of lists of

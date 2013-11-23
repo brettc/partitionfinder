@@ -71,7 +71,7 @@ class Pool(object):
     def next_task(self):
         self.task_lock.acquire()
         try:
-            if self.tasks == []:
+            if not self.tasks:
                 self.more_tasks = False
                 return None, None
             else:

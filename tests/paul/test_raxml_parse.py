@@ -1,7 +1,10 @@
+import os
 from partfinder.raxml import likelihood_parser
 import py.test
 
-raxml_likelihood_file = "RAxML_perSiteLLs.testing"
+HERE = os.path.abspath(os.path.dirname(__file__))
+
+raxml_likelihood_file = os.path.join(HERE, "RAxML_perSiteLLs.testing")
 
 def test_likelihoods():
     likelihood_list = [[-2.705940], [-2.705940], [-2.698479], [-5.225005], \

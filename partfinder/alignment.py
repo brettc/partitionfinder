@@ -154,7 +154,7 @@ class Alignment(object):
 
     def __str__(self):
         return "Alignment(%s species, %s codons)"\
-               % self.species, self.sequence_len
+               % (self.species, self.sequence_len)
 
     def same_as(self, other):
         if self.sequence_len != other.sequence_len:
