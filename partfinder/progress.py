@@ -15,8 +15,8 @@
 #all of which are protected by their own licenses and conditions, using
 #PartitionFinder implies that you agree with those licences and conditions as well.
 
-import logging
-log = logging.getLogger("progress")
+import logtools
+log = logtools.get_logger(__file__)
 
 
 class Progress(object):
@@ -53,11 +53,16 @@ class TextProgress(Progress):
         self.subsets_analysed = set()
 
         if "kmeans" not in self.cfg.search:
-            log.info("PartitionFinder will have to analyse %d subsets to complete this analysis", subset_count)
-            log.info("This will result in %s schemes being created", scheme_count)
+            log.info("""
+                PartitionFinder will have to analyse %d subsets to complete this
+                analysis. This will result in %s schemes being created""" %
+                 (subset_count,  scheme_count)
+            )
             if subset_count > 10000:
-                log.warning("%d is a lot of subsets, this might take a long time to analyse", subset_count)
-                log.warning("Perhaps consider using a different search scheme instead (see Manual)")
+                log.warning("""%d is a lot of subsets, this might take a
+                long time to analyse. Perhaps consider using a different
+                search scheme instead (see the Manual)"""
+                % subset_count)
 
     def next_scheme(self):
         self.schemes_analysed += 1
@@ -78,7 +83,8 @@ class TextProgress(Progress):
             else:    
                 percent_done = (
                     float(num_subs_done) * 100.0) / float(self.subset_count)
-                log.info("Finished subset %d/%d, %.2f percent done", num_subs_done, self.subset_count, percent_done)
+                log.info("Finished subset %d/%d, %.2f percent done" %
+                         (num_subs_done, self.subset_count, percent_done))
 
     def end(self):
         pass

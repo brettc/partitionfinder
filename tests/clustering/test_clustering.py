@@ -8,9 +8,8 @@ from partfinder.util import PartitionFinderError
 
 HERE = os.path.abspath(os.path.dirname(__file__))
 
-
-test_description ="""
-DNA_hcluster1  | success              |
+test_description = """
+DNA_hcluster1  | xfail Parser Error?  |
 DNA_hcluster2  | success              |
 DNA_hcluster3  | PartitionFinderError |
 DNA_hcluster4  | success              | --weights "1,1,1,1"
@@ -63,21 +62,22 @@ for line in test_description.split('\n'):
 
     test_container[name] = error, kind, cmdline
 
+
 def pytest_generate_tests(metafunc):
     # This function feeds the output of the above function into the tests below
     if 'folder_name' in metafunc.fixturenames:
-            # Send it sorted order
-            k = test_container.keys()
-            k.sort()
-            metafunc.parametrize('folder_name', k)
+        # Send it sorted order
+        k = test_container.keys()
+        k.sort()
+        metafunc.parametrize('folder_name', k)
 
 # The actual test function
 def test_clustering(folder_name):
     full_path = os.path.join(HERE, folder_name)
-    error , kind, cmdline = test_container[folder_name]
-    if error == None:
+    error, kind, cmdline = test_container[folder_name]
+    if error is None:
         main.call_main(kind, '"%s" --raxml %s' % (full_path, cmdline))
-    elif type(error) == type((0,0)):
+    elif type(error) == type((0, 0)):
         pytest.xfail(error[1])
     else:
         with pytest.raises(error):

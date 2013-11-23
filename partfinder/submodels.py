@@ -83,7 +83,7 @@ def count_relaxed_clustering_subsets(N, cluster_percent, output=False):
         # now we transfer over the 'previous' for the next round of the loop
         previous = num_new_schemes
         # now we calculate the final number of new schemes
-        num_new_schemes = num_new_schemes - num_already_analysed
+        num_new_schemes -= num_already_analysed
         cumsum += num_new_schemes
         if output:print cumsum
     return cumsum
@@ -120,7 +120,7 @@ def count_greedy_subsets(N):
 def bell_numbers(N):
     ## Return the bell number for N subsets
     # script modified from Wikipedia: http://en.wikipedia.org/wiki/Bell_number
-    N = N+1                          ## Bell numbers are indexed from zero 
+    N += 1## Bell numbers are indexed from zero
     t = [[1]]                        ## Initialize the triangle as a two-dimensional array
     c = 1                            ## Bell numbers count
     while c <= N:

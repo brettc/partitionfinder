@@ -3198,7 +3198,7 @@ def countedArray( expr ):
 
 def _flatten(L):
     if type(L) is not list: return [L]
-    if L == []: return L
+    if not L: return L
     return _flatten(L[0]) + _flatten(L[1:])
 
 def matchPreviousLiteral(expr):

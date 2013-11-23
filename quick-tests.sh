@@ -1,1 +1,1 @@
-py.test -v -k "not full"
+py.test -v -k "not full" -x

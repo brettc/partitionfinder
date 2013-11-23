@@ -7,7 +7,6 @@ def test_one():
     p = Parser(c)
     p.parse_configuration(test1)
     print c.user_subsets
-
     # Now do some testing on the Parsed stuff
 
 test1 = r"""

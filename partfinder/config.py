@@ -3,23 +3,17 @@ log = logging.getLogger("config")
 
 import os
 import fnmatch
-import cPickle as pickle
 import scheme
 import subset
 import parser
 import util
 import progress
-import errno
-
 
 class ConfigurationError(util.PartitionFinderError):
     pass
 
 
 class Configuration(object):
-
-    """This holds the user configuration info"""
-
     # List of valid options. The first one is the default
     options = {
         'branchlengths': ['linked', 'unlinked'],
@@ -309,116 +303,9 @@ class Configuration(object):
         if self.user_tree is None:
             self.user_tree_topology_path = None
         else:
-            self.user_tree_topology_path = os.path.join(self.base_path,
-                                                        self.user_tree)
-            log.info(
-                "Looking for tree file '%s'...", self.user_tree_topology_path)
+            self.user_tree_topology_path = \
+                    os.path.join(self.base_path, self.user_tree)
+            log.info("Looking for tree file '{}'...".format(
+                self.user_tree_topology_path))
             util.check_file_exists(self.user_tree_topology_path)
 
-    def check_for_old_config(self):
-        """
-        Check whether the analysis dictated by cfg has been run before, and if
-        the config has changed in any way that would make re-running it invalid
-        """
-
-        # TODO: Fix this mess
-        return
-
-        log.info("Checking previously run configuration data...")
-        if self.user_tree is None:
-            topology = ""
-        else:
-            topology = open(self.user_tree_topology_path).read()
-
-        cfg_list = [self.alignment,
-                    self.branchlengths,
-                    # self.user_subsets,
-                    self.phylogeny_program,
-                    topology]
-
-        # We need to know if there's anything in the subsets folder
-        subset_path = os.path.join(self.output_path, 'subsets')
-        has_subsets = False
-        if os.path.exists(subset_path):
-            # EAFP: we try to delete the file then see if os.rmdir spits an
-            # error...
-            try:
-                os.rmdir(subset_path)
-            except OSError as ex:
-                if ex.errno == errno.ENOTEMPTY:
-                    has_subsets = True
-
-        # We also need to know if there's an old conifg file saved
-        cfg_dir = os.path.join(self.output_path, 'cfg')
-        old_cfg_path = os.path.join(cfg_dir, 'oldcfg.bin')
-        if os.path.exists(old_cfg_path):
-            has_config = True
-        else:
-            has_config = False
-
-        if not has_subsets:
-            # we have no subsets so can't screw anything up, just copy the new
-            # cfg file settings, overwrite anything else
-            if not os.path.exists(cfg_dir):
-                os.makedirs(cfg_dir)
-            # store a nice binary
-            f = open(old_cfg_path, 'wb')
-            pickle.dump(cfg_list, f, -1)
-            f.close()
-            return 0
-
-        else:  # there are subsets
-            if not has_config:
-                log.error(
-                    "There are subsets stored, but PartitionFinder can't determine where they are from")
-                log.info(
-                    "Please re-run the analysis using the '--force-restart' option at the command line")
-                log.warning(
-                    "This will delete all of the analyses in the '/analysis' folder")
-                raise ConfigurationError
-            else:
-                # we have an old config, load it and compare the important bits
-                f = open(old_cfg_path, 'rb')
-                old_cfg = pickle.load(f)
-                f.close()
-                fail = []
-
-                if len(old_cfg) != len(cfg_list):
-                    log.error(
-                        "Your old configuration doesn't match with your new one")
-                    log.error("The most common cause of this error is trying to run a half-finished analysis"
-                              " but switching PartitionFinder versions half way through")
-                    log.error("The solution is to either go back to the same version of PartitionFinder"
-                              " you used for the initial analysis, or to re-run the analysis using the "
-                              "--force-restart option at the command line. Note that this will delete "
-                              "all previous analyses in the '/analysis' folder")
-
-                if not old_cfg[0] == cfg_list[0]:
-                    log.error("Old Alignment %s not equal to new alignment %s", old_cfg[
-                              0], cfg_list[0])
-                    fail.append("alignment")
-                if not old_cfg[1] == cfg_list[1]:
-                    fail.append("branchlengths")
-
-                old_parts = set([str(part) for part in old_cfg[2]])
-                new_parts = set([str(part) for part in cfg_list[2]])
-                if len(old_parts.difference(new_parts)) > 0:
-                    fail.append("[data_blocks]")
-
-                if not old_cfg[3] == cfg_list[3]:
-                    fail.append(
-                        "phylogeny_program (the --raxml commandline option)")
-
-                if not old_cfg[4] == cfg_list[4]:
-                    fail.append("user_tree_topology")
-
-                if len(fail) > 0:
-                    log.error(
-                        "There are subsets stored, but PartitionFinder has detected that these were run using a different .cfg setup")
-                    log.error("The following settings in the new .cfg file are incompatible with the previous analysis: %s" % (
-                        ', '.join(fail)))
-                    log.info(
-                        "To run this analysis and overwrite previous output, re-run the analysis using '--force-restart' option")
-                    log.info(
-                        "To run this analysis without deleting the previous analysis, please place your alignment and .cfg in a new folder and try again")
-                    raise ConfigurationError

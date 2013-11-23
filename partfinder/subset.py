@@ -1,30 +1,29 @@
-# Copyright (C) 2012 Robert Lanfear and Brett Calcott
+# Copyright (C) 2012-2013 Robert Lanfear and Brett Calcott
 #
 # This program is free software: you can redistribute it and/or modify it under
 # the terms of the GNU General Public License as published by the Free Software
 # Foundation, either version 3 of the License, or (at your option) any later
 # version.
 #
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-# General Public License for more details. You should have received a copy
-# of the GNU General Public License along with this program.  If not, see
-#<http://www.gnu.org/licenses/>. PartitionFinder also includes the PhyML
-# program, the RAxML program, and the PyParsing library,
-# all of which are protected by their own licenses and conditions, using
-# PartitionFinder implies that you agree with those licences and
-# conditions as well.
+# This program is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+# details. You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+# PartitionFinder also includes the PhyML program, the RAxML program, and the
+# PyParsing library, all of which are protected by their own licenses and
+# conditions, using PartitionFinder implies that you agree with those licences
+# and conditions as well.
 
-import logging
+import logtools
+log = logtools.get_logger(__file__)
 
-log = logging.getLogger("subset")
 import os
 import weakref
 
 from math import log as logarithm
 from alignment import Alignment, SubsetAlignment
-from util import PartitionFinderError, remove_runID_files, make_warning
+from util import PartitionFinderError, remove_runID_files
 import subset_ops
 
 FRESH, PREPARED, DONE = range(3)
@@ -78,7 +77,7 @@ class Subset(object):
         self.best_params = None
         self.best_lnl = None
         self.alignment_path = None
-        log.debug("Created %s", self)
+        log.debug("Created %s" % self)
 
     def add_description(self, name, description):
         """User created subsets can get some extra info"""
@@ -86,7 +85,7 @@ class Subset(object):
         self.description = description
 
     def __repr__(self):
-        return "Subset(%s)" % self.name
+        return "Subset(%s..)" % self.name[:5]
 
     @property
     def name(self):
@@ -98,14 +97,14 @@ class Subset(object):
             self._name = nm
         return nm
 
-    SMALL_WARNING = make_warning("""
+    SMALL_WARNING = """
     The subset containing the following data_blocks: %s, has a very small
     number of sites (%d) compared to the number of parameters in the model
     being estimated (the %s model which has %d parameters). This may give
     misleading AICc results, so please check carefully if you are using the
     AICc for your analyses. The model selection results for this subset are
     in the following file: /analysis/subsets/%s.txt
-    """)
+    """
 
     def add_result(self, cfg, model, result):
         result.model = model
@@ -306,12 +305,12 @@ class Subset(object):
     def add_centroid(self, centroid):
         self.centroid = centroid
 
-    FORCE_RESTART_MESSAGE = make_warning("""
+    FORCE_RESTART_MESSAGE = """
     It looks like you have changed one or more of the data_blocks in the
     configuration file, so the new subset alignments don't match the ones
     stored for this analysis.  You'll need to run the program with
     --force-restart
-    """)
+    """
 
     def make_alignment(self, cfg, alignment):
         # Make an Alignment from the source, using this subset
@@ -322,7 +321,7 @@ class Subset(object):
 
         # Maybe it is there already?
         if os.path.exists(sub_path):
-            log.debug("Found existing alignment file %s", sub_path)
+            log.debug("Found existing alignment file %s" % sub_path)
             old_align = Alignment()
             old_align.read(sub_path)
 
@@ -350,7 +349,7 @@ class Subset(object):
 
     def write_cache(self, cfg):
         """Write out the results we've collected to a binary file"""
-        log.debug("Writing binary cached results for %s", self)
+        log.debug("Writing binary cached results for %s" % self)
         store = dict([(x, getattr(self, x)) for x in Subset._cache_fields])
         cfg.subset_database[self.name] = store
 
@@ -358,6 +357,6 @@ class Subset(object):
         if self.name not in cfg.subset_database:
             return False
 
-        log.debug("Reading binary cached results for %s", self)
+        log.debug("Reading binary cached results for %s" % self)
         d = cfg.subset_database[self.name]
         self.__dict__.update(d)

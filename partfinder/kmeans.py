@@ -105,7 +105,7 @@ def kmeans_split_subset(cfg, alignment, a_subset, tree_path, number_of_ks = 2):
     # to something other than "likelihood_list" since this isn't really the
     # best description of what it is...
     per_site_statistics = processor.get_per_site_stats(phylip_file, cfg)
-    
+
     # Now store all of the per_site_stats with the subset
     a_subset.add_per_site_statistics(per_site_statistics)
 
@@ -124,7 +124,7 @@ def kmeans_split_subset(cfg, alignment, a_subset, tree_path, number_of_ks = 2):
         # Set the per_site_stat_list to likelihoods under each gamma rate
         # category
         per_site_stat_list = per_site_statistics[1]
-    
+
     log.debug("Site info list for subset %s is %s" % (a_subset.name, per_site_stat_list))
 
     # We use this variable in the case that, as a result of the split with
@@ -198,10 +198,10 @@ def kmeans_wrapper(cfg, alignment, a_subset, tree_path, max_ks = 10):
         # Set likelihood_list to site rates
         likelihood_list = per_site_statistics[2]
     elif cfg.kmeans_opt == 3:
-        raise ValueError("Search kmeans_wss cannot be used with kmeans" + 
+        raise ValueError("Search kmeans_wss cannot be used with kmeans" +
             " option 3. Use option 1 or 2")
     elif cfg.kmeans_opt == 4:
-        raise ValueError("Search kmeans_wss cannot be used with kmeans" + 
+        raise ValueError("Search kmeans_wss cannot be used with kmeans" +
             " option 4. Use option 1 or 2")
 
     count = 1

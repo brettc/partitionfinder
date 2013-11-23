@@ -1,10 +1,13 @@
-from phyml import likelihood_parser
+from partfinder.phyml import likelihood_parser
 from math import log
+import os
 import py.test
 
-phyml_file_4 = "free_rates_4_cat.phy_phyml_lk.txt"
-phyml_file_8 = "gamma_8_cat.phy_phyml_lk.txt"
-phyml_file_likelihoods = "simulated_TRUE.phy_phyml_lk.txt"
+HERE = os.path.abspath(os.path.dirname(__file__))
+
+phyml_file_4 = os.path.join(HERE, "free_rates_4_cat.phy_phyml_lk.txt")
+phyml_file_8 = os.path.join(HERE, "gamma_8_cat.phy_phyml_lk.txt")
+phyml_file_likelihoods = os.path.join(HERE, "simulated_TRUE.phy_phyml_lk.txt")
 
 def test_4_cat():
     likelihood_tuple_4 = ([[log(2.07027e-12)], [log(1.8652e-07)], \

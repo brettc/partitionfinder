@@ -15,8 +15,8 @@
 # conditions, using PartitionFinder implies that you agree with those licences
 # and conditions as well.
 
-import logging
-log = logging.getLogger("parser")
+import logtools
+log = logtools.get_logger(__file__)
 
 from pyparsing import (
     Word, OneOrMore, alphas, nums, Suppress, Optional, Group, stringEnd,
@@ -267,9 +267,9 @@ class Parser(object):
             raise PartitionFinderError
 
         except ParseException, p:
-            log.error("There was a problem loading your .cfg file, "
-                      "please check and try again")
-            log.error(p)
+            log.error("""There was a problem loading your .cfg file, please
+                      check and try again""")
+            log.error(str(p))
 
             # Let's see if there was something missing from the input file
             expectations = ["models", "search", "[schemes]", "[data_blocks]",
@@ -280,21 +280,21 @@ class Parser(object):
                     missing = e
 
             if missing:
-                log.info("It looks like the '%s' option might be missing or "
-                         "in the wrong place" % missing)
-                log.info("Or perhaps something is wrong in the lines just "
-                         "before the '%s' option" % missing)
-                log.info("Please double check the .cfg file and try again")
+                log.info(
+                    """It looks like the '%s' option might be missing or in the
+                    wrong place. Or perhaps something is wrong in the lines just
+                    before the '%s' option is missing. Please double check the
+                    configuration file and try again""" % (missing, missing))
             else:
-                log.info("The line causing the problem is this: '%s'" % p.line)
-                log.info("Please check that line, and make sure it appears in"
-                         "the right place in the .cfg file.")
-                log.info("If it looks OK, try double-checking the semi-colons"
-                         "on other lines in the .cfg file")
+                log.info(
+                    """The line causing the problem is this: '%s'. Please
+                    check that line, and make sure it appears in the right
+                    place in the config file. If it looks OK, try
+                    double-checking the semi-colons on other lines""" % p.line)
             raise PartitionFinderError
 
     def set_models(self, text, loc, tokens):
-        # TODO: Fix this ugly mess
+        # TODO: Fix this ugly mess.
         if self.cfg.phylogeny_program == "phyml":
             self.phylo_models = phyml_models
         elif self.cfg.phylogeny_program == "raxml":
@@ -332,17 +332,21 @@ class Parser(object):
                     modlist = set(raxml_models.get_protein_models_gamma())
                     protein_mods += 1
                 else:
-                    log.error("The models option 'all_protein_gamma' is only available with raxml"
-                              ", (the --raxml commandline option). Please check and try again")
+                    log.error(
+                        """The models option 'all_protein_gamma' is only
+                        available with raxml  (the --raxml commandline option).
+                        Please check and try again""")
                     raise ParserError
             elif modsgroup.lower() == "all_protein_gammaI":
                 if self.cfg.phylogeny_program == "raxml":
                     modlist = set(raxml_models.get_protein_models_gammaI())
                     protein_mods += 1
                 else:
-                    log.error("The models option 'all_protein_gammaI' is only available with raxml"
-                              ", (the --raxml commandline option). Please check and try again")
-                    raise ParserError            
+                    log.error(
+                        """The models option 'all_protein_gammaI' is only
+                        available with raxml (the --raxml commandline option).
+                        Please check and try again""")
+                    raise ParserError
             else:
                 pass
 
@@ -351,7 +355,7 @@ class Parser(object):
             modlist = filter(lambda x: x.count("LG4X")==0, modlist)
 
 
-            log.info("Setting 'models' to '%s'", modsgroup)
+            log.info("Setting 'models' to '%s'" % modsgroup)
 
         self.cfg.models = set()
         for m in modlist:
