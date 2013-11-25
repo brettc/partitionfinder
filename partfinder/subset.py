@@ -81,6 +81,9 @@ class Subset(object):
         self.alignment_path = None
         log.debug("Created %s", self)
 
+    def __len__(self):
+        return len(self.columns)
+
     def add_description(self, name, description):
         """User created subsets can get some extra info"""
         self.full_name = name
