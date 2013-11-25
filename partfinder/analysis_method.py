@@ -315,6 +315,7 @@ class RelaxedClusteringAnalysis(Analysis):
 
 class KmeansAnalysis(Analysis):
     def do_analysis(self):
+        bic_score_list = []
         # Copied and pasted from greedy analysis
         partnum = len(self.cfg.user_subsets)
         self.cfg.progress.begin(1, 1)
@@ -347,6 +348,8 @@ class KmeansAnalysis(Analysis):
 
             log.info("***Kmeans algorithm step %d***" % step)
             step += 1
+
+            all_subsets[subset_index:] = sorted(all_subsets[subset_index:], key = len, reverse = True)
 
             current_subset = all_subsets[subset_index]
 
@@ -400,6 +403,8 @@ class KmeansAnalysis(Analysis):
                 # Change this to the one with split subsets in it. Note that
                 # the subset_index now points a NEW subset, one that was split
                 all_subsets = updated_subsets
+
+                bic_score_list.append(best_result.score)
 
                 # record each scheme that's an improvement
                 self.cfg.reporter.write_scheme_summary(
@@ -486,6 +491,8 @@ class KmeansAnalysis(Analysis):
             best_scheme = merged_scheme
             best_result = merged_result
 
+            bic_score_list.append(best_result.score)
+
         # Since the AIC will likely be better before we dealt with the
         # fabricated subsets, we need to set the best scheme and best result
         # to those from the last merged_scheme. TODO: add a variable to scheme
@@ -500,6 +507,8 @@ class KmeansAnalysis(Analysis):
         log.info("** Kmeans algorithm finished after %d steps **" % (step - 1))
         log.info("Best scoring scheme is scheme %s, with %s score of %.3f"
                  % (self.results.best_scheme.name, self.cfg.model_selection, self.results.best_score))
+        log.info("BIC list is " + str(bic_score_list))
+        print("BIC list is " + str(bic_score_list))
 
         self.cfg.reporter.write_best_scheme(self.results)
 
