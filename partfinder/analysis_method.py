@@ -285,6 +285,13 @@ class RelaxedClusteringAnalysis(Analysis):
             cutoff = int(math.ceil(len(lumped_subsets) * stop_at))
             lumped_subsets = lumped_subsets[:cutoff]
 
+            # Make a list of all the new subsets, and get them analysed
+            new_subs = []
+            for subset_grouping in lumped_subsets:
+                new_sub = subset_ops.merge_subsets(subset_grouping)
+                new_subs.append(new_sub)
+            self.analyse_list_of_subsets(new_subs)
+
             # Now analyse the lumped schemes
             lumpings_done = 0
             old_best_score = self.results.best_score
