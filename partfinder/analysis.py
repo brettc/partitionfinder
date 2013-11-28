@@ -218,6 +218,20 @@ class Analysis(object):
         pool = threadpool.Pool(tasks, self.threads)
         pool.join()
 
+    def analyse_list_of_subsets(self, subsets):
+        # get a whole list of subsets analysed in parallel
+        # prepare the list of tasks
+        tasks = []
+        for sub in subsets:
+            sub.prepare(self.cfg, self.alignment)
+            self.add_tasks_for_sub(tasks, sub)
+
+        # Now do the analysis
+        if self.threads == 1:
+            self.run_concurrent(tasks)
+        else:
+            self.run_threaded(tasks)
+
     def analyse_scheme(self, sch):
         # Progress
         self.cfg.progress.next_scheme()
