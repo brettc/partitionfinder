@@ -173,6 +173,16 @@ class GreedyAnalysis(Analysis):
             # Get an iterable of all possible pairs of subsets in best_scheme
             lumped_subsets = itertools.combinations(start_scheme.subsets, 2)
 
+            # Make a list of all the new subsets, and get them analysed
+            lumped_subset_iterator = itertools.combinations(start_scheme.subsets, 2)
+            lumped_subsets = [] 
+            new_subs = []
+            for subset_grouping in lumped_subset_iterator:
+                lumped_subsets.append(subset_grouping)
+                new_sub = subset_ops.merge_subsets(subset_grouping)
+                new_subs.append(new_sub)
+            self.analyse_list_of_subsets(new_subs)
+
             for subset_grouping in lumped_subsets:
                 scheme_name = cur_s
                 lumped_scheme = neighbour.make_clustered_scheme(
@@ -274,6 +284,13 @@ class RelaxedClusteringAnalysis(Analysis):
             # Round up to stop zeros
             cutoff = int(math.ceil(len(lumped_subsets) * stop_at))
             lumped_subsets = lumped_subsets[:cutoff]
+
+            # Make a list of all the new subsets, and get them analysed
+            new_subs = []
+            for subset_grouping in lumped_subsets:
+                new_sub = subset_ops.merge_subsets(subset_grouping)
+                new_subs.append(new_sub)
+            self.analyse_list_of_subsets(new_subs)
 
             # Now analyse the lumped schemes
             lumpings_done = 0
