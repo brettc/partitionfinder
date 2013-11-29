@@ -1,4 +1,7 @@
 TODO
+* Add in sensible dependency checks at the start, and print out useful error messages.
+    e.g. "You need to have SciKit-Learn installed to run this analysis, to do that, 
+    please install the anaconda python distribution from here..."
 * Bug fix (kind of): if a user quits during the estimation of the starting tree, funny things
     happen. We need to put in some kind of check for this. Basically just make sure that
     if we're thinking of using old results, then we check that the starting tree file has
@@ -7,18 +10,10 @@ TODO
 * Usability: change the 'we aborted' error message to suggest trying force-restart. A lot of 
     user errors are fixed this way, there have been a few queries on email and on the user 
     group.
-* Add RAxML windows executable and check it works.
-* Make RAxML mac universal binary and check it works.
-* Change name of clustering to 'strict-clustering' in the program and the manual
-* Change name of greediest to 'relaxed-clustering' in the program and the manual
-* Change name of greediest-cutoff to something better.
 
-* Change --save-phyml to --save-phylofiles in the manual
 * merge phyml_models.py and raxml_models.py into one, have a 'model' class, make models
    know to which lists they belong, and let them return their own command lines when asked
-* change phyml folder to phylofiles folder
 
-DONE
 
 
 Brett test enhancing:
