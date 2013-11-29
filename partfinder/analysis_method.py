@@ -170,9 +170,6 @@ class GreedyAnalysis(Analysis):
 
             old_best_score = self.results.best_score
 
-            # Get an iterable of all possible pairs of subsets in best_scheme
-            lumped_subsets = itertools.combinations(start_scheme.subsets, 2)
-
             # Make a list of all the new subsets, and get them analysed
             lumped_subset_iterator = itertools.combinations(start_scheme.subsets, 2)
             lumped_subsets = [] 
