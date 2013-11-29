@@ -222,6 +222,11 @@ class Analysis(object):
         # get a whole list of subsets analysed in parallel
         # prepare the list of tasks
         tasks = []
+
+        # sort subsets based on size, so we add bigger subsets 
+        # to the front of the queue - improves efficiency
+        subsets.sort(key = lambda x: len(x.columns))
+
         for sub in subsets:
             sub.prepare(self.cfg, self.alignment)
             self.add_tasks_for_sub(tasks, sub)
