@@ -157,7 +157,10 @@ class GreedyAnalysis(Analysis):
 
         with logtools.LogIndented(log, "Analysing starting scheme (scheme %s)" %
                 start_scheme.name):
-            self.analyse_scheme(start_scheme)
+            start_result = self.analyse_scheme(start_scheme)
+            self.cfg.reporter.write_scheme_summary(
+                start_scheme, start_result)
+
 
         step = 1
         cur_s = 2
