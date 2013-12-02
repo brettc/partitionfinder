@@ -49,6 +49,8 @@ class Subset(object):
         This is basically a pythonized factory. See here:
         http://codesnipers.com/?q=python-flyweights
         """
+        column_set = list(column_set)
+        column_set.sort()
         column_set = frozenset(column_set)
         obj = Subset._cache.get(column_set, None)
         if not obj:
