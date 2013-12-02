@@ -220,13 +220,12 @@ class Analysis(object):
 
     def analyse_list_of_subsets(self, subsets):
         # get a whole list of subsets analysed in parallel
-        # prepare the list of tasks
-        tasks = []
 
-        # sort subsets based on size, so we add bigger subsets 
-        # to the front of the queue - improves efficiency
+        # analyse bigger subsets first, for efficiency
         subsets.sort(key = lambda x: len(x.columns))
 
+        # prepare the list of tasks
+        tasks = []
         for sub in subsets:
             sub.prepare(self.cfg, self.alignment)
             self.add_tasks_for_sub(tasks, sub)
@@ -237,30 +236,23 @@ class Analysis(object):
         else:
             self.run_threaded(tasks)
 
-    def analyse_scheme(self, sch):
-        # Progress
-        self.cfg.progress.next_scheme()
-
-        # Prepare by reading everything in first
-        tasks = []
-        for sub in sch:
-            sub.prepare(self.cfg, self.alignment)
-            self.add_tasks_for_sub(tasks, sub)
-
-        # Now do the analysis
-        if self.threads == 1:
-            self.run_concurrent(tasks)
-        else:
-            self.run_threaded(tasks)
-
         # Now see if we're done
-        for sub in sch:
+        for sub in subsets:
             # ALL subsets should already be finalised in the task. We just
             # check again here
             if not sub.finalise(self.cfg):
                 log.error("Failed to run models %s; not sure why" %
                           ", " "".join(list(sub.models_to_do)))
                 raise AnalysisError
+
+
+    def analyse_scheme(self, sch):
+        # Progress
+        self.cfg.progress.next_scheme()
+
+        # analyse the subsets in the scheme
+        subsets = [sub for sub in sch]
+        self.analyse_list_of_subsets(subsets)
 
         # AIC needs the number of sequences
         number_of_seq = len(self.alignment.species)
