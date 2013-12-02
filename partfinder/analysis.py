@@ -230,11 +230,12 @@ class Analysis(object):
             sub.prepare(self.cfg, self.alignment)
             self.add_tasks_for_sub(tasks, sub)
 
-        # Now do the analysis
-        if self.threads == 1:
-            self.run_concurrent(tasks)
-        else:
-            self.run_threaded(tasks)
+        if tasks:
+            # Now do the analysis
+            if self.threads == 1:
+                self.run_concurrent(tasks)
+            else:
+                self.run_threaded(tasks)
 
         # Now see if we're done
         for sub in subsets:
