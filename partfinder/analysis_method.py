@@ -301,8 +301,7 @@ class RelaxedClusteringAnalysis(Analysis):
             lumpings_done = 0
             old_best_score = self.results.best_score
 
-
-            log.info("analysing %d schemes" % len(lumped_subsets))
+            log.info("Analysing %d schemes" % len(lumped_subsets))
 
             for subset_grouping in lumped_subsets:
                 scheme_name = "%s_%d" % (name_prefix, lumpings_done + 1)
