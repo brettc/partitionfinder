@@ -294,11 +294,15 @@ class RelaxedClusteringAnalysis(Analysis):
             for subset_grouping in lumped_subsets:
                 new_sub = subset_ops.merge_subsets(subset_grouping)
                 new_subs.append(new_sub)
+
             self.analyse_list_of_subsets(new_subs)
 
             # Now analyse the lumped schemes
             lumpings_done = 0
             old_best_score = self.results.best_score
+
+
+            log.info("analysing %d schemes" % len(lumped_subsets))
 
             for subset_grouping in lumped_subsets:
                 scheme_name = "%s_%d" % (name_prefix, lumpings_done + 1)
@@ -332,6 +336,7 @@ class RelaxedClusteringAnalysis(Analysis):
                     "that improve the score, stopping",
                     len(lumped_subsets))
                 break
+
 
             # We're done if it's the scheme with everything together
             if len(set(lumped_scheme.subsets)) == 1:

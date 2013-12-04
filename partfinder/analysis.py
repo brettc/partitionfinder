@@ -246,7 +246,6 @@ class Analysis(object):
                           ", " "".join(list(sub.models_to_do)))
                 raise AnalysisError
 
-
     def analyse_scheme(self, sch):
         # Progress
         self.cfg.progress.next_scheme()

@@ -129,7 +129,7 @@ class Configuration(object):
             log.error("The rcluster-percent variable must be between 0.0 to 100.0, yours "
                       "is %.2f. Please check and try again." % self.cluster_percent)
             raise ConfigurationError
-        log.info("Setting rcluster-percent to %.2f" % self.cluster_percent)
+        log.debug("Setting rcluster-percent to %.2f" % self.cluster_percent)
 
         if self.cluster_max != None:
             try:
@@ -138,7 +138,7 @@ class Configuration(object):
                 log.error("The rcluster-max variable must greater than zero, yours "
                           "is %d. Please check and try again." % self.cluster_max)
                 raise ConfigurationError
-        log.info("Setting rcluster-max to %d" % self.cluster_max)
+            log.debug("Setting rcluster-max to %d" % self.cluster_max)
 
 
         if kmeans_opt < 1 or kmeans_opt > 4:
