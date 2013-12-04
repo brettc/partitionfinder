@@ -230,6 +230,11 @@ def parse_args(datatype, cmdargs=None):
              % ",".join(get_debug_regions())
     )
 
+    op.add_option(
+        '--profile',
+        action="store_true",
+        help="Output profiling information after running (this will slow everything down!)")
+
     if cmdargs is None:
         options, args = op.parse_args()
     else:
@@ -308,6 +313,24 @@ def check_python_version():
             with version 3 or higher. To guarantee success, please use
             Python 2.7.x""" % python_version)
 
+def run_analysis(cfg, options):
+    # Now try processing everything....
+    method = analysis_method.choose_method(cfg.search)
+    reporter.TextReporter(cfg)
+    anal = method(cfg, options.force_restart, options.processes)
+    results = anal.analyse()
+    if options.dump_results:
+        results.dump(cfg)
+    elif options.compare_results:
+        results.compare(cfg)
+
+def profile_analysis(cfg, options):
+    import cProfile, pstats
+    cProfile.runctx('run_analysis(cfg, options)', globals(), locals(), filename='profile.output')
+    p = pstats.Stats('profile.output')
+    p.sort_stats('time').print_stats(20)
+    p.sort_stats('cumtime').print_stats(20)
+    # p.strip_dirs().sort_stats(-1).print_stats()
 
 def main(name, datatype, passed_args=None):
     v = version.get_version()
@@ -348,22 +371,16 @@ def main(name, datatype, passed_args=None):
         cfg.load_base_path(args[0])
 
         if options.check_only:
-            log.info(
-                "Exiting without processing (because of the -c/--check-only option ...")
+            log.info("""
+            Exiting without processing (because of the
+            -c/--check-only option ...
+            """)
         else:
             try:
-                # Now try processing everything....
-                method = analysis_method.choose_method(cfg.search)
-                reporter.TextReporter(cfg)
-                anal = method(cfg,
-                              options.force_restart,
-                              options.processes)
-                results = anal.analyse()
-
-                if options.dump_results:
-                    results.dump(cfg)
-                elif options.compare_results:
-                    results.compare(cfg)
+                if options.profile:
+                    profile_analysis(cfg, options)
+                else:
+                    run_analysis(cfg, options)
             finally:
                 # Make sure that we reset the configuration
                 cfg.reset()
