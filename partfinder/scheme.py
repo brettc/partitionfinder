@@ -107,15 +107,15 @@ class Scheme(object):
         self.subsets = set(subsets)
         self.description = description
 
-        if subset_ops.subsets_overlap(subsets):
-            log.error("Scheme '%s' contains overlapping subsets", name)
-            raise SchemeError
-
-        if subset_ops.has_missing(subsets):
-            log.error("Scheme '%s' has missing subsets", name)
-            raise SchemeError
-
-        log.debug("Created %s" % self)
+        #if subset_ops.subsets_overlap(subsets):
+        #    log.error("Scheme '%s' contains overlapping subsets", name)
+        #    raise SchemeError
+        #
+        #if subset_ops.has_missing(subsets):
+        #    log.error("Scheme '%s' has missing subsets", name)
+        #    raise SchemeError
+        #
+        #log.debug("Created %s" % self)
 
     def __iter__(self):
         return iter(self.subsets)
