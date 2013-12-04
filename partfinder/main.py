@@ -207,7 +207,15 @@ def parse_args(datatype, cmdargs=None):
         help="This defines the proportion of possible schemes that the relaxed clustering"
              " algorithm will consider before it stops looking. The default is 10%."
              "e.g. --cluster-percent 10.0"
-
+    )
+    op.add_option(
+        "--rcluster-max",
+        type="int", dest="cluster_max", default=None, metavar="N",
+        help="This defines the number of possible schemes that the relaxed clustering"
+             " algorithm will consider before it stops looking. The default is to look at "
+             "all schemes contained in rcluster-percent. But using rcluster-max can speed "
+             "things up a lot"
+             "e.g. --rcluster-max 1000"
     )
     op.add_option(
         '--debug-output',
@@ -332,6 +340,7 @@ def main(name, datatype, passed_args=None):
                                    options.cmdline_extras,
                                    options.cluster_weights,
                                    options.cluster_percent,
+                                   options.cluster_max,
                                    options.kmeans_opt)
 
         # Set up the progress callback

@@ -237,7 +237,7 @@ class RelaxedClusteringAnalysis(Analysis):
     A relaxed clustering algorithm for heuristic partitioning searches
 
     1. Rank subsets by their similarity (defined by clustering-weights)
-    2. Analyse cluster-percent of the most similar schemes
+    2. Analyse min(cluster-percent or cluster-max) most similar schemes
     3. Take the scheme that improves the AIC/BIC score the most
     4. Quit if no improvements.
     '''
@@ -251,9 +251,9 @@ class RelaxedClusteringAnalysis(Analysis):
         partnum = len(self.cfg.user_subsets)
 
         scheme_count = submodels.count_relaxed_clustering_schemes(
-            partnum, self.cfg.cluster_percent)
+            partnum, self.cfg.cluster_percent, self.cfg.cluster_max)
         subset_count = submodels.count_relaxed_clustering_subsets(
-            partnum, self.cfg.cluster_percent)
+            partnum, self.cfg.cluster_percent, self.cfg.cluster_max)
 
         self.cfg.progress.begin(scheme_count, subset_count)
 
@@ -280,9 +280,13 @@ class RelaxedClusteringAnalysis(Analysis):
             lumped_subsets = neighbour.get_ranked_clustered_subsets(
                 start_scheme, self.cfg)
 
-            # Reduce the size of the lumped subsets to cluster_percent long
+            # Reduce the size of the lumped subsets to the smallest out of
+            # cluster_percent and cluster_max
             # Round up to stop zeros
             cutoff = int(math.ceil(len(lumped_subsets) * stop_at))
+            if self.cfg.cluster_max != None and cutoff>self.cfg.cluster_max:
+                cutoff = self.cfg.cluster_max
+
             lumped_subsets = lumped_subsets[:cutoff]
 
             # Make a list of all the new subsets, and get them analysed
@@ -311,9 +315,9 @@ class RelaxedClusteringAnalysis(Analysis):
 
             if self.results.best_score != old_best_score:
                 log.info(
-                    "Analysed %.1f percent of the schemes for this step. The best "
+                    "Analysed %d schemes. The best "
                     "scheme changed the %s score by %.1f units.",
-                    self.cfg.cluster_percent, self.cfg.model_selection,
+                    len(lumped_subsets), self.cfg.model_selection,
                     (self.results.best_score - old_best_score))
 
                 self.results.best_scheme.name = "step_%d" % step
@@ -324,9 +328,9 @@ class RelaxedClusteringAnalysis(Analysis):
                 start_scheme = self.results.best_scheme
             else:
                 log.info(
-                    "Analysed %.1f percent of the schemes for this step and found no schemes "
+                    "Analysed %d schemes and found no schemes "
                     "that improve the score, stopping",
-                    self.cfg.cluster_percent)
+                    len(lumped_subsets))
                 break
 
             # We're done if it's the scheme with everything together

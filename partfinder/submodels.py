@@ -58,15 +58,15 @@ def submodel_iterator(pat, current, maxn):
 def a_choose_b(n,k):
     return reduce(lambda a,b: a*(n-b)/(b+1),xrange(k),1)
 
-def count_relaxed_clustering_subsets(N, cluster_percent, output=False):
+def count_relaxed_clustering_subsets(N, cluster_percent, cluster_max):
     #startscheme    
     start_scheme = N
     #firstbatch is just cluster_percent of N choose 2
     step_1 = int(math.ceil(a_choose_b(N, 2)*cluster_percent*0.01))
+    if cluster_max != None and step_1>cluster_max:
+        step_1 = cluster_max    
     previous = step_1
     cumsum = start_scheme+step_1
-    if output: print start_scheme
-    if output: print cumsum
     #now for the rest
     for i in reversed(xrange(N)):
         # once we get to the all combined scheme we can stop  
@@ -79,32 +79,35 @@ def count_relaxed_clustering_subsets(N, cluster_percent, output=False):
         # previously analysed schemes, which is just 2(i)-1, so:
         worst_case = 2*i - 1
         num_already_analysed = previous - worst_case
-        if num_already_analysed <0: num_already_analysed=0
         # now we transfer over the 'previous' for the next round of the loop
         previous = num_new_schemes
         # now we calculate the final number of new schemes
         num_new_schemes -= num_already_analysed
+        if cluster_max != None and num_new_schemes>cluster_max:
+            num_new_schemes = cluster_max
         cumsum += num_new_schemes
-        if output:print cumsum
     return cumsum
 
-def count_relaxed_clustering_schemes(N, cluster_percent, output=False):
+def count_relaxed_clustering_schemes(N, cluster_percent, cluster_max):
     #startscheme    
     start_scheme = 1
     #firstbatch is just cluster_percent of N choose 2
     step_1 = int(math.ceil(a_choose_b(N, 2)*cluster_percent*0.01))
+
+    if cluster_max != None and step_1>cluster_max:
+        step_1 = cluster_max
+
     previous = step_1
     cumsum = start_scheme+step_1
-    if output: print start_scheme
-    if output: print cumsum
     #now for the rest
     for i in reversed(xrange(N)):
         # each subsequent step is cluster_percent of i choose 2  
         if i == 1:
             break
         num_new_schemes = int(math.ceil((a_choose_b(i, 2))*cluster_percent*0.01))
+        if cluster_max != None and num_new_schemes>cluster_max:
+            num_new_schemes = cluster_max
         cumsum += num_new_schemes
-        if output:print cumsum
     return cumsum
 
 def count_greedy_schemes(N):

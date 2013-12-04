@@ -175,6 +175,13 @@ class TextReporter(object):
         if self.cfg.search == "rcluster":
             output.write(scheme_header_template % ("rcluster-percent",
                                                    self.cfg.cluster_percent))
+            if self.cfg.cluster_max != None:
+                output.write(scheme_header_template % ("rcluster-max",
+                                                       self.cfg.cluster_max))
+            else:
+                output.write(scheme_header_template % ("rcluster-max",
+                                                       "all rcluster-percent schemes"))
+
         output.write('\n\nBest partitioning scheme\n\n')
         self.output_scheme(result.best_scheme, result.best_result, output)
         log.info("Information on best scheme is here: %s", pth)

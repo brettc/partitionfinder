@@ -35,6 +35,10 @@ Advanced Options:
                         Defines the percentage of schemes that relaxed
                         clustering algorithm will consider before it stops
                         looking [default: 10].
+  --rcluster-max <N>
+                        Defines the number of schemes that relaxed
+                        clustering algorithm will consider before it stops
+                        looking [default: all].
   --cmdline-extras <command-string>
                         Add additional commands to the phyml or raxml command
                         (may need to be quoted)

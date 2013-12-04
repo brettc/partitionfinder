@@ -24,7 +24,7 @@ class Configuration(object):
 
     def __init__(self, datatype="DNA", phylogeny_program='phyml',
                  save_phylofiles=False, cmdline_extras="", cluster_weights=None,
-                 cluster_percent=10, kmeans_opt=1):
+                 cluster_percent=10, cluster_max=None, kmeans_opt=1):
 
         log.info("------------- Configuring Parameters -------------")
         # Only required if user adds them
@@ -36,6 +36,15 @@ class Configuration(object):
         self.progress = progress.NoProgress(self)
         self.cmdline_extras = cmdline_extras
         self.cluster_percent = float(cluster_percent)
+        if cluster_max !=None:
+            try:
+                self.cluster_max = int(cluster_max)
+            except:
+                log.error("rcluster-max must be an integer" 
+                            "please check and try again")
+                raise ConfigurationError
+        else:
+            self.cluster_max = None
         self.kmeans_opt = kmeans_opt
 
         # Record this
@@ -117,12 +126,20 @@ class Configuration(object):
             assert self.cluster_percent >= 0.0
             assert self.cluster_percent <= 100.0
         except:
-
             log.error("The rcluster-percent variable must be between 0.0 to 100.0, yours "
                       "is %.2f. Please check and try again." % self.cluster_percent)
             raise ConfigurationError
+        log.info("Setting rcluster-percent to %.2f" % self.cluster_percent)
 
-        log.debug("Setting rcluster-percent to %.2f" % self.cluster_percent)
+        if self.cluster_max != None:
+            try:
+                assert self.cluster_max > 0
+            except:
+                log.error("The rcluster-max variable must greater than zero, yours "
+                          "is %d. Please check and try again." % self.cluster_max)
+                raise ConfigurationError
+        log.info("Setting rcluster-max to %d" % self.cluster_max)
+
 
         if kmeans_opt < 1 or kmeans_opt > 4:
             log.error(
