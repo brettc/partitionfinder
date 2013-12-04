@@ -24,7 +24,23 @@ def get_logger(fname):
     log_name = log_name[:10]
 
     # Now wrap it and return it
-    return Logger(logging.getLogger(log_name))
+    return DumbLogger(logging.getLogger(log_name))
+
+class DumbLogger(object):
+    def __init__(self, logger):
+        self.log = logger
+
+    def debug(self, *args):
+        self.log.debug(*args)
+
+    def info(self, *args):
+        self.log.info(*args)
+
+    def warning(self, *args):
+        self.log.warning(*args)
+
+    def error(self, *args):
+        msg = self.log.error(*args)
 
 
 class Logger(object):
