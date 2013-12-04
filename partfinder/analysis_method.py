@@ -29,6 +29,7 @@ import itertools
 import subset_ops
 from scipy import spatial
 import warnings
+from submodels import a_choose_b
 
 from util import PhylogenyProgramError
 
@@ -275,19 +276,18 @@ class RelaxedClusteringAnalysis(Analysis):
             step, partnum - 1))
             name_prefix = "step_%d" % (step)
 
-            # Get a list of all possible lumpings of the best_scheme, ordered
-            # according to the clustering weights
-            lumped_subsets = neighbour.get_ranked_clustered_subsets(
-                start_scheme, self.cfg)
 
-            # Reduce the size of the lumped subsets to the smallest out of
-            # cluster_percent and cluster_max
-            # Round up to stop zeros
-            cutoff = int(math.ceil(len(lumped_subsets) * stop_at))
+            # How many subsets do we want to look at? 
+            # The smallest out of cluster_percent and cluster_max
+            max_schemes = a_choose_b(len(start_scheme.subsets), 2)
+            cutoff = int(math.ceil(max_schemes * stop_at))
             if self.cfg.cluster_max != None and cutoff>self.cfg.cluster_max:
                 cutoff = self.cfg.cluster_max
 
-            lumped_subsets = lumped_subsets[:cutoff]
+            # Get a list of all possible lumpings of the best_scheme, ordered
+            # according to the clustering weights
+            lumped_subsets = neighbour.get_N_closest_subsets(
+                start_scheme, self.cfg, cutoff)
 
             # Make a list of all the new subsets, and get them analysed
             new_subs = []

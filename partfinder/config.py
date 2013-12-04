@@ -92,6 +92,7 @@ class Configuration(object):
                           "Please check and try again", len(cluster_weights), cluster_weights)
                 raise ConfigurationError
 
+            total = 0
             for thing in cluster_weights:
                 try:
                     num = float(eval(thing))
@@ -104,6 +105,12 @@ class Configuration(object):
                               "separated by commas. Then try again. "
                               "The part that I couldn't understand is this: '%s'" % thing)
                     raise ConfigurationError
+                total = total + float(eval(thing))
+
+            if total==0.0:
+                log.error("Please provide at least one cluster weight greater than zero")
+
+
 
             log.info("Setting cluster_weights to: "
                      "subset_rate = %s, freqs = %s, model = %s, alpha %s"
