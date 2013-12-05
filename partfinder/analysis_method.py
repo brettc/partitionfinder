@@ -170,7 +170,7 @@ class GreedyAnalysis(Analysis):
         # find a better one and if we do, we just keep going
         while True:
             log.info("***Greedy algorithm step %d***" % step)
-            log.push()
+            #log.push()
 
             old_best_score = self.results.best_score
 
@@ -220,17 +220,17 @@ class GreedyAnalysis(Analysis):
             if len(set(lumped_scheme.subsets)) == 1:
                 break
 
-            log.pop()
+            #log.pop()
             step += 1
 
-        log.pop()
+        #log.pop()
         log.info("Greedy algorithm finished after %d steps" % step)
         log.info("Best scoring scheme is scheme %s, with %s score of %.3f"
                  % (self.results.best_scheme.name, self.cfg.model_selection,
                     self.results.best_score))
 
         self.cfg.reporter.write_best_scheme(self.results)
-        log.pop()
+        #log.pop()
 
 
 class RelaxedClusteringAnalysis(Analysis):
