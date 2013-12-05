@@ -1,4 +1,13 @@
 TODO
+* Check this line
+        number_of_seq = len(self.alignment.species)
+  in analysis.py. It looks wrong to me - I think it's for the AICc calculation, and it 
+  suggests that we're calculating it with the number of species, not the number of sites in the 
+  alignment. That's a bit worrying. And should be checked and probably fixed
+
+* While I'm on the AIC/AICc/BIC, we should have a single function for these, called from 
+    different places. Right now there are functions in subset and scheme. No need for that.
+
 * Add in sensible dependency checks at the start, and print out useful error messages.
     e.g. "You need to have SciKit-Learn installed to run this analysis, to do that, 
     please install the anaconda python distribution from here..."
