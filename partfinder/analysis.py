@@ -226,9 +226,11 @@ class Analysis(object):
 
         # prepare the list of tasks
         tasks = []
-        for sub in subsets:
-            sub.prepare(self.cfg, self.alignment)
-            self.add_tasks_for_sub(tasks, sub)
+        for sub in subsets:            
+            # don't add subsets which are already labelled as finalised
+            if sub.status != 2:
+                sub.prepare(self.cfg, self.alignment)
+                self.add_tasks_for_sub(tasks, sub)
 
         if tasks:
             # Now do the analysis
