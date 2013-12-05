@@ -252,9 +252,13 @@ class Analysis(object):
         # Progress
         self.cfg.progress.next_scheme()
 
-        # analyse the subsets in the scheme
-        subsets = [sub for sub in sch]
-        self.analyse_list_of_subsets(subsets)
+        # analyse the subsets in the scheme that aren't done
+        not_done = []
+        for sub in sch:
+            if sub.status != 2:
+                not_done.append(sub)
+        if not_done:
+            self.analyse_list_of_subsets(not_done)
 
         # AIC needs the number of sequences
         number_of_seq = len(self.alignment.species)
