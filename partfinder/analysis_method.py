@@ -286,9 +286,11 @@ class RelaxedClusteringAnalysis(Analysis):
 
             # Get a list of all possible lumpings of the best_scheme, ordered
             # according to the clustering weights
+            log.info("Finding similar pairs of subsets")
             lumped_subsets = neighbour.get_N_closest_subsets(
                 start_scheme, self.cfg, cutoff)
 
+            log.info("Analysing %d similar pairs of subsets" % cutoff)
             # Make a list of all the new subsets, and get them analysed
             new_subs = []
             for subset_grouping in lumped_subsets:
