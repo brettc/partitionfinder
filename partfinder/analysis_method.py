@@ -182,8 +182,10 @@ class GreedyAnalysis(Analysis):
                 lumped_subsets.append(subset_grouping)
                 new_sub = subset_ops.merge_subsets(subset_grouping)
                 new_subs.append(new_sub)
+            log.info("Analysing %d subsets" % len(new_subs))
             self.analyse_list_of_subsets(new_subs)
 
+            log.info("Analysing %d schemes" % len(new_subs))
             for subset_grouping in lumped_subsets:
                 scheme_name = cur_s
                 lumped_scheme = neighbour.make_clustered_scheme(
