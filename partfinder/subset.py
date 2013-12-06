@@ -194,8 +194,8 @@ class Subset(object):
                 self.best_params = result.params
                 self.best_site_rate = result.site_rate
                 self.best_alpha = result.alpha
-                # self.best_freqs = result.freqs
-                # self.best_modelparams = result.rates
+                self.best_freqs = result.freqs
+                self.best_modelparams = result.rates
 
         log.debug("Model Selection. best model: %s, params: %d, site_rate: %f"
                   % (self.best_model, self.best_params, self.best_site_rate))
