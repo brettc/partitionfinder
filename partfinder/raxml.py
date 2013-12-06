@@ -332,14 +332,12 @@ class Parser(object):
         self.result.alpha = tokens[0]
 
     def set_rate(self, tokens):
-        pass
-        # basefrom, baseto, rate = tokens
-        # self.result.rates[(basefrom, baseto)] = rate
+        basefrom, baseto, rate = tokens
+        self.result.rates[(basefrom, baseto)] = rate
 
     def set_freq(self, tokens):
-        pass
-        # base, rate = tokens
-        # self.result.freqs[base] = rate
+        base, rate = tokens
+        self.result.freqs[base] = rate
 
     def parse(self, text):
         log.debug("Parsing raxml output...")

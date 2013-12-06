@@ -226,9 +226,9 @@ class PhymlResult(object):
         self.lnl = lnl
         self.seconds = seconds
         self.tree_size = tree_size
-        self.alpha = 0
-        # self.rates = {} #placeholder, doesn't do anything but makes it compatible
-        # self.freqs = {} #placeholder, doesn't do anything but makes it compatible
+        self.rates = {} #placeholder, doesn't do anything but makes it compatible
+        self.freqs = {} #placeholder, doesn't do anything but makes it compatible
+        self.alpha = 0  #placeholder, doesn't do anything but makes it compatible
 
     def __str__(self):
         return "PhymlResult(lnl:%s, tree_size:%s, secs:%s)" % (self.lnl, self.tree_size, self.seconds)
@@ -356,12 +356,12 @@ def likelihood_parser(phyml_lk_file):
         # Make a rate list
         rate_list = [[(logarithm(float(site[headers[len(headers) - 3]])))] for site in list_of_dicts]
 
-        # Now make a list of lists of site likelihoods under different
+        # Now make a list of lists of site likelihoods under different 
         # rate categories
         lk_rate_list = []
         for i in list_of_dicts:
             ind_lk_list = []
-            # Pull the likelihood from each rate category by calling the
+            # Pull the likelihood from each rate category by calling the 
             # appropriate key from "headers"
             for num in range(2, len(headers) - 3):
                 ind_lk_list.append(logarithm(float(i[headers[num]])))
