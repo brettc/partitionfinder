@@ -292,33 +292,32 @@ class RelaxedClusteringAnalysis(Analysis):
             lumped_subsets = neighbour.get_N_closest_subsets(
                 start_scheme, self.cfg, cutoff)
 
-            log.info("Analysing %d new subsets" % cutoff)
-            # Make a list of all the new subsets, and get them analysed
+            log.info("Creating %d new subsets" % cutoff)
+            # Make a list of all the new subsets and schemes
+            sch_num = 1
             new_subs = []
+            new_schemes = []
             for subset_grouping in lumped_subsets:
                 new_sub = subset_ops.merge_subsets(subset_grouping)
                 new_subs.append(new_sub)
+                scheme_name = "%s_%d" % (name_prefix, sch_num)
+                lumped_scheme = neighbour.make_clustered_scheme(
+                    start_scheme, scheme_name, subset_grouping, new_sub, self.cfg)
+                new_schemes.append(lumped_scheme)
+                sch_num += sch_num + 1
 
+            log.info("Analysing %d new subsets" % cutoff)
             self.analyse_list_of_subsets(new_subs)
 
             # Now analyse the lumped schemes
-            lumpings_done = 0
-            old_best_score = self.results.best_score
-
             log.info("Analysing %d schemes" % len(lumped_subsets))
-
-            for subset_grouping in lumped_subsets:
-                scheme_name = "%s_%d" % (name_prefix, lumpings_done + 1)
-                lumped_scheme = neighbour.make_clustered_scheme(
-                    start_scheme, scheme_name, subset_grouping, self.cfg)
-
+            old_best_score = self.results.best_score
+            for lumped_scheme in new_schemes:
                 new_result = self.analyse_scheme(lumped_scheme)
-
                 log.debug("Difference in %s: %.1f",
                           self.cfg.model_selection,
                           (new_result.score - old_best_score))
 
-                lumpings_done += 1
 
             if self.results.best_score != old_best_score:
                 log.info(
