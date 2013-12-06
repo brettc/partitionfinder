@@ -333,7 +333,7 @@ class Parser(object):
 
     def set_rate(self, tokens):
         basefrom, baseto, rate = tokens
-        self.result.rates[(basefrom, baseto)] = rate
+        self.result.rates["%s_%s" % (basefrom, baseto)] = rate
 
     def set_freq(self, tokens):
         base, rate = tokens

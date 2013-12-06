@@ -45,20 +45,26 @@ def enum(sequential):
     """
     Modified from here
     http://stackoverflow.com/questions/36932/how-can-i-represent-an-enum-in-python
+    We use these values to index into the database fields
     """
     n = len(sequential)
     enums = dict(zip(sequential, range(n)))
-
     # We add an extra one
     enums['MAX'] = n
+
+    # Not required?
+    # reverse = dict((value, key) for key, value in enums.iteritems())
+    # enums['name_from_value'] = reverse
+    # Good for looking up by variable
+    enums['get'] = staticmethod(lambda x: enums.get(x, None))
+
     return type('Enum', (), enums)
 
 
+# TODO: This should probably be in Raxml.py....
 # The number of codons
 codon_types = list("ATCG")
 Freqs = enum(codon_types)
-print Freqs.MAX
-
 
 # Define the number of rates we record
 rates_types = ["{}_{}".format(f, t) for f, t in zip('AAACCG', 'CGTGTT')]
@@ -66,6 +72,7 @@ Rates = enum(rates_types)
 
 
 def make_results_datatype():
+    # 32 is the md5 length
     subset_id_length = 32
     model_id_length = _model_string_maxlen()
 
@@ -76,7 +83,7 @@ def make_results_datatype():
         ('params', int_type),
     ]
 
-    # Now add the basic floating point field
+    # Now add the floating point fields
     flds = "lnl alpha aic aicc bic site_rate".split()
     for f in flds:
         layout.append((f, float_type))
@@ -93,28 +100,40 @@ def make_results_datatype():
     # Now construct the numpy datatype that gives us the layout
     return numpy.dtype(layout)
 
-# This is the numpy equivalent, we'll use it to create
+
+# Calculate this now, it is fixed, and not analysis dependent
 results_dtype = make_results_datatype()
 
 
 class Database(object):
+
     def __init__(self, cfg):
         self.cfg = cfg
         self.path = os.path.join(self.cfg.subsets_path, 'data.db')
         if os.path.exists(self.path):
-            self.load()
+            self.h5 = tables.open_file(self.path, 'a')
+            self.results = self.h5.root.results
+            assert isinstance(self.results, tables.Table)
+            assert self.results.indexed
         else:
-            self.create()
+            # Compression is good -- and faster, according to the pytables docs...
+            f = tables.Filters(complib='blosc', complevel=5)
+            self.h5 = tables.open_file(self.path, 'w', filters=f)
+            self.results = self.h5.create_table(
+                '/', 'results', results_dtype)
+            self.results.cols.subset_id.create_csindex()
 
-    def create(self):
-        # f = tables.Filters(complib='blosc', complevel=5)
-        self.h5 = tables.openFile(self.path, 'w') # , filters=f)
-        self.results = self.h5.createTable(
-            '/', 'results', results_dtype)
+    def get_results_for_subset(self, subset):
+        conditions = {'current_id':  subset.name}
+        matching = self.results.read_where(
+            'subset_id == current_id', conditions)
+        return matching
 
-    def load(self):
-        self.h5 = tables.openFile(self.path, 'a')
-        self.results = self.h5.root.results
+    def save_result(self, subset, n):
+        # We have to take a slice here, as pytables can't handle single
+        # elements
+        self.results.append(subset.result_array[n:n+1])
+        self.cfg.database.results.flush()
 
-    def save_result(self):
-        pass
+    def close(self):
+        self.h5.close()

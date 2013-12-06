@@ -31,6 +31,7 @@ class Configuration(object):
         self.user_schemes = scheme.SchemeSet()
         self.user_subsets = []
         self.user_subsets_by_name = {}
+        self.models = []
 
         self.save_phylofiles = save_phylofiles
         self.progress = progress.NoProgress(self)
