@@ -1,6 +1,4 @@
 TODO
-* fix file cleanup with raxml analyses. Right now there are a lot of files
-  left over in the phylofiles folder. Not good.
 
 * fix bug in --profile
 
@@ -16,11 +14,13 @@ TODO
 * Add in sensible dependency checks at the start, and print out useful error messages.
     e.g. "You need to have SciKit-Learn installed to run this analysis, to do that, 
     please install the anaconda python distribution from here..."
+
 * Bug fix (kind of): if a user quits during the estimation of the starting tree, funny things
     happen. We need to put in some kind of check for this. Basically just make sure that
     if we're thinking of using old results, then we check that the starting tree file has
     something in it. If it doesn't, quit with an error message and ask the user to 
     use force-restart
+
 * Usability: change the 'we aborted' error message to suggest trying force-restart. A lot of 
     user errors are fixed this way, there have been a few queries on email and on the user 
     group.
@@ -62,6 +62,8 @@ DONE
 
 Done
 ____
+* fix file cleanup with raxml analyses. Right now there are a lot of files
+  left over in the phylofiles folder. Not good.
 * add 'clustering' search option to the manual
 * add --additional_cmd_line option so that we can pass e.g. precision controllers to PhyML and RAxML
   and we could also then use the RAxML Pthreads version, and tell it how many processors to use.
