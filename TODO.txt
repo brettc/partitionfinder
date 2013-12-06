@@ -1,4 +1,9 @@
 TODO
+* fix file cleanup with raxml analyses. Right now there are a lot of files
+  left over in the phylofiles folder. Not good.
+
+* fix bug in --profile
+
 * Check this line
         number_of_seq = len(self.alignment.species)
   in analysis.py. It looks wrong to me - I think it's for the AICc calculation, and it 
