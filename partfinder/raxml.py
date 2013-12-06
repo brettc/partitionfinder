@@ -253,9 +253,10 @@ def remove_files(aln_path, model):
     '''remove all files from the alignment directory that are produced by raxml'''
     dir, file = os.path.split(aln_path)
     analysis_ID = raxml_analysis_ID(aln_path, model)
+    hex_ID = analysis_ID.split("_")[0]
     dir = os.path.abspath(dir)
     fs = os.listdir(dir)
-    fnames = fnmatch.filter(fs, '*%s*' % analysis_ID)
+    fnames = fnmatch.filter(fs, '*%s*' % hex_ID)
     util.delete_files(fnames)
 
 
