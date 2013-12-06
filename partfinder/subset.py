@@ -20,11 +20,13 @@ log = logtools.get_logger(__file__)
 
 import os
 import weakref
+import numpy
 
 from math import log as logarithm
 from alignment import Alignment, SubsetAlignment
 from util import PartitionFinderError, remove_runID_files
 import subset_ops
+import database
 
 FRESH, PREPARED, DONE = range(3)
 
@@ -66,6 +68,10 @@ class Subset(object):
         self.columns = list(column_set)
         self.columns.sort()
         self.status = FRESH
+        self.result_array = numpy.zeros(
+            cfg.model_count, database .results_dtype)
+        self.result_current = 0
+
         self.fabricated = False
         self.analysis_error = None
 
@@ -139,7 +145,28 @@ class Subset(object):
         if model in self.results:
             log.error("Can't add model result %s, it already exists in %s",
                       model, self)
+
         self.results[model] = result
+
+        cur = self.result_current
+        row = self.result_array[cur]
+        row['subset_id'] = self.name
+        row['model_id'] = result.model
+        row['lnl'] = result.lnl
+        row['seconds'] = result.seconds
+        row['params'] = result.params
+        row['alpha'] = result.alpha
+        row['aic'] = result.aic
+        row['aicc'] = result.aicc
+        row['bic'] = result.bic
+        row['site_rate'] = result.site_rate
+        # We have to take a slice here, as pytables can't handle single
+        # elements
+        cfg.database.results.append(self.result_array[cur:cur+1])
+        self.cfg.database.results.flush()
+        self.result_current += 1
+
+        # TODO: This will work now numpy.argmax(self.result_array['bic'])
 
 
     def model_selection(self, cfg):
@@ -167,8 +194,8 @@ class Subset(object):
                 self.best_params = result.params
                 self.best_site_rate = result.site_rate
                 self.best_alpha = result.alpha
-                self.best_freqs = result.freqs
-                self.best_modelparams = result.rates
+                # self.best_freqs = result.freqs
+                # self.best_modelparams = result.rates
 
         log.debug("Model Selection. best model: %s, params: %d, site_rate: %f"
                   % (self.best_model, self.best_params, self.best_site_rate))

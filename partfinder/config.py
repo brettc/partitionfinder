@@ -52,6 +52,7 @@ class Configuration(object):
         self.alignment = None
         self.user_tree = None
         self.old_working_directory = None
+        self.model_count = 0
 
         # Some basic checking of the setup, so that we don't hit too many
         # problems later
@@ -109,8 +110,6 @@ class Configuration(object):
 
             if total==0.0:
                 log.error("Please provide at least one cluster weight greater than zero")
-
-
 
             log.info("Setting cluster_weights to: "
                      "subset_rate = %s, freqs = %s, model = %s, alpha %s"

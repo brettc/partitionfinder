@@ -374,6 +374,7 @@ class Parser(object):
 
         log.info("The models included in this analysis are: %s",
                  ", ".join(self.cfg.models))
+        self.cfg.model_count = len(self.cfg.models)
 
         # Check data type against the model list that we've got a sensible
         # model list
