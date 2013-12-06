@@ -123,12 +123,9 @@ def get_N_closest_subsets(start_scheme, cfg, N):
     return ranked_subset_groupings
 
 
-def make_clustered_scheme(start_scheme, scheme_name, subsets_to_cluster, cfg):
+def make_clustered_scheme(start_scheme, scheme_name, subsets_to_cluster, merged_sub, cfg):
 
-    # 1. Create a new subset that merges the subsets_to_cluster
-    merged_sub = subset_ops.merge_subsets(subsets_to_cluster)
-
-    # 2. Then we define a new scheme with those merged subsets
+    # 1. Then we define a new scheme with those merged subsets
     new_subsets = start_scheme.subsets - set(subsets_to_cluster)
     new_subsets.add(merged_sub)
 
@@ -146,7 +143,10 @@ def get_nearest_neighbour_scheme(start_scheme, scheme_name, cfg):
     to work well with PartitionFinder
     """
 
+    # we use [0] becuase the function returns a ranked list of lists of length 1
     closest_subsets = get_N_closest_subsets(start_scheme, cfg, 1)[0]
+
+    merged_sub = subset_ops.merge_subsets(closest_subsets) 
 
     scheme = make_clustered_scheme(
         start_scheme, scheme_name, closest_subsets, cfg)

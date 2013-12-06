@@ -367,3 +367,11 @@ class Subset(object):
         else:
             # We need to write it
             sub_alignment.write(sub_path)
+
+    @property
+    def is_done(self):
+        return self.status == DONE
+
+    @property
+    def is_prepared(self):
+        return self.status == PREPARED
