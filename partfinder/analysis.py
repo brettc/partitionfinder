@@ -226,9 +226,13 @@ class Analysis(object):
 
         # prepare the list of tasks
         tasks = []
-        for sub in subsets:            
-            # don't add subsets which are already labelled as finalised
-            if sub.status != 2:
+        for sub in subsets:
+            
+            if sub.is_done:
+                pass
+            elif sub.is_prepared:
+                self.add_tasks_for_sub(tasks, sub)
+            else:
                 sub.prepare(self.cfg, self.alignment)
                 self.add_tasks_for_sub(tasks, sub)
 
@@ -253,9 +257,10 @@ class Analysis(object):
         self.cfg.progress.next_scheme()
 
         # analyse the subsets in the scheme that aren't done
+        # NB for most schemes we will have all subsets done, so this saves time
         not_done = []
         for sub in sch:
-            if sub.status != 2:
+            if sub.is_done == False:
                 not_done.append(sub)
         if not_done:
             self.analyse_list_of_subsets(not_done)

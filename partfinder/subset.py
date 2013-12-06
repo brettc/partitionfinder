@@ -362,3 +362,11 @@ class Subset(object):
         log.debug("Reading binary cached results for %s" % self)
         d = cfg.subset_database[self.name]
         self.__dict__.update(d)
+
+    @property
+    def is_done(self):
+        return self.status == DONE
+
+    @property
+    def is_prepared(self):
+        return self.status == PREPARED
