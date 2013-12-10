@@ -20,11 +20,13 @@ log = logtools.get_logger(__file__)
 
 import os
 import weakref
+import numpy
 
 from math import log as logarithm
 from alignment import Alignment, SubsetAlignment
 from util import PartitionFinderError, remove_runID_files
 import subset_ops
+import database
 
 FRESH, PREPARED, DONE = range(3)
 
@@ -32,11 +34,14 @@ FRESH, PREPARED, DONE = range(3)
 class SubsetError(PartitionFinderError):
     pass
 
+
 def count_subsets():
     return len(Subset._cache)
 
+
 def clear_subsets():
     Subset._cache.clear()
+
 
 class Subset(object):
     """Contains a set of columns in the Alignment
@@ -66,18 +71,29 @@ class Subset(object):
         self.columns = list(column_set)
         self.columns.sort()
         self.status = FRESH
+
+        # We put all results into this array, which is sized to the number of
+        # models that we are analysing
+        self.result_array = numpy.zeros(
+            cfg.model_count, database.results_dtype)
+
+        # This points to the current empty array entry that we will fill up
+        # next. When we're done it will equal the size of the array (and
+        # accessing will cause an error)
+        self.result_current = 0
+
+        # This will get set to the best entry, once we've done all the analysis
+        self.result_best = None
+
+        self.models_not_done = set(cfg.models)
+
         self.fabricated = False
         self.analysis_error = None
-
         self.centroid = None
-        self.results = {}
         # Site likelihoods calculated using GTR+G from the
         # processor.gen_per_site_stats()
         self.site_lnls_GTRG = []
-        self.best_info_score = None  # e.g. AIC, BIC, AICc
-        self.best_model = None
-        self.best_params = None
-        self.best_lnl = None
+
         self.alignment_path = None
         log.debug("Created %s" % self)
 
@@ -99,6 +115,15 @@ class Subset(object):
             self._name = nm
         return nm
 
+    def load_results(self, cfg):
+        matching = cfg.database.get_results_for_subset(self)
+        # We might get models that we don't want, so we need to filter them
+        for i, mod in enumerate(matching['model_id']):
+            if mod in self.models_not_done:
+                self.result_array[self.result_current] = matching[i]
+                self.result_current += 1
+                self.models_not_done.remove(mod)
+
     SMALL_WARNING = """
     The subset containing the following data_blocks: %s, has a very small
     number of sites (%d) compared to the number of parameters in the model
@@ -109,84 +134,103 @@ class Subset(object):
     """
 
     def add_result(self, cfg, model, result):
-        result.model = model
-        result.params = cfg.processor.models.get_num_params(model)
-
-        K = float(result.params)
+        """
+        We get the result class from raxml or phyml. We need to transform this
+        into a numpy record, and then store it locally, and in the database
+        """
+        K = float(cfg.processor.models.get_num_params(model))
         n = float(len(self.column_set))
         lnL = float(result.lnl)
+        aic = (-2.0 * lnL) + (2.0 * K)
+        bic = (-2.0 * lnL) + (K * logarithm(n))
+        aicc = (-2.0 * lnL) + ((2.0 * K) * (n / (n - K - 1.0)))
+        # This is the rate per site of the model - used in some clustering
+        # analyses
+        site_rate = float(result.tree_size)
 
         # Here we put in a catch for small subsets, where n < K+2.
         # If this happens, the AICc actually starts rewarding very small
         # datasets, which is wrong a simple but crude catch for this is just to
         # never allow n to go below k+2
-        result.aic = (-2.0 * lnL) + (2.0 * K)
-        result.bic = (-2.0 * lnL) + (K * logarithm(n))
-
         if n < (K + 2):
             log.debug(self.SMALL_WARNING % (self, n, model, K, self.name))
             n = K + 2
 
-        result.aicc = (-2.0 * lnL) + ((2.0 * K) * (n / (n - K - 1.0)))
+        # TODO Split this out!
+        # TODO: Check?
+        # if model in self.results:
+        #     log.error("Can't add model result %s, it already exists in %s",
+        #               model, self)
 
-        # This is the rate per site of the model - used in some clustering
-        # analyses
-        result.site_rate = float(result.tree_size)
+        # Put this into the current result_array item
+        cur = self.result_current
+        row = self.result_array[cur]
+        row['subset_id'] = self.name
+        row['model_id'] = model
+        row['lnl'] = result.lnl
+        row['seconds'] = result.seconds
+        row['params'] = K
+        row['alpha'] = result.alpha
+        row['aic'] = aic
+        row['aicc'] = aicc
+        row['bic'] = bic
+        row['site_rate'] = site_rate
+
+        # We need to get the keys from the dictionary and convert them to
+        # indexes into our fixed sized arrays
+        row_freqs = row['freqs']
+        getter = database.Freqs.get
+        for k, v in result.freqs.items():
+            i = getter(k)
+            if i is None:
+                log.error("Unrecognised Frequency type %s", k)
+                raise SubsetError
+            row_freqs[i] = v
+
+        row_rates = row['rates']
+        getter = database.Rates.get
+        for k, v in result.rates.items():
+            i = getter(k)
+            if i is None:
+                log.error("Unrecognised Rate type %s", k)
+                raise SubsetError
+            row_rates[i] = v
+
+        # Now save this to the database
+        cfg.database.save_result(self, self.result_current)
+        self.result_current += 1
 
         log.debug("Adding model to subset. Model: %s, params %d, site_rate %f"
-                  % (model, K, result.site_rate))
-
-        if model in self.results:
-            log.error("Can't add model result %s, it already exists in %s",
-                      model, self)
-        self.results[model] = result
-
+                  % (model, K, site_rate))
 
     def model_selection(self, cfg):
-        # Model selection is done after we've added all the models
-        # Note: we may have more models than we want if there is old data lying
-        # around
-        self.best_info_score = None  # Reset this before model selection
-        meth = cfg.model_selection.lower()
+        # We want the index of the smallest value
+        method = cfg.model_selection
+        self.result_best = numpy.argmin(self.result_array[method])
+        best = self.result_array[self.result_best]
 
-        for model in cfg.models:
-            result = self.results[model]
-            try:
-                info_score = getattr(result, meth)
-            except AttributeError:
-                log.error(
-                    "Model selection option %s not recognised, "
-                    "please check" % cfg.model_selection)
-                raise SubsetError
-
-            if self.best_info_score is None or info_score < self.best_info_score:
-                # TODO: Please make me better
-                self.best_lnl = result.lnl
-                self.best_info_score = info_score
-                self.best_model = result.model
-                self.best_params = result.params
-                self.best_site_rate = result.site_rate
-                self.best_alpha = result.alpha
-                self.best_freqs = result.freqs
-                self.best_modelparams = result.rates
+        # TODO: this is crappy. Anyone who wants this stuff should just access
+        # the entire "best" item
+        self.best_info_score = best[method]
+        self.best_lnl = best['lnl']
+        self.best_model = best['model_id']
+        self.best_site_rate = best['site_rate']
+        self.best_params = best['params']
+        self.best_alpha = best['alpha']
+        self.best_freqs = best['freqs']
+        self.best_rates = best['rates']
 
         log.debug("Model Selection. best model: %s, params: %d, site_rate: %f"
                   % (self.best_model, self.best_params, self.best_site_rate))
 
     def get_param_values(self):
-        param_values = {"rate": self.best_site_rate, "alpha": self.best_alpha}
-
-        # Not sure if this sorting is necessary, but it's here in case it's
-        # needed to make sure that freqs and model parameters are always in the
-        # same order can't hurt... (I hope).
-        keys_f = self.best_freqs.keys()
-        keys_f.sort()
-        param_values["freqs"] = [self.best_freqs[key] for key in keys_f]
-
-        keys_m = self.best_modelparams.keys()
-        keys_m.sort()
-        param_values["model"] = [self.best_modelparams[key] for key in keys_m]
-
+        param_values = {
+            "rate": self.best_site_rate,
+            "model": self.best_model,
+            "alpha": self.best_alpha,
+            "freqs": self.best_freqs,
+            "rates": self.best_rates,
+        }
         return param_values
 
     def finalise(self, cfg):
@@ -197,7 +241,6 @@ class Subset(object):
         if self.status == DONE:
             return True
 
-        self.save_results(cfg)
         self.model_selection(cfg)
 
         # Do all the final cleanup
@@ -206,7 +249,8 @@ class Subset(object):
             cfg.reporter.write_subset_summary(self)
         else:
             # Otherwise, clean up files generated by the programs as well
-            remove_runID_files(self.alignment_path)
+            if self.alignment_path:
+                remove_runID_files(self.alignment_path)
 
         self.models_to_process = []
         self.status = DONE
@@ -220,22 +264,11 @@ class Subset(object):
 
         # Load the cached results
         self.load_results(cfg)
-
-        # First, see if we've already got the results loaded. Then we can
-        # shortcut all the other checks
-        models_done = set(self.results.keys())
-        self.models_not_done = cfg.models - models_done
         if self.finalise(cfg):
             return
 
         # Make an Alignment from the source, using this subset
         self.make_alignment(cfg, alignment)
-
-        # Try and read in some previous analyses
-        self.parse_results(cfg)
-        if self.finalise(cfg):
-            return
-
         self.models_to_process = list(self.models_not_done)
         # Now order them by difficulty
         self.models_to_process.sort(
@@ -334,34 +367,6 @@ class Subset(object):
         else:
             # We need to write it
             sub_alignment.write(sub_path)
-
-    def get_subset_cache_path(self, cfg):
-        return os.path.join(cfg.subsets_path, self.name + '.bin')
-
-    def load_results(self, cfg):
-        # We might have already saved a bunch of results, try there first
-        if not self.results:
-            self.read_cache(cfg)
-
-    def save_results(self, cfg):
-        self.write_cache(cfg)
-
-    # These are the fields that get stored for quick loading
-    _cache_fields = "alignment_path results".split()
-
-    def write_cache(self, cfg):
-        """Write out the results we've collected to a binary file"""
-        log.debug("Writing binary cached results for %s" % self)
-        store = dict([(x, getattr(self, x)) for x in Subset._cache_fields])
-        cfg.subset_database[self.name] = store
-
-    def read_cache(self, cfg):
-        if self.name not in cfg.subset_database:
-            return False
-
-        log.debug("Reading binary cached results for %s" % self)
-        d = cfg.subset_database[self.name]
-        self.__dict__.update(d)
 
     @property
     def is_done(self):

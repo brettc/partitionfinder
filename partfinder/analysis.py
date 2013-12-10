@@ -21,6 +21,7 @@ log = logtools.get_logger(__file__)
 import os
 import shutil
 import shelve
+from database import Database
 
 from alignment import Alignment, SubsetAlignment
 import threadpool
@@ -55,9 +56,7 @@ class Analysis(object):
 
         # Make some folders for the analysis
         self.cfg.make_output_folders()
-
-        self.cfg.subset_database = shelve.open(
-            os.path.join(self.cfg.subsets_path, 'subsets'), protocol=-1)
+        self.cfg.database = Database(self.cfg)
 
         # TODO: This is going to be in "Prepare"
         self.make_alignment(cfg.alignment_path)
@@ -85,6 +84,9 @@ class Analysis(object):
 
     def analyse(self):
         self.do_analysis()
+
+        # TODO: Not really the right place for it?
+        self.cfg.database.close()
         return self.results
 
     def make_alignment(self, source_alignment_path):
@@ -227,7 +229,6 @@ class Analysis(object):
         # prepare the list of tasks
         tasks = []
         for sub in subsets:
-            
             if sub.is_done:
                 pass
             elif sub.is_prepared:
