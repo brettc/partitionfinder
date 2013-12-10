@@ -1,17 +1,25 @@
 library(ggplot2)
 library(reshape)
+library(zoo)
 
 dat <- read.csv("~/Documents/Projects_Current/partitionfinder/docs/downloadstats.csv")
+dat$date <- as.yearmon(dat$date)
 dat <- aggregate(. ~ date, data=dat, FUN=sum, na.action=na.pass)
-dat <- dat[order(as.Date(dat$date, format="%d/%m/%Y")),]
+dat <- dat[order(as.Date(dat$date)),]
 
 dat$Mac <- cumsum(dat$Mac)
 dat$Windows <- cumsum(dat$Windows)
  
 
 # Download plot
-dl <- melt(dat[,c(1, 2, 3)])
-colnames(dl) <- c("date", "OS", "downloads")
+m <- dat[,c(1,2)]
+m$OS <- "Mac"
+names(m) <- c('date', 'downloads', 'OS')
+w <- dat[,c(1,3)]
+w$OS <- "Windows"
+names(w) <- c('date', 'downloads', 'OS')
+
+dl <- rbind(m, w)
 dl$date <- as.Date(dl$date, format = "%d/%m/%Y")
 
 quartz(width=10, height=5)
