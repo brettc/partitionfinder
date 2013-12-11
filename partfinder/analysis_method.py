@@ -164,40 +164,40 @@ class GreedyAnalysis(Analysis):
 
 
         step = 1
-        cur_s = 2
 
         # Now we try out all lumpings of the current scheme, to see if we can
         # find a better one and if we do, we just keep going
         while True:
             log.info("***Greedy algorithm step %d***" % step)
             #log.push()
-
+            name_prefix = "step_%d" % (step)
             old_best_score = self.results.best_score
 
             # Make a list of all the new subsets, and get them analysed
+            sch_num = 1
             lumped_subset_iterator = itertools.combinations(start_scheme.subsets, 2)
             lumped_subsets = [] 
             new_subs = []
+            new_schemes = []
             for subset_grouping in lumped_subset_iterator:
                 lumped_subsets.append(subset_grouping)
                 new_sub = subset_ops.merge_subsets(subset_grouping)
                 new_subs.append(new_sub)
+                scheme_name = "%s_%d" % (name_prefix, sch_num)
+                lumped_scheme = neighbour.make_clustered_scheme(
+                    start_scheme, scheme_name, subset_grouping, new_sub, self.cfg)
+                new_schemes.append(lumped_scheme)
+                sch_num = sch_num + 1
+
             log.info("Analysing %d subsets" % len(new_subs))
             self.analyse_list_of_subsets(new_subs)
 
             log.info("Analysing %d schemes" % len(new_subs))
-            for subset_grouping in lumped_subsets:
-                scheme_name = cur_s
-                lumped_scheme = neighbour.make_clustered_scheme(
-                    start_scheme, scheme_name, subset_grouping, self.cfg)
-
+            for lumped_scheme in new_schemes:
                 new_result = self.analyse_scheme(lumped_scheme)
-
                 log.debug("Difference in %s: %.1f" %
                           (self.cfg.model_selection,
                            (new_result.score - old_best_score)))
-
-                cur_s += 1
 
             if self.results.best_score != old_best_score:
                 log.info("""Analysed all schemes for this step. The best
@@ -292,7 +292,6 @@ class RelaxedClusteringAnalysis(Analysis):
             lumped_subsets = neighbour.get_N_closest_subsets(
                 start_scheme, self.cfg, cutoff)
 
-            log.info("Creating %d new subsets" % cutoff)
             # Make a list of all the new subsets and schemes
             sch_num = 1
             new_subs = []
@@ -304,7 +303,7 @@ class RelaxedClusteringAnalysis(Analysis):
                 lumped_scheme = neighbour.make_clustered_scheme(
                     start_scheme, scheme_name, subset_grouping, new_sub, self.cfg)
                 new_schemes.append(lumped_scheme)
-                sch_num += sch_num + 1
+                sch_num = sch_num + 1
 
             log.info("Analysing %d new subsets" % cutoff)
             self.analyse_list_of_subsets(new_subs)
@@ -336,9 +335,8 @@ class RelaxedClusteringAnalysis(Analysis):
                 log.info(
                     "Analysed %d schemes and found no schemes "
                     "that improve the score, stopping",
-                    len(lumped_subsets))
+                    len(new_schemes))
                 break
-
 
             # We're done if it's the scheme with everything together
             if len(set(lumped_scheme.subsets)) == 1:

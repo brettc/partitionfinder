@@ -149,6 +149,6 @@ def get_nearest_neighbour_scheme(start_scheme, scheme_name, cfg):
     merged_sub = subset_ops.merge_subsets(closest_subsets) 
 
     scheme = make_clustered_scheme(
-        start_scheme, scheme_name, closest_subsets, cfg)
+        start_scheme, scheme_name, closest_subsets, merged_sub, cfg)
 
     return scheme
