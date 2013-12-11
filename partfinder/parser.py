@@ -214,7 +214,7 @@ class Parser(object):
 
         # TODO: Think about how we want to add descriptions.
         # Maybe this should be part of the __init__
-        user_subset.add_description(part_def.name, tuple(description))
+        user_subset.add_description([part_def.name], [tuple(description)])
         self.cfg.user_subsets.append(user_subset)
         self.cfg.user_subsets_by_name[part_def.name] = user_subset
 

@@ -39,10 +39,17 @@ def merge_subsets(subset_list):
     columns = set()
 
     # We just need the columns
+    names = []
+    descriptions = []
     for sub in subset_list:
         columns |= sub.column_set
+        descriptions = descriptions + sub.description
+        names = names + sub.full_name
 
-    return subset.Subset(sub.cfg, columns)
+    newsub = subset.Subset(sub.cfg, columns)
+    newsub.add_description(names, descriptions)
+
+    return newsub
 
 
 def subsets_overlap(subset_list):

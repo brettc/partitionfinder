@@ -23,7 +23,7 @@ import itertools
 import operator
 
 scheme_header_template = "%-18s: %s\n"
-scheme_subset_template = "%-6s | %-10s | %-30s | %-30s | %-40s\n"
+scheme_subset_template = "%-6s | %-10s | %-10s | %-100s\n"
 subset_template = "%-15s | %-15s | %-15s | %-15s | %-15s\n"
 
 
@@ -58,6 +58,7 @@ class TextReporter(object):
         sorted_subsets = [sub for sub in sch]
         sorted_subsets.sort(key=lambda sub: min(sub.columns), reverse=False)
         self.write_subsets(sch, result, output, sorted_subsets)
+        self.write_nexus_summary(output, sorted_subsets)
         self.write_raxml(sch, result, output, sorted_subsets)
 
     def write_scheme_header(self, sch, result, output):
@@ -74,43 +75,39 @@ class TextReporter(object):
         output.write(scheme_header_template % ("Number of subsets", result.nsubs))
         output.write("\n")
 
+    def write_nexus_summary(self, output, sorted_subsets):
+        output.write("\n\nNexus formatted character sets\n")
+        output.write("begin sets;\n")
+
+        subset_number = 1
+        charpartition = []
+        for sub in sorted_subsets:
+            partition_sites = sub.site_description
+
+            output.write("\tcharset Subset%s = %s;\n" % (subset_number, partition_sites))
+            charpartition.append("Group%s:Subset%s" % (subset_number, subset_number))
+            subset_number += 1
+        output.write('\tcharpartition PartitionFinder = %s;\n' % ', '.join(charpartition))
+        output.write('end;\n')
+
     def write_subsets(self, sch, result, output, sorted_subsets):
         output.write(scheme_subset_template % (
-            "Subset", "Best Model", "Subset Partitions", "Subset Sites", "Alignment"))
+            "Subset", "Best Model", "# sites", "Partition names"))
         number = 1
-
+        # a way to print out the scheme in PF format
         pf_scheme_description = []
-            # a way to print out the scheme in PF format
+        
 
         for sub in sorted_subsets:
-            # desc = {}
-            # names = []
-            # for part in sub:
-                # names.append(part.name)
-                # for subpart in part.description:  # loop through each sub-part of the partition
-                    # desc[subpart[0]] = subpart
-
-            # #pretty print the sites in the scheme
-            # desc_starts = desc.keys()
-            # desc_starts.sort()
-            # parts = []
-            # for key in desc_starts:
-                # part = desc[key]
-                # if part[2] == 1:
-                    # text = "%s-%s" % (part[0], part[1])
-                # else:
-                    # text = "%s-%s\\%s" % tuple(part)
-                # parts.append(text)
-            # parts = ', '.join(parts)
-
-            # names.sort()
-            # names = ', '.join(names)
-
-            # pf_scheme_description.append("(%s)" % names)
-            num_sites = len(sub.columns)
-            
+            partition_names = sub.long_name
+            pf_scheme_description.append("(%s)" % partition_names)
+            partition_sites = sub.site_description
             output.write(scheme_subset_template % (
-                number, sub.best_model, 0, num_sites, sub.alignment_path))
+                number, 
+                sub.best_model, 
+                len(sub.columns), 
+                partition_names,
+                ))
             number += 1
 
         pf_scheme_description = " ".join(pf_scheme_description)
@@ -125,23 +122,8 @@ class TextReporter(object):
         output.write("\n\nRaxML-style partition definitions\n")
 
         subset_number = 1
-        for each_s in sorted_subsets:
-            list_of_sites = each_s.columns
-            big_list = [x + 1 for x in list_of_sites]
-            # Took this solution for grouping consecutive sites from 
-            # http://stackoverflow.com/questions/2361945/detecting-consecutive-integers-in-a-list
-            #for k, g in itertools.groupby(enumerate(list_of_sites), 
-            #    lambda (i,x):i-x):
-            #    consec_sites = map(operator.itemgetter(1), g)
-            #    if len(consec_sites) > 2:
-            #        the_range = (str(min(consec_sites) + 1) + "-" + 
-            #            str(max(consec_sites) + 1))
-            #        big_list.append(the_range)
-            #    else:
-            #        consec_sites = [x + 1 for x in consec_sites]
-            #        big_list += consec_sites
-            big_list = str(big_list).strip("[]")
-            big_list = big_list.translate(None, "'")
+        for sub in sorted_subsets:
+            partition_sites = sub.site_description
 
             if self.cfg.datatype == "DNA":
                 model = 'DNA'
@@ -150,10 +132,9 @@ class TextReporter(object):
             else:
                 raise RuntimeError
 
-            output.write("%s, Subset%s = %s" % (model, subset_number, big_list))
+            output.write("%s, Subset%s = %s" % (model, subset_number, partition_sites))
             output.write("\n")
             subset_number += 1
-
 
     def write_best_scheme(self, result):
         pth = os.path.join(self.cfg.output_path, 'best_scheme.txt')
