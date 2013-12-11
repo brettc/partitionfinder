@@ -21,6 +21,7 @@ log = logging.getLogger("util")
 import os
 import re
 import fnmatch
+from math import log as logarithm
 
 
 # Base error class
@@ -114,9 +115,6 @@ def remove_runID_files(aln_pth):
             # sometimes try and delete things twice in the threading).
             pass
 
-
-
-
 def memoize(f):
     """Cache results from functions"""
     cache = {}
@@ -126,6 +124,28 @@ def memoize(f):
             cache[x] = f(*x)
         return cache[x]
     return memf
+
+def get_aic(lnL, K):
+    aic = (-2.0 * lnL) + (2.0 * K)
+    return aic
+
+def get_aicc(lnL, K, n):
+    SMALL_WARNING = """
+    You are calculating an AICc value in which the number of parameters
+    is large with respect to the number of sites in the alignment. Please
+    proceed with caution.
+    """
+    if n < (K + 2):
+        log.debug(self.SMALL_WARNING)
+        n = K + 2
+
+    aicc = (-2.0 * lnL) + ((2.0 * K) * (n / (n - K - 1.0)))
+    return aicc
+
+def get_bic(lnL, K, n):
+    bic = (-2.0 * lnL) + (K * logarithm(n))
+    return(bic)
+
 
 # def we_are_frozen():
     # All of the modules are built-in to the interpreter, e.g., by py2exe

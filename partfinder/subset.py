@@ -24,9 +24,12 @@ import numpy
 
 from math import log as logarithm
 from alignment import Alignment, SubsetAlignment
-from util import PartitionFinderError, remove_runID_files
+from util import PartitionFinderError, remove_runID_files, get_aic, get_aicc, get_bic
 import subset_ops
 import database
+
+
+
 
 FRESH, PREPARED, DONE = range(3)
 
@@ -124,15 +127,6 @@ class Subset(object):
                 self.result_current += 1
                 self.models_not_done.remove(mod)
 
-    SMALL_WARNING = """
-    The subset containing the following data_blocks: %s, has a very small
-    number of sites (%d) compared to the number of parameters in the model
-    being estimated (the %s model which has %d parameters). This may give
-    misleading AICc results, so please check carefully if you are using the
-    AICc for your analyses. The model selection results for this subset are
-    in the following file: /analysis/subsets/%s.txt
-    """
-
     def add_result(self, cfg, model, result):
         """
         We get the result class from raxml or phyml. We need to transform this
@@ -141,20 +135,13 @@ class Subset(object):
         K = float(cfg.processor.models.get_num_params(model))
         n = float(len(self.column_set))
         lnL = float(result.lnl)
-        aic = (-2.0 * lnL) + (2.0 * K)
-        bic = (-2.0 * lnL) + (K * logarithm(n))
-        aicc = (-2.0 * lnL) + ((2.0 * K) * (n / (n - K - 1.0)))
+        aic = get_aic(lnL, K)
+        bic = get_bic(lnL, K, n)
+        aicc = get_aicc(lnl, K, n)
+
         # This is the rate per site of the model - used in some clustering
         # analyses
         site_rate = float(result.tree_size)
-
-        # Here we put in a catch for small subsets, where n < K+2.
-        # If this happens, the AICc actually starts rewarding very small
-        # datasets, which is wrong a simple but crude catch for this is just to
-        # never allow n to go below k+2
-        if n < (K + 2):
-            log.debug(self.SMALL_WARNING % (self, n, model, K, self.name))
-            n = K + 2
 
         # TODO Split this out!
         # TODO: Check?
@@ -200,8 +187,8 @@ class Subset(object):
         cfg.database.save_result(self, self.result_current)
         self.result_current += 1
 
-        log.debug("Adding model to subset. Model: %s, params %d, site_rate %f"
-                  % (model, K, site_rate))
+        log.debug("Added model to subset. Model: %s, params: %d, sites:%d, lnL:%.2f, site_rate %f"
+                  % (model, K, n, lnL, site_rate))
 
     def model_selection(self, cfg):
         # We want the index of the smallest value
