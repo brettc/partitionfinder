@@ -83,10 +83,11 @@ class Analysis(object):
                 shutil.rmtree(self.cfg.schemes_path)
 
     def analyse(self):
-        self.do_analysis()
-
-        # TODO: Not really the right place for it?
-        self.cfg.database.close()
+        try:
+            self.do_analysis()
+        finally:
+            # TODO: Not really the right place for it?
+            self.cfg.database.close()
         return self.results
 
     def make_alignment(self, source_alignment_path):
