@@ -1,5 +1,6 @@
 TODO
 
+
 * Add in sensible dependency checks at the start, and print out useful error messages.
     e.g. "You need to have SciKit-Learn installed to run this analysis, to do that, 
     please install the anaconda python distribution from here..."
@@ -51,6 +52,8 @@ DONE
 
 Done
 ____
+
+* fix the reporting
 
 * Check this line
         number_of_seq = len(self.alignment.species)
