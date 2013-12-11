@@ -111,9 +111,9 @@ class Subset(object):
         try:
             l = self.full_name[:]
             long_name = ', '.join(l)
-            return(long_name)
+            return long_name
         except:
-            return("NA")
+            return "NA"
 
     @property
     def site_description(self):
@@ -127,9 +127,9 @@ class Subset(object):
                     text = "%s-%s\\%s" % tuple(d)
                 s.append(text)
             site_description = ', '.join(s)
+            return site_description 
         except:
-            return(', '.join(map(str, self.columns)))
-        return(site_description)
+            return ', '.join(map(str, self.columns))
 
     def __repr__(self):
         return "Subset(%s..)" % self.name[:5]

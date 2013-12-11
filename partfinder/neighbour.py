@@ -45,7 +45,7 @@ def get_ranked_list(distance_matrix, subsets, N):
         subset_group = [subsets[i] for i in locations]
         ordered_subsets.append(subset_group)
 
-    return(ordered_subsets)
+    return ordered_subsets
 
 def get_manhattan_matrix(rates, freqs, model, alpha, weights):
 
@@ -90,7 +90,7 @@ def get_manhattan_matrix(rates, freqs, model, alpha, weights):
             log.error("Distance matrices from different parameters are not the same size")
             raise AnalysisError
 
-    return(final_dists)
+    return final_dists
 
 def get_distance_matrix(start_scheme, weights):
     #1. get the parameter lists for each subset

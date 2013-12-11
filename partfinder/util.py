@@ -144,7 +144,7 @@ def get_aicc(lnL, K, n):
 
 def get_bic(lnL, K, n):
     bic = (-2.0 * lnL) + (K * logarithm(n))
-    return(bic)
+    return bic
 
 
 # def we_are_frozen():
