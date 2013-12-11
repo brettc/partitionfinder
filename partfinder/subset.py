@@ -93,6 +93,7 @@ class Subset(object):
         self.fabricated = False
         self.analysis_error = None
         self.centroid = None
+
         # Site likelihoods calculated using GTR+G from the
         # processor.gen_per_site_stats()
         self.site_lnls_GTRG = []
@@ -104,6 +105,31 @@ class Subset(object):
         """User created subsets can get some extra info"""
         self.full_name = name
         self.description = description
+
+    @property
+    def long_name(self):
+        try:
+            l = self.full_name[:]
+            long_name = ', '.join(l)
+            return(long_name)
+        except:
+            return("NA")
+
+    @property
+    def site_description(self):
+        try:
+            s = []
+            for d in self.description:
+                d = d[0]
+                if d == 1:
+                    text = "%s-%s" % (d[0], d[1])
+                else:
+                    text = "%s-%s\\%s" % tuple(d)
+                s.append(text)
+            site_description = ', '.join(s)
+        except:
+            return(', '.join(map(str, self.columns)))
+        return(site_description)
 
     def __repr__(self):
         return "Subset(%s..)" % self.name[:5]
