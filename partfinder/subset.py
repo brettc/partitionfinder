@@ -137,7 +137,7 @@ class Subset(object):
         lnL = float(result.lnl)
         aic = get_aic(lnL, K)
         bic = get_bic(lnL, K, n)
-        aicc = get_aicc(lnl, K, n)
+        aicc = get_aicc(lnL, K, n)
 
         # This is the rate per site of the model - used in some clustering
         # analyses
