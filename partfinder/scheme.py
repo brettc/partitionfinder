@@ -72,11 +72,11 @@ class SchemeResult(object):
         n = float(self.nsites)
         lnL = float(self.lnl)
 
-        log.debug("n: %d\tK: %d\tsites:%d" % (n, K, nsites))
+        log.debug("n: %d\tK: %d\tlnL: %d" % (n, K, lnL))
 
         self.aic = get_aic(lnL, K)
         self.bic = get_bic(lnL, K, n)
-        self.aicc = get_aicc(lnl, K, n)
+        self.aicc = get_aicc(lnL, K, n)
 
     @property
     def score(self):
