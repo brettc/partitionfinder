@@ -129,7 +129,7 @@ def make_topology(alignment_path, datatype, cmdline_extras):
         log.error("Unrecognised datatype: '%s'" % (datatype))
         raise(RaxmlError)
 
-    #force raxml to write to the dir with the alignment in it
+    # Force raxml to write to the dir with the alignment in it
     aln_dir, fname = os.path.split(alignment_path)
     command = ''.join([command, " -w '%s'" % os.path.abspath(aln_dir)])
 
@@ -140,7 +140,8 @@ def make_topology(alignment_path, datatype, cmdline_extras):
 
 
 def make_branch_lengths(alignment_path, topology_path, datatype, cmdline_extras):
-    #Now we re-estimate branchlengths using a GTR+G model on the (unpartitioned) dataset
+    # Now we re-estimate branchlengths using a GTR+G model on the
+    # (unpartitioned) dataset
     cmdline_extras = check_defaults(cmdline_extras)
     dir_path, fname = os.path.split(topology_path)
     tree_path = os.path.join(dir_path, 'topology_tree.phy')
@@ -168,20 +169,19 @@ def make_branch_lengths(alignment_path, topology_path, datatype, cmdline_extras)
 
 
 def check_defaults(cmdline_extras):
-    """We use some sensible defaults, but allow users to override them with extra cmdline options"""
+    # We use some sensible defaults, but allow users to override them with
+    # extra cmdline options
     if cmdline_extras.count("-e") > 0:
-        #then the user has specified a particular accuracy:
+        # then the user has specified a particular accuracy:
         accuracy = ""
     else:
-        #we specify a default accuracy of 1 lnL unit
+        # we specify a default accuracy of 1 lnL unit
         accuracy = " -e 1.0 "
 
-
-    #and we'll specify the -O option, so that the program doesn't exit if there are undetermined seqs.
-    #we'll put spaces at the start and end too, just in case...
-    cmdline_extras = ''.join(
-        [" ", cmdline_extras, accuracy, "-O "])
-
+    # and we'll specify the -O option, so that the program doesn't exit if
+    # there are undetermined seqs.  we'll put spaces at the start and end too,
+    # just in case...
+    cmdline_extras = ''.join([" ", cmdline_extras, accuracy, "-O "])
     return cmdline_extras
 
 

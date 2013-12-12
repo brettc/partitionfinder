@@ -22,13 +22,10 @@ import os
 import weakref
 import numpy
 
-from math import log as logarithm
 from alignment import Alignment, SubsetAlignment
 from util import PartitionFinderError, remove_runID_files, get_aic, get_aicc, get_bic
 import subset_ops
 import database
-
-
 
 
 FRESH, PREPARED, DONE = range(3)

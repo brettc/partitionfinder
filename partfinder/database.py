@@ -40,7 +40,8 @@ def _model_string_maxlen():
     lengths = [len(m) for m in all_models]
     return max(lengths)
 
-
+# TODO: This is overkill, we never need the enums. It should just be a
+# dictionary
 def enum(sequential):
     """
     Modified from here
@@ -52,11 +53,8 @@ def enum(sequential):
     # We add an extra one
     enums['MAX'] = n
 
-    # Not required?
-    # reverse = dict((value, key) for key, value in enums.iteritems())
-    # enums['name_from_value'] = reverse
     # Good for looking up by variable
-    enums['get'] = staticmethod(lambda x: enums.get(x, None))
+    enums['get'] = staticmethod(lambda x: enums[x])
 
     return type('Enum', (), enums)
 
@@ -67,6 +65,7 @@ codon_types = list("ATCG")
 Freqs = enum(codon_types)
 
 # Define the number of rates we record
+# TODO: This should be generated using itertools.combinations(x, 2)
 rates_types = ["{}_{}".format(f, t) for f, t in zip('AAACCG', 'CGTGTT')]
 Rates = enum(rates_types)
 
