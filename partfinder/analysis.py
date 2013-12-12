@@ -178,19 +178,13 @@ class Analysis(object):
 
     def run_task(self, model_name, sub):
         # This bit should run in parallel (forking the processor)
-        try:
-            self.cfg.processor.analyse(
-                model_name,
-                sub.alignment_path,
-                self.tree_path,
-                self.cfg.branchlengths,
-                self.cfg.cmdline_extras
-            )
-
-        except PhylogenyProgramError as e:
-            # TODO: probably should do something smart with these "errors" so
-            # that we can pull them up and see what went wrong
-            sub.analysis_error = e.stdout, e.stderr
+        self.cfg.processor.analyse(
+            model_name,
+            sub.alignment_path,
+            self.tree_path,
+            self.cfg.branchlengths,
+            self.cfg.cmdline_extras
+        )
 
         # Not entirely sure that WE NEED to block here, but it is safer to do
         # It shouldn't hold things up toooo long...
