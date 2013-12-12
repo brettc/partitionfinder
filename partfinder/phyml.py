@@ -35,12 +35,17 @@ from pyparsing import (
 from math import log as logarithm
 
 import phyml_models as models
+from database import DataRecord, DataLayout
 
 _binary_name = 'phyml'
 if sys.platform == 'win32':
     _binary_name += ".exe"
 
 from util import PhylogenyProgramError
+
+
+def make_data_layout(cfg):
+    return DataLayout()
 
 
 class PhymlError(PhylogenyProgramError):
@@ -221,23 +226,13 @@ def remove_files(aln_path, model):
     util.delete_files(fnames)
 
 
-class PhymlResult(object):
-    def __init__(self, lnl, tree_size, seconds):
-        self.lnl = lnl
-        self.seconds = seconds
-        self.tree_size = tree_size
-
-        # For compatibility with RaxmlResult
-        self.rates = {}
-        self.freqs = {}
-        self.alpha = 0
-
-    def __str__(self):
-        return "PhymlResult(lnl:%s, tree_size:%s, secs:%s)" % (self.lnl, self.tree_size, self.seconds)
+class PhymlResult(DataRecord):
+    pass
 
 
 class Parser(object):
-    def __init__(self, datatype):
+    def __init__(self, cfg):
+        self.cfg = cfg
         FLOAT = Word(nums + '.-').setParseAction(lambda x: float(x[0]))
         INTEGER = Word(nums + '-').setParseAction(lambda x: int(x[0]))
 
@@ -275,11 +270,16 @@ class Parser(object):
         log.debug("Parsed TREESIZE: %s" % tokens.tree_size)
         log.debug("Parsed TIME:     %s" % tokens.time)
 
-        return PhymlResult(lnl=tokens.lnl, tree_size=tokens.tree_size, seconds=tokens.seconds)
+        res = PhymlResult(self.cfg)
+        res.lnl = tokens.lnl
+        res.site_rate = tokens.tree_size
+        res.seconds = tokens.seconds
+
+        return res
 
 
-def parse(text, datatype):
-    the_parser = Parser(datatype)
+def parse(text, cfg):
+    the_parser = Parser(cfg)
     return the_parser.parse(text)
 
 def likelihood_parser(phyml_lk_file):

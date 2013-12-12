@@ -63,6 +63,10 @@ class Configuration(object):
         # Import the right processor
         self.processor = __import__(phylogeny_program.lower(), globals())
 
+        # This returns the record layout for the results that we store. It
+        # varies depending on the processor, and also DNA vs protein
+        self.data_layout = self.processor.make_data_layout(self)
+
         log.info("Setting phylogeny program to '%s'", phylogeny_program)
         self.phylogeny_program = phylogeny_program
 

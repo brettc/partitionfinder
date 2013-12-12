@@ -25,6 +25,7 @@ import shutil
 import sys
 import fnmatch
 import util
+from database import DataLayout, DataRecord
 
 from pyparsing import (
     Word, Literal, nums, Suppress, ParseException,
@@ -32,6 +33,9 @@ from pyparsing import (
 )
 
 import raxml_models as models
+
+_protein_letters = "ARNDCQEGHILKMFPSTWYV"
+_dna_letters = "ATCG"
 
 # This is set as the binary name because the previously compiled raxml had a
 # bug when calculating site likelihoods, this needs to be changed back to
@@ -41,6 +45,14 @@ if sys.platform == 'win32':
     _binary_name += ".exe"
 
 from util import PhylogenyProgramError
+
+
+def make_data_layout(cfg):
+    if cfg.datatype == "protein":
+        letters = _protein_letters
+    elif cfg.datatype == "DNA":
+        letters = _dna_letters
+    return DataLayout(letters)
 
 
 class RaxmlError(PhylogenyProgramError):
@@ -250,27 +262,23 @@ def remove_files(aln_path, model):
     util.delete_files(fnames)
 
 
-class RaxmlResult(object):
-
-    def __init__(self):
-        self.rates = {}
-        self.freqs = {}
-
-    def __str__(self):
-        return "RaxmlResult(lnl:%s, tree_size:%s, secs:%s, alphs:%s)" % (
-                self.lnl, self.tree_size, self.seconds, self.alpha)
-
+class RaxmlResult(DataRecord):
+    pass
 
 class Parser(object):
-    def __init__(self, datatype):
+    def __init__(self, cfg):
+        self.cfg = cfg
 
-        if datatype == "protein":
-            letters = "ARNDCQEGHILKMFPSTWYV"
-        elif datatype == "DNA":
-            letters = "ATCG"
+        if cfg.datatype == "protein":
+            letters = _protein_letters
+        elif cfg.datatype == "DNA":
+            letters = _dna_letters
         else:
             log.error("Unknown datatype '%s', please check" % datatype)
             raise RaxmlError
+
+        self.rate_indexes = self.cfg.data_layout.rate_indexes
+        self.freq_indexes = self.cfg.data_layout.letter_indexes
 
         FLOAT = Word(nums + '.-').setParseAction(lambda x: float(x[0]))
 
@@ -317,22 +325,24 @@ class Parser(object):
         self.result.lnl = tokens[0]
 
     def set_tree_size(self, tokens):
-        self.result.tree_size = tokens[0]
+        self.result.site_rate = tokens[0]
 
     def set_alpha(self, tokens):
         self.result.alpha = tokens[0]
 
     def set_rate(self, tokens):
         basefrom, baseto, rate = tokens
-        self.result.rates["%s_%s" % (basefrom, baseto)] = rate
+        index = self.rate_indexes["%s_%s" % (basefrom, baseto)]
+        self.result.rates[0, index] = rate
 
     def set_freq(self, tokens):
         base, rate = tokens
-        self.result.freqs[base] = rate
+        index = self.freq_indexes[base]
+        self.result.freqs[0, index] = rate
 
     def parse(self, text):
         log.debug("Parsing raxml output...")
-        self.result = RaxmlResult()
+        self.result = RaxmlResult(self.cfg)
         try:
             self.root_parser.parseString(text)
         except ParseException, p:
@@ -343,8 +353,8 @@ class Parser(object):
         return self.result
 
 
-def parse(text, datatype):
-    the_parser = Parser(datatype)
+def parse(text, cfg):
+    the_parser = Parser(cfg)
     return the_parser.parse(text)
 
 def likelihood_parser(raxml_lnl_file):

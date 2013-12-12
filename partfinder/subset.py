@@ -75,7 +75,7 @@ class Subset(object):
         # We put all results into this array, which is sized to the number of
         # models that we are analysing
         self.result_array = numpy.zeros(
-            cfg.model_count, database.results_dtype)
+            cfg.model_count, cfg.data_layout.data_type)
 
         # This points to the current empty array entry that we will fill up
         # next. When we're done it will equal the size of the array (and
@@ -162,56 +162,42 @@ class Subset(object):
         bic = get_bic(lnL, K, n)
         aicc = get_aicc(lnL, K, n)
 
-        # This is the rate per site of the model - used in some clustering
-        # analyses
-        site_rate = float(result.tree_size)
+        result.subset_id = self.name
+        result.model_id = model
+        result.params = K
+        result.aic = aic
+        result.aicc = aicc
+        result.bic = bic
 
-        # TODO Split this out!
-        # TODO: Check?
-        # if model in self.results:
-        #     log.error("Can't add model result %s, it already exists in %s",
-        #               model, self)
-
-        # Put this into the current result_array item
-        cur = self.result_current
-        row = self.result_array[cur]
-        row['subset_id'] = self.name
-        row['model_id'] = model
-        row['lnl'] = result.lnl
-        row['seconds'] = result.seconds
-        row['params'] = K
-        row['alpha'] = result.alpha
-        row['aic'] = aic
-        row['aicc'] = aicc
-        row['bic'] = bic
-        row['site_rate'] = site_rate
-
-        # We need to get the keys from the dictionary and convert them to
-        # indexes into our fixed sized arrays
-        row_freqs = row['freqs']
-        getter = database.Freqs.get
-        for k, v in result.freqs.items():
-            i = getter(k)
-            if i is None:
-                log.error("Unrecognised Frequency type %s", k)
-                raise SubsetError
-            row_freqs[i] = v
-
-        row_rates = row['rates']
-        getter = database.Rates.get
-        for k, v in result.rates.items():
-            i = getter(k)
-            if i is None:
-                log.error("Unrecognised Rate type %s", k)
-                raise SubsetError
-            row_rates[i] = v
-
-        # Now save this to the database
+        # Now assign the data record in the result into the current model
+        # result and save it to the database
+        self.result_array[self.result_current] = result._data
         cfg.database.save_result(self, self.result_current)
         self.result_current += 1
 
+        # We need to get the keys from the dictionary and convert them to
+        # indexes into our fixed sized arrays
+        # row_freqs = row['freqs']
+        # getter = database.Freqs.get
+        # for k, v in result.freqs.items():
+        #     i = getter(k)
+        #     if i is None:
+        #         log.error("Unrecognised Frequency type %s", k)
+        #         raise SubsetError
+        #     row_freqs[i] = v
+
+        # row_rates = row['rates']
+        # getter = database.Rates.get
+        # for k, v in result.rates.items():
+        #     i = getter(k)
+        #     if i is None:
+        #         log.error("Unrecognised Rate type %s", k)
+        #         raise SubsetError
+        #     row_rates[i] = v
+
+
         log.debug("Added model to subset. Model: %s, params: %d, sites:%d, lnL:%.2f, site_rate %f"
-                  % (model, K, n, lnL, site_rate))
+                  % (model, K, n, lnL, result.site_rate))
 
     def model_selection(self, cfg):
         # We want the index of the smallest value
@@ -302,7 +288,7 @@ class Subset(object):
 
         output = open(pth, 'rb').read()
         try:
-            result = cfg.processor.parse(output, cfg.datatype)
+            result = cfg.processor.parse(output, cfg)
             self.add_result(cfg, model, result)
             # Remove the current model from remaining ones
             self.models_not_done.remove(model)

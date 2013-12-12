@@ -21,6 +21,7 @@ log = logtools.get_logger(__file__)
 import os
 import numpy
 import tables
+from itertools import combinations
 
 import raxml_models
 import phyml_models
@@ -40,68 +41,76 @@ def _model_string_maxlen():
     lengths = [len(m) for m in all_models]
     return max(lengths)
 
-# TODO: This is overkill, we never need the enums. It should just be a
-# dictionary
-def enum(sequential):
-    """
-    Modified from here
-    http://stackoverflow.com/questions/36932/how-can-i-represent-an-enum-in-python
-    We use these values to index into the database fields
-    """
-    n = len(sequential)
-    enums = dict(zip(sequential, range(n)))
-    # We add an extra one
-    enums['MAX'] = n
 
-    # Good for looking up by variable
-    enums['get'] = staticmethod(lambda x: enums[x])
+class DataLayout(object):
+    def __init__(self, letters=None):
+        self.letters = letters
+        if letters is not None:
+            self.make_results_and_freqs()
+        else:
+            # We just fake an entry, 
+            self.letter_indexes = { 'EMPTY': 0 }
+            self.rate_indexes = { 'EMPTY': 0 }
 
-    return type('Enum', (), enums)
+        self.data_type = self.make_datatype()
 
+    def make_results_and_freqs(self):
+        l = list(self.letters) 
+        self.letter_indexes = dict(zip(l, range(len(l))))
 
-# TODO: This should probably be in Raxml.py....
-# The number of codons
-codon_types = list("ATCG")
-Freqs = enum(codon_types)
+        ri = {}
+        for i, rate in enumerate(combinations(l, 2)):
+            # We need both directions as either could be used to look it up
+            # ie. A <-> C or C <-> A
+            f, t = rate
+            ri["%s_%s" % (f, t)] = i
+            ri["%s_%s" % (t, f)] = i
 
-# Define the number of rates we record
-# TODO: This should be generated using itertools.combinations(x, 2)
-rates_types = ["{}_{}".format(f, t) for f, t in zip('AAACCG', 'CGTGTT')]
-Rates = enum(rates_types)
+        self.rate_indexes = ri
 
+    def get_empty_record(self):
+        return numpy.zeros(1, self.data_type)
 
-def make_results_datatype():
-    # 32 is the md5 length
-    subset_id_length = 32
-    model_id_length = _model_string_maxlen()
+    def make_datatype(self):
+        # 32 is the md5 length
+        subset_id_length = 32
+        model_id_length = _model_string_maxlen()
 
-    layout = [
-        ('subset_id', 'S{}'.format(subset_id_length)),
-        ('model_id', 'S{}'.format(model_id_length)),
-        ('seconds', int_type),
-        ('params', int_type),
-    ]
+        layout = [
+            ('subset_id', 'S{}'.format(subset_id_length)),
+            ('model_id', 'S{}'.format(model_id_length)),
+            ('seconds', int_type),
+            ('params', int_type),
+        ]
 
-    # Now add the floating point fields
-    flds = "lnl alpha aic aicc bic site_rate".split()
-    for f in flds:
-        layout.append((f, float_type))
+        # Now add the floating point fields
+        flds = "lnl alpha aic aicc bic site_rate".split()
+        for f in flds:
+            layout.append((f, float_type))
 
-    # Now add frequencies and rates
-    # Note that these are added as embedded in an extra dimension
-    # We can access them via the Enums above.
-    # EG. Given a numpy record X, we can use X['freqs'][Freqs.A]
-    layout.extend([
-        ('freqs', float_type, (Freqs.MAX)),
-        ('rates', float_type, (Rates.MAX)),
-    ])
+        # Now add frequencies and rate. These are added as embedded in an extra dimension
+        layout.extend([
+            ('freqs', float_type, len(self.letter_indexes)),
+            ('rates', float_type, len(self.rate_indexes)),
+        ])
 
-    # Now construct the numpy datatype that gives us the layout
-    return numpy.dtype(layout)
+        # Now construct the numpy datatype that gives us the layout
+        return numpy.dtype(layout)
 
 
-# Calculate this now, it is fixed, and not analysis dependent
-results_dtype = make_results_datatype()
+class DataRecord(object):
+    def __init__(self, cfg):
+        self.__dict__['_data'] = cfg.data_layout.get_empty_record()
+
+    def __getattr__(self, name):
+        return self._data[name]
+
+    def __setattr__(self, name, value):
+        self._data[name] = value
+
+    def __str__(self):
+        return "DataRecord<lnl:%s, tree_size:%s, secs:%s>" % (
+            self.lnl, self.site_rate, self.seconds)
 
 
 class Database(object):
@@ -119,7 +128,7 @@ class Database(object):
             f = tables.Filters(complib='blosc', complevel=5)
             self.h5 = tables.open_file(self.path, 'w', filters=f)
             self.results = self.h5.create_table(
-                '/', 'results', results_dtype)
+                '/', 'results', cfg.data_layout.data_type)
             self.results.cols.subset_id.create_csindex()
 
     def get_results_for_subset(self, subset):
