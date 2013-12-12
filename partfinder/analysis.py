@@ -76,11 +76,14 @@ class Analysis(object):
                             self.cfg.output_path)
                 shutil.rmtree(self.cfg.output_path)
         else:
-            # Just remove the schemes folder
+            # Remove the schemes folder, and clean out the phylofiles folder
             if os.path.exists(self.cfg.schemes_path):
-                log.info("""Removing Schemes in '%s' (they will be  recalculated
-                from  the existing subset data)""" % self.cfg.schemes_path)
+                log.debug("Removing files in '%s'" % self.cfg.schemes_path)
                 shutil.rmtree(self.cfg.schemes_path)
+            if os.path.exists(self.cfg.phylofiles_path):
+                log.debug("Removing files in '%s'" % self.cfg.phylofiles_path)
+                shutil.rmtree(self.cfg.phylofiles_path)
+
 
     def analyse(self):
         try:
