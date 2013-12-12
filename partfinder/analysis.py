@@ -176,7 +176,7 @@ class Analysis(object):
                 self.cfg.cmdline_extras)
 
         self.tree_path = tree_path
-        log.info("Starting tree with branch lengths is here: %s" %
+        log.debug("Starting tree with branch lengths is here: %s" %
                  self.tree_path)
 
     def run_task(self, model_name, sub):
