@@ -37,15 +37,7 @@ class Configuration(object):
         self.progress = progress.NoProgress(self)
         self.cmdline_extras = cmdline_extras
         self.cluster_percent = float(cluster_percent)
-        if cluster_max !=None:
-            try:
-                self.cluster_max = int(cluster_max)
-            except:
-                log.error("rcluster-max must be an integer" 
-                            "please check and try again")
-                raise ConfigurationError
-        else:
-            self.cluster_max = None
+        self.cluster_max = cluster_max
         self.kmeans_opt = kmeans_opt
 
         # Record this
@@ -77,6 +69,23 @@ class Configuration(object):
         # Now find the phylogeny_program before we do any changing of dirs
         self.find_programs()
 
+        self.set_default_options()
+
+        # TODO: Move all these horrible functions somewhere else. This should be done
+        # elsewhere in the option setting
+        self.validate_cluster_weights(cluster_weights)
+        self.validate_cluster()
+        self.validate_kmeans()
+
+    def set_default_options(self):
+
+        # Set the defaults into the class. These can be reset by calling
+        # set_option(...)
+        for o, v in self.options.items():
+            # Could call self.set_option here -- but it might confuse users
+            setattr(self, o, v[0])
+
+    def validate_cluster_weights(self, cluster_weights):
         if cluster_weights is None:
             # default weights - just use overall rates of subsets. Based on
             # 2013 analyses.
@@ -123,12 +132,7 @@ class Configuration(object):
             self.cluster_weights["model"] = float(eval(cluster_weights[2]))
             self.cluster_weights["alpha"] = float(eval(cluster_weights[3]))
 
-        # Set the defaults into the class. These can be reset by calling
-        # set_option(...)
-        for o, v in self.options.items():
-            # Could call self.set_option here -- but it might confuse users
-            setattr(self, o, v[0])
-
+    def validate_cluster(self):
         try:
             assert self.cluster_percent >= 0.0
             assert self.cluster_percent <= 100.0
@@ -139,6 +143,7 @@ class Configuration(object):
         log.debug("Setting rcluster-percent to %.2f" % self.cluster_percent)
 
         if self.cluster_max != None:
+            self.cluster_max = int(self.cluster_max)
             try:
                 assert self.cluster_max > 0
             except:
@@ -147,7 +152,8 @@ class Configuration(object):
                 raise ConfigurationError
             log.debug("Setting rcluster-max to %d" % self.cluster_max)
 
-        if kmeans_opt < 1 or kmeans_opt > 4:
+    def validate_kmeans(self):
+        if self.kmeans_opt < 1 or self.kmeans_opt > 4:
             log.error(
                 "The --kmeans-opt setting must be 1, 2, 3, or 4. Please check and restart")
             raise ConfigurationError
