@@ -147,7 +147,6 @@ class Configuration(object):
                 raise ConfigurationError
             log.debug("Setting rcluster-max to %d" % self.cluster_max)
 
-
         if kmeans_opt < 1 or kmeans_opt > 4:
             log.error(
                 "The --kmeans-opt setting must be 1, 2, 3, or 4. Please check and restart")

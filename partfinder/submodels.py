@@ -67,8 +67,10 @@ def count_relaxed_clustering_subsets(N, cluster_percent, cluster_max):
         step_1 = cluster_max    
     previous = step_1
     cumsum = start_scheme+step_1
+
     #now for the rest
     for i in reversed(xrange(N)):
+
         # once we get to the all combined scheme we can stop  
         if i == 1:
             break
@@ -86,6 +88,7 @@ def count_relaxed_clustering_subsets(N, cluster_percent, cluster_max):
         if cluster_max != None and num_new_schemes>cluster_max:
             num_new_schemes = cluster_max
         cumsum += num_new_schemes
+
     return cumsum
 
 def count_relaxed_clustering_schemes(N, cluster_percent, cluster_max):

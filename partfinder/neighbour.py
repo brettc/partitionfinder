@@ -24,25 +24,25 @@ import scipy.spatial.distance
 import logging
 log = logging.getLogger("cluster")
 
+
 def get_ranked_list(distance_matrix, subsets, N):
     """
-    Return the N closest groups of subsets in 'subsets' 
-    where distance is defined by the condensed np.array distance_matrix
-    NB it's feasible (if unlikely) that >2 subsets are equally close. 
+    Return the N closest pairs of subsets in 'subsets' 
     """
 
-    # we keep the closest N distances
-    unique_distances = np.unique(distance_matrix)[:N]
-
-    # expand the condensed distance matrix - easier to look stuff up
+    # expand the condensed distance matrix
     d_sq = scipy.spatial.distance.squareform(distance_matrix)
+
+    closest = d_sq.argsort()
+    pair1 = closest[0][:N]
+    pair2 = closest[1][:N]
+    r = zip(pair1, pair2)
 
     # and we look up all the subsets that correspond to each distance
     # and add it to our ordered list of subset lists
     ordered_subsets = []
-    for d in unique_distances:
-        locations = set(np.where(d_sq==d)[0])
-        subset_group = [subsets[i] for i in locations]
+    for pair in r:
+        subset_group = [subsets[i] for i in pair]
         ordered_subsets.append(subset_group)
 
     return ordered_subsets
@@ -93,8 +93,9 @@ def get_manhattan_matrix(rates, freqs, model, alpha, weights):
     return final_dists
 
 def get_distance_matrix(start_scheme, weights):
+
     #1. get the parameter lists for each subset
-    subsets = []  # a list of subset names, so we know the order things appear in the list
+    subsets = []  # a list of subsets
     rates = []  # tree length
     freqs = []  # amino acid or base frequencies
     model = []  # model parameters e.g. A<->C
@@ -116,10 +117,8 @@ def get_distance_matrix(start_scheme, weights):
 def get_N_closest_subsets(start_scheme, cfg, N):
     """Find the N most similar groups of subsets in a scheme
     """
-
     distance_matrix, subsets = get_distance_matrix(start_scheme, cfg.cluster_weights)
     ranked_subset_groupings = get_ranked_list(distance_matrix, subsets, N)
-
     return ranked_subset_groupings
 
 
