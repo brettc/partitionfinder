@@ -136,7 +136,7 @@ def get_aicc(lnL, K, n):
     proceed with caution.
     """
     if n < (K + 2):
-        log.debug(self.SMALL_WARNING)
+        log.debug(SMALL_WARNING)
         n = K + 2
 
     aicc = (-2.0 * lnL) + ((2.0 * K) * (n / (n - K - 1.0)))
