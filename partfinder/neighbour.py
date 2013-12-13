@@ -30,19 +30,20 @@ def get_ranked_list(distance_matrix, subsets, N):
     Return the N closest pairs of subsets in 'subsets' 
     """
 
-    # expand the condensed distance matrix
-    d_sq = scipy.spatial.distance.squareform(distance_matrix)
-
-    closest = d_sq.argsort()
-    pair1 = closest[0][:N]
-    pair2 = closest[1][:N]
-    r = zip(pair1, pair2)
+    # TODO. If/when anaconda moves to numpy v1.8, we can use
+    # a ~7x faster solution here, which uses np.argpartition()
+    # see here: http://stackoverflow.com/questions/20540889/
+    # extract-the-n-closest-pairs-from-a-numpy-distance-array
+    closest = distance_matrix.argsort()[:N]
+    n = len(subsets)
+    ti = np.triu_indices(n, 1)
+    r  = zip(ti[0][closest] + 1, ti[1][closest] + 1)
 
     # and we look up all the subsets that correspond to each distance
     # and add it to our ordered list of subset lists
     ordered_subsets = []
-    for pair in r:
-        subset_group = [subsets[i] for i in pair]
+    for i, pair in enumerate(r):
+        subset_group = [subsets[i-1] for i in pair]
         ordered_subsets.append(subset_group)
 
     return ordered_subsets
