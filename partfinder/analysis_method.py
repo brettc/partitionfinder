@@ -274,7 +274,7 @@ class RelaxedClusteringAnalysis(Analysis):
         step = 1
         while True:
 
-            log.info("***Relaxed clustering algorithm step %d of %d***" % (
+            log.info("***Relaxed clustering algorithm step %d of up to %d***" % (
             step, partnum - 1))
             name_prefix = "step_%d" % (step)
 
@@ -292,20 +292,22 @@ class RelaxedClusteringAnalysis(Analysis):
             lumped_subsets = neighbour.get_N_closest_subsets(
                 start_scheme, self.cfg, cutoff)
 
+            log.info("Building new subsets")
             # Make a list of all the new subsets and schemes
             sch_num = 1
             new_subs = []
             new_schemes = []
             for subset_grouping in lumped_subsets:
                 new_sub = subset_ops.merge_subsets(subset_grouping)
-                new_subs.append(new_sub)
+                if new_sub.is_done == False:
+                    new_subs.append(new_sub)
                 scheme_name = "%s_%d" % (name_prefix, sch_num)
                 lumped_scheme = neighbour.make_clustered_scheme(
                     start_scheme, scheme_name, subset_grouping, new_sub, self.cfg)
                 new_schemes.append(lumped_scheme)
                 sch_num = sch_num + 1
 
-            log.info("Analysing %d new subsets" % cutoff)
+            log.info("Analysing %d subsets" % len(new_subs))
             self.analyse_list_of_subsets(new_subs)
 
             # Now analyse the lumped schemes
@@ -320,9 +322,9 @@ class RelaxedClusteringAnalysis(Analysis):
 
             if self.results.best_score != old_best_score:
                 log.info(
-                    "Analysed %d schemes. The best "
+                    "The best "
                     "scheme changed the %s score by %.1f units.",
-                    len(lumped_subsets), self.cfg.model_selection,
+                    self.cfg.model_selection,
                     (self.results.best_score - old_best_score))
 
                 self.results.best_scheme.name = "step_%d" % step
