@@ -157,11 +157,11 @@ class GreedyAnalysis(Analysis):
         start_scheme = scheme.create_scheme(
             self.cfg, "start_scheme", start_description)
 
-        with logtools.LogIndented(log, "Analysing starting scheme (scheme %s)" %
-                start_scheme.name):
-            start_result = self.analyse_scheme(start_scheme)
-            self.cfg.reporter.write_scheme_summary(
-                start_scheme, start_result)
+        log.info("Analysing starting scheme (scheme %s)" % start_scheme.name)
+        log.push()
+        start_result = self.analyse_scheme(start_scheme)
+        self.cfg.reporter.write_scheme_summary(start_scheme, start_result)
+        log.pop()
 
         step = 1
 
@@ -169,7 +169,7 @@ class GreedyAnalysis(Analysis):
         # find a better one and if we do, we just keep going
         while True:
             log.info("***Greedy algorithm step %d***" % step)
-            #log.push()
+            log.push()
             name_prefix = "step_%d" % (step)
             old_best_score = self.results.best_score
 
@@ -222,7 +222,7 @@ class GreedyAnalysis(Analysis):
             if len(set(lumped_scheme.subsets)) == 1:
                 break
 
-            #log.pop()
+            log.pop()
             step += 1
 
         #log.pop()

@@ -5,7 +5,7 @@ import textwrap
 
 _log_depth = 0
 _max_width = 80
-_tab_width = 4
+_tab_width = 2
 
 # These should be the same size as the _tab_width
 _bullet       = ""
@@ -24,7 +24,8 @@ def get_logger(fname):
     log_name = log_name[:10]
 
     # Now wrap it and return it
-    return DumbLogger(logging.getLogger(log_name))
+    # return DumbLogger(logging.getLogger(log_name))
+    return SmartLogger(logging.getLogger(log_name))
 
 class DumbLogger(object):
     def __init__(self, logger):
@@ -40,10 +41,16 @@ class DumbLogger(object):
         self.log.warning(*args)
 
     def error(self, *args):
-        msg = self.log.error(*args)
+        self.log.error(*args)
+
+    def push():
+        pass
+
+    def pop():
+        pass
 
 
-class Logger(object):
+class SmartLogger(object):
     def __init__(self, logger):
         self.log = logger
 
@@ -72,6 +79,11 @@ class Logger(object):
         return msg
 
     def post_message(self, msg, log_function):
+        indent_amount = _log_depth * (_tab_width + 1)
+        spaces = " " * indent_amount
+        log_function(spaces + msg)
+
+    def clever_post_message(self, msg, log_function):
         # How much room have we got?
         indent_amount = _log_depth * (_tab_width + 1)
         local_max_width = _max_width - indent_amount
@@ -103,13 +115,11 @@ class Logger(object):
         # the-shortest-way-to-remove-multiple-spaces-in-a-string-in-python
         return ' '.join(warning.split())
 
-    @staticmethod
-    def push():
+    def push(self):
         global _log_depth
         _log_depth += 1
 
-    @staticmethod
-    def pop():
+    def pop(self):
         global _log_depth
         _log_depth -= 1
 
@@ -122,10 +132,10 @@ class LogIndented(object):
     def __enter__(self):
         if self.logger and self.msg:
             self.logger.info(self.msg)
-        Logger.push()
+        self.logger.push()
 
     def __exit__(self, type, value, traceback):
-        Logger.pop()
+        self.logger.pop()
 
 
 class log_info(object):
@@ -136,6 +146,6 @@ class log_info(object):
 
     def __call__(self, fn):
         def indented_fn(*args, **kwargs):
-            with LogIndented(self.logger, self.msg) as nothing:
+            with LogIndented(self.logger, self.msg) as _:
                 fn(*args, **kwargs)
         return indented_fn
