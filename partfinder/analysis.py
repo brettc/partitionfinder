@@ -227,6 +227,7 @@ class Analysis(object):
         # prepare the list of tasks
         tasks = []
         for sub in subsets:
+            print len(sub.columns)
             if sub.is_done:
                 pass
             elif sub.is_prepared:
