@@ -271,17 +271,26 @@ class RelaxedClusteringAnalysis(Analysis):
 
         # Now get the main distance matrix
         log.info("Calculating initial distance matrix")
-        d_matrix, subsets = neighbour.get_distance_matrix(start_scheme, 
-                                    self.cfg.cluster_weights)
+        subsets = [s for s in start_scheme.subsets]
 
-        # Now initialise a change in info score matrix to inf
-        c_matrix = np.empty(d_matrix.shape)
-        c_matrix[:] = np.inf
 
         step = 1
         while True:
             log.info("***Relaxed clustering algorithm step %d of up to %d***"
                 % (step, partnum - 1))
+
+            # it's vital that we keep an ordered list of subsets
+            subsets = [s for s in start_scheme.subsets]
+
+            # just to be sure. NB, if this is a rate limiting step,
+            # we can speed it up by doing smarter d_matrix updates
+            d_matrix = neighbour.get_distance_matrix(subsets, 
+                                    self.cfg.cluster_weights)
+
+            if step == 1:
+                # Now initialise a change in info score matrix to inf
+                c_matrix = np.empty(d_matrix.shape)
+                c_matrix[:] = np.inf
 
             # 1. pick top N subset pairs from distance matrix
             log.info("Finding similar pairs of subsets")
@@ -290,7 +299,7 @@ class RelaxedClusteringAnalysis(Analysis):
             if self.cfg.cluster_max != None and cutoff>self.cfg.cluster_max:
                 cutoff = self.cfg.cluster_max
             closest_pairs = neighbour.get_N_closest_subsets(
-                start_scheme, self.cfg, cutoff, d_matrix)
+                subsets, self.cfg, cutoff, d_matrix)
 
             # 2. analyse K subsets in top N that have not yet been analysed
             log.info("Building new subsets")
@@ -306,21 +315,46 @@ class RelaxedClusteringAnalysis(Analysis):
             self.analyse_list_of_subsets(new_subs)
 
             # 3. for all K new subsets, update improvement matrix
-            print c_matrix
-            c_matrix = neighbour.update_c_matrix(c_matrix, sub_tuples, start_scheme, self.cfg, nseq)
-            print c_matrix
-
-
-            break
+            c_matrix = neighbour.update_c_matrix(c_matrix, sub_tuples, subsets, self.cfg, nseq)
 
             # 4. pick best subset pair from improvement matrix
-                # If you can't find an improvement, just quit
+            # If you can't find an improvement, just quit
+            best_change = np.amin(c_matrix)
+            if best_change>0:
+                log.info("Found no schemes that improve the score, stopping")
+                break
 
-            # 5. update distance and improvement matrices
+            # 5. build new scheme, set that scheme to the start scheme
+            old_best_score = self.results.best_score
+            best_pair = neighbour.get_best_pair(c_matrix, best_change, subsets)
+            best_merged = subset_ops.merge_subsets(best_pair)
+            scheme_name = "step_%d" % step
+            best_scheme = neighbour.make_clustered_scheme(
+                start_scheme, scheme_name, best_pair, best_merged, self.cfg)                
+            self.analyse_scheme(best_scheme)
+            log.info("The best scheme merges %s and %s",
+                best_pair[0].long_name, best_pair[1].long_name)
+            log.info("This improves the %s score by %.1f",
+                self.cfg.model_selection, 
+                np.abs(self.results.best_score - old_best_score))
+            start_scheme = best_scheme
+
+            # 5. reset_c_matrix
                 # drop out the 2 rows and 2 cols that correspond to the pre-merge pairs of subsets
                 # add hte row and col that corresponds to the post-merge pair
+            c_matrix = neighbour.reset_c_matrix(c_matrix, list(best_pair), [best_merged], subsets)
 
-            # 6. build new scheme, set that scheme to the start scheme
+            if len(set(start_scheme.subsets)) == 1:
+                break
+
+            step += 1
+
+        log.info("Relaxed clustering algorithm finished after %d steps" % step)
+        log.info("Best scoring scheme is scheme %s, with %s score of %.3f"
+                 % (self.results.best_scheme.name, model_selection,
+                    self.results.best_score))
+
+        self.cfg.reporter.write_best_scheme(self.results)
 
 
 class RelaxedClusteringAnalysis_old(Analysis):

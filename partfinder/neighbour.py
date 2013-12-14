@@ -95,18 +95,16 @@ def get_manhattan_matrix(rates, freqs, model, alpha, weights):
 
     return final_dists
 
-def get_distance_matrix(start_scheme, weights):
+def get_distance_matrix(subsets, weights):
 
     #1. get the parameter lists for each subset
-    subsets = []  # a list of subsets
     rates = []  # tree length
     freqs = []  # amino acid or base frequencies
     model = []  # model parameters e.g. A<->C
     alpha = []  #alpha parameter of the gamma distribution of rates across sites
 
-    for s in start_scheme.subsets:
+    for s in subsets:
         param_dict = s.get_param_values()
-        subsets.append(s)
         rates.append([param_dict["rate"]])
         freqs.append(param_dict["freqs"])
         model.append(param_dict["model"])
@@ -115,15 +113,13 @@ def get_distance_matrix(start_scheme, weights):
     # get pairwise manhattan distances between subsets (a square numpy array)
     final_dists = get_manhattan_matrix(rates, freqs, model, alpha, weights)
 
-    return final_dists, subsets
+    return final_dists
 
-def get_N_closest_subsets(start_scheme, cfg, N, distance_matrix = None):
+def get_N_closest_subsets(subsets, cfg, N, distance_matrix = None):
     """Find the N most similar groups of subsets in a scheme
     """
     if distance_matrix == None:
-        distance_matrix, subsets = get_distance_matrix(start_scheme, cfg.cluster_weights)
-    else:
-        subsets = [s for s in start_scheme.subsets]
+        distance_matrix = get_distance_matrix(subsets, cfg.cluster_weights)
     ranked_subset_groupings = get_ranked_list(distance_matrix, subsets, N)
     return ranked_subset_groupings
 
@@ -158,13 +154,12 @@ def get_nearest_neighbour_scheme(start_scheme, scheme_name, cfg):
 
     return scheme
 
-def update_c_matrix(c_matrix, sub_tuples, start_scheme, cfg, nseq):
+def update_c_matrix(c_matrix, sub_tuples, subsets, cfg, nseq):
     """
     Update a symmetric matrix of measurements between subsets, by adding a row
     and column according to that subset.
     """
     c_matrix = scipy.spatial.distance.squareform(c_matrix)
-    refs = [s for s in start_scheme.subsets]
 
     for t in sub_tuples:
         new_sub = t[0]
@@ -181,11 +176,43 @@ def update_c_matrix(c_matrix, sub_tuples, start_scheme, cfg, nseq):
         old_score = subset_ops.score_subset_list(list(old_subs), cfg, nseq)
         new_score = subset_ops.score_subset_list([new_sub], cfg, nseq)
         diff = new_score - old_score # good diffs are NEGATIVE
-        i = refs.index(old_subs[0])
-        j = refs.index(old_subs[1])
+        i = subsets.index(old_subs[0])
+        j = subsets.index(old_subs[1])
         c_matrix[i,j] = c_matrix[j,i] = diff
 
     c_matrix = scipy.spatial.distance.squareform(c_matrix)
     return c_matrix
 
+def get_best_pair(c_matrix, best_change, subsets):
 
+    c_matrix = scipy.spatial.distance.squareform(c_matrix)
+    l = np.where(c_matrix==best_change)
+    s1 = l[0][0] # the double index protects against >1 value == best_change
+    s2 = l[1][0]    
+    sub1 = subsets[s1]
+    sub2 = subsets[s2]
+
+    return (sub1, sub2)
+
+def reset_c_matrix(c_matrix, remove_list, add_list, subsets):
+
+    c_matrix = scipy.spatial.distance.squareform(c_matrix)
+
+    indices = []
+    for r in remove_list:
+        indices.append(subsets.index(r))
+
+    c_matrix = np.delete(c_matrix, indices, 1)
+    c_matrix = np.delete(c_matrix, indices, 0)
+
+    for a in add_list:
+        row = np.array((c_matrix.shape[0]) * [np.inf])
+        col = c_matrix.shape[0] * [np.inf]
+        col.append(0)
+        col = np.array(col)[:, None]
+        c_matrix = np.vstack((c_matrix, row))
+        c_matrix = np.hstack((c_matrix, col))
+
+    c_matrix = scipy.spatial.distance.squareform(c_matrix)
+
+    return c_matrix
