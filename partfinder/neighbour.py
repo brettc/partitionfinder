@@ -155,3 +155,24 @@ def get_nearest_neighbour_scheme(start_scheme, scheme_name, cfg):
         start_scheme, scheme_name, closest_subsets, merged_sub, cfg)
 
     return scheme
+
+def update_c_matrix(c_matrix, old_subs, new_subs, start_scheme):
+    """
+    Update a symmetric matrix of measurements between subsets, by adding a row
+    and column according to that subset.
+    """
+    c_matrix = scipy.spatial.distance.sqaureform(c_matrix)
+
+    refs = [s for s in start_scheme.subsets]
+
+    for old_sub, new_sub in itertools.izip(old_subs, new_subs):
+        diff = subset_ops.compare_subsets(list(old_sub), list(new_subs))
+        i = refs.index(old_sub[0])
+        j = refs.index(old_sub[1])
+        c_matrix[i,j] = c_matrix[j,i] = diff
+
+    return c_matrix
+
+def get_improvements(new_sub, start_scheme):
+
+
