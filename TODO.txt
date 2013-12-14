@@ -1,5 +1,8 @@
 TODO
 
+* odd bug - we seem to have lost the ability to tell whether an analysis was run in phyml or raxml
+  so we run the risk of taking results from shitty subsets. Need to add this to the old config
+  comparison method. 
 
 * Add in sensible dependency checks at the start, and print out useful error messages.
     e.g. "You need to have SciKit-Learn installed to run this analysis, to do that, 
