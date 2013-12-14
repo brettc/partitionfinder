@@ -18,6 +18,7 @@
 import hashlib
 import cPickle as pickle
 import subset
+from util import get_aic, get_aicc, get_bic
 
 import logging
 log = logging.getLogger("subset_ops")
@@ -125,3 +126,37 @@ def merge_fabricated_subsets(subset_list):
     new_sub.centroid = centroid
     new_sub.lnl = lnl
     return new_sub
+
+def score_subset_list(sub_list, cfg, nseq):
+
+    model_selection = cfg.model_selection
+    nsubs = len(sub_list)  # number of subsets
+    sum_subset_k = sum([s.best_params for s in sub_list])
+
+    if cfg.branchlengths == 'linked':
+        sum_k = sum_subset_k + (nsubs - 1) + (
+            (2 * nseq) - 3)
+    elif cfg.branchlengths == 'unlinked':
+        sum_k = sum_subset_k + (nsubs * (
+            (2 * nseq) - 3))
+    else:
+        log.error("Unknown option for branchlengths: %s", branchlengths)
+        raise AnalysisError
+
+    lnl = sum([s.best_lnl for s in sub_list])
+    nsites = sum([len(s.column_set) for s in sub_list])
+
+    K = float(sum_k)
+    n = float(nsites)
+    lnL = float(lnl)
+
+    if cfg.model_selection == 'aic':
+        score = get_aic(lnL, K)
+    elif cfg.model_selection == 'bic':
+        score = get_bic(lnL, K, n)
+    elif cfg.model_selection == 'aicc':
+        score = get_aicc(lnL, K, n)
+    else:
+        log.error("Unkown model selection")
+
+    return float(score)
