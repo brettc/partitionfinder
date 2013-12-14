@@ -28,8 +28,9 @@ import kmeans
 import itertools
 import subset_ops
 from scipy import spatial
+from scipy.misc import comb
 import warnings
-from submodels import a_choose_b
+import numpy as np
 
 from util import PhylogenyProgramError
 
@@ -247,100 +248,97 @@ class RelaxedClusteringAnalysis(Analysis):
     def do_analysis(self):
         log.info("Performing relaxed clustering analysis")
 
-        stop_at = self.cfg.cluster_percent * 0.01
-
+        # initialisation steps
         model_selection = self.cfg.model_selection
         partnum = len(self.cfg.user_subsets)
+        nseq = len(self.alignment.species)
 
         scheme_count = submodels.count_relaxed_clustering_schemes(
             partnum, self.cfg.cluster_percent, self.cfg.cluster_max)
         subset_count = submodels.count_relaxed_clustering_subsets(
             partnum, self.cfg.cluster_percent, self.cfg.cluster_max)
-
         self.cfg.progress.begin(scheme_count, subset_count)
 
         # Start with the most partitioned scheme, and record it.
+        log.info("Analysing starting scheme")
         start_description = range(partnum)
         start_scheme = scheme.create_scheme(
             self.cfg, "start_scheme", start_description)
-        log.info("Analysing starting scheme (scheme %s)" % start_scheme.name)
         self.analyse_scheme(start_scheme)
         self.cfg.reporter.write_scheme_summary(
             self.results.best_scheme, self.results.best_result)
 
-        # Start by remembering that we analysed the starting scheme
-        subset_counter = 1
+        # Now get the main distance matrix
+        log.info("Calculating initial distance matrix")
+        subsets = [s for s in start_scheme.subsets]
+
+
         step = 1
         while True:
-
-            log.info("***Relaxed clustering algorithm step %d of up to %d***" % (
-            step, partnum - 1))
-            name_prefix = "step_%d" % (step)
+            log.info("***Relaxed clustering algorithm step %d of up to %d***"
+                % (step, partnum - 1))
 
 
-            # How many subsets do we want to look at? 
-            # The smallest out of cluster_percent and cluster_max
-            max_schemes = a_choose_b(len(start_scheme.subsets), 2)
-            cutoff = int(math.ceil(max_schemes * stop_at))
+            # just to be sure. NB, if this is a rate limiting step,
+            # we can speed it up by doing smarter d_matrix updates
+            d_matrix = neighbour.get_distance_matrix(subsets, 
+                                    self.cfg.cluster_weights)
+
+            if step == 1:
+                # Now initialise a change in info score matrix to inf
+                c_matrix = np.empty(d_matrix.shape)
+                c_matrix[:] = np.inf
+
+            # 1. pick top N subset pairs from distance matrix
+            log.info("Finding similar pairs of subsets")
+            max_schemes = comb(len(start_scheme.subsets), 2)
+            cutoff = int(math.ceil(max_schemes * (self.cfg.cluster_percent * 0.01)))
             if self.cfg.cluster_max != None and cutoff>self.cfg.cluster_max:
                 cutoff = self.cfg.cluster_max
+            closest_pairs = neighbour.get_N_closest_subsets(
+                subsets, self.cfg, cutoff, d_matrix)
 
-            # Get a list of all possible lumpings of the best_scheme, ordered
-            # according to the clustering weights
-            log.info("Finding similar pairs of subsets")
-            lumped_subsets = neighbour.get_N_closest_subsets(
-                start_scheme, self.cfg, cutoff)
-
-            log.info("Building new subsets")
-            # Make a list of all the new subsets and schemes
-            sch_num = 1
+            # 2. analyse K subsets in top N that have not yet been analysed
             new_subs = []
-            new_schemes = []
-            for subset_grouping in lumped_subsets:
-                new_sub = subset_ops.merge_subsets(subset_grouping)
-                if not new_sub.is_done:
+            sub_tuples = []
+            for pair in closest_pairs:
+                new_sub = subset_ops.merge_subsets(pair)
+                if new_sub.finalise(self.cfg) == False:
                     new_subs.append(new_sub)
-                scheme_name = "%s_%d" % (name_prefix, sch_num)
-                lumped_scheme = neighbour.make_clustered_scheme(
-                    start_scheme, scheme_name, subset_grouping, new_sub, self.cfg)
-                new_schemes.append(lumped_scheme)
-                sch_num = sch_num + 1
+                    sub_tuples.append((new_sub, pair))
 
-            log.info("Analysing %d subsets" % len(new_subs))
+            log.info("Analysing %d new subsets" % len(new_subs))
             self.analyse_list_of_subsets(new_subs)
 
-            # Now analyse the lumped schemes
-            log.info("Analysing %d schemes" % len(lumped_subsets))
-            old_best_score = self.results.best_score
-            for lumped_scheme in new_schemes:
-                new_result = self.analyse_scheme(lumped_scheme)
-                log.debug("Difference in %s: %.1f",
-                          self.cfg.model_selection,
-                          (new_result.score - old_best_score))
-
-
-            if self.results.best_score != old_best_score:
-                log.info(
-                    "The best "
-                    "scheme changed the %s score by %.1f units.",
-                    self.cfg.model_selection,
-                    (self.results.best_score - old_best_score))
-
-                self.results.best_scheme.name = "step_%d" % step
-                self.cfg.reporter.write_scheme_summary(
-                    self.results.best_scheme, self.results.best_result)
-
-                # Now we find out which is the best lumping we know of for this step
-                start_scheme = self.results.best_scheme
-            else:
-                log.info(
-                    "Analysed %d schemes and found no schemes "
-                    "that improve the score, stopping",
-                    len(new_schemes))
+            # 3. for all K new subsets, update improvement matrix and find best pair
+            log.info("Finding the best subset")
+            c_matrix = neighbour.update_c_matrix(c_matrix, sub_tuples, subsets, self.cfg, nseq)
+            best_change = np.amin(c_matrix)
+            if best_change>=0:
+                log.info("Found no schemes that improve the score, stopping")
                 break
 
-            # We're done if it's the scheme with everything together
-            if len(set(lumped_scheme.subsets)) == 1:
+            # 5. build new scheme, set that scheme to the start scheme
+            old_best_score = self.results.best_score
+            best_pair = neighbour.get_best_pair(c_matrix, best_change, subsets)
+            best_merged = subset_ops.merge_subsets(best_pair)
+            scheme_name = "step_%d" % step
+            best_scheme = neighbour.make_clustered_scheme(
+                start_scheme, scheme_name, best_pair, best_merged, self.cfg)                
+            self.analyse_scheme(best_scheme)
+            log.info("The best scheme improves the %s score by %.1f to %.1f",
+                self.cfg.model_selection, 
+                np.abs(self.results.best_score - old_best_score),
+                self.results.best_score)
+            start_scheme = best_scheme
+            self.cfg.reporter.write_scheme_summary(
+                self.results.best_scheme, self.results.best_result)
+
+            # 5. reset_c_matrix and the subset list
+            c_matrix = neighbour.reset_c_matrix(c_matrix, list(best_pair), [best_merged], subsets)
+            subsets = neighbour.reset_subsets(subsets, list(best_pair), [best_merged])
+
+            if len(set(start_scheme.subsets)) == 1:
                 break
 
             step += 1
@@ -351,7 +349,6 @@ class RelaxedClusteringAnalysis(Analysis):
                     self.results.best_score))
 
         self.cfg.reporter.write_best_scheme(self.results)
-
 
 class KmeansAnalysis(Analysis):
     def do_analysis(self):
