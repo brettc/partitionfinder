@@ -317,7 +317,7 @@ class RelaxedClusteringAnalysis(Analysis):
             # 4. pick best subset pair from improvement matrix
             # If you can't find an improvement, just quit
             best_change = np.amin(c_matrix)
-            print "\n\n", best_change
+
             if best_change>=0:
                 log.info("Found no schemes that improve the score, stopping")
                 break
