@@ -19,8 +19,6 @@ import logging
 log = logging.getLogger("reporter")
 
 import os
-import itertools
-import operator
 
 scheme_header_template = "%-18s: %s\n"
 scheme_subset_template = "%-6s | %-10s | %-10s | %-100s\n"
@@ -33,14 +31,14 @@ class TextReporter(object):
         self.cfg.reporter = self
 
     def write_subset_summary(self, sub):
-        pth = os.path.join(self.cfg.subsets_path, sub.name + '.txt')
+        pth = os.path.join(self.cfg.subsets_path, sub.subset_id + '.txt')
         # Sort everything
         model_results = [(r.bic, r) for r in sub.results.values()]
         model_results.sort()
         output = open(pth, 'w')
         # TODO change back to full name...
         # output.write("Model selection results for subset: %s\n" % sub.full_name)
-        output.write("Model selection results for subset: %s\n" % sub.name)
+        output.write("Model selection results for subset: %s\n" % sub.subset_id)
         output.write("Subset alignment stored here: %s\n" % sub.alignment_path)
         output.write("This subset contains the following data_blocks: %s\n" % sub)
         output.write("Models are organised according to their BIC scores\n\n")
@@ -97,16 +95,13 @@ class TextReporter(object):
         # a way to print out the scheme in PF format
         pf_scheme_description = []
         
-
         for sub in sorted_subsets:
-            partition_names = sub.long_name
-            pf_scheme_description.append("(%s)" % partition_names)
-            partition_sites = sub.site_description
+            pf_scheme_description.append("(%s)" % sub.name)
             output.write(scheme_subset_template % (
                 number, 
                 sub.best_model, 
                 len(sub.columns), 
-                partition_names,
+                sub.name,
                 ))
             number += 1
 

@@ -32,6 +32,7 @@ def subset_unique_name(columns):
     # we'll get the same thing. Google "MD5 Hash Collision"
     return hashlib.md5(pickled_columns).hexdigest()
 
+
 def merge_subsets(subset_list):
     """Take a set of subsets and merge them together"""
     columns = set()
@@ -41,11 +42,14 @@ def merge_subsets(subset_list):
     descriptions = []
     for sub in subset_list:
         columns |= sub.column_set
-        descriptions = descriptions + sub.description
-        names = names + sub.full_name
+        descriptions.extend(sub.description)
+        names.extend(sub.names)
 
     newsub = subset.Subset(sub.cfg, columns)
-    newsub.add_description(names, descriptions)
+    # Only add the description if it isn't there (we might get back a cache
+    # hit)
+    if not newsub.names:
+        newsub.add_description(names, descriptions)
 
     return newsub
 

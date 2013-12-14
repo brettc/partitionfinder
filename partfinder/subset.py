@@ -46,7 +46,7 @@ class Subset(object):
     """
     _cache = {}
 
-    def __new__(cls, cfg, column_set):
+    def __new__(cls, cfg, column_set, name=None, description=None):
         """Returns the identical subset if the columns are identical.
 
         This is basically a pythonized factory. See here:
@@ -56,9 +56,7 @@ class Subset(object):
         columns.sort()
         subset_id = subset_ops.subset_unique_name(columns)
         obj = Subset._cache.get(subset_id, None)
-        if obj:
-            pass
-        else:
+        if not obj:
             obj = object.__new__(cls)
             Subset._cache[subset_id] = obj
             obj.init(subset_id, cfg, column_set, columns)
@@ -66,11 +64,13 @@ class Subset(object):
         return obj
 
     def init(self, subset_id, cfg, column_set, columns):
-        self.name = subset_id
+        self.subset_id = subset_id
         self.cfg = cfg
         self.column_set = column_set
         self.columns = columns
         self.status = FRESH
+        self.names = []
+        self.description = []
 
         # We put all results into this array, which is sized to the number of
         # models that we are analysing
@@ -98,17 +98,15 @@ class Subset(object):
         self.alignment_path = None
         log.debug("Created %s" % self)
 
-    def add_description(self, name, description):
+    def add_description(self, names, description):
         """User created subsets can get some extra info"""
-        self.full_name = name
+        self.names = names
         self.description = description
 
     @property
-    def long_name(self):
+    def name(self):
         try:
-            l = self.full_name[:]
-            long_name = ', '.join(l)
-            return long_name
+            return ", ".join(self.names)
         except:
             return "NA"
 
@@ -116,12 +114,12 @@ class Subset(object):
     def site_description(self):
         try:
             s = []
-            for d in self.description:
-                d = d[0] # TODO: should'n this be d[2]?
-                if d == 1:
-                    text = "%s-%s" % (d[0], d[1])
+            for desc in self.description:
+                step = desc[2] 
+                if step == 1:
+                    text = "%s-%s" % (desc[0], desc[1])
                 else:
-                    text = "%s-%s\\%s" % tuple(d)
+                    text = "%s-%s\\%s" % tuple(desc)
                 s.append(text)
             site_description = ', '.join(s)
             return site_description 
@@ -152,7 +150,7 @@ class Subset(object):
         bic = get_bic(lnL, K, n)
         aicc = get_aicc(lnL, K, n)
 
-        result.subset_id = self.name
+        result.subset_id = self.subset_id
         result.model_id = model
         result.params = K
         result.aic = aic
@@ -315,7 +313,7 @@ class Subset(object):
     def make_alignment(self, cfg, alignment):
         # Make an Alignment from the source, using this subset
         sub_alignment = SubsetAlignment(alignment, self)
-        sub_path = os.path.join(cfg.phylofiles_path, self.name + '.phy')
+        sub_path = os.path.join(cfg.phylofiles_path, self.subset_id + '.phy')
         # Add it into the sub, so we keep it around
         self.alignment_path = sub_path
 
@@ -344,3 +342,5 @@ class Subset(object):
     @property
     def is_fresh(self):
         return self.status == FRESH
+
+

@@ -74,7 +74,7 @@ class TextProgress(Progress):
 
     def subset_done(self, sub):
         old_num_done = len(self.subsets_analysed)
-        self.subsets_analysed.add(sub.name)
+        self.subsets_analysed.add(sub.subset_id)
         num_subs_done = len(self.subsets_analysed)
         if old_num_done != num_subs_done:
 

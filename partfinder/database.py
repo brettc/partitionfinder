@@ -132,7 +132,7 @@ class Database(object):
             self.results.cols.subset_id.create_csindex()
 
     def get_results_for_subset(self, subset):
-        conditions = {'current_id':  subset.name}
+        conditions = {'current_id':  subset.subset_id}
         matching = self.results.read_where(
             'subset_id == current_id', conditions)
         return matching
