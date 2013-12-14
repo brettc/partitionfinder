@@ -299,7 +299,6 @@ class RelaxedClusteringAnalysis(Analysis):
                 subsets, self.cfg, cutoff, d_matrix)
 
             # 2. analyse K subsets in top N that have not yet been analysed
-            log.info("Building new subsets")
             new_subs = []
             sub_tuples = []
             for pair in closest_pairs:
@@ -308,7 +307,7 @@ class RelaxedClusteringAnalysis(Analysis):
                     new_subs.append(new_sub)
                     sub_tuples.append((new_sub, pair))
 
-            log.info("Analysing %d subsets" % len(new_subs))
+            log.info("Analysing %d new subsets" % len(new_subs))
             self.analyse_list_of_subsets(new_subs)
 
             # 3. for all K new subsets, update improvement matrix
