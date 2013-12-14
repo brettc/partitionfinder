@@ -310,13 +310,10 @@ class RelaxedClusteringAnalysis(Analysis):
             log.info("Analysing %d new subsets" % len(new_subs))
             self.analyse_list_of_subsets(new_subs)
 
-            # 3. for all K new subsets, update improvement matrix
+            # 3. for all K new subsets, update improvement matrix and find best pair
+            log.info("Finding the best subset")
             c_matrix = neighbour.update_c_matrix(c_matrix, sub_tuples, subsets, self.cfg, nseq)
-
-            # 4. pick best subset pair from improvement matrix
-            # If you can't find an improvement, just quit
             best_change = np.amin(c_matrix)
-
             if best_change>=0:
                 log.info("Found no schemes that improve the score, stopping")
                 break
@@ -338,8 +335,6 @@ class RelaxedClusteringAnalysis(Analysis):
                 self.results.best_scheme, self.results.best_result)
 
             # 5. reset_c_matrix and the subset list
-                # drop out the 2 rows and 2 cols that correspond to the pre-merge pairs of subsets
-                # add hte row and col that corresponds to the post-merge pair
             c_matrix = neighbour.reset_c_matrix(c_matrix, list(best_pair), [best_merged], subsets)
             subsets = neighbour.reset_subsets(subsets, list(best_pair), [best_merged])
 
