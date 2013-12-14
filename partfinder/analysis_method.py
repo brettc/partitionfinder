@@ -278,8 +278,6 @@ class RelaxedClusteringAnalysis(Analysis):
             log.info("***Relaxed clustering algorithm step %d of up to %d***"
                 % (step, partnum - 1))
 
-            # it's vital that we keep an ordered list of subsets
-            subsets = [s for s in start_scheme.subsets]
 
             # just to be sure. NB, if this is a rate limiting step,
             # we can speed it up by doing smarter d_matrix updates
@@ -319,7 +317,8 @@ class RelaxedClusteringAnalysis(Analysis):
             # 4. pick best subset pair from improvement matrix
             # If you can't find an improvement, just quit
             best_change = np.amin(c_matrix)
-            if best_change>0:
+            print "\n\n", best_change
+            if best_change>=0:
                 log.info("Found no schemes that improve the score, stopping")
                 break
 
@@ -331,19 +330,19 @@ class RelaxedClusteringAnalysis(Analysis):
             best_scheme = neighbour.make_clustered_scheme(
                 start_scheme, scheme_name, best_pair, best_merged, self.cfg)                
             self.analyse_scheme(best_scheme)
-            log.info("The best scheme merges %s and %s",
-                best_pair[0].long_name, best_pair[1].long_name)
-            log.info("This improves the %s score by %.1f",
+            log.info("The best scheme improves the %s score by %.1f to %.1f",
                 self.cfg.model_selection, 
-                np.abs(self.results.best_score - old_best_score))
+                np.abs(self.results.best_score - old_best_score),
+                self.results.best_score)
             start_scheme = best_scheme
-            self.cfg.reporter.write_best_scheme(self.results)
+            self.cfg.reporter.write_scheme_summary(
+                self.results.best_scheme, self.results.best_result)
 
-
-            # 5. reset_c_matrix
+            # 5. reset_c_matrix and the subset list
                 # drop out the 2 rows and 2 cols that correspond to the pre-merge pairs of subsets
                 # add hte row and col that corresponds to the post-merge pair
             c_matrix = neighbour.reset_c_matrix(c_matrix, list(best_pair), [best_merged], subsets)
+            subsets = neighbour.reset_subsets(subsets, list(best_pair), [best_merged])
 
             if len(set(start_scheme.subsets)) == 1:
                 break

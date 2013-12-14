@@ -216,3 +216,15 @@ def reset_c_matrix(c_matrix, remove_list, add_list, subsets):
     c_matrix = scipy.spatial.distance.squareform(c_matrix)
 
     return c_matrix
+
+
+def reset_subsets(subsets, remove_list, add_list):
+    
+    for r in remove_list:
+        subsets.pop(subsets.index(r))
+
+    for a in add_list:
+        subsets.append(a)
+
+    return subsets
+
