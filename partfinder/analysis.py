@@ -222,12 +222,11 @@ class Analysis(object):
         # get a whole list of subsets analysed in parallel
 
         # analyse bigger subsets first, for efficiency
-        subsets.sort(key = lambda x: len(x.columns))
+        subsets.sort(key = lambda x: 1.0/float(len(x.columns)))
 
         # prepare the list of tasks
         tasks = []
         for sub in subsets:
-            print len(sub.columns)
             if sub.is_done:
                 pass
             elif sub.is_prepared:
