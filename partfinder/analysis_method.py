@@ -306,15 +306,8 @@ class RelaxedClusteringAnalysis(Analysis):
                 new_schemes.append(lumped_scheme)
                 sch_num = sch_num + 1
 
-
-            log.info("The length of new_subs: %d, should be equal to the number of subsets with work to do", len(new_subs))
-            log.info("But look - it's almost always as long as the number of pairs we're looking at (%d)", cutoff)
-            log.info("Even though most of those pairs have already been analysed")
-            log.info("You can see that they've been analysed because only a few subsets require are reported as 'finished' in the logging output for the rest of the step")
-
             log.info("Analysing %d subsets" % len(new_subs))
             self.analyse_list_of_subsets(new_subs)
-
 
             # Now analyse the lumped schemes
             log.info("Analysing %d schemes" % len(lumped_subsets))
