@@ -46,7 +46,7 @@ def clear_subsets():
 class Subset(object):
     """Contains a set of columns in the Alignment
     """
-    _cache = weakref.WeakValueDictionary()
+    _cache = {}
 
     def __new__(cls, cfg, column_set):
         """Returns the identical subset if the columns are identical.
