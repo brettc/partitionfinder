@@ -57,6 +57,7 @@ class DataLayout(object):
     def make_results_and_freqs(self):
         l = list(self.letters) 
         self.letter_indexes = dict(zip(l, range(len(l))))
+        self.letter_size = len(self.letter_indexes)
 
         ri = {}
         for i, rate in enumerate(combinations(l, 2)):
@@ -67,6 +68,7 @@ class DataLayout(object):
             ri["%s_%s" % (t, f)] = i
 
         self.rate_indexes = ri
+        self.rate_size = len(ri) / 2 
 
     def get_empty_record(self):
         return numpy.zeros(1, self.data_type)
@@ -89,9 +91,10 @@ class DataLayout(object):
             layout.append((f, float_type))
 
         # Now add frequencies and rate. These are added as embedded in an extra dimension
+
         layout.extend([
-            ('freqs', float_type, len(self.letter_indexes)),
-            ('rates', float_type, len(self.rate_indexes)),
+            ('freqs', float_type, self.letter_size),
+            ('rates', float_type, self.rate_size),
         ])
 
         # Now construct the numpy datatype that gives us the layout
