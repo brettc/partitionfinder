@@ -20,6 +20,8 @@ import subset_ops
 import scheme
 import numpy as np
 import scipy.spatial.distance
+import itertools
+from util import PartitionFinderError
 
 import logging
 log = logging.getLogger("cluster")
@@ -156,23 +158,34 @@ def get_nearest_neighbour_scheme(start_scheme, scheme_name, cfg):
 
     return scheme
 
-def update_c_matrix(c_matrix, old_subs, new_subs, start_scheme):
+def update_c_matrix(c_matrix, sub_tuples, start_scheme, cfg, nseq):
     """
     Update a symmetric matrix of measurements between subsets, by adding a row
     and column according to that subset.
     """
-    c_matrix = scipy.spatial.distance.sqaureform(c_matrix)
-
+    c_matrix = scipy.spatial.distance.squareform(c_matrix)
     refs = [s for s in start_scheme.subsets]
 
-    for old_sub, new_sub in itertools.izip(old_subs, new_subs):
-        diff = subset_ops.compare_subsets(list(old_sub), list(new_subs))
-        i = refs.index(old_sub[0])
-        j = refs.index(old_sub[1])
+    for t in sub_tuples:
+        new_sub = t[0]
+        old_subs = t[1]
+        # a basic check
+        old_columns = set()
+        for s in old_subs:
+            old_columns |= s.column_set
+        new_columns = new_sub.column_set
+        if not new_columns == old_columns:
+            log.error("Can't compare subsets with different sites")
+            raise PartitionFinderError
+
+        old_score = subset_ops.score_subset_list(list(old_subs), cfg, nseq)
+        new_score = subset_ops.score_subset_list([new_sub], cfg, nseq)
+        diff = new_score - old_score # good diffs are NEGATIVE
+        i = refs.index(old_subs[0])
+        j = refs.index(old_subs[1])
         c_matrix[i,j] = c_matrix[j,i] = diff
 
+    c_matrix = scipy.spatial.distance.squareform(c_matrix)
     return c_matrix
-
-def get_improvements(new_sub, start_scheme):
 
 

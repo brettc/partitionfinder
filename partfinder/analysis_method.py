@@ -252,6 +252,8 @@ class RelaxedClusteringAnalysis(Analysis):
         # initialisation steps
         model_selection = self.cfg.model_selection
         partnum = len(self.cfg.user_subsets)
+        nseq = len(self.alignment.species)
+
         scheme_count = submodels.count_relaxed_clustering_schemes(
             partnum, self.cfg.cluster_percent, self.cfg.cluster_max)
         subset_count = submodels.count_relaxed_clustering_subsets(
@@ -290,21 +292,26 @@ class RelaxedClusteringAnalysis(Analysis):
             closest_pairs = neighbour.get_N_closest_subsets(
                 start_scheme, self.cfg, cutoff, d_matrix)
 
-
             # 2. analyse K subsets in top N that have not yet been analysed
             log.info("Building new subsets")
             new_subs = []
+            sub_tuples = []
             for pair in closest_pairs:
                 new_sub = subset_ops.merge_subsets(pair)
-                if new_sub.finalise == False:
+                if new_sub.finalise(self.cfg) == False:
                     new_subs.append(new_sub)
+                    sub_tuples.append((new_sub, pair))
+
             log.info("Analysing %d subsets" % len(new_subs))
             self.analyse_list_of_subsets(new_subs)
 
+            # 3. for all K new subsets, update improvement matrix
+            print c_matrix
+            c_matrix = neighbour.update_c_matrix(c_matrix, sub_tuples, start_scheme, self.cfg, nseq)
+            print c_matrix
+
 
             break
-
-            # 3. for all K new subsets, update improvement matrix
 
             # 4. pick best subset pair from improvement matrix
                 # If you can't find an improvement, just quit
