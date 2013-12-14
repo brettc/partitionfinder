@@ -162,7 +162,6 @@ class GreedyAnalysis(Analysis):
             self.cfg.reporter.write_scheme_summary(
                 start_scheme, start_result)
 
-
         step = 1
 
         # Now we try out all lumpings of the current scheme, to see if we can
@@ -299,7 +298,7 @@ class RelaxedClusteringAnalysis(Analysis):
             new_schemes = []
             for subset_grouping in lumped_subsets:
                 new_sub = subset_ops.merge_subsets(subset_grouping)
-                if new_sub.is_done == False:
+                if not new_sub.is_done:
                     new_subs.append(new_sub)
                 scheme_name = "%s_%d" % (name_prefix, sch_num)
                 lumped_scheme = neighbour.make_clustered_scheme(
