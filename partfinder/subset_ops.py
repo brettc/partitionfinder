@@ -22,17 +22,15 @@ import subset
 import logging
 log = logging.getLogger("subset_ops")
 
-
-def subset_unique_name(subset):
+def subset_unique_name(columns):
     """Return a unique string based on the subsets columns (which are unique)"""
 
     # Use pickle to give us a string from the object
-    pickled_columns = pickle.dumps(subset.column_set, -1)
+    pickled_columns = pickle.dumps(columns, -1)
 
     # Now get an md5 hash from this. There is some vanishingly small chance that
     # we'll get the same thing. Google "MD5 Hash Collision"
     return hashlib.md5(pickled_columns).hexdigest()
-
 
 def merge_subsets(subset_list):
     """Take a set of subsets and merge them together"""

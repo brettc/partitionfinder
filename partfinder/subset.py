@@ -19,13 +19,11 @@ import logtools
 log = logtools.get_logger(__file__)
 
 import os
-import weakref
 import numpy
 
 from alignment import Alignment, SubsetAlignment
 from util import PartitionFinderError, remove_runID_files, get_aic, get_aicc, get_bic
 import subset_ops
-import database
 
 
 FRESH, PREPARED, DONE = range(3)
@@ -54,22 +52,24 @@ class Subset(object):
         This is basically a pythonized factory. See here:
         http://codesnipers.com/?q=python-flyweights
         """
-        column_set = list(column_set)
-        column_set.sort()
-        column_set = frozenset(column_set)
-        obj = Subset._cache.get(column_set, None)
-        if not obj:
+        columns = list(column_set)
+        columns.sort()
+        subset_id = subset_ops.subset_unique_name(columns)
+        obj = Subset._cache.get(subset_id, None)
+        if obj:
+            pass
+        else:
             obj = object.__new__(cls)
-            Subset._cache[column_set] = obj
-            obj.init(cfg, column_set)
+            Subset._cache[subset_id] = obj
+            obj.init(subset_id, cfg, column_set, columns)
 
         return obj
 
-    def init(self, cfg, column_set):
+    def init(self, subset_id, cfg, column_set, columns):
+        self.name = subset_id
         self.cfg = cfg
         self.column_set = column_set
-        self.columns = list(column_set)
-        self.columns.sort()
+        self.columns = columns
         self.status = FRESH
 
         # We put all results into this array, which is sized to the number of
@@ -117,7 +117,7 @@ class Subset(object):
         try:
             s = []
             for d in self.description:
-                d = d[0]
+                d = d[0] # TODO: should'n this be d[2]?
                 if d == 1:
                     text = "%s-%s" % (d[0], d[1])
                 else:
@@ -130,16 +130,6 @@ class Subset(object):
 
     def __repr__(self):
         return "Subset(%s..)" % self.name[:5]
-
-    @property
-    def name(self):
-        # Cache this
-        if hasattr(self, '_name'):
-            nm = self._name
-        else:
-            nm = subset_ops.subset_unique_name(self)
-            self._name = nm
-        return nm
 
     def load_results(self, cfg):
         matching = cfg.database.get_results_for_subset(self)
@@ -174,27 +164,6 @@ class Subset(object):
         self.result_array[self.result_current] = result._data
         cfg.database.save_result(self, self.result_current)
         self.result_current += 1
-
-        # We need to get the keys from the dictionary and convert them to
-        # indexes into our fixed sized arrays
-        # row_freqs = row['freqs']
-        # getter = database.Freqs.get
-        # for k, v in result.freqs.items():
-        #     i = getter(k)
-        #     if i is None:
-        #         log.error("Unrecognised Frequency type %s", k)
-        #         raise SubsetError
-        #     row_freqs[i] = v
-
-        # row_rates = row['rates']
-        # getter = database.Rates.get
-        # for k, v in result.rates.items():
-        #     i = getter(k)
-        #     if i is None:
-        #         log.error("Unrecognised Rate type %s", k)
-        #         raise SubsetError
-        #     row_rates[i] = v
-
 
         log.debug("Added model to subset. Model: %s, params: %d, sites:%d, lnL:%.2f, site_rate %f"
                   % (model, K, n, lnL, result.site_rate))
@@ -371,3 +340,7 @@ class Subset(object):
     @property
     def is_prepared(self):
         return self.status == PREPARED
+
+    @property
+    def is_fresh(self):
+        return self.status == FRESH
