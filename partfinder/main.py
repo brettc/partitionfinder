@@ -120,7 +120,7 @@ def parse_args(datatype, cmdargs=None):
         action="store_true", dest="check_only",
         help="just check the configuration files, don't do any processing")
     op.add_option(
-        "--force-restart",
+        "-f", "--force-restart",
         action="store_true", dest="force_restart",
         help="delete all previous output and start afresh (!)")
     op.add_option(
@@ -148,7 +148,13 @@ def parse_args(datatype, cmdargs=None):
         help="Compare the results to previously dumped binary results. "
              "This is only of use for testing purposes.")
     op.add_option(
-        "--raxml",
+        "-q", "--quick",
+        action="store_true", dest="quick",
+        help="Avoid anything slow (like writing schemes at each step)," 
+             "useful for very large datasets."
+    )
+    op.add_option(
+        "-r", "--raxml",
         action="store_true", dest="raxml",
         help="Use RAxML (rather than PhyML) to do the analysis. See the manual"
     )

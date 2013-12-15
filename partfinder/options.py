@@ -14,12 +14,13 @@ Output:
     found under the supplied <folder-name>.
 
 Options:
-  -h, --help            Show this help message and exit
-  -v, --verbose         Show all debug logging information
   -c, --check-only      Just check the configuration files, don't do any processing
-  --force-restart       Delete all previous output and start afresh (!)
-  -p, --processes <N>   Number of concurrent processes to use [default: all].
-  --raxml               Use RAxML, rather than PhyML, to do the analysis.
+  -f, --force-restart   Delete all previous output and start afresh (!)
+  -h, --help            Show this help message and exit
+  -p, --processes <N>   Number of concurrent processes to use [default: all]
+  -q, --quick           Avoid anything slow (like writing schemes at each step), useful for very large datasets
+  -r, --raxml           Use RAxML, rather than PhyML, to do the analysis
+  -v, --verbose         Show all debug logging information
 
 Advanced Options:
   --weights <O:B:M:A>   Assign different weights to (O)verall rate for a
