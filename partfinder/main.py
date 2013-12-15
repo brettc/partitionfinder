@@ -78,22 +78,6 @@ def set_debug_regions(regions):
 
     return None
 
-
-def clean_folder(folder):
-    """ Delete all the files in a folder
-    Thanks to StackOverflow for this:
-    http://stackoverflow.com/questions/185936/delete-folder-contents-in-python
-    """
-    for the_file in os.listdir(folder):
-        file_path = os.path.join(folder, the_file)
-        try:
-            if os.path.isfile(file_path):
-                os.unlink(file_path)
-        except Exception, e:
-            log.error("Couldn't delete file from phylofiles folder: %s" % e)
-            raise PartitionFinderError
-
-
 def parse_args(datatype, cmdargs=None):
     usage = """usage: python %prog [options] <foldername>
 
