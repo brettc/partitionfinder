@@ -299,13 +299,13 @@ class RelaxedClusteringAnalysis(Analysis):
                 subsets, self.cfg, cutoff, d_matrix)
 
             # 2. analyse K subsets in top N that have not yet been analysed
+            pairs_todo = neighbour.get_pairs_todo(closest_pairs, c_matrix, subsets)
             new_subs = []
             sub_tuples = []
-            for pair in closest_pairs:
+            for pair in pairs_todo:
                 new_sub = subset_ops.merge_subsets(pair)
-                if new_sub.finalise(self.cfg) == False:
-                    new_subs.append(new_sub)
-                    sub_tuples.append((new_sub, pair))
+                new_subs.append(new_sub)
+                sub_tuples.append((new_sub, pair))
 
             log.info("Analysing %d new subsets" % len(new_subs))
             self.analyse_list_of_subsets(new_subs)

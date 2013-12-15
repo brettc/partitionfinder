@@ -217,14 +217,24 @@ def reset_c_matrix(c_matrix, remove_list, add_list, subsets):
 
     return c_matrix
 
+def get_pairs_todo(closest_pairs, c_matrix, subsets):
+    pairs_todo = []
+    c_matrix = scipy.spatial.distance.squareform(c_matrix)
+
+    for p in closest_pairs:
+        i = subsets.index(p[0])
+        j = subsets.index(p[1])
+        if c_matrix[i,j] == np.inf:
+            pairs_todo.append(p)
+
+    c_matrix = scipy.spatial.distance.squareform(c_matrix)
+
+    return pairs_todo
 
 def reset_subsets(subsets, remove_list, add_list):
-    
     for r in remove_list:
         subsets.pop(subsets.index(r))
-
     for a in add_list:
         subsets.append(a)
-
     return subsets
 

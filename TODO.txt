@@ -1,5 +1,13 @@
 TODO
 
+* More efficiency: create d and c matrices at the start of a run. 
+  Make them (N + N-1) along each of 2 dimensions. Also make a list of subsets in the start 
+  scheme (i.e. N subsets long). Populate those matrices as the algorithm progresses. And when 
+  we're done with a subset, label the d and c columns and rows for that subset with np.inf.
+  This is the most memory and speed efficient way to proceed, because numpy arrays populate
+  contiguous memory blocks, and creating new arrays means copying ot a totally new piece of
+  memory.  
+
 * odd bug - we seem to have lost the ability to tell whether an analysis was run in phyml or raxml
   so we run the risk of taking results from shitty subsets. Need to add this to the old config
   comparison method. 
