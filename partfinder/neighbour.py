@@ -159,7 +159,8 @@ def update_c_matrix(c_matrix, sub_tuples, subsets, cfg, nseq):
     Update a symmetric matrix of measurements between subsets, by adding a row
     and column according to that subset.
     """
-    c_matrix = scipy.spatial.distance.squareform(c_matrix)
+    if len(c_matrix.shape) == 1:
+        c_matrix = scipy.spatial.distance.squareform(c_matrix)
 
     for t in sub_tuples:
         new_sub = t[0]
@@ -180,12 +181,12 @@ def update_c_matrix(c_matrix, sub_tuples, subsets, cfg, nseq):
         j = subsets.index(old_subs[1])
         c_matrix[i,j] = c_matrix[j,i] = diff
 
-    c_matrix = scipy.spatial.distance.squareform(c_matrix)
     return c_matrix
 
 def get_best_pair(c_matrix, best_change, subsets):
 
-    c_matrix = scipy.spatial.distance.squareform(c_matrix)
+    if len(c_matrix.shape) == 1:
+        c_matrix = scipy.spatial.distance.squareform(c_matrix)
     l = np.where(c_matrix==best_change)
     s1 = l[0][0] # the double index protects against >1 value == best_change
     s2 = l[1][0]    
@@ -196,7 +197,8 @@ def get_best_pair(c_matrix, best_change, subsets):
 
 def reset_c_matrix(c_matrix, remove_list, add_list, subsets):
 
-    c_matrix = scipy.spatial.distance.squareform(c_matrix)
+    if len(c_matrix.shape) == 1:
+        c_matrix = scipy.spatial.distance.squareform(c_matrix)
 
     indices = []
     removals = []
@@ -224,21 +226,18 @@ def reset_c_matrix(c_matrix, remove_list, add_list, subsets):
         log.error("Adding: %s", str(additions))
         raise AnalysisError
 
-    c_matrix = scipy.spatial.distance.squareform(c_matrix)
-
     return c_matrix
 
 def get_pairs_todo(closest_pairs, c_matrix, subsets):
     pairs_todo = []
-    c_matrix = scipy.spatial.distance.squareform(c_matrix)
+    if len(c_matrix.shape) == 1:
+        c_matrix = scipy.spatial.distance.squareform(c_matrix)
 
     for p in closest_pairs:
         i = subsets.index(p[0])
         j = subsets.index(p[1])
         if c_matrix[i,j] == np.inf:
             pairs_todo.append(p)
-
-    c_matrix = scipy.spatial.distance.squareform(c_matrix)
 
     return pairs_todo
 
