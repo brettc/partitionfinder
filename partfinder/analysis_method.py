@@ -290,6 +290,7 @@ class RelaxedClusteringAnalysis(Analysis):
                 # Now initialise a change in info score matrix to inf
                 c_matrix = np.empty(d_matrix.shape)
                 c_matrix[:] = np.inf
+                c_matrix = scipy.spatial.distance.squareform(c_matrix)
 
             # 1. pick top N subset pairs from distance matrix
             log.info("Finding similar pairs of subsets")
