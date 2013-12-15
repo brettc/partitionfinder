@@ -24,7 +24,7 @@ class Configuration(object):
 
     def __init__(self, datatype="DNA", phylogeny_program='phyml',
                  save_phylofiles=False, cmdline_extras="", cluster_weights=None,
-                 cluster_percent=10, cluster_max=None, kmeans_opt=1):
+                 cluster_percent=10, cluster_max=None, kmeans_opt=1, quick=False):
 
         log.info("------------- Configuring Parameters -------------")
         # Only required if user adds them
@@ -39,6 +39,7 @@ class Configuration(object):
         self.cluster_percent = float(cluster_percent)
         self.cluster_max = cluster_max
         self.kmeans_opt = kmeans_opt
+        self.quick = quick
 
         # Record this
         self.base_path = '.'

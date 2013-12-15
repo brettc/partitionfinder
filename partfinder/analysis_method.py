@@ -265,8 +265,10 @@ class RelaxedClusteringAnalysis(Analysis):
         start_scheme = scheme.create_scheme(
             self.cfg, "start_scheme", start_description)
         self.analyse_scheme(start_scheme)
-        self.cfg.reporter.write_scheme_summary(
-            self.results.best_scheme, self.results.best_result)
+    
+        if not self.cfg.quick:
+            self.cfg.reporter.write_scheme_summary(
+                self.results.best_scheme, self.results.best_result)
 
         # Now get the main distance matrix
         log.info("Calculating initial distance matrix")
@@ -331,8 +333,10 @@ class RelaxedClusteringAnalysis(Analysis):
                 np.abs(self.results.best_score - old_best_score),
                 self.results.best_score)
             start_scheme = best_scheme
-            self.cfg.reporter.write_scheme_summary(
-                self.results.best_scheme, self.results.best_result)
+
+            if not self.cfg.quick:
+                self.cfg.reporter.write_scheme_summary(
+                    self.results.best_scheme, self.results.best_result)
 
             # 5. reset_c_matrix and the subset list
             c_matrix = neighbour.reset_c_matrix(c_matrix, list(best_pair), [best_merged], subsets)

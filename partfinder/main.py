@@ -149,7 +149,7 @@ def parse_args(datatype, cmdargs=None):
              "This is only of use for testing purposes.")
     op.add_option(
         "-q", "--quick",
-        action="store_true", dest="quick",
+        action="store_true", dest="quick", default=False,
         help="Avoid anything slow (like writing schemes at each step)," 
              "useful for very large datasets."
     )
@@ -354,7 +354,8 @@ def main(name, datatype, passed_args=None):
                                    options.cluster_weights,
                                    options.cluster_percent,
                                    options.cluster_max,
-                                   options.kmeans_opt)
+                                   options.kmeans_opt, 
+                                   options.quick)
 
         # Set up the progress callback
         progress.TextProgress(cfg)
