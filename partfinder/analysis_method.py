@@ -280,7 +280,6 @@ class RelaxedClusteringAnalysis(Analysis):
             log.info("***Relaxed clustering algorithm step %d of up to %d***"
                 % (step, partnum - 1))
 
-
             # just to be sure. NB, if this is a rate limiting step,
             # we can speed it up by doing smarter d_matrix updates
             d_matrix = neighbour.get_distance_matrix(subsets, 
@@ -309,6 +308,9 @@ class RelaxedClusteringAnalysis(Analysis):
                 new_sub = subset_ops.merge_subsets(pair)
                 new_subs.append(new_sub)
                 sub_tuples.append((new_sub, pair))
+
+            subset_count = len(new_subs)
+            self.cfg.progress.begin(scheme_count, subset_count)
 
             log.info("Analysing %d new subsets" % len(new_subs))
             self.analyse_list_of_subsets(new_subs)
