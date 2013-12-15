@@ -1,5 +1,7 @@
 TODO
 
+* change user output so that % done is per step.
+
 * More efficiency: create d and c matrices at the start of a run. 
   Make them (N + N-1) along each of 2 dimensions. Also make a list of subsets in the start 
   scheme (i.e. N subsets long). Populate those matrices as the algorithm progresses. And when 
