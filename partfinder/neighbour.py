@@ -171,7 +171,7 @@ def update_c_matrix(c_matrix, sub_tuples, subsets, cfg, nseq):
         new_columns = new_sub.column_set
         if not new_columns == old_columns:
             log.error("Can't compare subsets with different sites")
-            raise PartitionFinderError
+            raise AnalysisError
 
         old_score = subset_ops.score_subset_list(list(old_subs), cfg, nseq)
         new_score = subset_ops.score_subset_list([new_sub], cfg, nseq)
@@ -199,19 +199,30 @@ def reset_c_matrix(c_matrix, remove_list, add_list, subsets):
     c_matrix = scipy.spatial.distance.squareform(c_matrix)
 
     indices = []
+    removals = []
     for r in remove_list:
         indices.append(subsets.index(r))
+        removals = removals + r.names
 
     c_matrix = np.delete(c_matrix, indices, 1)
     c_matrix = np.delete(c_matrix, indices, 0)
 
+    additions = []
     for a in add_list:
+        additions = additions + a.names
         row = np.array((c_matrix.shape[0]) * [np.inf])
         col = c_matrix.shape[0] * [np.inf]
         col.append(0)
         col = np.array(col)[:, None]
         c_matrix = np.vstack((c_matrix, row))
         c_matrix = np.hstack((c_matrix, col))
+
+    # we can only do this if we've removed the same stuff as we added, check
+    if not additions == removals:
+        log.error("Removal and addition of subsets don't add up")
+        log.error("Removing: %s", str(removals))
+        log.error("Adding: %s", str(additions))
+        raise AnalysisError
 
     c_matrix = scipy.spatial.distance.squareform(c_matrix)
 
