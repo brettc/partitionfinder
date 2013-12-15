@@ -53,11 +53,6 @@ class TextProgress(Progress):
         self.subsets_analysed = set()
 
         if "kmeans" not in self.cfg.search:
-            log.info("""
-                PartitionFinder will have to analyse %d subsets to complete this
-                analysis. This will result in %s schemes being created""" %
-                 (subset_count,  scheme_count)
-            )
             if subset_count > 10000:
                 log.warning("""%d is a lot of subsets, this might take a
                 long time to analyse. Perhaps consider using a different

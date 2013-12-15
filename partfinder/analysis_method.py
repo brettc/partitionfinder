@@ -259,6 +259,9 @@ class RelaxedClusteringAnalysis(Analysis):
             partnum, self.cfg.cluster_percent, self.cfg.cluster_max)
         self.cfg.progress.begin(scheme_count, subset_count)
 
+        log.info("PartitionFinder will have to analyse %d subsets to"
+                 " complete this analyses" % subset_count)
+
         # Start with the most partitioned scheme, and record it.
         log.info("Analysing starting scheme")
         start_description = range(partnum)
@@ -289,7 +292,7 @@ class RelaxedClusteringAnalysis(Analysis):
                 # Now initialise a change in info score matrix to inf
                 c_matrix = np.empty(d_matrix.shape)
                 c_matrix[:] = np.inf
-                c_matrix = scipy.spatial.distance.squareform(c_matrix)
+                c_matrix = spatial.distance.squareform(c_matrix)
 
             # 1. pick top N subset pairs from distance matrix
             log.info("Finding similar pairs of subsets")
