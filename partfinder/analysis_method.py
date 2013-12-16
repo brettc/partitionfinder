@@ -257,13 +257,15 @@ class RelaxedClusteringAnalysis(Analysis):
             partnum, self.cfg.cluster_percent, self.cfg.cluster_max)
         subset_count = submodels.count_relaxed_clustering_subsets(
             partnum, self.cfg.cluster_percent, self.cfg.cluster_max)
-        self.cfg.progress.begin(scheme_count, subset_count)
 
         log.info("PartitionFinder will have to analyse %d subsets to"
                  " complete this analyses" % subset_count)
+        self.cfg.progress.begin(scheme_count, subset_count)
 
         # Start with the most partitioned scheme, and record it.
-        log.info("Analysing starting scheme")
+        log.info("*** Analysing starting scheme ***"
+        subset_count = partnum
+        self.cfg.progress.begin(scheme_count, subset_count)
         start_description = range(partnum)
         start_scheme = scheme.create_scheme(
             self.cfg, "start_scheme", start_description)
@@ -273,14 +275,11 @@ class RelaxedClusteringAnalysis(Analysis):
             self.cfg.reporter.write_scheme_summary(
                 self.results.best_scheme, self.results.best_result)
 
-        # Now get the main distance matrix
-        log.info("Calculating initial distance matrix")
         subsets = [s for s in start_scheme.subsets]
-
 
         step = 1
         while True:
-            log.info("***Relaxed clustering algorithm step %d of up to %d***"
+            log.info("*** Relaxed clustering algorithm step %d of up to %d ***"
                 % (step, partnum - 1))
 
             # just to be sure. NB, if this is a rate limiting step,
