@@ -1,5 +1,25 @@
 TODO
 
+* think about maintaining a list that is cutoff long, of the distances between
+  closest subset pairs. 
+  The list would need to be updated whenever we make new subsets. It might be
+  a bit tough to do it, but it would address the argsort() function limitation, which is what currently slows us down the most. 
+
+* implement 'search = auto'. This will save people from choosing a search 
+  method. The idea is just to go with the defaults below, but it's a neat feature for PF2. We can time it against 1.1.1 as well, and show the improvements. It might also be possible to estimate the weights automatically and iteratively using the new arrays, but running a linear model that updates at each step to calculate weights. 
+
+* Change the default settings to:
+    --rcluster-percent 100
+    --rcluster-max 1000
+
+    This is a better setting for almost all cases, because it ensures that we 
+    look hard for new merges when towards the end of the algorithm.
+    And it means that we don't spend too long on any one step.
+    A few preliminary tests show that it does way better than e.g. rcluster-percent 1.0 on large datasets, because that one tends not to look hard enough.
+
+    As a bonus, this avoids having giant arrays, and so speeds up the algo.
+    in general as well. 
+
 * change user output so that % done is per step.
 
 * More efficiency: create d and c matrices at the start of a run. 
