@@ -338,9 +338,9 @@ def main(name, datatype, passed_args=None):
     check_python_version()
 
     if passed_args is None:
-        cmdline = "".join(sys.argv)
+        cmdline = " ".join(sys.argv)
     else:
-        cmdline = "".join(passed_args)
+        cmdline = " ".join(passed_args)
 
     log.info("Command-line arguments used: %s" % cmdline)
 
