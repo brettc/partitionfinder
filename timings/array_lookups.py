@@ -5,6 +5,10 @@ import random
 import sklearn.metrics.pairwise
 import scipy.spatial.distance
 import heapq
+from bisect    import insort
+from itertools import islice
+from scipy.spatial import KDTree
+
 
 
 N = 1000
@@ -101,9 +105,63 @@ def method8(dists, N):
     return r
 
 
+def method9(dists, N, insort=insort):
+    # http://stackoverflow.com/questions/350519/getting-the-lesser-n-elements-of-a-list-in-python
+    it   = iter(dists)
+    closest = sorted(islice(it, N))
+    for el in it:
+        if el <= closest[-1]: #NOTE: equal sign is to preserve duplicates
+            insort(closest, el)
+            closest.pop()
 
+    n = np.ceil(np.sqrt(2* len(dists)))
+    ti = np.triu_indices(n, 1)
+    r  = zip(ti[0][closest] + 1, ti[1][closest] + 1)
+    return r
+
+def method10(dists, N):
+    # http://stackoverflow.com/questions/350519/getting-the-lesser-n-elements-of-a-list-in-python    
+    mins = dists[:N]
+    mins.sort()
+    for i in dists[N:]:
+        if i <= mins[-1]: 
+            np.append(mins, i)
+            mins.sort()
+            mins = mins[:N]
+    closest = [np.where(dists==x) for x in mins]
+    n = np.ceil(np.sqrt(2* len(dists)))
+    ti = np.triu_indices(n, 1)
+    r  = zip(ti[0][closest] + 1, ti[1][closest] + 1)
+    return r
+
+
+def method11(dists, N):
+    # http://stackoverflow.com/questions/350519/getting-the-lesser-n-elements-of-a-list-in-python    
+    mins = list(dists[:N])
+    mins.sort()
+    for i in dists[N:]:
+        if i <= mins[-1]: 
+            mins.append(i)
+            insort(mins, i)
+            mins = mins[:N]
+
+    closest = [np.where(dists==x) for x in mins]
+    n = np.ceil(np.sqrt(2* len(dists)))
+    ti = np.triu_indices(n, 1)
+    r  = zip(ti[0][closest] + 1, ti[1][closest] + 1)
+    return r
+
+
+def method12(dists, N):
+    tree = KDTree(dists, leafsize=dists.shape[0]+1)
+    distances, ndx = tree.query(0, k=N)
+
+def method4_2(dists, N):
+    closest = dists.argsort()[:N]
 
 # timing in ipython, best is method 4 when the array is 1000 by 1000, and N = 1000
+
+# best method is 9 when array gets > ~6000 by 6000, and 9 is only marginally slower for smaller arrays
 
 # but note that either using the bottleneck module, or method7 (both of which use 
 # efficient sorting) would be a lot quicker.
