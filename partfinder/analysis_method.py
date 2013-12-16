@@ -263,7 +263,7 @@ class RelaxedClusteringAnalysis(Analysis):
         self.cfg.progress.begin(scheme_count, subset_count)
 
         # Start with the most partitioned scheme, and record it.
-        log.info("*** Analysing starting scheme ***"
+        log.info("*** Analysing starting scheme ***")
         subset_count = partnum
         self.cfg.progress.begin(scheme_count, subset_count)
         start_description = range(partnum)
