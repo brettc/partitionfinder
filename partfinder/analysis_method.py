@@ -298,6 +298,7 @@ class RelaxedClusteringAnalysis(Analysis):
             log.info("Finding similar pairs of subsets")
             max_schemes = comb(len(start_scheme.subsets), 2)
             cutoff = int(math.ceil(max_schemes * (self.cfg.cluster_percent * 0.01)))
+            if cutoff <= 0: cutoff = 1
             if self.cfg.cluster_max != None and cutoff>self.cfg.cluster_max:
                 cutoff = self.cfg.cluster_max
             closest_pairs = neighbour.get_N_closest_subsets(
