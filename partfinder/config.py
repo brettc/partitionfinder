@@ -32,6 +32,7 @@ class Configuration(object):
         self.user_subsets = []
         self.user_subsets_by_name = {}
         self.models = []
+        self.database = None
 
         self.save_phylofiles = save_phylofiles
         self.progress = progress.NoProgress(self)
@@ -184,6 +185,8 @@ class Configuration(object):
         log.debug(
             "Cleaning out all subsets (There are %d)...", subset.count_subsets())
         subset.clear_subsets()
+        if self.database:
+            self.database.close()
 
     def find_config_file(self, pth):
         """Try and get the base folder and config file from the path"""

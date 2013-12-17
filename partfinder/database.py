@@ -123,18 +123,34 @@ class Database(object):
     def __init__(self, cfg):
         self.cfg = cfg
         self.path = os.path.join(self.cfg.subsets_path, 'data.db')
+        self.results = None
         if os.path.exists(self.path):
-            self.h5 = tables.open_file(self.path, 'a')
-            self.results = self.h5.root.results
-            assert isinstance(self.results, tables.Table)
-            assert self.results.indexed
-        else:
+            try:
+                self.h5 = tables.open_file(self.path, 'a')
+                self.results = self.h5.root.results
+            except:
+                # If anything fails, we just create a new database...
+                log.warning("""Failed to open existing database at %s, or
+                database is corrupted. Creating a new one""", self.path)
+                self.results = None
+
+        # Something went wrong!
+        if not self.results:
+            try:
+                # Try closing this, just in case
+                self.h5.close()
+            except:
+                pass
+
             # Compression is good -- and faster, according to the pytables docs...
             f = tables.Filters(complib='blosc', complevel=5)
             self.h5 = tables.open_file(self.path, 'w', filters=f)
             self.results = self.h5.create_table(
                 '/', 'results', cfg.data_layout.data_type)
             self.results.cols.subset_id.create_csindex()
+
+        assert isinstance(self.results, tables.Table)
+        assert self.results.indexed
 
     def get_results_for_subset(self, subset):
         conditions = {'current_id':  subset.subset_id}
