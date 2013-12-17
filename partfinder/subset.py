@@ -183,8 +183,17 @@ class Subset(object):
         self.best_freqs = best['freqs']
         self.best_rates = best['rates']
 
-        log.debug("Model Selection. best model: %s, params: %d, site_rate: %f"
-                  % (self.best_model, self.best_params, self.best_site_rate))
+        log.debug("Best model for this subset: %s \n" 
+                  "lnL: %s\n" 
+                  "site_rate: %s\n" 
+                  "params: %s\n" 
+                  "alpha: %s\n" 
+                  "freqs: %s\n" 
+                  "rates: %s\n" 
+                  % (self.best_model, str(self.best_lnl), 
+                    str(self.best_site_rate), str(self.best_params),
+                    str(self.best_alpha), str(self.best_freqs),
+                    str(self.best_rates)))
 
     def get_param_values(self):
         param_values = {
