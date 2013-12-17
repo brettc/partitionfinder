@@ -189,10 +189,9 @@ class Subset(object):
     def get_param_values(self):
         param_values = {
             "rate": self.best_site_rate,
-            "model": self.best_model,
+            "model": self.best_rates,
             "alpha": self.best_alpha,
             "freqs": self.best_freqs,
-            "rates": self.best_rates,
         }
         return param_values
 
