@@ -1,5 +1,7 @@
 TODO
 
+* right now we allow data blocks to have identical names. This is not a good idea. Fix.
+
 * think about maintaining a list that is cutoff long, of the distances between
   closest subset pairs. 
   The list would need to be updated whenever we make new subsets. It might be
