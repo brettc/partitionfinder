@@ -51,6 +51,8 @@ class DataLayout(object):
             # We just fake an entry, 
             self.letter_indexes = { 'EMPTY': 0 }
             self.rate_indexes = { 'EMPTY': 0 }
+            self.letter_size = 1
+            self.rate_size = 1
 
         self.data_type = self.make_datatype()
 
