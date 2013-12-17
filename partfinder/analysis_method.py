@@ -269,8 +269,8 @@ class RelaxedClusteringAnalysis(Analysis):
         start_description = range(partnum)
         start_scheme = scheme.create_scheme(
             self.cfg, "start_scheme", start_description)
-        self.analyse_scheme(start_scheme)
-    
+        start_result = self.analyse_scheme(start_scheme)
+        start_score = start_result.score
         if not self.cfg.quick:
             self.cfg.reporter.write_scheme_summary(
                 self.results.best_scheme, self.results.best_result)
@@ -281,6 +281,7 @@ class RelaxedClusteringAnalysis(Analysis):
         while True:
             log.info("*** Relaxed clustering algorithm step %d of up to %d ***"
                 % (step, partnum - 1))
+            old_best_score = self.results.best_score
 
             # just to be sure. NB, if this is a rate limiting step,
             # we can speed it up by doing smarter d_matrix updates
@@ -320,31 +321,41 @@ class RelaxedClusteringAnalysis(Analysis):
 
             # 3. for all K new subsets, update improvement matrix and find best pair
             log.info("Finding the best subset")
-            c_matrix = neighbour.update_c_matrix(c_matrix, sub_tuples, subsets, self.cfg, nseq)
+
+            diffs = []
+            min_diff = np.inf
+            scheme_name = "step_%d" %(step)
+            for t in sub_tuples:
+                pair_merged = t[0]
+                pair = t[1]
+                new_scheme = neighbour.make_clustered_scheme(
+                        start_scheme, scheme_name, pair, pair_merged, self.cfg)
+                r = self.analyse_scheme(new_scheme)
+                diff = r.score - start_score
+                diffs.append(diff)
+
+            c_matrix = neighbour.update_c_matrix(c_matrix, sub_tuples, subsets, diffs)
+
+            # 4. Find the best pair of subsets, and build a scheme based on that
+            print c_matrix
             best_change = np.amin(c_matrix)
-
             log.info("Best subset change: %.2f", best_change)
-
             if best_change>=0:
                 log.info("Found no schemes that improve the score, stopping")
                 break
 
-            # 5. build new scheme, set that scheme to the start scheme
-            old_best_score = self.results.best_score
             best_pair = neighbour.get_best_pair(c_matrix, best_change, subsets)
+
             best_merged = subset_ops.merge_subsets(best_pair)
-
-            log.info("Best pair: (%s) + (%s)", best_pair[0].name, best_pair[1].name)
-
-            scheme_name = "step_%d" % step
             best_scheme = neighbour.make_clustered_scheme(
                 start_scheme, scheme_name, best_pair, best_merged, self.cfg)                
             best_result = self.analyse_scheme(best_scheme)
-            log.info("The best scheme improves the %s score by %.1f to %.1f",
+            log.info("The best scheme improves the %s score by %.2f to %.1f",
                 self.cfg.model_selection, 
                 np.abs(self.results.best_score - old_best_score),
                 self.results.best_score)
             start_scheme = best_scheme
+            start_score = best_result.score
 
             if not self.cfg.quick:
                 self.cfg.reporter.write_scheme_summary(
