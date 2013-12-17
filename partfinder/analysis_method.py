@@ -339,7 +339,7 @@ class RelaxedClusteringAnalysis(Analysis):
             scheme_name = "step_%d" % step
             best_scheme = neighbour.make_clustered_scheme(
                 start_scheme, scheme_name, best_pair, best_merged, self.cfg)                
-            self.analyse_scheme(best_scheme)
+            best_result = self.analyse_scheme(best_scheme)
             log.info("The best scheme improves the %s score by %.1f to %.1f",
                 self.cfg.model_selection, 
                 np.abs(self.results.best_score - old_best_score),
@@ -348,7 +348,7 @@ class RelaxedClusteringAnalysis(Analysis):
 
             if not self.cfg.quick:
                 self.cfg.reporter.write_scheme_summary(
-                    self.results.best_scheme, self.results.best_result)
+                    best_scheme, best_result)
 
             # 5. reset_c_matrix and the subset list
             c_matrix = neighbour.reset_c_matrix(c_matrix, list(best_pair), [best_merged], subsets)
