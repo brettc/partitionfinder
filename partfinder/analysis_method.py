@@ -322,6 +322,9 @@ class RelaxedClusteringAnalysis(Analysis):
             log.info("Finding the best subset")
             c_matrix = neighbour.update_c_matrix(c_matrix, sub_tuples, subsets, self.cfg, nseq)
             best_change = np.amin(c_matrix)
+
+            log.info("Best subset change: %.2f", best_change)
+
             if best_change>=0:
                 log.info("Found no schemes that improve the score, stopping")
                 break
@@ -330,6 +333,9 @@ class RelaxedClusteringAnalysis(Analysis):
             old_best_score = self.results.best_score
             best_pair = neighbour.get_best_pair(c_matrix, best_change, subsets)
             best_merged = subset_ops.merge_subsets(best_pair)
+
+            log.info("Best pair: (%s) + (%s)", best_pair[0].name, best_pair[1].name)
+
             scheme_name = "step_%d" % step
             best_scheme = neighbour.make_clustered_scheme(
                 start_scheme, scheme_name, best_pair, best_merged, self.cfg)                
