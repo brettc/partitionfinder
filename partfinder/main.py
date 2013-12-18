@@ -193,14 +193,14 @@ def parse_args(datatype, cmdargs=None):
     )
     op.add_option(
         "--rcluster-percent",
-        type="float", dest="cluster_percent", default=10.0, metavar="N",
+        type="float", dest="cluster_percent", default=100.0, metavar="N",
         help="This defines the proportion of possible schemes that the relaxed clustering"
              " algorithm will consider before it stops looking. The default is 10%."
              "e.g. --cluster-percent 10.0"
     )
     op.add_option(
         "--rcluster-max",
-        type="int", dest="cluster_max", default=None, metavar="N",
+        type="int", dest="cluster_max", default=1000, metavar="N",
         help="This defines the number of possible schemes that the relaxed clustering"
              " algorithm will consider before it stops looking. The default is to look at "
              "all schemes contained in rcluster-percent. But using rcluster-max can speed "

@@ -24,7 +24,7 @@ class Configuration(object):
 
     def __init__(self, datatype="DNA", phylogeny_program='phyml',
                  save_phylofiles=False, cmdline_extras="", cluster_weights=None,
-                 cluster_percent=10, cluster_max=None, kmeans_opt=1, quick=False):
+                 cluster_percent=100.0, cluster_max=1000, kmeans_opt=1, quick=False):
 
         log.info("------------- Configuring Parameters -------------")
         # Only required if user adds them
@@ -109,11 +109,11 @@ class Configuration(object):
                           "Please check and try again", len(cluster_weights), cluster_weights)
                 raise ConfigurationError
 
-            total = 0
+            total = 0.0
             for thing in cluster_weights:
                 try:
-                    num = float(eval(thing))
-                    assert num >= 0
+                    num = float(thing)
+                    assert num >= 0.0
                 except:
                     log.error("Unable to understand your --cluster_weights argument."
                               " It should look like this: --cluster_weights '1,2,3,6'. "
@@ -122,7 +122,7 @@ class Configuration(object):
                               "separated by commas. Then try again. "
                               "The part that I couldn't understand is this: '%s'" % thing)
                     raise ConfigurationError
-                total = total + float(eval(thing))
+                total = total + num
 
             if total==0.0:
                 log.error("Please provide at least one cluster weight greater than zero")
@@ -147,6 +147,10 @@ class Configuration(object):
                       "is %.2f. Please check and try again." % self.cluster_percent)
             raise ConfigurationError
         log.debug("Setting rcluster-percent to %.2f" % self.cluster_percent)
+
+        if self.cluster_max == -1:
+            # allow users to ignore cluster_max by passing in a -1
+            self.cluster_max = None
 
         if self.cluster_max != None:
             self.cluster_max = int(self.cluster_max)

@@ -84,14 +84,14 @@ def get_manhattan_matrix(rates, freqs, model, alpha, weights):
         # no distance arrays, something odd happened
         log.error("Problem calculating subset similarity. Please check that you included"
                 " at least one non-zero weight in your clustering weights")
-        raise AnalysisError
+        raise PartitionFinderError
 
     for a in distance_arrays[1:]:
         try:
             final_dists = np.add(final_dists, a)
         except:
             log.error("Distance matrices from different parameters are not the same size")
-            raise AnalysisError
+            raise PartitionFinderError
 
     return final_dists
 
@@ -179,8 +179,6 @@ def get_best_pair(c_matrix, best_change, subsets):
     if len(c_matrix.shape) == 1:
         c_matrix = scipy.spatial.distance.squareform(c_matrix)
     l = np.where(c_matrix==best_change)
-
-    print l
 
     s1 = l[0][0] # the double index protects against >1 value == best_change
     s2 = l[1][0]    

@@ -264,11 +264,9 @@ class RelaxedClusteringAnalysis(Analysis):
 
         # Start with the most partitioned scheme, and record it.
         log.info("*** Analysing starting scheme ***")
-        subset_count = partnum
-        self.cfg.progress.begin(scheme_count, subset_count)
-        start_description = range(partnum)
+        self.cfg.progress.begin(scheme_count, partnum)
         start_scheme = scheme.create_scheme(
-            self.cfg, "start_scheme", start_description)
+            self.cfg, "start_scheme", range(partnum))
         start_result = self.analyse_scheme(start_scheme)
         start_score = start_result.score
         if not self.cfg.quick:
@@ -281,12 +279,12 @@ class RelaxedClusteringAnalysis(Analysis):
         while True:
             log.info("*** Relaxed clustering algorithm step %d of up to %d ***"
                 % (step, partnum - 1))
-            old_best_score = self.results.best_score
 
-            # just to be sure. NB, if this is a rate limiting step,
-            # we can speed it up by doing smarter d_matrix updates
+            # get distances between subsets
+            max_schemes = comb(len(start_scheme.subsets), 2)
+            log.info("Measuring the similarity of %d subset pairs" % max_schemes)
             d_matrix = neighbour.get_distance_matrix(subsets, 
-                                    self.cfg.cluster_weights)
+                self.cfg.cluster_weights)
 
             if step == 1:
                 # Now initialise a change in info score matrix to inf
@@ -295,17 +293,17 @@ class RelaxedClusteringAnalysis(Analysis):
                 c_matrix = spatial.distance.squareform(c_matrix)
 
             # 1. pick top N subset pairs from distance matrix
-            log.info("Finding similar pairs of subsets")
-            max_schemes = comb(len(start_scheme.subsets), 2)
             cutoff = int(math.ceil(max_schemes * (self.cfg.cluster_percent * 0.01)))
             if cutoff <= 0: cutoff = 1
             if self.cfg.cluster_max != None and cutoff>self.cfg.cluster_max:
                 cutoff = self.cfg.cluster_max
+            log.info("Choosing the %d most similar subset pairs" % cutoff)
             closest_pairs = neighbour.get_N_closest_subsets(
                 subsets, self.cfg, cutoff, d_matrix)
 
             # 2. analyse K subsets in top N that have not yet been analysed
             pairs_todo = neighbour.get_pairs_todo(closest_pairs, c_matrix, subsets)
+            log.info("Analysing %d new subsets" % len(pairs_todo))
             new_subs = []
             sub_tuples = []
             for pair in pairs_todo:
@@ -313,14 +311,12 @@ class RelaxedClusteringAnalysis(Analysis):
                 new_subs.append(new_sub)
                 sub_tuples.append((new_sub, pair))
 
-            subset_count = len(new_subs)
-            self.cfg.progress.begin(scheme_count, subset_count)
-
-            log.info("Analysing %d new subsets" % len(new_subs))
+            self.cfg.progress.begin(scheme_count, len(new_subs))
             self.analyse_list_of_subsets(new_subs)
 
             # 3. for all K new subsets, update improvement matrix and find best pair
-            log.info("Finding the best subset")
+            log.info("Finding the subset pair that most improves" 
+                "the %s score", self.cfg.model_selection)
 
             diffs = []
             min_diff = np.inf
@@ -337,12 +333,7 @@ class RelaxedClusteringAnalysis(Analysis):
             c_matrix = neighbour.update_c_matrix(c_matrix, sub_tuples, subsets, diffs)
 
             # 4. Find the best pair of subsets, and build a scheme based on that
-            print c_matrix
             best_change = np.amin(c_matrix)
-            log.info("Best subset change: %.2f", best_change)
-            if best_change>=0:
-                log.info("Found no schemes that improve the score, stopping")
-                break
 
             best_pair = neighbour.get_best_pair(c_matrix, best_change, subsets)
 
@@ -350,9 +341,17 @@ class RelaxedClusteringAnalysis(Analysis):
             best_scheme = neighbour.make_clustered_scheme(
                 start_scheme, scheme_name, best_pair, best_merged, self.cfg)                
             best_result = self.analyse_scheme(best_scheme)
+
+            # the best change can get updated a fraction at this point
+            best_change = self.results.best_score - start_score
+
+            if best_change>=0:
+                log.info("Found no schemes that improve the score, stopping")
+                break
+
             log.info("The best scheme improves the %s score by %.2f to %.1f",
                 self.cfg.model_selection, 
-                np.abs(self.results.best_score - old_best_score),
+                np.abs(best_change),
                 self.results.best_score)
             start_scheme = best_scheme
             start_score = best_result.score
@@ -374,6 +373,8 @@ class RelaxedClusteringAnalysis(Analysis):
         log.info("Best scoring scheme is scheme %s, with %s score of %.3f"
                  % (self.results.best_scheme.name, model_selection,
                     self.results.best_score))
+
+
 
         self.cfg.reporter.write_best_scheme(self.results)
 
