@@ -145,7 +145,8 @@ def get_nearest_neighbour_scheme(start_scheme, scheme_name, cfg):
     """
 
     # we use [0] becuase the function returns a ranked list of lists of length 1
-    closest_subsets = get_N_closest_subsets(start_scheme, cfg, 1)[0]
+    subsets = [s for s in start_scheme.subsets]
+    closest_subsets = get_N_closest_subsets(subsets, cfg, 1)[0]
 
     merged_sub = subset_ops.merge_subsets(closest_subsets) 
 
