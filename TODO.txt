@@ -1,5 +1,8 @@
 TODO
 
+* On the final scheme, run it with all gamma models and then all gamma+I models. In the RAxML results print out that set of models, rather than the most
+optimal models, as well as info on the best rate hetero model.
+
 * right now we allow data blocks to have identical names. This is not a good idea. Fix.
 
 * think about maintaining a list that is cutoff long, of the distances between
@@ -22,7 +25,6 @@ TODO
     As a bonus, this avoids having giant arrays, and so speeds up the algo.
     in general as well. 
 
-* change user output so that % done is per step.
 
 * More efficiency: create d and c matrices at the start of a run. 
   Make them (N + N-1) along each of 2 dimensions. Also make a list of subsets in the start 
@@ -87,6 +89,7 @@ DONE
 
 Done
 ____
+* change user output so that % done is per step.
 
 * fix the reporting
 
