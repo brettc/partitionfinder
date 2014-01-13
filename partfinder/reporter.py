@@ -123,14 +123,30 @@ class TextReporter(object):
             if self.cfg.datatype == "DNA":
                 model = 'DNA'
             elif self.cfg.datatype == "protein":
-                model = "BUG!"
-                # model = get_raxml_protein_modelstring(result.best_model)
+                model = get_raxml_protein_modelstring(sub.best_model)
             else:
                 raise RuntimeError
 
             output.write("%s, Subset%s = %s" % (model, subset_number, partition_sites))
             output.write("\n")
             subset_number += 1
+
+        output.write("\nWarning: RAxML allows for only a single model of rate"
+                     " heterogeneity in partitioned analyses. I.e. all "
+                     "partitions must be assigned either a +G model or a "
+                     "+I+G model. If the best models for your dataset"
+                     "contain both types of model, you will need to choose "
+                     "an appropriate rate heterogeneity model when you run "
+                     "RAxML. This is specified through the command line to "
+                     "RAxML. To rigorously choose the best model, run two "
+                     "further PF analyses (these will be fast), fixing "
+                     "the partitioning scheme to this scheme and "
+                     "'search=user;', in both. In one run, use only +I+G "
+                     "models ('models = all_protein_gammaI'); in the next, "
+                     "use only +G models ('models = all_protein_gamma;''). "
+                     "Choose the scheme with the lowest AIC/AICc/BIC score. "
+                     "Note that these re-runs will be quick!" 
+                    )
 
     def write_best_scheme(self, result):
         pth = os.path.join(self.cfg.output_path, 'best_scheme.txt')
