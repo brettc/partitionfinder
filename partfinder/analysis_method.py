@@ -297,13 +297,13 @@ class RelaxedClusteringAnalysis(Analysis):
             if cutoff <= 0: cutoff = 1
             if self.cfg.cluster_max != None and cutoff>self.cfg.cluster_max:
                 cutoff = self.cfg.cluster_max
-            log.info("Choosing the %d most similar subset pairs" % cutoff)
+            log.debug("Choosing the %d most similar subset pairs" % cutoff)
             closest_pairs = neighbour.get_N_closest_subsets(
                 subsets, self.cfg, cutoff, d_matrix)
 
             # 2. analyse K subsets in top N that have not yet been analysed
             pairs_todo = neighbour.get_pairs_todo(closest_pairs, c_matrix, subsets)
-            log.info("Analysing %d new subsets" % len(pairs_todo))
+            log.info("Analysing %d new subset pairs" % len(pairs_todo))
             new_subs = []
             sub_tuples = []
             for pair in pairs_todo:
@@ -315,9 +315,7 @@ class RelaxedClusteringAnalysis(Analysis):
             self.analyse_list_of_subsets(new_subs)
 
             # 3. for all K new subsets, update improvement matrix and find best pair
-            log.info("Finding the subset pair that most improves" 
-                "the %s score", self.cfg.model_selection)
-
+            log.info("Finding the best partitioning scheme")
             diffs = []
             min_diff = np.inf
             scheme_name = "step_%d" %(step)
