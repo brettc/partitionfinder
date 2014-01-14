@@ -4,10 +4,10 @@
 This just makes sure that you have the latest Python libraries that PartitionFinder needs.
 
 1. Go to this address and follow the instructions for your system:
-[http://docs.continuum.io/anaconda/install.html]
+http://docs.continuum.io/anaconda/install.html
 
-Check that it worked by typing this at the command prompt:
-> conda
+2. Check that it worked by typing this at the command prompt:
+    > conda
 
 It should print out a lot of help stuff for anaconda.
 
