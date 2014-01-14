@@ -19,17 +19,17 @@ https://github.com/brettc/partitionfinder/archive/develop.zip
 
 2. Unzip develop.zip which will create a folder called partitionfinder-develop
 
-3. If you are using Linux, you will need to download and compile your own version of RAxML.
-3.1 Download the PF version of RAxML from here:
-https://github.com/brettc/standard-RAxML/archive/master.zip
+3. If you are using Linux, you will need to download and compile your own version of RAxML. To do that:
+    3.1 Download the PF version of RAxML from here:
+    https://github.com/brettc/standard-RAxML/archive/master.zip
 
-3.2 Compile using the Makefile.SSE3.gcc, or the Makefile.AVX.gcc version, depending on your chip architecture, following the instructions here (do not use the PTHREADs or MPI versions, and do not use the RAxML from Alexis Statmatakis' github account):
-https://github.com/brettc/standard-RAxML
+    3.2 Compile using the Makefile.SSE3.gcc, or the Makefile.AVX.gcc version, depending on your chip architecture, following the instructions here (do not use the PTHREADs or MPI versions, and do not use the RAxML from Alexis Statmatakis' github account):
+    https://github.com/brettc/standard-RAxML
 
-3.3 Rename the compiled executable "raxml"
+    3.3 Rename the compiled executable "raxml"
 
-3.4 In the 'partitionfinder-develop/programs' folder, delete 'raxml'
-copy-paste your newly compiled 'raxml' into partitionfinder-develop/programs folder
+    3.4 In the 'partitionfinder-develop/programs' folder, delete 'raxml'
+    copy-paste your newly compiled 'raxml' into partitionfinder-develop/programs folder
 
 
 ##Run PartitionFinder
