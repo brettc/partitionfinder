@@ -1,23 +1,17 @@
-Using PartitionFinder for enormous datasets
+#Using PartitionFinder for enormous datasets
 
-Install Anaconda
-****************
+##Install Anaconda
 This just makes sure that you have the latest Python libraries that PartitionFinder needs.
 
-Go to this address and follow the instructions for your system:
-http://docs.continuum.io/anaconda/install.html
-
-When asked this question, respond 'yes':
-Do you wish the installer to prepend the Anaconda install location
-to PATH in your /home/kmeusema/.bashrc ? [yes|no]
+1. Go to this address and follow the instructions for your system:
+[http://docs.continuum.io/anaconda/install.html]
 
 Check that it worked by typing this at the command prompt:
 > conda
 
 It should print out a lot of help stuff for anaconda.
 
-PF Installation
-***************
+##Install PartitionFinder
 We need the development version of PartitionFinder (it will be PF2, but it's not quite
 ready for general release, yet):
 
