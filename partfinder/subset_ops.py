@@ -18,7 +18,7 @@
 import hashlib
 import cPickle as pickle
 import subset
-from util import get_aic, get_aicc, get_bic
+
 
 import logging
 log = logging.getLogger("subset_ops")
