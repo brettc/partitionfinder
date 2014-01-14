@@ -20,6 +20,7 @@ https://github.com/brettc/partitionfinder/archive/develop.zip
 2. Unzip develop.zip which will create a folder called partitionfinder-develop
 
 3. If you are using Linux, you will need to download and compile your own version of RAxML. To do that:
+
     3.1 Download the PF version of RAxML from here:
     https://github.com/brettc/standard-RAxML/archive/master.zip
 
@@ -37,15 +38,16 @@ Setting up the .cfg file still works exactly as described in the manaul (in the 
 
 
 --rcluster-max
+
 defines the number of partitioning scheme that PF will explore at each step of the analysis. More is better, and the default is 1000. As a rough rule of thumb, I suggest using 2x the number of data blocks in your .cfg file. If your run is too slow, make --rcluster-max smaller. We have to be pragmatic, after all. But if your run finishes quickly, try running it again after doubling --rcluster max. 
 
 -q
+
 this stops PF from writing unnecessary files. And helps you to stay friends with the folks that manage the clusters you might use. 
 
 By default PF will use ALL of your CPUs. To control the number of cpus, use -p:
 
--p 10
-This will use 10 cpus (or less than 10 if you have less than 10).
+e.g. "-p 10" will use 10 cpus (or less than 10 if you have less than 10).
 
 ##An example
 Here's a worked example of analysing a massive dataset with PartitionFinder.
@@ -109,14 +111,6 @@ If you want to control the number of processors, use -p:
 And if you want to control the way that similarity is defined among subsets, you can use the "--weights" option (see the manual for how this works). For example, we could assign equal weight to rates, amino acid frequencies, and the gamma parameter, but ignore model parameters (sensible for an amino acid dataset because they are not estimated from the data):
 
     python ~/blah/PartitionFinderProtein.py ~/blah/analysis --raxml -q --rcluster-max 5000 -p 20 --weights "1, 1, 0, 1"
-
-
-
-  --weights <O:B:M:A>   Assign different weights to (O)verall rate for a
-                        subset, the (B)ase/amino acid frequencies, (M)odel
-                        parameters, and (A)lpha value [default: 1:0:0:0].
-
-
 
 
 
