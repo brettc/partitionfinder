@@ -247,7 +247,7 @@ class SubsetAlignment(Alignment):
                       "but the alignment only has %d sites. "
                       "Please check." % (site_max, source.sequence_len))
             raise AlignmentError
-
+#Possible place to change things over to arrays
         # Pull out the columns we need
         for species_name, old_sequence in source.species.iteritems():
             new_sequence = ''.join([old_sequence[i] for i in subset.columns])
