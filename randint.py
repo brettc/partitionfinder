@@ -1,6 +1,7 @@
 import unittest
 import numpy as np
 import random
+import scipy
 
 def make_mat():
 	a = np.random.randint(11, size=(5, 5))
@@ -13,8 +14,8 @@ def make_mat():
 
 def rescale_mat():
 	a = make_mat()
-	uniq, inv = np.unique(a, return_inverse = True)
-	rescaled_matrix = inv.reshape(a.shape)
+	uniq = np.unique(a)
+	rescaled_matrix = uniq.searchsorted(a)
 #	print rescaled_matrix
 	return a, rescaled_matrix
 
