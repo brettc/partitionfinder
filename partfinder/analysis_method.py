@@ -251,6 +251,7 @@ class RelaxedClusteringAnalysis(Analysis):
         # Start by remembering that we analysed the starting scheme
         subset_counter = 1
         step = 1
+        bic_score_list = []
         while True:
 
             log.info("***Relaxed clustering algorithm step %d of %d***" % (step, partnum - 1))
@@ -282,6 +283,7 @@ class RelaxedClusteringAnalysis(Analysis):
                           (new_result.score-old_best_score))
 
                 lumpings_done += 1
+                bic_score_list.append(self.results.best_score)
 
             if self.results.best_score != old_best_score:
                 log.info("Analysed %.1f percent of the schemes for this step. The best "
@@ -309,6 +311,7 @@ class RelaxedClusteringAnalysis(Analysis):
         log.info("Relaxed clustering algorithm finished after %d steps" % step)
         log.info("Best scoring scheme is scheme %s, with %s score of %.3f"
                  % (self.results.best_scheme.name, model_selection, self.results.best_score))
+        log.info("BIC score list is: " + str(bic_score_list))
 
         self.cfg.reporter.write_best_scheme(self.results)
 
@@ -329,6 +332,7 @@ class KmeansAnalysis(Analysis):
         log.info("Analysing starting scheme (scheme %s)" % start_scheme.name)
         old_score = self.analyse_scheme(start_scheme)
 
+
         # Get first scheme
         best_scheme = start_scheme
         subset_index = 0
@@ -338,6 +342,7 @@ class KmeansAnalysis(Analysis):
         alignment_path = self.filtered_alignment_path
         tree_path = processor.make_tree_path(alignment_path)
         best_result = self.analyse_scheme(best_scheme)
+        bic_score_list.append(best_result.score)
         fabricated_subsets =[]
         step = 1
 
@@ -349,11 +354,13 @@ class KmeansAnalysis(Analysis):
             log.info("***Kmeans algorithm step %d***" % step)
             step += 1
 
+            # Sort the subsets we haven't analyzed yet by size
             all_subsets[subset_index:] = sorted(all_subsets[subset_index:], key = len, reverse = True)
 
             current_subset = all_subsets[subset_index]
 
             log.info("Analysing subset of %d sites", len(current_subset.columns))
+            log.info("You are on number %s of %s subsets" % ((subset_index + 1), len(all_subsets)))
 
             # First check if the subset is large enough to split, if it isn't,
             # move to the next subset
@@ -381,7 +388,6 @@ class KmeansAnalysis(Analysis):
                 fabricated_subsets.append(current_subset)
                 continue
 
- 
             # Take a copy
             updated_subsets = all_subsets[:]
 
@@ -421,7 +427,8 @@ class KmeansAnalysis(Analysis):
                        l = float(len(s.columns))
                        props = [(float(m.count(1))/l), (float(m.count(2))/l), (float(m.count(0))/l)]
                        log.info("%d subset has 1st, 2nd, 3rd props: %s" %(len(s.columns), str(props)))
- 
+
+     
 
 
             else:
@@ -439,6 +446,7 @@ class KmeansAnalysis(Analysis):
             log.info("This involves cleaning up small subsets which %s "
                      "can't analyse", self.cfg.phylogeny_program)
 
+        log.info("BIC list before rejoining: " + str(bic_score_list))
         # Now join the fabricated subsets back up with other subsets
         while fabricated_subsets:
             log.info("***Kmeans algorithm step %d***" % step)
@@ -508,7 +516,6 @@ class KmeansAnalysis(Analysis):
         log.info("Best scoring scheme is scheme %s, with %s score of %.3f"
                  % (self.results.best_scheme.name, self.cfg.model_selection, self.results.best_score))
         log.info("BIC list is " + str(bic_score_list))
-        print("BIC list is " + str(bic_score_list))
 
         self.cfg.reporter.write_best_scheme(self.results)
 
@@ -855,6 +862,104 @@ class KmeansGreedy(Analysis):
 
         self.cfg.reporter.write_best_scheme(self.results)
 
+class KmeansVar(Analysis):
+    def do_analysis(self):
+        bic_score_list = []
+        # Copied and pasted from greedy analysis
+        partnum = len(self.cfg.user_subsets)
+        self.cfg.progress.begin(1, 1)
+
+        # Start with the most partitioned scheme
+        start_description = range(partnum)
+        start_scheme = scheme.create_scheme(
+            self.cfg, "start_scheme", start_description)
+
+
+        log.info("Analysing starting scheme (scheme %s)" % start_scheme.name)
+        old_score = self.analyse_scheme(start_scheme)
+
+
+        # Get first scheme
+        best_scheme = start_scheme
+        subset_index = 0
+        all_subsets = list(best_scheme.subsets)
+        original_subset = all_subsets[0]
+
+        processor = self.cfg.processor
+        alignment_path = self.filtered_alignment_path
+        tree_path = processor.make_tree_path(alignment_path)
+        best_result = self.analyse_scheme(best_scheme)
+        bic_score_list.append(best_result.score)
+        fabricated_subsets =[]
+        step = 1
+        num_ks = 2
+        last_ks = 0
+
+        # Generate per site statistics (this step should only happen once)
+        processor.gen_per_site_stats(self.cfg, alignment_path, tree_path)
+        per_site_statistics = processor.get_per_site_stats(alignment_path, self.cfg)
+        likelihood_list = per_site_statistics[0]
+        original_subset.site_lnls_GTRG = likelihood_list
+
+        if self.cfg.kmeans_opt == 1:
+            # Set the per_site_stat_list to site likelihoods only
+            per_site_stat_list = per_site_statistics[0]
+        if self.cfg.kmeans_opt == 2:
+            # Set the per_site_stat_list to site rates only
+            per_site_stat_list = per_site_statistics[2]
+        if self.cfg.kmeans_opt == 3:
+            # Set the per_site_stat_list to site rates and likelihoods together
+            per_site_stat_list = per_site_statistics[3]
+        if self.cfg.kmeans_opt == 4:
+            # Set the per_site_stat_list to likelihoods under each gamma rate
+            # category
+            per_site_stat_list = per_site_statistics[1]
+
+        cap = False
+        high_ks = 0
+        
+        while num_ks > high_ks:
+            log.info("*** K-means step %i ***" % step)
+            step += 1
+
+            # Then we use k-means to split the alignment into 2 subsets and
+            # create a new scheme, see if that improves the overall score, if
+            # it does we move onto the next step
+            new_subs = kmeans.kmeans_var_ks(self.cfg, original_subset, num_ks, per_site_stat_list)
+            new_scheme = scheme.Scheme(self.cfg, str(step-1),
+                new_subs)
+            new_result = self.analyse_scheme(new_scheme)
+
+            # Bisection search: with improvements, set num_ks to double. When
+            # the BIC score doesn't improve, set num_ks into the middle
+            # between the last one that improved the BIC and the current
+            # number
+            if new_result.score < best_result.score:
+                log.info("Score improved with %s k's" % num_ks)
+                log.info("New score is: %d" % new_result.score)
+                best_result = new_result
+                best_scheme = new_scheme
+                last_ks = num_ks
+                high_ks = num_ks
+                if cap:
+                    num_ks = (new_cap + num_ks)/2
+                else:
+                    num_ks = (num_ks*2)
+
+            else:
+                log.info("Didn't get better with %s k's, bisecting..." % num_ks)
+                cap = True
+                new_cap = num_ks
+                num_ks = (last_ks + num_ks)/2
+
+
+
+        log.info("Best scoring scheme is scheme %s, with %s score of %.3f"
+                 % (self.results.best_scheme.name, self.cfg.model_selection, self.results.best_score))
+
+        self.cfg.reporter.write_best_scheme(self.results)
+
+
 
 def choose_method(search):
     if search == 'all':
@@ -873,6 +978,8 @@ def choose_method(search):
         method = KmeansAnalysisWrapper
     elif search == 'kmeans_greedy':
         method = KmeansGreedy
+    elif search == 'kmeans_var':
+        method = KmeansVar
     else:
         log.error("Search algorithm '%s' is not yet implemented", search)
         raise AnalysisError

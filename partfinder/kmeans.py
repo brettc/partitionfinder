@@ -287,3 +287,15 @@ def make_likelihood_list(likelihood_list, site_categories):
             one_list.append(likelihood[0])
         rate_list.append(one_list)
     return rate_list
+
+def kmeans_var_ks(cfg, a_subset, number_of_ks, likelihood_list): 
+    '''Takes a desired number of k's and returns the newly
+    split subsets into however many k's were desired
+    '''
+    site_categories = kmeans(likelihood_list, number_of_ks = number_of_ks)[1]
+    new_likelihood_lists = make_likelihood_list(likelihood_list, site_categories)
+    list_of_sites = []
+    for k in site_categories:
+        list_of_sites.append(site_categories[k])
+    new_subsets = subset_ops.split_subset(a_subset, list_of_sites)
+    return new_subsets
