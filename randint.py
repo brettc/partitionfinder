@@ -4,7 +4,6 @@ import random
 import scipy
 from scipy import stats
 
-
 def make_mat():
 	a = np.random.randint(5, size=(1000, 100000))
 	return a
@@ -14,9 +13,10 @@ def read_in_array():
 	return mat
 
 def rescale_mat():
+	"""RAxML expects symbols to be constant across columns, so we rescale the matrices to meet this reuirement"""
 	a = read_in_array()
+	a = np.ma.masked_array(a,np.isnan(a))
 #	a = np.array([[1, 2, 10],[1, 2, 99],[1,2,30]])
-	print a
 #Solution with scipy: Times at 249ms per loop with 100 x 10000 matrix. 2.73s per loop for 1000 x 10000 and runs out of memory at 1000 x 10000.
 #	rescaled_matrix = scipy.stats.rankdata(a,'dense').reshape(a.shape)-1
 #Solution 2: This runs into a memory error on my computer with a 1000 x 100000 or 1000 x 10000 data set. Times at 410ms per loop with 100 x 10000 matrix. I think this is not our solution.
@@ -25,8 +25,16 @@ def rescale_mat():
 #Solution 3: 192ms per loop with a 100 x 10000 matrix, 19.2s per loop with 1000 x 100000. 
 	uniq = np.unique(a)
 	rescaled_matrix = uniq.searchsorted(a)
-	print rescaled_matrix
 	return a, rescaled_matrix
+
+def fix_missing():
+	"""Rescaled matrices are don't have missing data symbols, as numpy does not use them, so we need to reinsert those"""
+	mat_list = rescale_mat()
+	a = mat_list[1]
+	a = a.tolist()
+	a=[['?' if x is None else x for x in i] for i in a]
+	return a
+	
 
 def test_type_of():
 	"""Test to mkae sure matrix being imported is actually a numpy array, otherwise the next step does not work"""
@@ -46,8 +54,7 @@ def test_rescaling():
 	except:
 		print "These values are not appropriately scaled, please check that your input matrix is comprised of numbers and not letters."
 	
-
-test_rescaling()
+fix_missing()
 
 
 
