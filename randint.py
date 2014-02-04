@@ -33,7 +33,6 @@ def fix_missing():
 	a = a.tolist()
 #timeit solutions, including all the dependent functions: 1000x1000 size: 365ms per loop. 1000x10000: 3.67s per loop. 1000x100000: 36.8s per loop. Seems good.
 	a=[['?' if x is None else x for x in i] for i in a]
-	print a
 	return a
 	
 def test_type_of():
@@ -42,20 +41,48 @@ def test_type_of():
 	assert isinstance(a, np.ndarray)
 	print 'Morphology data passes initial format check.'
 
-def test_rescaling():
-	"""check that the rescaling worked: the input matrix should not be the same as the rescaled, unless input contained zero"""
-	a = rescale_mat()
-	print a[0], "\n", a[1]
-	rescaled = a[1]
+def test_shape():
+	'''check that the rescaled matrix with appropriate missing data symbols matches the input matrix'''
+	a = read_in_array()
+	b = fix_missing()
+	b = np.array(b)
+#	print b, b.shape
+#	print a, a.shape
 	try:
-		 np.array_equal(a[:1],a[1:])
-		 np.any(rescaled[:, 0] == 0)
-		 print "Input matrix appropriately scaled; continuing to write out matrices."
+		a.shape == b.shape
+		print "Input and output matrices are the same size. All data present and accounted for, captain!"
 	except:
+		a.shape != b.shape
+		print "Something has gone wrong. This is most likely due to non-numeric characters in your data"
+
+def test_rescaling():
+	"""check that the rescaling worked: calling unique on the rescaled matrix should yield a sequential series of numbers beginning from zero"""
+	b = rescale_mat()
+	c = np.unique(b[1])
+	try:
+		len(c)-1 == max(c)-min(c)
+		min(c) == 0
+		print "Input matrix appropriately scaled; continuing to write out matrices."
+
+	except:
+		len(c)-1 != max(c)-min(c)
+		print "These values are not appropriately scaled, please check that your input matrix is comprised of numbers and not letters."
+		min(c) != 0
 		print "These values are not appropriately scaled, please check that your input matrix is comprised of numbers and not letters."
 
-
-fix_missing()
+def test_nans_replaced():
+	a = fix_missing()
+	print a
+	print set(a)
+	try:
+		None in set(a)
+	except:
+		print 'There are NoneTypes in this array, which RAxML cannot handle. Please check that there are no non-numeric characters in your input matrix.'
+	else:
+		None not in set(a)
+		'?' in set(a)
+		print 'This matrix is acceptably scaled labeled for output to RAxML'
+test_rescaling()
 
 
 
