@@ -63,7 +63,6 @@ def test_rescaling():
 		len(c)-1 == max(c)-min(c)
 		min(c) == 0
 		print "Input matrix appropriately scaled; continuing to write out matrices."
-
 	except:
 		len(c)-1 != max(c)-min(c)
 		print "These values are not appropriately scaled, please check that your input matrix is comprised of numbers and not letters."
@@ -72,17 +71,18 @@ def test_rescaling():
 
 def test_nans_replaced():
 	a = fix_missing()
-	print a
-	print set(a)
+	new_list = [x for sublist in a for x in sublist]
+	unique_vals = set(new_list)
 	try:
-		None in set(a)
+		None not in unique_vals
+		'?' in unique_vals
+		print "NaNs removed, matrix has appropriate missing data symbols."
 	except:
+		None in unique_vals
 		print 'There are NoneTypes in this array, which RAxML cannot handle. Please check that there are no non-numeric characters in your input matrix.'
-	else:
-		None not in set(a)
-		'?' in set(a)
-		print 'This matrix is acceptably scaled labeled for output to RAxML'
-test_rescaling()
+
+
+test_nans_replaced()
 
 
 
