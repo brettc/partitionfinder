@@ -1,0 +1,45 @@
+source file: <b>/home/april/project_files/partitions/partitionfinder/tests/test_rescaling.py</b><br>
+
+
+file stats: <b>36 lines, 35 executed: 97.2% covered</b>
+<pre>
+<font color="green">   1. import sys</font>
+<font color="green">   2. import numpy as np</font>
+<font color="green">   3. rescale_morphology = sys.path.append('/home/april/project_files/partitions/partitionfinder/partfinder/')</font>
+<font color="black">   4. </font>
+<font color="green">   5. import rescale_morphology as rem</font>
+<font color="black">   6. </font>
+<font color="green">   7. def test_shape():</font>
+<font color="green">   8. 	&quot;&quot;&quot;check that the size and shape (number of characters and taxa) of the rescaled matrix with appropriate missing data symbols matches the input matrix. Tests that no data has been lost in the functions rescale_mat and fix_missing.&quot;&quot;&quot;</font>
+<font color="green">   9. 	a = rem.make_mat()</font>
+<font color="green">  10. 	b = rem.fix_missing()</font>
+<font color="green">  11. 	b = rem.np.array(b)</font>
+<font color="green">  12. 	assert a.shape == b.shape, &quot;Input and output matrices are the same size. All data present and accounted for, captain!&quot;</font>
+<font color="green">  13. 	if not a.shape == b.shape:</font>
+<font color="green">  14. 		raise AssertionError, &quot;Data has been lost between input and output matrix. This is most likely due to non-numeric characters in your data, please check that no non-numeric or missing data ('-', '?') characters exist in input file.&quot;</font>
+<font color="green">  15. </font>
+<font color="green">  16. def test_rescaling():</font>
+<font color="green">  17. 	&quot;&quot;&quot;check that the rescaling worked: calling unique on the rescaled matrix should yield a sequential series of numbers beginning from zero. Tests function of rescale_mat.&quot;&quot;&quot;</font>
+<font color="green">  18. 	b = rem.rescale_mat()</font>
+<font color="green">  19. 	c = np.unique(b[1])</font>
+<font color="green">  20. 	try:</font>
+<font color="green">  21. 		len(c)-1 == max(c)-min(c)</font>
+<font color="green">  22. 		min(c) == 0</font>
+<font color="green">  23. 		print &quot;Input matrix appropriately scaled; continuing to write out matrices.&quot;</font>
+<font color="green">  24. 	except:</font>
+<font color="red">  25. 		raise TypeError, &quot;These values are not appropriately scaled, please check that your input matrix is comprised of numbers and not letters.&quot;</font>
+<font color="green">  26. </font>
+<font color="green">  27. def test_nans_replaced():</font>
+<font color="green">  28. 	&quot;&quot;&quot;Check that all NoneType characters have been replaced with a missing data symbol ('?') that RAxML can actually read. Checks functionality of fix_missing.&quot;&quot;&quot;</font>
+<font color="green">  29. 	a = rem.fix_missing()</font>
+<font color="green">  30. 	new_list = [x for sublist in a for x in sublist]</font>
+<font color="green">  31. 	unique_vals = set(new_list)</font>
+<font color="green">  32. 	try:</font>
+<font color="green">  33. 		None not in unique_vals</font>
+<font color="green">  34. 		'?' in unique_vals</font>
+<font color="green">  35. 		print &quot;NaNs removed, matrix has appropriate missing data symbols.&quot;</font>
+<font color="green">  36. 	except:</font>
+<font color="green">  37. 		raise TypeError, &quot;There are NoneType characters in this array, which RAxML cannot handle. Please check that there are no non-numeric characters in your input matrix.&quot;</font>
+<font color="green">  38. </font>
+</pre>
+

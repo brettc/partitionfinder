@@ -252,10 +252,13 @@ def check_options(op, options):
             bad = ",".join(list(errors))
             op.error("Invalid debug regions: %s" % bad)
 
-    # Default to raxml for morphology
+    # Default to phyml
     if options.datatype == 'morphology':
 	options.phylogeny_program = 'raxml'
-
+    elif options.raxml == 1:
+        options.phylogeny_program = 'raxml'
+    else:
+        options.phylogeny_program = 'phyml'
 
     #A warning for people using the Pthreads version of RAxML
     if options.cmdline_extras.count("-T") > 0:
