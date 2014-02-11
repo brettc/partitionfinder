@@ -82,6 +82,8 @@ def split_subset(a_subset, cluster_list):
     tracker = 0
     for column_set in subset_columns:
         new_subset = subset.Subset(a_subset.cfg, column_set)
+        if new_subset.best_lnl > 0:
+            new_subset.fabricated = True
         list_of_subsets.append(new_subset)
         new_subset.site_lnls_GTRG = site_likelihoods[tracker]
         tracker += 1
