@@ -40,3 +40,25 @@ p + geom_point() + geom_smooth(stat="identity")
 dev.copy2pdf(file="~/Documents/Projects_Current/partitionfinder/docs/citationsplot.pdf")
 dev.off()
 
+
+# Conversion rate plot (how many downloads per citation)
+d <- c[c(2:nrow(d)),]
+d$downloads <- m$downloads[19:length(m$downloads)] + m$downloads[19:length(m$downloads)]
+d$downloads.per.cite <- d$downloads / d$citations.googlescholar
+
+e <- d[,c(1,2)]
+e$type <- "citations"
+f <- d[,c(1,4)]
+f$type <- "downloads.per.citation"
+
+names(e) <- names(f) <- c("date", "value", "type")
+g <- rbind(e, f)
+
+quartz(width=10, height=5)
+p <- ggplot(g, aes(date, value, colour = type))
+p + geom_point() + geom_smooth(stat="identity")
+dev.copy2pdf(file="~/Documents/Projects_Current/partitionfinder/docs/citationsplot2.pdf")
+dev.off()
+
+
+
