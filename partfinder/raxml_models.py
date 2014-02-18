@@ -91,9 +91,12 @@ def get_protein_models_gammaI():
 
 @memoize
 def get_all_morphology_models():
+## RAxML has: BINGAMMAI, MULTIGAMMAI, BINGAMMA, MULTIGAMMA (no invarient, but has autamorphies) and ASC_BINGAMMA, ASC_MULTIGAMMA (for data sets without invarient sites or autapomorphies)
     model_list = []
     for model in _base_morphology_models.keys():
-        model_list.append("%s+G"     %(model))
+	model_list.append("ASC_ + %s" %(model))
+        model_list.append("MULTI + %s" %(model))
+        model_list.append("%s+I"     %(model))
     return model_list
 
 

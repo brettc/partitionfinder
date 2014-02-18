@@ -1,0 +1,44 @@
+source file: <b>/home/april/project_files/partitions/partitionfinder/tests/test_phyml.py</b><br>
+
+
+file stats: <b>7 lines, 7 executed: 100.0% covered</b>
+<pre>
+<font color="green">   1. from partfinder import alignment</font>
+<font color="black">   2. </font>
+<font color="black">   3. </font>
+<font color="green">   4. def test_simple():</font>
+<font color="black">   5.     test = &quot;&quot;&quot;</font>
+<font color="black">   6. 5 10</font>
+<font color="black">   7. spp1   actgactgaa</font>
+<font color="black">   8. spp2   tctgtctgtt</font>
+<font color="black">   9. spp3   agtgagtgaa</font>
+<font color="black">  10. spp4   actaactaaa</font>
+<font color="black">  11. spp5   acagacagaa</font>
+<font color="green">  12.     &quot;&quot;&quot;</font>
+<font color="green">  13.     alignment.parse(test)</font>
+<font color="black">  14. </font>
+<font color="black">  15. </font>
+<font color="green">  16. def test_interleaved():</font>
+<font color="black">  17.     test = &quot;&quot;&quot;</font>
+<font color="black">  18. 5 30</font>
+<font color="black">  19. spp1   actgactgaa</font>
+<font color="black">  20. spp2   tctgtctgtt</font>
+<font color="black">  21. spp3   agtgagtgaa</font>
+<font color="black">  22. spp4   actaactaaa</font>
+<font color="black">  23. spp5   acagacagaa</font>
+<font color="black">  24. </font>
+<font color="black">  25. actgactgaa</font>
+<font color="black">  26. tctgtctgtt</font>
+<font color="black">  27. agtgagtgaa</font>
+<font color="black">  28. actaactaaa</font>
+<font color="black">  29. acagacagaa</font>
+<font color="black">  30. </font>
+<font color="black">  31. actgactgaa</font>
+<font color="black">  32. tctgtctgtt</font>
+<font color="black">  33. agtgagtgaa</font>
+<font color="black">  34. actaactaaa</font>
+<font color="black">  35. acagacagaa</font>
+<font color="green">  36.     &quot;&quot;&quot;</font>
+<font color="green">  37.     alignment.parse(test)</font>
+</pre>
+
