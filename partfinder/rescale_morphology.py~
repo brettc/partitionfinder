@@ -11,7 +11,7 @@ def read_in_array():
 
 def rescale_mat():
 	"""RAxML expects symbols to be constant across columns, so we rescale the matrices to meet this reuirement"""
-	a = read_in_array()
+	a = make_mat()
 	a = np.ma.masked_array(a,np.isnan(a))
 #Solution with scipy: Times at 249ms per loop with 100 x 10000 matrix. 2.73s per loop for 1000 x 10000 and runs out of memory at 1000 x 10000.
 #	rescaled_matrix = scipy.stats.rankdata(a,'dense').reshape(a.shape)-1
