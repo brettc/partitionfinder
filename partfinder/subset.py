@@ -366,7 +366,7 @@ class Subset(object):
         if not os.path.exists(path):
             return False
 
-        log.debug("Reading binary cached results for %s", self)
+        log.debug("Reading binary cached results for %s", path)
         f = open(path, 'rb')
         self.__dict__.update(pickle.load(f))
         f.close()
