@@ -3,6 +3,8 @@ import numpy as np
 import os
 from partfinder import rescale_morphology as rem
 
+HERE = os.path.abspath(os.path.join(os.path.dirname(__file__),"../.."))
+
 def test_nans_replaced():
     """Check that all NoneType characters have been replaced with a missing 
     data symbol ('?') that RAxML can actually read. Checks functionality of 

@@ -1,7 +1,7 @@
 import sys
 import numpy as np
 from partfinder import rescale_morphology as rem
-
+HERE = os.path.abspath(os.pardir)
 def test_rescaling():
 	"""check that the rescaling worked: calling unique on the rescaled matrix 
     should yield a sequential series of numbers beginning from zero. 
