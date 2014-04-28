@@ -42,7 +42,7 @@ dev.off()
 
 
 # Conversion rate plot (how many downloads per citation)
-d <- c[c(2:nrow(d)),]
+d <- c[c(2:nrow(c)),]
 d$downloads <- m$downloads[19:length(m$downloads)] + m$downloads[19:length(m$downloads)]
 d$downloads.per.cite <- d$downloads / d$citations.googlescholar
 
