@@ -174,26 +174,37 @@ class GreedyAnalysis(Analysis):
             old_best_score = self.results.best_score
 
             # Make a list of all the new subsets, and get them analysed
-            sch_num = 1
+            # We do them in blocks of 10K, to avoid memory overload
             lumped_subset_iterator = itertools.combinations(start_scheme.subsets, 2)
-            lumped_subsets = [] 
             new_subs = []
-            new_schemes = []
+            log.info("Building subsets")
             for subset_grouping in lumped_subset_iterator:
-                lumped_subsets.append(subset_grouping)
                 new_sub = subset_ops.merge_subsets(subset_grouping)
-                new_subs.append(new_sub)
+                if not new_sub.is_done:
+                    new_subs.append(new_sub)
+                if len(new_subs)>9999:
+                    log.info("Analysing 10,000 subsets")
+                    self.analyse_list_of_subsets(new_subs)
+                    new_subs = []
+                    log.info("Building more subsets")
+
+            # analyse what's left, and clean out list
+            log.info("Analysing %d subsets"%(len(new_subs)))
+            self.analyse_list_of_subsets(new_subs)
+            new_subs = []
+
+            log.info("Analysing schemes")
+            # we repeat the iterator, for memory efficiency
+            lumped_subset_iterator = itertools.combinations(start_scheme.subsets, 2)
+            sch_num = 1
+            for subset_grouping in lumped_subset_iterator:
+                # could do this without another merge, but this seems most robust
+                new_sub = subset_ops.merge_subsets(subset_grouping)
                 scheme_name = "%s_%d" % (name_prefix, sch_num)
                 lumped_scheme = neighbour.make_clustered_scheme(
                     start_scheme, scheme_name, subset_grouping, new_sub, self.cfg)
-                new_schemes.append(lumped_scheme)
                 sch_num = sch_num + 1
 
-            log.info("Analysing %d subsets" % len(new_subs))
-            self.analyse_list_of_subsets(new_subs)
-
-            log.info("Analysing %d schemes" % len(new_subs))
-            for lumped_scheme in new_schemes:
                 new_result = self.analyse_scheme(lumped_scheme)
                 log.debug("Difference in %s: %.1f" %
                           (self.cfg.model_selection,
