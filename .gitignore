@@ -53,3 +53,7 @@ examples/nucleotide/RAxML_info.partitions
 examples/nucleotide/best_scheme_all_models_kmeans_wss.txt
 
 examples/nucleotide/raxml_def_all_models_wss.txt
+
+docs/.Rhistory
+
+docs/.Rhistory
