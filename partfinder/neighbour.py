@@ -136,6 +136,21 @@ def make_clustered_scheme(start_scheme, scheme_name, subsets_to_cluster, merged_
     return final_scheme
 
 
+def make_split_scheme(start_scheme, scheme_name, subset_to_split, split_subsets, cfg):
+
+    # 1. Then we define a new scheme with those merged subsets
+    new_subsets = start_scheme.subsets - set([subset_to_split])
+
+    # add all of the split subsets
+    for s in split_subsets:
+        new_subsets.add(s)
+
+    #3. Create the clustered scheme
+    final_scheme = scheme.Scheme(cfg, str(scheme_name), new_subsets)
+
+    return final_scheme
+
+
 def get_nearest_neighbour_scheme(start_scheme, scheme_name, cfg):
     """
     The idea here is to take a scheme, and perform some analyses to find a

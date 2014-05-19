@@ -78,6 +78,9 @@ def kmeans_split_subset(cfg, alignment, a_subset, tree_path, number_of_ks = 2):
     # For some reason some instances can be analyzed using -f B but not -f g
     # in RAxML, this is to catch those instances and flag the subset as
     # fabricated to add to others later.
+    # TO DO move these to the raxml.py and/or phyml.py file. 
+    # They are specific to those processors. If there's an error, we can just 
+    # suppress it and label that subset as fabricated.
     try:
         processor.gen_per_site_stats(cfg, str(phylip_file),
             str(tree_path))
@@ -101,9 +104,7 @@ def kmeans_split_subset(cfg, alignment, a_subset, tree_path, number_of_ks = 2):
             raise PhylogenyProgramError
 
     # Call processor to parse them likelihoods from the output file. NB these
-    # can be site rates as well as likelihoods ToDo: Change the name of this
-    # to something other than "likelihood_list" since this isn't really the
-    # best description of what it is...
+    # can be site rates as well as likelihoods 
     per_site_statistics = processor.get_per_site_stats(phylip_file, cfg)
 
     # Now store all of the per_site_stats with the subset

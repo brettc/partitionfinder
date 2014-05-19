@@ -387,7 +387,159 @@ class RelaxedClusteringAnalysis(Analysis):
 
         self.cfg.reporter.write_best_scheme(self.results)
 
+
 class KmeansAnalysis(Analysis):
+
+
+    @logtools.log_info(log, "Performing k-means Analysis")
+    def do_analysis(self):
+        '''A greedy algorithm for heuristic partitioning searches'''
+
+        partnum = len(self.cfg.user_subsets)
+        self.cfg.progress.begin(1, 1)
+
+        # Start with the most partitioned scheme
+        start_description = range(partnum)
+        start_scheme = scheme.create_scheme(
+            self.cfg, "start_scheme", start_description)
+
+        log.info("Analysing starting scheme (scheme %s)" % start_scheme.name)
+        log.push()
+        start_result = self.analyse_scheme(start_scheme)
+        self.cfg.reporter.write_scheme_summary(start_scheme, start_result)
+        log.pop()
+
+        processor = self.cfg.processor
+        alignment_path = self.filtered_alignment_path
+        tree_path = processor.make_tree_path(alignment_path)
+
+        step = 0
+        while True:
+            step += 1
+            log.info("***k-means algorithm step %d***" % step)
+            log.push()
+            name_prefix = "step_%d" % (step)
+
+            # 1. Make split subsets
+            split_subs = {}
+            for sub in start_scheme.subsets:
+                if len(sub.columns) == 1 or sub.fabricated:
+                    split_subs[sub] = [sub]
+                else:
+                    split = kmeans.kmeans_split_subset(self.cfg,
+                                                       self.alignment,
+                                                       sub,
+                                                       tree_path)
+                    split_subs[sub] = split
+
+            # 2. Analyse split subsets (this to take advantage of parallelisation)
+            subs = []
+            for key in split_subs:
+                subs = subs + split_subs[key]
+            self.analyse_list_of_subsets(subs)
+
+            # 3. Build new scheme
+            new_scheme_subs = [] 
+            for sub in start_scheme.subsets:
+
+                if len(sub.columns) == 1 or sub.fabricated:
+                    new_scheme_subs.append(sub)
+                else: # compare split to un-split
+                    split_subsets = split_subs[sub]
+                    split_scheme = neighbour.make_split_scheme(
+                        start_scheme, name_prefix, sub, split_subsets, self.cfg)
+
+                    new_result = self.analyse_scheme(split_scheme)
+                    score_diff = new_result.score - start_result.score
+                    log.info("Difference in %s: %.1f" %
+                                (self.cfg.model_selection.upper(),
+                                score_diff))
+                    if score_diff < 0:
+                        new_scheme_subs = new_scheme_subs + split_subsets
+                    else:
+                        new_scheme_subs.append(sub)
+
+            print new_scheme_subs
+            print start_scheme.subsets
+
+            if len(new_scheme_subs) == len(list(start_scheme.subsets)):
+                log.info("""Analysed all subsets, but couldn't Find
+                            a split that improved the score. Quitting.""")
+                break
+            else:
+                n_splits = len(new_scheme_subs) - len(start_scheme.subsets)
+                old_best_score = start_result.score
+                start_scheme = scheme.Scheme(self.cfg, name_prefix, new_scheme_subs)
+                start_result = self.analyse_scheme(start_scheme)
+
+
+                log.info("""Analysed all subsets. Found %d subsets which can be split.
+                    New scheme changes the %s score by %.1f units.""" % (
+                    n_splits,
+                    self.cfg.model_selection,
+                    self.results.best_score - old_best_score
+                ))
+
+                self.cfg.reporter.write_scheme_summary(
+                    start_scheme, start_result)
+
+
+        fabricated_subsets = start_scheme.get_fabricated_subsets()
+
+        if fabricated_subsets:
+            log.info("Finalising partitioning scheme")
+
+            while fabricated_subsets:
+                step += 1
+                log.info("***k-means algorithm step %d***" % step)
+
+                s = fabricated_subsets[0]
+                centroid = s.centroid
+                best_match = None
+
+                # get closest subset to s
+                all_subs = list(best_scheme)
+                all_subs.remove(s)
+                for sub in all_subs:
+                    centroid_array = [sub.centroid, centroid]
+                    warnings.simplefilter('ignore', DeprecationWarning)
+                    euclid_dist = spatial.distance.pdist(centroid_array)
+                    if euclid_dist < best_match or best_match is None:
+                        best_match = euclid_dist
+                        closest_sub = sub
+
+                # create, analyse, report the new scheme
+                scheme_name = "step_%d" %(step)
+                merged_sub = subset_ops.merge_fabricated_subsets([s, closest_sub])
+
+                start_scheme = neighbour.make_clustered_scheme(
+                    start_scheme, scheme_name, [s, closest_sub], merged_sub, self.cfg)
+                start_result = self.analyse_scheme(start_scheme)
+                self.cfg.reporter.write_scheme_summary(start_scheme, start_result)
+
+                fabricated_subsets = start_scheme.get_fabricated_subsets()
+
+
+        # Since the AIC will likely be better before we dealt with the
+        # fabricated subsets, we need to set the best scheme and best result
+        # to those from the last merged_scheme. TODO: add a variable to scheme
+        # to take care of this problem so that the best AND analysable scheme
+        # is the one that gets automatically flagged as the best scheme
+        self.results.best_scheme = start_scheme
+        self.results.best_result = start_result
+
+
+        log.info("** Kmeans algorithm finished after %d steps **" % (step))
+        log.info("Best scoring scheme has %d subsets and a %s score of %.3f"
+                 % (len(self.results.best_scheme.subsets), self.cfg.model_selection,
+                    self.results.best_score))
+
+        self.cfg.reporter.write_best_scheme(self.results)
+
+
+
+
+class oldKmeansAnalysis(Analysis):
     def do_analysis(self):
         # Copied and pasted from greedy analysis
         partnum = len(self.cfg.user_subsets)

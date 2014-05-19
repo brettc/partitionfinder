@@ -110,6 +110,13 @@ class Scheme(object):
         ss = ', '.join([str(s) for s in self.subsets])
         return "Scheme(%s, %s)" % (self.name, ss)
 
+    def get_fabricated_subsets(self):
+        fabricated_subsets = []
+        for sub in self.subsets:
+            if sub.fabricated:
+                fabricated_subsets.append(sub)
+        return fabricated_subsets
+
 
 class SchemeSet(object):
     """All the schemes added, and also a list of all unique subsets"""
