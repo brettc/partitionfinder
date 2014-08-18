@@ -390,7 +390,6 @@ class RelaxedClusteringAnalysis(Analysis):
 
 class KmeansAnalysis(Analysis):
 
-
     @logtools.log_info(log, "Performing k-means Analysis")
     def do_analysis(self):
         '''A greedy algorithm for heuristic partitioning searches'''
