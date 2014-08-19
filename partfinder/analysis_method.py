@@ -422,14 +422,18 @@ class KmeansAnalysis(Analysis):
             # 1. Make split subsets
             split_subs = {}
             for sub in start_scheme.subsets:
-                if len(sub.columns) == 1 or sub.fabricated:
+                if len(sub.columns) == 1:
                     split_subs[sub] = [sub]
                 else:
                     split = kmeans.kmeans_split_subset(self.cfg,
                                                        self.alignment,
                                                        sub,
                                                        tree_path)
-                    split_subs[sub] = split
+                    
+                    if split == 1: # we couldn't analyse the big subset
+                        split_subs[sub] = [sub] # so we keep it whole
+                    else: # we could analyse the big subset
+                        split_subs[sub] = split # so we split it into >1
 
             # 2. Analyse split subsets (this to take advantage of parallelisation)
             subs = []
@@ -458,8 +462,6 @@ class KmeansAnalysis(Analysis):
                     else:
                         new_scheme_subs.append(sub)
 
-            print new_scheme_subs
-            print start_scheme.subsets
 
             if len(new_scheme_subs) == len(list(start_scheme.subsets)):
                 log.info("""Analysed all subsets, but couldn't Find
@@ -487,17 +489,17 @@ class KmeansAnalysis(Analysis):
 
         if fabricated_subsets:
             log.info("Finalising partitioning scheme")
+            log.debug("There are %d/%d fabricated subsets" 
+                    %(len(fabricated_subsets), len(start_scheme.subsets)))
 
             while fabricated_subsets:
-                step += 1
-                log.info("***k-means algorithm step %d***" % step)
 
                 s = fabricated_subsets[0]
                 centroid = s.centroid
                 best_match = None
 
                 # get closest subset to s
-                all_subs = list(best_scheme)
+                all_subs = list(start_scheme)
                 all_subs.remove(s)
                 for sub in all_subs:
                     centroid_array = [sub.centroid, centroid]
