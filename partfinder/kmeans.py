@@ -75,12 +75,8 @@ def kmeans_split_subset(cfg, alignment, a_subset, tree_path, number_of_ks = 2):
     log.debug("Received subset, now gathering likelihoods")
     processor = cfg.processor
 
-    # For some reason some instances can be analyzed using -f B but not -f g
-    # in RAxML, this is to catch those instances and flag the subset as
-    # fabricated to add to others later.
-    # TO DO move these to the raxml.py and/or phyml.py file. 
-    # They are specific to those processors. If there's an error, we can just 
-    # suppress it and label that subset as fabricated.
+    # This is where we catch and deal with errors from PhyML/RAxML
+    # we only catch very specific errors.
     try:
         processor.gen_per_site_stats(cfg, str(phylip_file),
             str(tree_path))
@@ -100,6 +96,13 @@ def kmeans_split_subset(cfg, alignment, a_subset, tree_path, number_of_ks = 2):
             a_subset.fabricated = True
             a_subset.analysis_error = "state frequency equal to zero"
             return 1
+        elif e.stdout.find("Round_Optimize") != 1:
+            log.warning("The program couldn't analyse this subset" +
+                " because the optimisation failed")
+            a_subset.fabricated = True
+            a_subset.analysis_error = "Optimisation failed"
+            return 1
+
         else:
             raise PhylogenyProgramError
 
