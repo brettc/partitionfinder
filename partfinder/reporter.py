@@ -80,7 +80,10 @@ class TextReporter(object):
         subset_number = 1
         charpartition = []
         for sub in sorted_subsets:
-            partition_sites = sub.site_description
+            if self.cfg.search == "kmeans":
+                partition_sites = str(sub.columns).strip('[]')
+            else:
+                partition_sites = sub.site_description
 
             output.write("\tcharset Subset%s = %s;\n" % (subset_number, partition_sites))
             charpartition.append("Group%s:Subset%s" % (subset_number, subset_number))
@@ -89,21 +92,35 @@ class TextReporter(object):
         output.write('end;\n')
 
     def write_subsets(self, sch, result, output, sorted_subsets):
+        
         output.write(scheme_subset_template % (
             "Subset", "Best Model", "# sites", "Partition names"))
         number = 1
         # a way to print out the scheme in PF format
         pf_scheme_description = []
-        
-        for sub in sorted_subsets:
-            pf_scheme_description.append("(%s)" % sub.name)
-            output.write(scheme_subset_template % (
-                number, 
-                sub.best_model, 
-                len(sub.columns), 
-                sub.name,
-                ))
-            number += 1
+            
+        if self.cfg.search == "kmeans":
+            for sub in sorted_subsets:
+                num_sites = len(sub.columns)
+                pf_scheme_description.append("(%s)" % str(sub.columns).strip('[]'))
+                output.write(scheme_subset_template % (
+                    number, 
+                    sub.best_model, 
+                    num_sites, 
+                    'NA',
+                    ))
+                number += 1
+
+        else:
+            for sub in sorted_subsets:
+                pf_scheme_description.append("(%s)" % sub.name)
+                output.write(scheme_subset_template % (
+                    number, 
+                    sub.best_model, 
+                    len(sub.columns), 
+                    sub.name,
+                    ))
+                number += 1
 
         pf_scheme_description = " ".join(pf_scheme_description)
         output.write("\n\nScheme Description in PartitionFinder format\n")
@@ -118,7 +135,10 @@ class TextReporter(object):
 
         subset_number = 1
         for sub in sorted_subsets:
-            partition_sites = sub.site_description
+            if self.cfg.search == "kmeans":
+                partition_sites = str(sub.columns).strip('[]')
+            else:
+                partition_sites = sub.site_description
 
             if self.cfg.datatype == "DNA":
                 model = 'DNA'
