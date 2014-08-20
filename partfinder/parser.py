@@ -16,7 +16,7 @@
 # and conditions as well.
 
 import logtools
-log = logtools.get_logger(__file__)
+log = logtools.get_logger()
 
 from pyparsing import (
     Word, OneOrMore, alphas, nums, Suppress, Optional, Group, stringEnd,

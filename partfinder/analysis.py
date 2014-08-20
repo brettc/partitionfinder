@@ -16,23 +16,20 @@
 # and conditions as well.
 
 import logtools
-log = logtools.get_logger(__file__)
+log = logtools.get_logger()
 
 import os
 import shutil
-import shelve
 from database import Database
 
 from alignment import Alignment, SubsetAlignment
 import threadpool
 import scheme
-import subset
 import subset_ops
 import results
 import threading
 from util import PartitionFinderError
 import util
-from util import PhylogenyProgramError
 
 class AnalysisError(PartitionFinderError):
     pass

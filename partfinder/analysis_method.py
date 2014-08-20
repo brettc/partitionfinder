@@ -16,8 +16,7 @@
 # and conditions as well.
 
 import logtools
-
-log = logtools.get_logger(__file__)
+log = logtools.get_logger()
 
 import math
 import scheme
@@ -262,7 +261,6 @@ class RelaxedClusteringAnalysis(Analysis):
         # initialisation steps
         model_selection = self.cfg.model_selection
         partnum = len(self.cfg.user_subsets)
-        nseq = len(self.alignment.species)
 
         scheme_count = submodels.count_relaxed_clustering_schemes(
             partnum, self.cfg.cluster_percent, self.cfg.cluster_max)
@@ -328,7 +326,6 @@ class RelaxedClusteringAnalysis(Analysis):
             # 3. for all K new subsets, update improvement matrix and find best pair
             log.info("Finding the best partitioning scheme")
             diffs = []
-            min_diff = np.inf
             scheme_name = "step_%d" %(step)
             for t in sub_tuples:
                 pair_merged = t[0]
@@ -552,7 +549,6 @@ class oldKmeansAnalysis(Analysis):
             self.cfg, "start_scheme", start_description)
 
         log.info("Analysing starting scheme (scheme %s)" % start_scheme.name)
-        old_score = self.analyse_scheme(start_scheme)
 
         # Get first scheme
         best_scheme = start_scheme
@@ -754,7 +750,6 @@ class KmeansAnalysisWrapper(Analysis):
             self.cfg, "start_scheme", start_description)
 
         log.info("Analysing starting scheme (scheme %s)" % start_scheme.name)
-        old_score = self.analyse_scheme(start_scheme)
 
         # Get first scheme
         best_scheme = start_scheme
@@ -972,7 +967,6 @@ class KmeansGreedy(Analysis):
             self.cfg, "start_scheme", start_description)
 
         log.info("Analysing starting scheme (scheme %s)" % start_scheme.name)
-        old_score = self.analyse_scheme(start_scheme)
 
         # Get first scheme
         best_scheme = start_scheme

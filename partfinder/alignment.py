@@ -21,16 +21,12 @@
     http://www.atgc-montpellier.fr/phyml/usersguide.php?type=command
 
 """
-import logging
-log = logging.getLogger("alignment")
+import logtools
+log = logtools.get_logger()
 
 import os
-
-from pyparsing import (
-    Word, OneOrMore, alphas, nums, Suppress, Optional, Group, stringEnd,
-    delimitedList, ParseException, line, lineno, col, restOfLine, LineEnd,
-    White, Literal, Combine, Or, MatchFirst, ZeroOrMore)
-
+from pyparsing import (Word, OneOrMore, alphas, nums, Suppress, stringEnd,
+                       ParseException, restOfLine, LineEnd, ZeroOrMore)
 from util import PartitionFinderError
 
 

@@ -1,24 +1,22 @@
-#Copyright (C) 2012 Robert Lanfear and Brett Calcott
+# Copyright (C) 2012 Robert Lanfear and Brett Calcott
 #
-#This program is free software: you can redistribute it and/or modify it
-#under the terms of the GNU General Public License as published by the
-#Free Software Foundation, either version 3 of the License, or (at your
-#option) any later version.
+# This program is free software: you can redistribute it and/or modify it under
+# the terms of the GNU General Public License as published by the Free Software
+# Foundation, either version 3 of the License, or (at your option) any later
+# version.
 #
-#This program is distributed in the hope that it will be useful, but
-#WITHOUT ANY WARRANTY; without even the implied warranty of
-#MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-#General Public License for more details. You should have received a copy
-#of the GNU General Public License along with this program.  If not, see
-#<http://www.gnu.org/licenses/>. PartitionFinder also includes the PhyML
-#program, the RAxML program, and the PyParsing library, 
-#all of which are protected by their own licenses and conditions, using 
-#PartitionFinder implies that you agree with those licences and conditions as well.
+# This program is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+# details. You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+# PartitionFinder also includes the PhyML program, the RAxML program, and the
+# PyParsing library, all of which are protected by their own licenses and
+# conditions, using PartitionFinder implies that you agree with those licences
+# and conditions as well.
 
-import logging
-log = logging.getLogger("analysis")
-
-import config
+import logtools
+log = logtools.get_logger()
 
 # TODO need some error checking!
 
@@ -110,7 +108,7 @@ def get_all_dna_models():
 
 @memoize
 def get_all_models():
-    model_list = get_all_DNA_models() + get_all_protein_models()
+    model_list = get_all_dna_models() + get_all_protein_models()
     return model_list
 
 @memoize
@@ -212,7 +210,7 @@ if __name__ == "__main__":
     print "Params".ljust(10),
     print "Diff".ljust(10),
     print "CommandLine"
-    for i, model in enumerate(get_all_DNA_models()):
+    for i, model in enumerate(get_all_dna_models()):
         print str(i+1).rjust(2), 
         print model.ljust(15),
         print str(get_num_params(model)).ljust(10),

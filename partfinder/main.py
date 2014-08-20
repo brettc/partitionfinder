@@ -18,7 +18,6 @@
 import logging
 import sys
 import shlex
-import os
 import logtools
 
 logging.basicConfig(
@@ -26,7 +25,7 @@ logging.basicConfig(
     level=logging.INFO
 )
 
-log = logtools.get_logger(__file__)
+log = logtools.get_logger()
 from optparse import OptionParser
 
 # We import everything here as it forces all of debug regions to be loaded
@@ -40,11 +39,10 @@ import datetime
 import parser
 import raxml
 import phyml
-from partfinder import current
 
 
-def debug_arg_callback(option, opt, value, parser):
-    setattr(parser.values, option.dest, value.split(','))
+def debug_arg_callback(option, opt, value, theparser):
+    setattr(theparser.values, option.dest, value.split(','))
 
 
 def get_debug_regions():

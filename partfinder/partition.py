@@ -15,14 +15,13 @@
 # conditions, using PartitionFinder implies that you agree with those licences
 # and conditions as well.
 
-import logging
-log = logging.getLogger("partition")
+import logtools
+log = logtools.get_logger()
 
 from util import PartitionFinderError
 
 class PartitionError(PartitionFinderError):
     pass
-
 
 def columnset_to_string(colset):
     s = list(colset)

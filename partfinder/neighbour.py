@@ -15,7 +15,6 @@
 # conditions, using PartitionFinder implies that you agree with those licences
 # and conditions as well.
 
-import subset
 import subset_ops
 import scheme
 import numpy as np
@@ -23,8 +22,8 @@ import scipy.spatial.distance
 import itertools
 from util import PartitionFinderError
 
-import logging
-log = logging.getLogger("cluster")
+import logtools
+log = logtools.get_logger()
 
 
 def get_ranked_list(distance_matrix, subsets, N):

@@ -15,8 +15,8 @@
 # conditions, using PartitionFinder implies that you agree with those licences
 # and conditions as well.
 
-import logging
-log = logging.getLogger("reporter")
+import logtools
+log = logtools.get_logger()
 
 import os
 

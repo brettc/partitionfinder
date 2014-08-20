@@ -15,13 +15,13 @@
 # conditions, using PartitionFinder implies that you agree with those licences
 # and conditions as well.
 
+import logtools
+log = logtools.get_logger()
+
 import hashlib
 import cPickle as pickle
 import subset
 
-
-import logging
-log = logging.getLogger("subset_ops")
 
 def subset_unique_name(columns):
     """Return a unique string based on the subsets columns (which are unique)"""

@@ -16,7 +16,7 @@
 # and conditions as well.
 
 import logtools
-log = logtools.get_logger(__file__)
+log = logtools.get_logger()
 
 import os
 import numpy

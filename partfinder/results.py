@@ -1,4 +1,4 @@
-# Copyright (C) 2012-2013 Robert Lanfear and Brett Calcott
+# Copyright (C) 2012 Robert Lanfear and Brett Calcott
 #
 # This program is free software: you can redistribute it and/or modify it under
 # the terms of the GNU General Public License as published by the Free Software
@@ -15,8 +15,8 @@
 # conditions, using PartitionFinder implies that you agree with those licences
 # and conditions as well.
 
-import logging
-log = logging.getLogger("results")
+import logtools
+log = logtools.get_logger()
 
 import os
 import cPickle as pickle

@@ -15,8 +15,8 @@
 # conditions, using PartitionFinder implies that you agree with those licences
 # and conditions as well.
 
-import logging
-log = logging.getLogger("raxml")
+import logtools
+log = logtools.get_logger()
 
 import subprocess
 import shlex
@@ -274,7 +274,7 @@ class Parser(object):
         elif cfg.datatype == "DNA":
             letters = _dna_letters
         else:
-            log.error("Unknown datatype '%s', please check" % datatype)
+            log.error("Unknown datatype '%s', please check" % self.cfg.datatype)
             raise RaxmlError
 
         self.rate_indexes = self.cfg.data_layout.rate_indexes
@@ -447,6 +447,7 @@ def fabricate(lnl):
     return result.result
 
 if __name__ == '__main__':
+    import logging
     logging.basicConfig(level=logging.DEBUG)
     pth = "./tests/misc/raxml_nucleotide.output"
     p = Parser('DNA')

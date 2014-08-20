@@ -16,8 +16,8 @@
 # PartitionFinder implies that you agree with those licences and
 # conditions as well.
 
-import logging
-log = logging.getLogger("analysis")
+import logtools
+log = logtools.get_logger()
 
 from util import memoize
 

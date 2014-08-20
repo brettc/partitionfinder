@@ -2,6 +2,7 @@ import logging
 import os
 import re
 import textwrap
+import inspect
 
 _log_depth = 0
 _max_width = 80
@@ -11,8 +12,13 @@ _tab_width = 2
 _bullet       = ""
 _continuation = "   "
 
-def get_logger(fname):
+def get_logger(fname=None):
     """Pass in the __file__"""
+
+    # Magically get the filename from the calling function
+    if fname is None:
+        caller_frame = inspect.stack()[1][0]
+        fname = caller_frame.f_globals['__file__']
 
     # Strip the beginning and the extension
     head_tail = os.path.split(fname)
@@ -124,7 +130,7 @@ class SmartLogger(object):
         _log_depth -= 1
 
 
-class LogIndented(object):
+class indented(object):
     def __init__(self, logger=None, msg=None):
         self.logger = logger
         self.msg = msg
@@ -146,6 +152,6 @@ class log_info(object):
 
     def __call__(self, fn):
         def indented_fn(*args, **kwargs):
-            with LogIndented(self.logger, self.msg) as _:
+            with indented(self.logger, self.msg) as _:
                 fn(*args, **kwargs)
         return indented_fn

@@ -16,13 +16,11 @@
 # and conditions as well.
 
 import logtools
-log = logtools.get_logger(__file__)
+log = logtools.get_logger()
 
 from partfinder import subset_ops
-import subset
 import submodels
 
-from math import log as logarithm
 from util import PartitionFinderError, get_aic, get_aicc, get_bic
 
 
@@ -61,7 +59,7 @@ class SchemeResult(object):
         else:
             # WTF?
             log.error("Unknown option for branchlengths: %s", branchlengths)
-            raise AnalysisError
+            raise PartitionFinderError
 
         log.debug("Grand total parameters: %d" % (self.sum_k))
 
