@@ -21,9 +21,6 @@
 import logtools
 log = logtools.get_logger()
 
-
-import logging
-log = logging.getLogger("threadpool")
 import threading
 from time import sleep
 import multiprocessing

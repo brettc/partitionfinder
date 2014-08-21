@@ -156,93 +156,88 @@ class GreedyAnalysis(Analysis):
         start_scheme = scheme.create_scheme(
             self.cfg, "start_scheme", start_description)
 
-        log.info("Analysing starting scheme (scheme %s)" % start_scheme.name)
-        log.push()
-        start_result = self.analyse_scheme(start_scheme)
-        self.cfg.reporter.write_scheme_summary(start_scheme, start_result)
-        log.pop()
+        with logtools.indented(log, "Analysing starting scheme (scheme %s)" %
+                          start_scheme.name):
+            start_result = self.analyse_scheme(start_scheme)
+            self.cfg.reporter.write_scheme_summary(start_scheme, start_result)
 
         step = 1
 
         # Now we try out all lumpings of the current scheme, to see if we can
         # find a better one and if we do, we just keep going
         while True:
-            log.info("***Greedy algorithm step %d***" % step)
-            log.push()
-            name_prefix = "step_%d" % (step)
-            old_best_score = self.results.best_score
+            with logtools.indented(log, "***Greedy algorithm step %d***" % step):
+                name_prefix = "step_%d" % (step)
+                old_best_score = self.results.best_score
 
-            # Make a list of all the new subsets, and get them analysed
-            # We do them in blocks of 10K, to avoid memory overload
-            lumped_subset_iterator = itertools.combinations(start_scheme.subsets, 2)
-            new_subs = []
-            log.info("Building subsets")
-            for subset_grouping in lumped_subset_iterator:
-                new_sub = subset_ops.merge_subsets(subset_grouping)
-                if not new_sub.is_done:
-                    new_subs.append(new_sub)
-                if len(new_subs)>9999:
-                    log.info("Analysing 10,000 subsets")
-                    self.analyse_list_of_subsets(new_subs)
-                    new_subs = []
-                    log.info("Building more subsets")
+                # Make a list of all the new subsets, and get them analysed
+                # We do them in blocks of 10K, to avoid memory overload
+                lumped_subset_iterator = itertools.combinations(start_scheme.subsets, 2)
+                new_subs = []
+                log.info("Building subsets")
+                for subset_grouping in lumped_subset_iterator:
+                    new_sub = subset_ops.merge_subsets(subset_grouping)
+                    if not new_sub.is_done:
+                        new_subs.append(new_sub)
+                    if len(new_subs)>9999:
+                        log.info("Analysing 10,000 subsets")
+                        self.analyse_list_of_subsets(new_subs)
+                        new_subs = []
+                        log.info("Building more subsets")
 
-            # analyse what's left, and clean out list
-            log.info("Analysing %d subsets"%(len(new_subs)))
-            self.analyse_list_of_subsets(new_subs)
-            new_subs = []
+                # analyse what's left, and clean out list
+                log.info("Analysing %d subsets"%(len(new_subs)))
+                self.analyse_list_of_subsets(new_subs)
+                new_subs = []
 
-            log.info("Analysing schemes")
-            # we repeat the iterator, for memory efficiency
-            lumped_subset_iterator = itertools.combinations(start_scheme.subsets, 2)
-            sch_num = 1
-            for subset_grouping in lumped_subset_iterator:
-                # could do this without another merge, but this seems most robust
-                new_sub = subset_ops.merge_subsets(subset_grouping)
-                scheme_name = "%s_%d" % (name_prefix, sch_num)
-                lumped_scheme = neighbour.make_clustered_scheme(
-                    start_scheme, scheme_name, subset_grouping, new_sub, self.cfg)
-                sch_num = sch_num + 1
+                log.info("Analysing schemes")
+                # we repeat the iterator, for memory efficiency
+                lumped_subset_iterator = itertools.combinations(start_scheme.subsets, 2)
+                sch_num = 1
+                for subset_grouping in lumped_subset_iterator:
+                    # could do this without another merge, but this seems most robust
+                    new_sub = subset_ops.merge_subsets(subset_grouping)
+                    scheme_name = "%s_%d" % (name_prefix, sch_num)
+                    lumped_scheme = neighbour.make_clustered_scheme(
+                        start_scheme, scheme_name, subset_grouping, new_sub, self.cfg)
+                    sch_num = sch_num + 1
 
-                new_result = self.analyse_scheme(lumped_scheme)
-                log.debug("Difference in %s: %.1f" %
-                          (self.cfg.model_selection,
-                           (new_result.score - old_best_score)))
+                    new_result = self.analyse_scheme(lumped_scheme)
+                    log.debug("Difference in %s: %.1f" %
+                            (self.cfg.model_selection,
+                            (new_result.score - old_best_score)))
 
-            if self.results.best_score != old_best_score:
-                log.info("""Analysed all schemes for this step. The best
-                    scheme changed the %s score by %.1f units.""" % (
-                    self.cfg.model_selection,
-                    self.results.best_score - old_best_score
-                ))
+                if self.results.best_score != old_best_score:
+                    log.info("""Analysed all schemes for this step. The best
+                        scheme changed the %s score by %.1f units.""" % (
+                        self.cfg.model_selection,
+                        self.results.best_score - old_best_score
+                    ))
 
-                self.results.best_scheme.name = "step_%d" % step
-                self.cfg.reporter.write_scheme_summary(
-                    self.results.best_scheme, self.results.best_result)
+                    self.results.best_scheme.name = "step_%d" % step
+                    self.cfg.reporter.write_scheme_summary(
+                        self.results.best_scheme, self.results.best_result)
 
-                # Now we find out which is the best lumping we know of for
-                # this step
-                start_scheme = self.results.best_scheme
-            else:
-                log.info("""Analysed all schemes for this step and found no
-                    schemes that improve the score, stopping""")
-                break
+                    # Now we find out which is the best lumping we know of for
+                    # this step
+                    start_scheme = self.results.best_scheme
+                else:
+                    log.info("""Analysed all schemes for this step and found no
+                        schemes that improve the score, stopping""")
+                    break
 
             # We're done if it's the scheme with everything together
             if len(set(lumped_scheme.subsets)) == 1:
                 break
 
-            log.pop()
             step += 1
 
-        #log.pop()
         log.info("Greedy algorithm finished after %d steps" % step)
         log.info("Best scoring scheme is scheme %s, with %s score of %.3f"
                  % (self.results.best_scheme.name, self.cfg.model_selection,
                     self.results.best_score))
 
         self.cfg.reporter.write_best_scheme(self.results)
-        #log.pop()
 
 
 class RelaxedClusteringAnalysis(Analysis):
@@ -529,12 +524,12 @@ class KmeansAnalysis(Analysis):
             start_result = self.analyse_scheme(start_scheme)
 
             log.info("""Analysed all subsets. Found %d subsets which can be
-            split.
-                    New scheme changes the %s score by %.1f units.""" % (
-                n_splits,
-                self.cfg.model_selection,
-                self.results.best_score - old_best_score
-            ))
+                     split. New scheme changes the %s score by %.1f units.""" % 
+                     (
+                         n_splits,
+                         self.cfg.model_selection,
+                         self.results.best_score - old_best_score
+                     ))
             done = False
 
         return done, start_result, start_scheme
@@ -548,7 +543,7 @@ class KmeansAnalysis(Analysis):
         step = 0
         while True:
             step += 1
-            with logtools.LogIndented(log, "***k-means algorithm step %d***"
+            with logtools.indented(log, "***k-means algorithm step %d***"
                     % step):
                 done, start_result, start_scheme = self.one_kmeans_step(
                     start_result, start_scheme, step, tree_path)
