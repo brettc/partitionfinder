@@ -27,6 +27,7 @@ import shutil
 import sys
 import fnmatch
 import util
+from math import log as logarithm
 
 from pyparsing import (
     Word, Literal, nums, Suppress, ParseException,
@@ -445,6 +446,14 @@ def fabricate(lnl):
     result.result.seconds = 0
     result.result.alpha = 0
     return result.result
+
+def get_CIs():
+    ci_list = []
+    the_cis = open("CIs.txt")
+    for ci in the_cis.readlines():
+        ci_list.append([logarithm(float(ci))])
+    return ci_list
+
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.DEBUG)

@@ -131,30 +131,35 @@ def kmeans_split_subset(cfg, alignment, a_subset, tree_path, number_of_ks = 2):
     # kmeans, the subset becomes unanalysable. In that instance, these will be
     # transferred to the new subset and the sum taken as a proxy for the
     # overal lnl
-    a_subset.site_lnls_GTRG = per_site_statistics[0]
+    if per_site_stat_list == None:
+        a_subset.fabricated = True
+        return 1
 
-    # Perform kmeans clustering on the likelihoods
-    kmeans_results = kmeans(per_site_stat_list,
-        number_of_ks)
+    else:
+        a_subset.site_lnls_GTRG = per_site_statistics[0]
 
-    centroids = kmeans_results[0]
-    split_categories = kmeans_results[1]
+        # Perform kmeans clustering on the likelihoods
+        kmeans_results = kmeans(per_site_stat_list,
+            number_of_ks)
 
-    list_of_sites = []
-    for k in range(len(split_categories)):
-        list_of_sites.append(split_categories[k])
+        centroids = kmeans_results[0]
+        split_categories = kmeans_results[1]
 
-    log.debug("Creating new subsets from k-means split")
-    # Make the new subsets
-    new_subsets = subset_ops.split_subset(a_subset, list_of_sites)
+        list_of_sites = []
+        for k in range(len(split_categories)):
+            list_of_sites.append(split_categories[k])
 
-    # Now add the site_lnl centroid to each new subset
-    marker = 0
-    for s in new_subsets:
-        s.centroid = centroids[marker]
-        marker += 1
+        log.debug("Creating new subsets from k-means split")
+        # Make the new subsets
+        new_subsets = subset_ops.split_subset(a_subset, list_of_sites)
 
-    return new_subsets
+        # Now add the site_lnl centroid to each new subset
+        marker = 0
+        for s in new_subsets:
+            s.centroid = centroids[marker]
+            marker += 1
+
+        return new_subsets
 
 
 def kmeans_wrapper(cfg, alignment, a_subset, tree_path, max_ks = 10):

@@ -350,35 +350,48 @@ def likelihood_parser(phyml_lk_file):
         return likelihood_list
 
     else:
-        # Make a list of site log ikelihoods
-        likelihood_list = [[logarithm(float(site[headers[1]]))] for site in list_of_dicts]
+        # Make a list of site log likelihoods
+        if list_of_dicts[0][headers[1]] == 'nan' or list_of_dicts[0][headers[1]] == 'inf':
+            likelihood_list = None
+            print "Whoopsies!"
+            rate_list = None
+            lk_rate_list = None
+            lk_site_rate_list = None
+            return likelihood_list, lk_rate_list, rate_list, lk_site_rate_list
 
-        # Make a rate list
-        rate_list = [[(logarithm(float(site[headers[len(headers) - 3]])))] for site in list_of_dicts]
+        else:
+            likelihood_list = [[logarithm(float(site[headers[1]]))] for site in list_of_dicts]
 
-        # Now make a list of lists of site likelihoods under different 
-        # rate categories
-        lk_rate_list = []
-        for i in list_of_dicts:
-            ind_lk_list = []
-            # Pull the likelihood from each rate category by calling the 
-            # appropriate key from "headers"
-            for num in range(2, len(headers) - 3):
-                ind_lk_list.append(logarithm(float(i[headers[num]])))
-            # Now add the list of likelihoods for the site to a master list
-            lk_rate_list.append(ind_lk_list)
+            # Make a rate list
+            # print list_of_dicts[0][headers[len(headers) - 3]]
+            # if list_of_dicts[0][headers[len(headers) - 3]] == 'nan' or list_of_dicts[0][headers[len(headers) - 3]] == 'inf':
+            #     rate_list = None
+            #     print "Whoopsies!"
+            # else:
+            rate_list = [[(logarithm(float(site[headers[len(headers) - 3]])))] for site in list_of_dicts]
 
-        # Now pull likelihoods and rates for a two dimensional list
-        lk_site_rate_list = []
-        for i in list_of_dicts:
-            ind_lk_r_list = []
-            ind_lk_r_list.append(logarithm(float(i[headers[1]])))
-            ind_lk_r_list.append(logarithm(float(i[headers[len(headers) - 3]])))
-            lk_site_rate_list.append(ind_lk_r_list)
+            # Now make a list of lists of site likelihoods under different 
+            # rate categories
+            lk_rate_list = []
+            for i in list_of_dicts:
+                ind_lk_list = []
+                # Pull the likelihood from each rate category by calling the 
+                # appropriate key from "headers"
+                for num in range(2, len(headers) - 3):
+                    ind_lk_list.append(logarithm(float(i[headers[num]])))
+                # Now add the list of likelihoods for the site to a master list
+                lk_rate_list.append(ind_lk_list)
 
-        # Return both the list of site likelihoods and the list of lists of
-        # likelihoods under different rate categories
-        return likelihood_list, lk_rate_list, rate_list, lk_site_rate_list
+            # Now pull likelihoods and rates for a two dimensional list
+            lk_site_rate_list = []
+            for i in list_of_dicts:
+                ind_lk_r_list = []
+                ind_lk_r_list.append(logarithm(float(i[headers[1]])))
+                ind_lk_r_list.append(logarithm(float(i[headers[len(headers) - 3]])))
+                lk_site_rate_list.append(ind_lk_r_list)
+            # Return both the list of site likelihoods and the list of lists of
+            # likelihoods under different rate categories
+            return likelihood_list, lk_rate_list, rate_list, lk_site_rate_list
 
 program_name = "phyml"
 
@@ -388,7 +401,7 @@ def program():
 def gen_per_site_stats(cfg, alignment_path, tree_path):
     if cfg.datatype == 'DNA':
         if cfg.branchlengths == 'linked':
-            command = "--run_id GTRGAMMA -b 0 -i '%s' -u '%s' -m GTR --print_site_lnl --constrained_lens" % (
+            command = "--run_id GTRGAMMA -b 0 -i '%s' -u '%s' -m JC69 --print_site_lnl --constrained_lens -f 0.25,0.25,0.25,0.25" % (
                 alignment_path, tree_path)
         elif cfg.branchlengths == 'unlinked':
             command = "--run_id GTRGAMMA -b 0 -i '%s' -u '%s' -m GTR --print_site_lnl" % (

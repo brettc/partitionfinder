@@ -406,8 +406,9 @@ class KmeansAnalysis(Analysis):
                 best_scheme = test_scheme
                 best_result = new_result
 
-                # Change this to the one with split subsets in it. Note that
-                # the subset_index now points a NEW subset, one that was split
+                # Replace this to the one with split subsets in it. Note that
+                # the subset_index now points to a NEW subset, one that was
+                # split
                 all_subsets = updated_subsets
 
                 bic_score_list.append(best_result.score)
@@ -889,6 +890,7 @@ class KmeansVar(Analysis):
         alignment_path = self.filtered_alignment_path
         tree_path = processor.make_tree_path(alignment_path)
         best_result = self.analyse_scheme(best_scheme)
+        log.info("Starting score is %s" % best_result.score)
         bic_score_list.append(best_result.score)
         fabricated_subsets =[]
         step = 1
@@ -919,7 +921,92 @@ class KmeansVar(Analysis):
         high_ks = 0
         
         while num_ks > high_ks:
-            log.info("*** K-means step %i ***" % step)
+            log.info("*** K-means bisection search step %i ***" % step)
+            step += 1
+
+            # Then we use k-means to split the alignment into 2 subsets and
+            # create a new scheme, see if that improves the overall score, if
+            # it does we move onto the next step
+            new_subs = kmeans.kmeans_var_ks(self.cfg, original_subset, num_ks, per_site_stat_list)
+            new_scheme = scheme.Scheme(self.cfg, str(step-1),
+                new_subs)
+            new_result = self.analyse_scheme(new_scheme)
+
+            # Bisection search: with improvements, set num_ks to double. When
+            # the BIC score doesn't improve, set num_ks into the middle
+            # between the last one that improved the BIC and the current
+            # number
+            if new_result.score < best_result.score:
+                self.cfg.reporter.write_scheme_summary(
+                    self.results.best_scheme, self.results.best_result)
+                log.info("Score improved with %s k's" % num_ks)
+                log.info("New score is: %d" % new_result.score)
+                best_result = new_result
+                best_scheme = new_scheme
+                last_ks = num_ks
+                high_ks = num_ks
+                if cap:
+                    num_ks = (new_cap + num_ks)/2
+                else:
+                    num_ks = (num_ks*2)
+
+            else:
+                log.info("Didn't get better with %s k's, bisecting..." % num_ks)
+                cap = True
+                new_cap = num_ks
+                num_ks = (last_ks + num_ks)/2
+
+        log.info("Best scoring scheme is scheme %s, with %s score of %.3f"
+                 % (self.results.best_scheme.name, self.cfg.model_selection, self.results.best_score))
+
+        self.cfg.reporter.write_best_scheme(self.results)
+
+class KmeansVarCI(Analysis):
+    def do_analysis(self):
+        bic_score_list = []
+        # Copied and pasted from greedy analysis
+        partnum = len(self.cfg.user_subsets)
+        self.cfg.progress.begin(1, 1)
+
+        # Start with the most partitioned scheme
+        start_description = range(partnum)
+        start_scheme = scheme.create_scheme(
+            self.cfg, "start_scheme", start_description)
+
+
+        log.info("Analysing starting scheme (scheme %s)" % start_scheme.name)
+        old_score = self.analyse_scheme(start_scheme)
+
+
+        # Get first scheme
+        best_scheme = start_scheme
+        subset_index = 0
+        all_subsets = list(best_scheme.subsets)
+        original_subset = all_subsets[0]
+
+        processor = self.cfg.processor
+        alignment_path = self.filtered_alignment_path
+        tree_path = processor.make_tree_path(alignment_path)
+        best_result = self.analyse_scheme(best_scheme)
+        bic_score_list.append(best_result.score)
+        log.info("Starting score is %s" % best_result.score)
+        fabricated_subsets =[]
+        step = 1
+        num_ks = 2
+        last_ks = 0
+
+        # Grab CIs from pre-created file
+        per_site_statistics = processor.get_CIs()
+        likelihood_list = per_site_statistics
+        original_subset.site_lnls_GTRG = likelihood_list
+
+        per_site_stat_list = likelihood_list
+
+        cap = False
+        high_ks = 0
+        
+        while num_ks > high_ks:
+            log.info("*** K-means bisection search step %i ***" % step)
             step += 1
 
             # Then we use k-means to split the alignment into 2 subsets and
@@ -952,13 +1039,10 @@ class KmeansVar(Analysis):
                 new_cap = num_ks
                 num_ks = (last_ks + num_ks)/2
 
-
-
         log.info("Best scoring scheme is scheme %s, with %s score of %.3f"
                  % (self.results.best_scheme.name, self.cfg.model_selection, self.results.best_score))
 
         self.cfg.reporter.write_best_scheme(self.results)
-
 
 
 def choose_method(search):
@@ -980,6 +1064,8 @@ def choose_method(search):
         method = KmeansGreedy
     elif search == 'kmeans_var':
         method = KmeansVar
+    elif search == 'kmeans_var_ci':
+        method = KmeansVarCI
     else:
         log.error("Search algorithm '%s' is not yet implemented", search)
         raise AnalysisError
