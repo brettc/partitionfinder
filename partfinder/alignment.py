@@ -228,6 +228,20 @@ class Alignment(object):
             fd.write(sequence)
             fd.write("\n")
         fd.close()
+    def write_fasta(self, pth):
+        fd = open(pth, 'w')
+        log.debug("Writing fasta file '%s'", pth)
+
+        species_count = len(self.species)
+        sequence_len = len(iter(self.species.itervalues()).next())
+
+        for species, sequence in self.species.iteritems():
+            fd.write(">")
+            fd.write(species)
+            fd.write("\n")
+            fd.write(sequence)
+            fd.write("\n")
+        fd.close()
 
 
 class SubsetAlignment(Alignment):
