@@ -81,7 +81,8 @@ class TextReporter(object):
         charpartition = []
         for sub in sorted_subsets:
             if self.cfg.search == "kmeans":
-                partition_sites = str(sub.columns).strip('[]')
+                sites = [x + 1 for x in sub.columns]
+                partition_sites = str(sites).strip('[]')
             else:
                 partition_sites = sub.site_description
 
@@ -102,7 +103,9 @@ class TextReporter(object):
         if self.cfg.search == "kmeans":
             for sub in sorted_subsets:
                 num_sites = len(sub.columns)
-                pf_scheme_description.append("(%s)" % str(sub.columns).strip('[]'))
+                
+                sites = [x + 1 for x in sub.columns]
+                pf_scheme_description.append("(%s)" % str(sites).strip('[]'))
                 output.write(scheme_subset_template % (
                     number, 
                     sub.best_model, 
@@ -122,6 +125,7 @@ class TextReporter(object):
                     ))
                 number += 1
 
+        
         pf_scheme_description = " ".join(pf_scheme_description)
         output.write("\n\nScheme Description in PartitionFinder format\n")
         output.write("Scheme_%s = %s;" % (sch.name, pf_scheme_description))
@@ -136,7 +140,8 @@ class TextReporter(object):
         subset_number = 1
         for sub in sorted_subsets:
             if self.cfg.search == "kmeans":
-                partition_sites = str(sub.columns).strip('[]')
+                sites = [x + 1 for x in sub.columns]
+                partition_sites = str(sites).strip('[]')
             else:
                 partition_sites = sub.site_description
 
