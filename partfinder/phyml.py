@@ -326,7 +326,6 @@ def likelihood_parser(phyml_lk_file):
                 delimiter = " ", skipinitialspace = True))
     except IOError:
         raise IOError("Could not find the likelihood file!")
-    phyml_lk_file.close()
 
     # Right now, when the alignment is over 1,000,000 sites, PhyML
     # merges the site number with the site likelihood, catch that and
@@ -341,7 +340,7 @@ def likelihood_parser(phyml_lk_file):
     # Sort the headers into alphabetical order
     headers.sort()
 
-    # Check if the rate cateogories were estimated, if they weren't
+    # Check if the rate categories were estimated, if they weren't
     # just return the likelihood scores for each site, otherwise, return
     # site likelihoods and likelihoods under each rate category
     if len(headers) < 4:
@@ -350,7 +349,7 @@ def likelihood_parser(phyml_lk_file):
         return likelihood_list
 
     else:
-        # Make a list of site log ikelihoods
+        # Make a list of site log likelihoods
         likelihood_list = [[logarithm(float(site[headers[1]]))] for site in list_of_dicts]
 
         # Make a rate list
