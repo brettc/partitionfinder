@@ -138,7 +138,7 @@ def make_clustered_scheme(start_scheme, scheme_name, subsets_to_cluster, merged_
 def make_split_scheme(start_scheme, scheme_name, subset_to_split, split_subsets, cfg):
 
     # 1. Then we define a new scheme with those merged subsets
-    new_subsets = start_scheme.subsets - set([subset_to_split])
+    new_subsets = start_scheme.subsets - {subset_to_split}
 
     # add all of the split subsets
     for s in split_subsets:
