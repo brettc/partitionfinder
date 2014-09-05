@@ -27,10 +27,9 @@ from util import PhylogenyProgramError
 
 import subset_ops
 
-
 # You can run kmeans in parallel, specify n_jobs as -1 and it will run
 # on all cores available.
-def kmeans(likelihood_list, number_of_ks=2, n_jobs=1):
+def kmeans(likelihood_list, number_of_ks, n_jobs):
     '''Take as input a list of sites, performs k-means clustering on
     sites and returns k centroids and a dictionary with k's as keys
     and lists of sites belonging to that k as values
@@ -77,7 +76,8 @@ def kmeans(likelihood_list, number_of_ks=2, n_jobs=1):
     return centroid_list, dict(cluster_dict)
 
 
-def kmeans_split_subset(cfg, alignment, a_subset, tree_path, number_of_ks = 2):
+def kmeans_split_subset(cfg, alignment, a_subset, tree_path,
+                        n_jobs, number_of_ks=2):
     """Takes a subset and number of k's and returns
     subsets for however many k's are specified
     """
@@ -152,9 +152,7 @@ def kmeans_split_subset(cfg, alignment, a_subset, tree_path, number_of_ks = 2):
     a_subset.site_lnls_GTRG = per_site_statistics[0]
 
     # Perform kmeans clustering on the likelihoods
-    kmeans_results = kmeans(per_site_stat_list,
-        number_of_ks)
-
+    kmeans_results = kmeans(per_site_stat_list, number_of_ks, n_jobs)
     centroids = kmeans_results[0]
     split_categories = kmeans_results[1]
 
@@ -175,133 +173,3 @@ def kmeans_split_subset(cfg, alignment, a_subset, tree_path, number_of_ks = 2):
     return new_subsets
 
 
-def kmeans_wrapper(cfg, alignment, a_subset, tree_path, max_ks = 10):
-    '''This function performs kmeans on
-    a specified number of different k's on a dictionary parsed
-    from a *_phyml_lk.txt file. It then calculates
-    the within sum of squares (wss) of the k's and returns
-    the optimal number of k's and a dictionary of
-    the k's and sites belonging to the k's as output
-    determined by the first time the wss a decrease that is 1/10
-    of the initial decrease
-    '''
-    # Start variable counters
-    # Currently we do kmeans with one k for the first cluster, this
-    # can be modified to start with two k's. This will results in
-    # a slightly larger amount of clusters, we should check the change
-    # in AIC scores of both methods and choose one.
-    a_subset.make_alignment(cfg, alignment)
-    phylip_file = a_subset.alignment_path
-
-    # Add option to output likelihoods, *raxml version takes more
-    # modfying of the commands in the analyse function
-    processor = cfg.processor
-
-    try:
-        processor.gen_per_site_stats(cfg, str(phylip_file),
-            str(tree_path))
-    except PhylogenyProgramError as e:
-        log.error("Total bummer: %s" % e)
-        return 1
-
-    per_site_statistics = processor.get_per_site_stats(phylip_file, cfg)
-    a_subset.add_per_site_statistics(per_site_statistics)
-    likelihood_list = per_site_statistics[0]
-    a_subset.site_lnls_GTRG = likelihood_list
-
-    if cfg.kmeans_opt == 1:
-        # Set likelihood_list to site likelihoods
-        likelihood_list = per_site_statistics[0]
-    elif cfg.kmeans_opt == 2:
-        # Set likelihood_list to site rates
-        likelihood_list = per_site_statistics[2]
-    elif cfg.kmeans_opt == 3:
-        raise ValueError("Search kmeans_wss cannot be used with kmeans" +
-            " option 3. Use option 1 or 2")
-    elif cfg.kmeans_opt == 4:
-        raise ValueError("Search kmeans_wss cannot be used with kmeans" +
-            " option 4. Use option 1 or 2")
-
-    count = 1
-    new_wss = 0
-    list_of_wss = []
-    # Calculate a bunch of kmeans on however many max_ks are determined
-    for i in range(max_ks):
-        # Run kmeans with each count
-        site_categories = kmeans(likelihood_list, number_of_ks = count)[1]
-
-        new_likelihood_lists = make_likelihood_list(likelihood_list,
-            site_categories)
-        # Set previous wss
-        previous_wss = new_wss
-        # Calculate new wss
-        new_wss = within_sum_of_squares(new_likelihood_lists)
-        list_of_wss.append(new_wss)
-        # Keep the first wss value
-        if count == 1:
-            first_wss = new_wss
-        # Find out the initial decrease
-        if count == 2:
-            initial_decrease = first_wss - new_wss
-            log.info("The initial decrease is %s!" % initial_decrease)
-        # Find out if the most recent decrease is less than 10% of the
-        # initial decrease
-        # print "New wss: " + str(new_wss)
-        if count > 2:
-            decrease = previous_wss - new_wss
-            # print "decrease: " + str(decrease)
-            if decrease < ((0.1) * initial_decrease):
-                list_of_sites = []
-                for k in site_categories:
-                    list_of_sites.append(site_categories[k])
-                new_subsets = subset_ops.split_subset(a_subset, list_of_sites)
-                log.info(
-                    "Found that %s categories minimizes within sum of squares"
-                     % count)
-
-                return new_subsets
-        count += 1
-    list_of_sites = []
-    for k in site_categories:
-        list_of_sites.append(site_categories[k])
-    # Make new subsets
-    new_subsets = subset_ops.split_subset(a_subset, list_of_sites)
-    return new_subsets
-
-
-def sum_of_squares(list_of_likelihoods):
-    '''Input a list of likelihoods, and returns the sum of squares
-    of the list
-    '''
-    sums_of_squares = 0
-    mean_likelihood = sum(list_of_likelihoods)/len(list_of_likelihoods)
-    for i in list_of_likelihoods:
-        sums_of_squares += (i - mean_likelihood)**2
-    return sums_of_squares
-
-
-def within_sum_of_squares(likelihood_lists):
-    '''Inputs a list that contains lists of likelihoods from different
-    clusters, outputs the within sum of squares
-    '''
-    wss = 0
-    # Call sum_of_squares on each list to get global wss
-    for i in likelihood_lists:
-        wss += sum_of_squares(i)
-    return wss
-
-
-def make_likelihood_list(likelihood_list, site_categories):
-    '''Takes a likelihood_list and a dictionary with kmeans clusters
-    as keys and a list of sites belonging to that cluster as values
-    as input and returns a list of lists of likelihoods belonging to
-    each cluster
-    '''
-    rate_list = []
-    for cluster in site_categories:
-        one_list = []
-        for site in site_categories[cluster]:
-            likelihood = (likelihood_list[site - 1])
-            one_list.append(likelihood[0])
-        rate_list.append(one_list)
-    return rate_list

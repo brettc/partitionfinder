@@ -37,11 +37,14 @@ class AnalysisError(PartitionFinderError):
 
 class Analysis(object):
     """Performs the analysis and collects the results"""
-    def __init__(self, cfg, force_restart=False, threads=-1):
+    def __init__(self, cfg, force_restart, threads):
         cfg.validate()
         self.cfg = cfg
 
         # TODO: Remove -- put this all into "options"
+        if threads == -1:
+            threads = threadpool.get_cpu_count()
+
         self.threads = threads
 
         # TODO: Move these to the config validate and prepare

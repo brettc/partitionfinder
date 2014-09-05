@@ -10,7 +10,7 @@ _tab_width = 2
 
 # These should be the same size as the _tab_width
 _bullet       = ""
-_continuation = "   "
+_continuation = "..."
 
 def get_logger(fname=None):
     """Pass in the __file__"""
@@ -76,6 +76,16 @@ class SmartLogger(object):
         msg = self.compose_message(*args)
         self.post_message(msg, self.log.error)
 
+    def format_message(self, msg):
+        """Strip multiline comments down to a single line"""
+        # First, get rid of tabs and newlines
+        warning = re.sub('\s', ' ', msg)
+
+        # Now get rid of all extra spaces
+        # http://stackoverflow.com/questions/1546226/
+        # the-shortest-way-to-remove-multiple-spaces-in-a-string-in-python
+        return ' '.join(warning.split())
+
     def compose_message(self, *args):
         if len(args) > 1:
             msg = args[0] % args[1:]
@@ -84,7 +94,7 @@ class SmartLogger(object):
         msg = self.format_message(msg)
         return msg
 
-    def post_message(self, msg, log_function):
+    def normal_post_message(self, msg, log_function):
         indent_amount = _log_depth * (_tab_width + 1)
         spaces = " " * indent_amount
         log_function(spaces + msg)
@@ -97,6 +107,7 @@ class SmartLogger(object):
 
         # Note: if this happens, you're doing too much formatting. Get rid of
         # some of the "push" calls
+        # TODO: you can't do an assert here.
         assert local_max_width > 30
 
         if len(msg) <= local_max_width:
@@ -111,15 +122,7 @@ class SmartLogger(object):
         for next_line in line_iterator:
             log_function(spaces + _continuation + next_line)
 
-    def format_message(self, msg):
-        """Strip multiline comments down to a single line"""
-        # First, get rid of tabs and newlines
-        warning = re.sub('\s', ' ', msg)
-
-        # Now get rid of all extra spaces
-        # http://stackoverflow.com/questions/1546226/
-        # the-shortest-way-to-remove-multiple-spaces-in-a-string-in-python
-        return ' '.join(warning.split())
+    post_message = normal_post_message
 
     def push(self):
         global _log_depth
@@ -152,6 +155,6 @@ class log_info(object):
 
     def __call__(self, fn):
         def indented_fn(*args, **kwargs):
-            with indented(self.logger, self.msg) as _:
+            with indented(self.logger, self.msg):
                 fn(*args, **kwargs)
         return indented_fn
