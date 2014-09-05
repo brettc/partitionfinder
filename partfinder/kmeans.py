@@ -36,14 +36,9 @@ def kmeans(likelihood_list, number_of_ks, n_jobs):
     '''
     log.debug("Beginning k-means splitting")
     start = time.clock()
-    all_rates_list = []
-    for site in likelihood_list:
-        lk_list = site
-        all_rates_list.append(lk_list)
 
     # Create and scale an array for input into kmeans function
-    array = np.array(all_rates_list)
-    # array = scale(array)
+    array = np.array(likelihood_list)
 
     # Call scikit_learn's k-means, use "k-means++" to find centroids
     # kmeans_out = KMeans(init='k-means++', n_init = 100)
