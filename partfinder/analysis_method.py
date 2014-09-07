@@ -348,7 +348,7 @@ class KmeansAnalysis(Analysis):
 
 
         while subset_index < len(all_subsets):
-            log.info("Best scheme has %s score of %.2f and %d subset(s)" 
+            log.info("Best scheme has %s score of %.2f and %d subset(s)"
                      %(self.cfg.model_selection.upper(), best_result.score, len(best_scheme.subsets)))
 
             log.info("***Kmeans algorithm step %d***" % step)
@@ -419,7 +419,7 @@ class KmeansAnalysis(Analysis):
 
                 if len(split_subsets)==2:
                     log.info("Splitting subset into %d:%d sites improved the %s score"
-                              %(len(split_subsets[0].columns), 
+                              %(len(split_subsets[0].columns),
                                 len(split_subsets[1].columns),
                                 self.cfg.model_selection))
 
@@ -429,16 +429,16 @@ class KmeansAnalysis(Analysis):
                        props = [(float(m.count(1))/l), (float(m.count(2))/l), (float(m.count(0))/l)]
                        log.info("%d subset has 1st, 2nd, 3rd props: %s" %(len(s.columns), str(props)))
 
-     
+
 
 
             else:
-                log.info("Splitting this subset did not improve the %s score", 
+                log.info("Splitting this subset did not improve the %s score",
                          self.cfg.model_selection.upper())
                 # Move to the next subset in the all_subsets list
                 subset_index += 1
 
-        log.info("Best scheme has %s score of %.2f and %d subset(s)" 
+        log.info("Best scheme has %s score of %.2f and %d subset(s)"
                  %(self.cfg.model_selection.upper(), best_result.score, len(best_scheme.subsets)))
 
 
@@ -566,7 +566,7 @@ class KmeansAnalysisWrapper(Analysis):
 
 
         while subset_index < len(all_subsets):
-            log.info("Best scheme has %s score of %.2f and %d subset(s)" 
+            log.info("Best scheme has %s score of %.2f and %d subset(s)"
                      %(self.cfg.model_selection.upper(), best_result.score, len(best_scheme.subsets)))
 
             log.info("***Kmeans algorithm step %d***" % step)
@@ -604,7 +604,7 @@ class KmeansAnalysisWrapper(Analysis):
 
             for each_subset in split_subsets:
                 log.info("Subset resulting from split is %d sites long", len(each_subset.columns))
- 
+
             # Take a copy
             updated_subsets = all_subsets[:]
 
@@ -633,7 +633,7 @@ class KmeansAnalysisWrapper(Analysis):
 
                 if len(split_subsets)==2:
                     log.info("Splitting subset into %d:%d sites improved the %s score"
-                              %(len(split_subsets[0].columns), 
+                              %(len(split_subsets[0].columns),
                                 len(split_subsets[1].columns),
                                 self.cfg.model_selection))
 
@@ -642,16 +642,16 @@ class KmeansAnalysisWrapper(Analysis):
                        l = float(len(s.columns))
                        props = [(float(m.count(1))/l), (float(m.count(2))/l), (float(m.count(0))/l)]
                        log.info("%d subset has 1st, 2nd, 3rd props: %s" %(len(s.columns), str(props)))
- 
+
 
 
             else:
-                log.info("Splitting this subset did not improve the %s score", 
+                log.info("Splitting this subset did not improve the %s score",
                          self.cfg.model_selection.upper())
                 # Move to the next subset in the all_subsets list
                 subset_index += 1
 
-        log.info("Best scheme has %s score of %.2f and %d subset(s)" 
+        log.info("Best scheme has %s score of %.2f and %d subset(s)"
                  %(self.cfg.model_selection.upper(), best_result.score, len(best_scheme.subsets)))
 
 
@@ -919,7 +919,7 @@ class KmeansVar(Analysis):
 
         cap = False
         high_ks = 0
-        
+
         while num_ks > high_ks:
             log.info("*** K-means bisection search step %i ***" % step)
             step += 1
@@ -996,7 +996,7 @@ class KmeansVarCI(Analysis):
         last_ks = 0
 
         # Grab CIs from pre-created file
-        per_site_statistics = processor.get_CIs()
+        per_site_statistics = processor.get_CIs(self.cfg)
         likelihood_list = per_site_statistics
         original_subset.site_lnls_GTRG = likelihood_list
 
@@ -1004,7 +1004,7 @@ class KmeansVarCI(Analysis):
 
         cap = False
         high_ks = 0
-        
+
         while num_ks > high_ks:
             log.info("*** K-means bisection search step %i ***" % step)
             step += 1

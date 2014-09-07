@@ -45,7 +45,7 @@ class Configuration(object):
 
     def __init__(self, datatype="DNA", phylogeny_program='phyml',
         save_phylofiles=False, cmdline_extras = "", cluster_weights = None,
-        cluster_percent=10, kmeans_opt=1):
+        cluster_percent=10, kmeans_opt=1, rates_file=''):
 
         log.info("------------- Configuring Parameters -------------")
         # Only required if user adds them
@@ -58,6 +58,7 @@ class Configuration(object):
         self.cmdline_extras = cmdline_extras
         self.cluster_percent = float(cluster_percent)
         self.kmeans_opt = kmeans_opt
+        self.rates_file = rates_file
 
         # Record this
         self.base_path = '.'
@@ -298,7 +299,7 @@ class Configuration(object):
             log.error("Clustering methods are only available when using raxml"
                       " (the --raxml commandline option). Please check and try again."
                       " See the manual for more details.")
-            raise ConfigurationError        
+            raise ConfigurationError
 
         if option == "search" and "kmeans" in value and self.phylogeny_program != 'phyml' and self.kmeans_opt != 1:
             log.error("You have chosen a kmeans option (--kmeans_opt) that does not work "

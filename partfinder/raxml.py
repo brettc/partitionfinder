@@ -423,7 +423,7 @@ def get_per_site_stats(phylip_file, cfg):
     # before the full stop
     phylip_file_split = os.path.split(phylip_file)
     subset_code = phylip_file_split[1].split(".")[0]
-    
+
     if cfg.datatype == 'DNA':
         raxml_lnl_file = os.path.join(phylip_file_split[0],
             ("RAxML_perSiteLLs.%s_GTRGAMMA.txt" % subset_code))
@@ -447,13 +447,12 @@ def fabricate(lnl):
     result.result.alpha = 0
     return result.result
 
-def get_CIs():
+def get_CIs(cfg):
     ci_list = []
-    the_cis = open("CIs.txt")
+    the_cis = open(cfg.rates_file)
     for ci in the_cis.readlines():
         ci_list.append([logarithm(float(ci))])
     return ci_list
-
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.DEBUG)

@@ -83,8 +83,8 @@ def set_debug_regions(regions):
     return None
 
 def clean_folder(folder):
-    """ Delete all the files in a folder 
-    Thanks to StackOverflow for this:  
+    """ Delete all the files in a folder
+    Thanks to StackOverflow for this:
     http://stackoverflow.com/questions/185936/delete-folder-contents-in-python
     """
     for the_file in os.listdir(folder):
@@ -151,6 +151,13 @@ def parse_args(datatype, cmdargs=None):
         "--show-python-exceptions",
         action="store_true", dest="show_python_exceptions",
         help="If errors occur, print the python exceptions")
+
+    op.add_option(
+        "--rates-file",
+        action="store_true", dest="rates_file",
+        help="where to find a file of rates across sites to use for clustering")
+
+
     op.add_option(
         "--save-phylofiles",
         action="store_true", dest="save_phylofiles",
@@ -202,7 +209,8 @@ def parse_args(datatype, cmdargs=None):
         "\n--kmeans-opt 2: use site rates only (only works with PhyML)"
         "\n--kmeans-opt 3: use site likelihoods and site rates (only works with PhyML)"
         "\n--kmeans-opt 4: use site likelihoods from gamma rate categories (only works with PhyML)"
-    )   
+    )
+
     op.add_option(
         "--rcluster-percent",
         type="float", dest="cluster_percent", default=10.0, metavar="N",
@@ -319,9 +327,9 @@ def main(name, datatype, passed_args=None):
     # Load, using the first argument as the folder
     try:
         # TODO: just pass the options in!
-        cfg = config.Configuration(datatype, 
+        cfg = config.Configuration(datatype,
                                    options.phylogeny_program,
-                                   options.save_phylofiles, 
+                                   options.save_phylofiles,
                                    options.cmdline_extras,
                                    options.cluster_weights,
                                    options.cluster_percent,

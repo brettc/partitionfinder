@@ -370,12 +370,12 @@ def likelihood_parser(phyml_lk_file):
             # else:
             rate_list = [[(logarithm(float(site[headers[len(headers) - 3]])))] for site in list_of_dicts]
 
-            # Now make a list of lists of site likelihoods under different 
+            # Now make a list of lists of site likelihoods under different
             # rate categories
             lk_rate_list = []
             for i in list_of_dicts:
                 ind_lk_list = []
-                # Pull the likelihood from each rate category by calling the 
+                # Pull the likelihood from each rate category by calling the
                 # appropriate key from "headers"
                 for num in range(2, len(headers) - 3):
                     ind_lk_list.append(logarithm(float(i[headers[num]])))
@@ -432,6 +432,13 @@ def get_per_site_stats(phylip_file, cfg):
 def fabricate(lnl):
     result = PhymlResult(lnl, 0, 0)
     return result
+
+def get_CIs(cfg):
+    ci_list = []
+    the_cis = open(cfg.rates_file)
+    for ci in the_cis.readlines():
+        ci_list.append([logarithm(float(ci))])
+    return ci_list
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.DEBUG)
