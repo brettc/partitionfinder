@@ -435,7 +435,8 @@ def fabricate(lnl):
 
 def get_CIs(cfg):
     ci_list = []
-    the_cis = open(cfg.rates_file)
+    fname = os.path.join(cfg.base_path, 'rates.txt')
+    the_cis = open(fname)
     for ci in the_cis.readlines():
         ci_list.append([logarithm(float(ci))])
     return ci_list
