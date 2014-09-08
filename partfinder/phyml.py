@@ -401,8 +401,8 @@ def program():
 def gen_per_site_stats(cfg, alignment_path, tree_path):
     if cfg.datatype == 'DNA':
         if cfg.branchlengths == 'linked':
-            #command = "--run_id GTRGAMMA -b 0 -i '%s' -u '%s' -m JC69 --print_site_lnl --constrained_lens -f 0.25,0.25,0.25,0.25" % (alignment_path, tree_path)
-            command = "--run_id GTRGAMMA -b 0 -i '%s' -u '%s' -m GTR --print_site_lnl --constrained_lens" % (alignment_path, tree_path)
+            command = "--run_id GTRGAMMA -b 0 -i '%s' -u '%s' -m JC69 --print_site_lnl --constrained_lens -f 0.25,0.25,0.25,0.25" % (alignment_path, tree_path)
+            #command = "--run_id GTRGAMMA -b 0 -i '%s' -u '%s' -m GTR --print_site_lnl --constrained_lens" % (alignment_path, tree_path)
         elif cfg.branchlengths == 'unlinked':
             command = "--run_id GTRGAMMA -b 0 -i '%s' -u '%s' -m GTR --print_site_lnl" % (
                 alignment_path, tree_path)
