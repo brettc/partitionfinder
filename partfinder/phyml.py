@@ -199,7 +199,7 @@ def analyse(model, alignment_path, tree_path, branchlengths, cmdline_extras):
 
 def make_tree_path(alignment_path):
     pth, ext = os.path.splitext(alignment_path)
-    return pth + ".phy_phyml_tree.txt"
+    return pth + ".phy_phyml_tree"
 
 
 def make_output_path(aln_path, model):
