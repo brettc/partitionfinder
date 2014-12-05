@@ -2,7 +2,7 @@ library(ggplot2)
 library(reshape)
 library(zoo)
 
-dat <- read.csv("~/Documents/Projects_Current/partitionfinder/docs/downloadstats.csv")
+dat <- read.csv("~/Documents/github/partitionfinder/docs/downloadstats.csv")
 dat$date <- as.yearmon(dat$date)
 dat <- aggregate(. ~ date, data=dat, FUN=sum, na.action=na.pass)
 dat <- dat[order(as.Date(dat$date)),]
@@ -25,7 +25,7 @@ dl$date <- as.Date(dl$date, format = "%d/%m/%Y")
 quartz(width=10, height=5)
 p <- ggplot(dl, aes(date, downloads))
 p + geom_area(aes(colour = OS, fill= OS), position = 'stack')
-dev.copy2pdf(file="~/Documents/Projects_Current/partitionfinder/docs/downloadplot.pdf")
+dev.copy2pdf(file="~/Documents/github/partitionfinder/docs/downloadplot.pdf")
 dev.off()
 
 
@@ -37,7 +37,7 @@ c <- c[complete.cases(c),]
 quartz(width=10, height=5)
 p <- ggplot(c, aes(date, citations.googlescholar))
 p + geom_point() + geom_smooth(stat="identity")
-dev.copy2pdf(file="~/Documents/Projects_Current/partitionfinder/docs/citationsplot.pdf")
+dev.copy2pdf(file="~/Documents/github/partitionfinder/docs/citationsplot.pdf")
 dev.off()
 
 
@@ -57,7 +57,7 @@ g <- rbind(e, f)
 quartz(width=10, height=5)
 p <- ggplot(g, aes(date, value, colour = type))
 p + geom_point() + geom_smooth(stat="identity")
-dev.copy2pdf(file="~/Documents/Projects_Current/partitionfinder/docs/citationsplot2.pdf")
+dev.copy2pdf(file="~/Documents/github/partitionfinder/docs/citationsplot2.pdf")
 dev.off()
 
 
