@@ -254,7 +254,7 @@ def check_options(op, options):
 
     # Default to raxml for morphology
     if options.datatype == 'morphology':
-	options.phylogeny_program = 'raxml'
+	    options.phylogeny_program = 'raxml'
 
 
     #A warning for people using the Pthreads version of RAxML

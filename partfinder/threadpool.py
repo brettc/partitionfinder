@@ -89,16 +89,20 @@ class Pool(object):
         self.task_lock.release()
 
     def join(self):
+        
         # TODO: I don't think we need this bit....
         # Wait till all tasks have been taken
         while self.more_tasks:
             sleep(.1)
         # ... now wait for them all to finish
-        for t in self.threads:
-            t.join()
+        if len(self.threads) > 1:
+            for t in self.threads:
+                t.join()
+        else:
+            pass
 
-        if self.failed:
-            raise self.exception
+ #       if self.failed:
+    #        raise self.exception
 
 
 class Thread(threading.Thread):

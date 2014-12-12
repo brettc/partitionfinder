@@ -3,7 +3,7 @@ import os
 import random
 import glob
 
-HERE = os.path.abspath(os.path.join(os.path.dirname(__file__),"../"))
+HERE = os.path.abspath(os.path.join(os.path.dirname(__file__),"../examples/morphology"))
 
 
 def make_mat():
@@ -38,13 +38,12 @@ def rescale_mat():
 #   loop with 1000 x 100000. 
     uniq = np.unique(a)
     rescaled_matrix = uniq.searchsorted(a)
-    return a, rescaled_matrix
+    return([a, rescaled_matrix])
 
 def fix_missing():
     """Rescaled matrices are don't have missing data symbols, as numpy does 
     not use them, so we need to reinsert those
-
-"""
+	"""
     mat_list = rescale_mat()
     a = mat_list[1]
     a = a.tolist()
@@ -52,6 +51,11 @@ def fix_missing():
 #   365ms per loop. 1000x10000: 3.67s per loop. 1000x100000: 36.8s per loop. 
 #   Seems good.
     a=[['?' if x is None else x for x in i] for i in a]
-    return a
+    print a
+    return(a)
 
+fix_missing()
 
+if __name__ == '__main__':
+    rescale_mat()
+    fix_missing()

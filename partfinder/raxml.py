@@ -58,7 +58,7 @@ def find_program():
     pth, notused = os.path.split(pth)
     pth = os.path.join(pth, "programs", _binary_name)
     pth = os.path.normpath(pth)
-
+    print _binary_name
     log.debug("Checking for program %s", _binary_name)
     if not os.path.exists(pth) or not os.path.isfile(pth):
         log.error("No such file: '%s'", pth)
@@ -467,4 +467,8 @@ if __name__ == '__main__':
 
     pth = "./tests/misc/raxml_aminoacid.output"
     p = Parser('protein')
+    result = p.parse(open(pth).read())
+    
+    pth = "./tests/misc/raxml_morphology.output"
+    p = Parser('morphology')
     result = p.parse(open(pth).read())

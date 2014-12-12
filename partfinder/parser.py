@@ -99,6 +99,8 @@ class Parser(object):
             CaselessKeyword("beast") |
             CaselessKeyword("all_protein") |
             CaselessKeyword("all_protein_gamma") |
+            CaselessKeyword("multi") |
+            CaselessKeyword("binary") |
             CaselessKeyword("all_protein_gammaI"))("predefined") |
             Group(model_list)("userlist")) + SEMICOLON
         model_def.setParseAction(self.set_models)
@@ -302,13 +304,17 @@ class Parser(object):
 
         all_dna_mods = set(self.phylo_models.get_all_dna_models())
         all_protein_mods = set(self.phylo_models.get_all_protein_models())
-        all_morphology_mods = set(self.phylo_models.get_all_morphology_models())
-        total_mods = all_dna_mods | all_protein_mods | all_morphology_mods
+        all_binary_morphology_mods = set(self.phylo_models.get_binary_morphology_models())
+        all_multi_morphology_mods = set(self.phylo_models.get_multi_morphology_models())
+        total_mods = all_dna_mods | all_protein_mods | all_binary_morphology_mods | all_multi_morphology_mods
+
 
 
         mods = tokens[1]
         DNA_mods = 0
         protein_mods = 0
+        multi_mods = 0
+        bin_mods = 0
         if mods.userlist:
             modlist = mods.userlist
             log.info("Setting 'models' to a user-specified list")
@@ -320,7 +326,7 @@ class Parser(object):
                 if self.cfg.datatype == "protein":
                     modlist = list(all_protein_mods)
                 if self.cfg.datatype == "morphology":
-                    modlist = list(all_morphology_mods)
+                    modlist = list(all_morph_models)
             elif modsgroup.lower() == "mrbayes":
                 modlist = set(phyml_models.get_mrbayes_models())
             elif modsgroup.lower() == "beast":
@@ -343,9 +349,13 @@ class Parser(object):
                     log.error("The models option 'all_protein_gammaI' is only available with raxml"
                               ", (the --raxml commandline option). Please check and try again")
                     raise ParserError            
+            elif modsgroup.lower() == "binary":
+                modlist = set(raxml_models.get_binary_morphology_models())
+            elif modsgroup.lower() == "multi":
+                modlist = set(raxml_models.get_multi_morphology_models())
             else:
                 pass
-
+        
             # never include the LG4X model in predefined model lists
             # because it can't (yet) be used for partitionined analyses
             modlist = filter(lambda x: x.count("LG4X")==0, modlist)
@@ -368,7 +378,11 @@ class Parser(object):
                 DNA_mods += 1
             if m in all_protein_mods:
                 protein_mods += 1
-
+            if m in all_binary_morphology_mods:
+                bin_mods += 1               
+            if m in all_multi_morphology_mods:
+                multi_mods += 1     
+                
             self.cfg.models.add(m)
 
         log.info("The models included in this analysis are: %s",
@@ -391,8 +405,9 @@ class Parser(object):
             if not modset.issubset(all_protein_mods):
                 raise ParserError(text, loc, GENERIC_MODEL_LIST_WARNING %(self.cfg.datatype))
         if self.cfg.datatype == "morphology":
-            # check that we only have models from the DNA list
-            if not modset.issubset(all_morphology_mods):
+            # check that we only have models from the morphology list
+            all_morph_mods = list(all_binary_morphology_mods) + list(all_multi_morphology_mods)
+            if not modset.issubset(all_morph_mods):
                 raise ParserError(text, loc, GENERIC_MODEL_LIST_WARNING %(self.cfg.datatype))
 
     def define_range(self, part):
