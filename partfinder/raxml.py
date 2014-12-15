@@ -396,47 +396,47 @@ program_name = "raxml"
 def program():
     return program_name
 
-def gen_per_site_stats(cfg, alignment_path, tree_path):
-    #raxml doesn't append alignment names automatically, like PhyML, let's do that here
-    if cfg.datatype == 'DNA':
-        analysis_ID = raxml_analysis_ID(alignment_path, 'GTRGAMMA')
+# def gen_per_site_stats(cfg, alignment_path, tree_path):
+#     #raxml doesn't append alignment names automatically, like PhyML, let's do that here
+#     if cfg.datatype == 'DNA':
+#         analysis_ID = raxml_analysis_ID(alignment_path, 'GTRGAMMA')
 
-        #force raxml to write to the dir with the alignment in it
-        #-e 1.0 sets the precision to 1 lnL unit. This is all that's required here, and helps with speed.
-        aln_dir, fname = os.path.split(alignment_path)
-        command = "-m GTRGAMMA -f g -s '%s' -z '%s' -n %s -w '%s'" % (
-            alignment_path, tree_path, analysis_ID, os.path.abspath(aln_dir))
-    elif cfg.datatype == 'protein':
-        analysis_ID = raxml_analysis_ID(alignment_path, 'LGGAMMA')
+#         #force raxml to write to the dir with the alignment in it
+#         #-e 1.0 sets the precision to 1 lnL unit. This is all that's required here, and helps with speed.
+#         aln_dir, fname = os.path.split(alignment_path)
+#         command = "-m GTRGAMMA -f g -s '%s' -z '%s' -n %s -w '%s'" % (
+#             alignment_path, tree_path, analysis_ID, os.path.abspath(aln_dir))
+#     elif cfg.datatype == 'protein':
+#         analysis_ID = raxml_analysis_ID(alignment_path, 'LGGAMMA')
 
-        aln_dir, gname = os.path.split(alignment_path)
-        # log.error("RAxML kmeans splitting does not currently work with protein analyses")
-        # raise RaxmlError(0,0)
-        command = "-m PROTGAMMALG -f g -s '%s' -z '%s' -n '%s' -w '%s'" % (
-            alignment_path, tree_path, analysis_ID, os.path.abspath(aln_dir))
+#         aln_dir, gname = os.path.split(alignment_path)
+#         # log.error("RAxML kmeans splitting does not currently work with protein analyses")
+#         # raise RaxmlError(0,0)
+#         command = "-m PROTGAMMALG -f g -s '%s' -z '%s' -n '%s' -w '%s'" % (
+#             alignment_path, tree_path, analysis_ID, os.path.abspath(aln_dir))
 
-    run_raxml(command)
+#     run_raxml(command)
 
-def get_per_site_stats(phylip_file, cfg):
-    # Retrieve a list the per site stats. The phylip files are called
-    # e.g. "67e2419ede57ae4032c534fe97ba408a.phy" we want the the number
-    # before the full stop
-    phylip_file_split = os.path.split(phylip_file)
-    subset_code = phylip_file_split[1].split(".")[0]
+# def get_per_site_stats(phylip_file, cfg):
+#     # Retrieve a list the per site stats. The phylip files are called
+#     # e.g. "67e2419ede57ae4032c534fe97ba408a.phy" we want the the number
+#     # before the full stop
+#     phylip_file_split = os.path.split(phylip_file)
+#     subset_code = phylip_file_split[1].split(".")[0]
 
-    if cfg.datatype == 'DNA':
-        raxml_lnl_file = os.path.join(phylip_file_split[0],
-            ("RAxML_perSiteLLs.%s_GTRGAMMA.txt" % subset_code))
+#     if cfg.datatype == 'DNA':
+#         raxml_lnl_file = os.path.join(phylip_file_split[0],
+#             ("RAxML_perSiteLLs.%s_GTRGAMMA.txt" % subset_code))
 
-    elif cfg.datatype == 'protein':
-        raxml_lnl_file = os.path.join(phylip_file_split[0],
-            ("RAxML_perSiteLLs.%s_LGGAMMA.txt" % subset_code))
+#     elif cfg.datatype == 'protein':
+#         raxml_lnl_file = os.path.join(phylip_file_split[0],
+#             ("RAxML_perSiteLLs.%s_LGGAMMA.txt" % subset_code))
 
-    # Now we return a likelihood list with three empty slots. This is to
-    # maintain consistency with the PhyML method which returns lists of rates
-    # and other things as well
-    likelihood_list = [likelihood_parser(raxml_lnl_file), None, None, None]
-    return likelihood_list
+#     # Now we return a likelihood list with three empty slots. This is to
+#     # maintain consistency with the PhyML method which returns lists of rates
+#     # and other things as well
+#     likelihood_list = [likelihood_parser(raxml_lnl_file), None, None, None]
+#     return likelihood_list
 
 def fabricate(lnl):
     result = Parser('DNA')
@@ -453,6 +453,51 @@ def get_CIs(cfg):
     for ci in the_cis.readlines():
         ci_list.append([logarithm(float(ci))])
     return ci_list
+
+def rate_parser(rates_name):
+    rates_list = []
+    the_rates = open(rates_name)
+    for rate in the_rates.readlines():
+        rates_list.append([float(rate)])
+    return rates_list, None, None, None
+
+def run_rates(command, report_errors=True):
+    program_name = "fast_TIGER"
+    program_path = util.program_path
+    program_path = os.path.join(program_path, program_name)
+    # command = "\"%s\" %s" % (program_path, command)
+
+    command = "\"%s\" %s" % (program_path, command)
+
+    # Note: We use shlex.split as it does a proper job of handling command
+    # lines that are complex
+    p = subprocess.Popen(
+        shlex.split(command),
+        shell=False,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE)
+
+    # Capture the output, we might put it into the errors
+    stdout, stderr = p.communicate()
+    # p.terminate()
+
+    if p.returncode != 0:
+        if report_errors == True:
+            log.error("rates_calculator did not execute successfully")
+            log.error("rates_calculator output follows, in case it's helpful for finding the problem")
+            log.error("%s", stdout)
+            log.error("%s", stderr)
+        raise RaxmlError(stdout, stderr)
+
+def gen_per_site_stats(cfg, alignment_path, tree_path):
+    if cfg.datatype == 'DNA':
+        command = " dna " + alignment_path
+    run_rates(command, report_errors=False)
+
+def get_per_site_stats(phylip_file, cfg):
+    rates_name = ("%s_r8s.txt" % phylip_file)
+
+    return rate_parser(rates_name)
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.DEBUG)
