@@ -324,7 +324,6 @@ class KmeansAnalysis(Analysis):
         start_scheme = scheme.create_scheme(
             self.cfg, "start_scheme", start_description)
 
-
         log.info("Analysing starting scheme (scheme %s)" % start_scheme.name)
         old_score = self.analyse_scheme(start_scheme)
 

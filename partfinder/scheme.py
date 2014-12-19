@@ -41,7 +41,7 @@ class SchemeResult(object):
         # How you do this depends on whether brlens are linked or not.
         self.nsubs = len(sch.subsets)  # number of subsets
         sum_subset_k = sum([s.best_params for s in sch])  # sum of number of parameters in the best model of each subset
-
+        
         log.debug("Calculating number of parameters in scheme:")
         log.debug("Total parameters from subset models: %d" % (sum_subset_k))
 

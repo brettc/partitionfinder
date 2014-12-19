@@ -214,7 +214,7 @@ class Analysis(object):
         for sub in sch:
             sub.prepare(self.cfg, self.alignment)
             self.add_tasks_for_sub(tasks, sub)
-
+            
         # Now do the analysis
         if self.threads == 1:
             self.run_concurrent(tasks)
@@ -222,12 +222,12 @@ class Analysis(object):
             self.run_threaded(tasks)
 
         # Now see if we're done
-        for sub in sch:
+#        for sub in sch:
             # ALL subsets should already be finalised in the task. We just
             # check again here
-            if not sub.finalise(self.cfg):
-                log.error("Failed to run models %s; not sure why", ", ".join(list(sub.models_to_do)))
-                raise AnalysisError
+ #           if not sub.finalise(self.cfg):
+  #              log.error("Failed to run models %s; not sure why", ", ".join(list(sub.models_to_do)))
+   #             raise AnalysisError
 
         # AIC needs the number of sequences
         number_of_seq = len(self.alignment.species)

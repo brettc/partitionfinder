@@ -178,17 +178,17 @@ def get_model_commandline(modelstring):
         if "F" in extras:
             commandline = ''.join([commandline, "F"])
     if model_name in _base_multi_morphology_models.keys():
-        # these look like this: "-m MULTIGAMMA -K MK" or ""-m MULTIGAMMA -K GTR"
-        commandline = "-m %s" % model_name
+        # these look like this: "-m MULTIGAMMA -K MK" or ""-m MULTIGAMMA -K GTR"  
         if "ASC" in extras: 
-           commandline = ''.join('ASC_', [commandline]) 
+           commandline = ''.join(["-m ASC_", model_name]) 
+        else: 
+            commandline = "-m %s" % model_name
     elif model_name in _base_binary_morphology_models.keys():
         # these look like this: "-m MULTIGAMMA -K MK" or ""-m MULTIGAMMA -K GTR"
         commandline = "-m %s " % model_name
         if "ASC" in extras:  
            commandline = ''.join('ASC_', [commandline]) 
             
-    print commandline
     return commandline
 
 

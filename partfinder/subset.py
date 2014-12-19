@@ -158,7 +158,6 @@ class Subset(object):
                     "Model selection option %s not recognised, "
                     "please check" % cfg.model_selection)
                 raise SubsetError
-
             if self.best_info_score is None or info_score < self.best_info_score:
                 # TODO: Please make me better
                 self.best_lnl = result.lnl
@@ -169,10 +168,8 @@ class Subset(object):
                 self.best_alpha = result.alpha
                 self.best_freqs = result.freqs
                 self.best_modelparams = result.rates
-
         log.debug("Model Selection. best model: %s, params: %d, site_rate: %f"
                   % (self.best_model, self.best_params, self.best_site_rate))
-
     def get_param_values(self):
         param_values = {"rate": self.best_site_rate, "alpha": self.best_alpha}
 
@@ -186,7 +183,6 @@ class Subset(object):
         keys_m = self.best_modelparams.keys()
         keys_m.sort()
         param_values["model"] = [self.best_modelparams[key] for key in keys_m]
-
         return param_values
 
     def finalise(self, cfg):
