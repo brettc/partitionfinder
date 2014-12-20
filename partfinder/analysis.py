@@ -52,8 +52,6 @@ class Analysis(object):
         self.cfg.check_for_old_config()
         # Make some folders for the analysis
         self.cfg.make_output_folders()
-        self.cfg.subset_database = shelve.open(
-            os.path.join(self.cfg.subsets_path, 'subsets'), protocol=-1)
         self.make_alignment(cfg.alignment_path)
         self.make_tree(cfg.user_tree_topology_path)
         

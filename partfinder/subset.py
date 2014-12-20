@@ -21,7 +21,7 @@ import logging
 log = logging.getLogger("subset")
 import os
 import weakref
-import shelve
+import pickle
 
 from math import log as logarithm
 from alignment import Alignment, SubsetAlignment
@@ -345,20 +345,23 @@ class Subset(object):
     # These are the fields that get stored for quick loading
     _cache_fields = "alignment_path results".split()
 
-    def write_cache(self, cfg):
+    def write_cache(self, path):
         """Write out the results we've collected to a binary file"""
-        log.debug("Writing binary cached results for %s", self)
+        f = open(os.path.join(self.cfg.subsets_path, 'subsets'), 'wb')
         store = dict([(x, getattr(self, x)) for x in Subset._cache_fields])
-        self.cfg.subset_database = shelve.open(
-            os.path.join(self.cfg.subsets_path, 'subsets'), 'wb', protocol=-1)
-        cfg.subset_database[self.name] = store
-
-    def read_cache(self, cfg):
-        cfg.subset_database = shelve.open(
-            os.path.join(self.cfg.subsets_path, 'subsets'), 'rb', protocol=-1)
-        if self.name not in cfg.subset_database:
+        pickle.dump(store, f, -1)
+        f.close()
+        
+    def read_cache(self, path):
+        if not os.path.exists(os.path.join(self.cfg.subsets_path, 'subsets')):
             return False
         log.debug("Reading binary cached results for %s", self)
-        d = cfg.subset_database[self.name]
-        self.__dict__.update(d)
+        f = open(os.path.join(self.cfg.subsets_path, 'subsets'), 'rb')
+        try:
+            b = pickle.load(f)
+            self.__dict__.update(pickle.load(f))
+        except EOFError:
+            pass
+
+        f.close()
         
