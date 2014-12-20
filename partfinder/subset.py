@@ -21,6 +21,7 @@ import logging
 log = logging.getLogger("subset")
 import os
 import weakref
+import shelve
 
 from math import log as logarithm
 from alignment import Alignment, SubsetAlignment
@@ -213,7 +214,6 @@ class Subset(object):
         """Get everything ready for running the analysis
         """
         cfg.progress.subset_begin(self)
-
         # Load the cached results
         self.load_results(cfg)
 
@@ -337,7 +337,7 @@ class Subset(object):
     def load_results(self, cfg):
         # We might have already saved a bunch of results, try there first
         if not self.results:
-            self.read_cache(cfg)
+            print self.read_cache(cfg)
 
     def save_results(self, cfg):
         self.write_cache(cfg)
@@ -349,12 +349,16 @@ class Subset(object):
         """Write out the results we've collected to a binary file"""
         log.debug("Writing binary cached results for %s", self)
         store = dict([(x, getattr(self, x)) for x in Subset._cache_fields])
+        self.cfg.subset_database = shelve.open(
+            os.path.join(self.cfg.subsets_path, 'subsets'), 'wb', protocol=-1)
         cfg.subset_database[self.name] = store
 
     def read_cache(self, cfg):
+        cfg.subset_database = shelve.open(
+            os.path.join(self.cfg.subsets_path, 'subsets'), 'rb', protocol=-1)
         if self.name not in cfg.subset_database:
             return False
-
         log.debug("Reading binary cached results for %s", self)
         d = cfg.subset_database[self.name]
         self.__dict__.update(d)
+        

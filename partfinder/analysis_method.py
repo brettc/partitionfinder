@@ -231,7 +231,6 @@ class RelaxedClusteringAnalysis(Analysis):
 
         model_selection = self.cfg.model_selection
         partnum = len(self.cfg.user_subsets)
-
         scheme_count = submodels.count_relaxed_clustering_schemes(
             partnum, self.cfg.cluster_percent)
         subset_count = submodels.count_relaxed_clustering_subsets(
@@ -247,7 +246,7 @@ class RelaxedClusteringAnalysis(Analysis):
         self.analyse_scheme(start_scheme)
         self.cfg.reporter.write_scheme_summary(
             self.results.best_scheme, self.results.best_result)
-
+        
         # Start by remembering that we analysed the starting scheme
         subset_counter = 1
         step = 1
@@ -255,7 +254,7 @@ class RelaxedClusteringAnalysis(Analysis):
 
             log.info("***Relaxed clustering algorithm step %d of %d***" % (step, partnum - 1))
             name_prefix = "step_%d" % (step)
-
+    
             # Get a list of all possible lumpings of the best_scheme, ordered
             # according to the clustering weights
             lumped_subsets = neighbour.get_ranked_clustered_subsets(
@@ -269,7 +268,6 @@ class RelaxedClusteringAnalysis(Analysis):
             # Now analyse the lumped schemes
             lumpings_done = 0
             old_best_score = self.results.best_score
-
             for subset_grouping in lumped_subsets:
                 scheme_name = "%s_%d" % (name_prefix, lumpings_done + 1)
                 lumped_scheme = neighbour.make_clustered_scheme(
@@ -299,7 +297,7 @@ class RelaxedClusteringAnalysis(Analysis):
                 log.info("Analysed %.1f percent of the schemes for this step and found no schemes "
                          "that improve the score, stopping" , self.cfg.cluster_percent)
                 break
-
+        
             # We're done if it's the scheme with everything together
             if len(set(lumped_scheme.subsets)) == 1:
                 break

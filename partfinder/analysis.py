@@ -45,23 +45,20 @@ class Analysis(object):
         self.threads = threads
 
         self.results = results.AnalysisResults(self.cfg.model_selection)
-
         log.info("Beginning Analysis")
         self.process_restart(force_restart)
 
         # Check for old analyses to see if we can use the old data
         self.cfg.check_for_old_config()
-
         # Make some folders for the analysis
         self.cfg.make_output_folders()
         self.cfg.subset_database = shelve.open(
             os.path.join(self.cfg.subsets_path, 'subsets'), protocol=-1)
         self.make_alignment(cfg.alignment_path)
         self.make_tree(cfg.user_tree_topology_path)
-
+        
         # We need this to block the threads for critical stuff
         self.lock = threading.Condition(threading.Lock())
-
     def process_restart(self, force_restart):
         if force_restart:
             # Remove everything
@@ -82,7 +79,6 @@ class Analysis(object):
         # Make the alignment
         self.alignment = Alignment()
         self.alignment.read(source_alignment_path)
-
         # We start by copying the alignment
         self.alignment_path = os.path.join(self.cfg.start_tree_path, 'source.phy')
         if os.path.exists(self.alignment_path):
@@ -194,7 +190,7 @@ class Analysis(object):
     def add_tasks_for_sub(self, tasks, sub):
         for m in sub.models_to_process:
             tasks.append((self.run_task, (m, sub)))
-
+         
     def run_concurrent(self, tasks):
         for func, args in tasks:
             func(*args)
@@ -203,18 +199,18 @@ class Analysis(object):
         if not tasks:
             return
         pool = threadpool.Pool(tasks, self.threads)
+        
         pool.join()
 
     def analyse_scheme(self, sch):
         # Progress
         self.cfg.progress.next_scheme()
-
+    
         # Prepare by reading everything in first
         tasks = []
         for sub in sch:
             sub.prepare(self.cfg, self.alignment)
             self.add_tasks_for_sub(tasks, sub)
-            
         # Now do the analysis
         if self.threads == 1:
             self.run_concurrent(tasks)
@@ -222,16 +218,16 @@ class Analysis(object):
             self.run_threaded(tasks)
 
         # Now see if we're done
-#        for sub in sch:
+        for sub in sch:
             # ALL subsets should already be finalised in the task. We just
             # check again here
- #           if not sub.finalise(self.cfg):
-  #              log.error("Failed to run models %s; not sure why", ", ".join(list(sub.models_to_do)))
-   #             raise AnalysisError
+            if not sub.finalise(self.cfg):
+                log.error("Failed to run models %s; not sure why", ", ".join(list(sub.models_to_do)))
+                raise AnalysisError
 
         # AIC needs the number of sequences
         number_of_seq = len(self.alignment.species)
         result = scheme.SchemeResult(sch, number_of_seq, self.cfg.branchlengths, self.cfg.model_selection)
         self.results.add_scheme_result(sch, result)
-
+        
         return result
