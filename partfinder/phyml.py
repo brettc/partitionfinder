@@ -479,7 +479,7 @@ def run_rates(command, report_errors=True):
 def gen_per_site_stats(cfg, alignment_path, tree_path):
     if cfg.datatype == 'DNA':
         command = " dna " + alignment_path
-    elif cfg.datatype == 'MORPHOLOGY':
+    elif cfg.datatype == 'morphology':
         command = " morphology " + alignment_path
     run_rates(command, report_errors=False)
 
