@@ -1,3 +1,20 @@
+# Copyright (C) 2012 Robert Lanfear and Brett Calcott
+#
+# This program is free software: you can redistribute it and/or modify it under
+# the terms of the GNU General Public License as published by the Free Software
+# Foundation, either version 3 of the License, or (at your option) any later
+# version.
+#
+# This program is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+# details. You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+# PartitionFinder also includes the PhyML program, the RAxML program, and the
+# PyParsing library, all of which are protected by their own licenses and
+# conditions, using PartitionFinder implies that you agree with those licences
+# and conditions as well.
+
 import logging
 log = logging.getLogger("config")
 
@@ -9,28 +26,25 @@ import subset
 import parser
 import util
 import progress
+import numbers
 import errno
-
 
 class ConfigurationError(util.PartitionFinderError):
     pass
 
 
 class Configuration(object):
-
     """This holds the user configuration info"""
 
     # List of valid options. The first one is the default
     options = {
         'branchlengths': ['linked', 'unlinked'],
         'model_selection': ['aic', 'aicc', 'bic'],
-        'search': ['all', 'user', 'greedy', 'hcluster', 'rcluster', 'kmeans',
-            'kmeans_wss', 'kmeans_greedy']
+        'search': ['all', 'user', 'greedy', 'hcluster', 'rcluster', 'kmeans', 'kmeans_wss', 'kmeans_greedy', 'kmeans_var', 'kmeans_var_ci']
     }
-
     def __init__(self, datatype="DNA", phylogeny_program='phyml',
-                 save_phylofiles=False, cmdline_extras="", cluster_weights=None,
-                 cluster_percent=10, kmeans_opt=1):
+        save_phylofiles=False, cmdline_extras = "", cluster_weights = None,
+        cluster_percent=10, kmeans_opt=1, rates_file=''):
 
         log.info("------------- Configuring Parameters -------------")
         # Only required if user adds them
@@ -43,6 +57,7 @@ class Configuration(object):
         self.cmdline_extras = cmdline_extras
         self.cluster_percent = float(cluster_percent)
         self.kmeans_opt = kmeans_opt
+        self.rates_file = rates_file
 
         # Record this
         self.base_path = '.'
@@ -53,7 +68,7 @@ class Configuration(object):
         # Some basic checking of the setup, so that we don't hit too many
         # problems later
         if datatype != "DNA" and datatype != "protein" and datatype != "morphology":
-            log.error("datatype must be 'DNA', 'protein', or 'morphology'")
+            log.error("datatype must be 'DNA' or 'protein'")
             raise ConfigurationError
 
         log.info("Setting datatype to '%s'", datatype)
@@ -73,8 +88,7 @@ class Configuration(object):
         self.find_programs()
 
         if cluster_weights is None:
-            # default weights - just use overall rates of subsets. Based on
-            # 2013 analyses.
+            #default weights - just use overall rates of subsets. Based on 2013 analyses.
             self.cluster_weights = {"rate": 1, "freqs": 0,
                                     "model": 0, "alpha": 0}
         else:
@@ -82,7 +96,7 @@ class Configuration(object):
             # Brett say "YES. But this will do for now..."
             cluster_weights = [x.strip() for x in cluster_weights.split(",")]
 
-            # now we check that it's a list of exactly four numbers
+            #now we check that it's a list of exactly four numbers
             if len(cluster_weights) != 4:
                 log.error("Your --cluster_weights argument should have exactly 4"
                           " numbers separated by commas, but it has %d ('%s') "
@@ -108,7 +122,7 @@ class Configuration(object):
                         cluster_weights[2], cluster_weights[3]))
 
             self.cluster_weights = {}
-            self.cluster_weights["rate"] = float(eval(cluster_weights[0]))
+            self.cluster_weights["rate"] =  float(eval(cluster_weights[0]))
             self.cluster_weights["freqs"] = float(eval(cluster_weights[1]))
             self.cluster_weights["model"] = float(eval(cluster_weights[2]))
             self.cluster_weights["alpha"] = float(eval(cluster_weights[3]))
@@ -130,9 +144,9 @@ class Configuration(object):
 
         log.debug("Setting rcluster-percent to %.2f" % self.cluster_percent)
 
+
         if kmeans_opt < 1 or kmeans_opt > 4:
-            log.error(
-                "The --kmeans-opt setting must be 1, 2, 3, or 4. Please check and restart")
+            log.error("The --kmeans-opt setting must be 1, 2, 3, or 4. Please check and restart")
             raise ConfigurationError
 
     def find_programs(self):
@@ -150,11 +164,9 @@ class Configuration(object):
 
     def reset(self):
         if self.old_working_directory is not None:
-            log.debug(
-                "Returning to original path: %s", self.old_working_directory)
+            log.debug("Returning to original path: %s", self.old_working_directory)
             os.chdir(self.old_working_directory)
-        log.debug(
-            "Cleaning out all subsets (There are %d)...", subset.count_subsets())
+        log.debug("Cleaning out all subsets (There are %d)...", subset.count_subsets())
         subset.clear_subsets()
 
     def find_config_file(self, pth):
@@ -191,11 +203,9 @@ class Configuration(object):
 
         folder, filename = self.find_config_file(pth)
 
-        # check that user didn't enter a file instead of a folder
+        #check that user didn't enter a file instead of a folder
         # if os.path.isfile(pth):
-            # log.error("The second argument of the commandline currently
-            # points to a file, but it should point to the folder that contains
-            # the alignment and .cfg files, please check.")
+            # log.error("The second argument of the commandline currently points to a file, but it should point to the folder that contains the alignment and .cfg files, please check.")
             # raise ConfigurationError
 
         self.set_base_path(folder)
@@ -211,6 +221,8 @@ class Configuration(object):
 
         self.init_logger(self.base_path)
         self.load(config_path)
+
+        self.make_output_folders()
 
     def register_folder(self, name):
         # Separate the naming and construction of folders
@@ -236,15 +248,14 @@ class Configuration(object):
         handler.setFormatter(formatter)
         handler.setLevel(logging.DEBUG)
         logging.getLogger("").addHandler(handler)
-
+        
     def load(self, config_path):
         """We get the parser to construct the configuration"""
         log.info("Loading configuration at '%s'", config_path)
         self.config_path = config_path
         p = parser.Parser(self)
         p.parse_file(config_path)
-        log.info(
-            "------------------------ BEGINNING NEW RUN -------------------------------")
+        log.info("------------------------ BEGINNING NEW RUN -------------------------------")
 
     def set_base_path(self, base_path):
         self.full_base_path = os.path.abspath(base_path)
@@ -281,7 +292,7 @@ class Configuration(object):
                      (option, "'%s'" % ("', '".join(self.options[option]))))
             raise ConfigurationError
 
-        # TODO: not the best place for this at all..., but it works
+        #TODO: not the best place for this at all..., but it works
         if option == "search" and "cluster" in value and self.phylogeny_program != 'raxml':
             log.error("Clustering methods are only available when using raxml"
                       " (the --raxml commandline option). Please check and try again."
@@ -290,11 +301,12 @@ class Configuration(object):
 
         if option == "search" and "kmeans" in value and self.phylogeny_program != 'phyml' and self.kmeans_opt != 1:
             log.error("You have chosen a kmeans option (--kmeans_opt) that does not work "
-                      "with the --raxml option. Please re-run your analysis in one of two ways: "
-                      "\n 1. Remove the --raxml commandline option, so that PhyML is used, or "
-                      "\n 2. Change the --kmeans_opt commandline option to 1 (or remove it) and leave the "
-                      "--raxml option in place.")
+                "with the --raxml option. Please re-run your analysis in one of two ways: "
+                "\n 1. Remove the --raxml commandline option, so that PhyML is used, or "
+                "\n 2. Change the --kmeans_opt commandline option to 1 (or remove it) and leave the "
+                "--raxml option in place.")
             raise ConfigurationError
+
 
         log.info("Setting '%s' to '%s'", option, value)
         setattr(self, option, value)
@@ -324,6 +336,7 @@ class Configuration(object):
         # TODO: Fix this mess
         return
 
+
         log.info("Checking previously run configuration data...")
         if self.user_tree is None:
             topology = ""
@@ -340,8 +353,7 @@ class Configuration(object):
         subset_path = os.path.join(self.output_path, 'subsets')
         has_subsets = False
         if os.path.exists(subset_path):
-            # EAFP: we try to delete the file then see if os.rmdir spits an
-            # error...
+            #EAFP: we try to delete the file then see if os.rmdir spits an error...
             try:
                 os.rmdir(subset_path)
             except OSError as ex:
@@ -394,8 +406,7 @@ class Configuration(object):
                               "all previous analyses in the '/analysis' folder")
 
                 if not old_cfg[0] == cfg_list[0]:
-                    log.error("Old Alignment %s not equal to new alignment %s", old_cfg[
-                              0], cfg_list[0])
+                    log.error("Old Alignment %s not equal to new alignment %s", old_cfg[0], cfg_list[0])
                     fail.append("alignment")
                 if not old_cfg[1] == cfg_list[1]:
                     fail.append("branchlengths")
@@ -413,12 +424,8 @@ class Configuration(object):
                     fail.append("user_tree_topology")
 
                 if len(fail) > 0:
-                    log.error(
-                        "There are subsets stored, but PartitionFinder has detected that these were run using a different .cfg setup")
-                    log.error("The following settings in the new .cfg file are incompatible with the previous analysis: %s" % (
-                        ', '.join(fail)))
-                    log.info(
-                        "To run this analysis and overwrite previous output, re-run the analysis using '--force-restart' option")
-                    log.info(
-                        "To run this analysis without deleting the previous analysis, please place your alignment and .cfg in a new folder and try again")
+                    log.error("There are subsets stored, but PartitionFinder has detected that these were run using a different .cfg setup")
+                    log.error("The following settings in the new .cfg file are incompatible with the previous analysis: %s" % (', '.join(fail)))
+                    log.info("To run this analysis and overwrite previous output, re-run the analysis using '--force-restart' option")
+                    log.info("To run this analysis without deleting the previous analysis, please place your alignment and .cfg in a new folder and try again")
                     raise ConfigurationError

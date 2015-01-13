@@ -350,75 +350,141 @@ def likelihood_parser(phyml_lk_file):
         return likelihood_list
 
     else:
-        # Make a list of site log ikelihoods
-        likelihood_list = [[logarithm(float(site[headers[1]]))] for site in list_of_dicts]
+        # Make a list of site log likelihoods
+        if list_of_dicts[0][headers[1]] == 'nan' or list_of_dicts[0][headers[1]] == 'inf':
+            likelihood_list = None
+            print "Whoopsies!"
+            rate_list = None
+            lk_rate_list = None
+            lk_site_rate_list = None
+            return likelihood_list, lk_rate_list, rate_list, lk_site_rate_list
 
-        # Make a rate list
-        rate_list = [[(logarithm(float(site[headers[len(headers) - 3]])))] for site in list_of_dicts]
+        else:
+            likelihood_list = [[logarithm(float(site[headers[1]]))] for site in list_of_dicts]
 
-        # Now make a list of lists of site likelihoods under different 
-        # rate categories
-        lk_rate_list = []
-        for i in list_of_dicts:
-            ind_lk_list = []
-            # Pull the likelihood from each rate category by calling the 
-            # appropriate key from "headers"
-            for num in range(2, len(headers) - 3):
-                ind_lk_list.append(logarithm(float(i[headers[num]])))
-            # Now add the list of likelihoods for the site to a master list
-            lk_rate_list.append(ind_lk_list)
+            # Make a rate list
+            # print list_of_dicts[0][headers[len(headers) - 3]]
+            # if list_of_dicts[0][headers[len(headers) - 3]] == 'nan' or list_of_dicts[0][headers[len(headers) - 3]] == 'inf':
+            #     rate_list = None
+            #     print "Whoopsies!"
+            # else:
+            rate_list = [[(logarithm(float(site[headers[len(headers) - 3]])))] for site in list_of_dicts]
 
-        # Now pull likelihoods and rates for a two dimensional list
-        lk_site_rate_list = []
-        for i in list_of_dicts:
-            ind_lk_r_list = []
-            ind_lk_r_list.append(logarithm(float(i[headers[1]])))
-            ind_lk_r_list.append(logarithm(float(i[headers[len(headers) - 3]])))
-            lk_site_rate_list.append(ind_lk_r_list)
+            # Now make a list of lists of site likelihoods under different
+            # rate categories
+            lk_rate_list = []
+            for i in list_of_dicts:
+                ind_lk_list = []
+                # Pull the likelihood from each rate category by calling the
+                # appropriate key from "headers"
+                for num in range(2, len(headers) - 3):
+                    ind_lk_list.append(logarithm(float(i[headers[num]])))
+                # Now add the list of likelihoods for the site to a master list
+                lk_rate_list.append(ind_lk_list)
 
-        # Return both the list of site likelihoods and the list of lists of
-        # likelihoods under different rate categories
-        return likelihood_list, lk_rate_list, rate_list, lk_site_rate_list
+            # Now pull likelihoods and rates for a two dimensional list
+            lk_site_rate_list = []
+            for i in list_of_dicts:
+                ind_lk_r_list = []
+                ind_lk_r_list.append(logarithm(float(i[headers[1]])))
+                ind_lk_r_list.append(logarithm(float(i[headers[len(headers) - 3]])))
+                lk_site_rate_list.append(ind_lk_r_list)
+            # Return both the list of site likelihoods and the list of lists of
+            # likelihoods under different rate categories
+            return likelihood_list, lk_rate_list, rate_list, lk_site_rate_list
 
 program_name = "phyml"
 
 def program():
     return program_name
 
-def gen_per_site_stats(cfg, alignment_path, tree_path):
-    if cfg.datatype == 'DNA':
-        if cfg.branchlengths == 'linked':
-            command = "--run_id GTRGAMMA -b 0 -i '%s' -u '%s' -m GTR --print_site_lnl --constrained_lens" % (
-                alignment_path, tree_path)
-        elif cfg.branchlengths == 'unlinked':
-            command = "--run_id GTRGAMMA -b 0 -i '%s' -u '%s' -m GTR --print_site_lnl" % (
-                alignment_path, tree_path)
+# def gen_per_site_stats(cfg, alignment_path, tree_path):
+#     if cfg.datatype == 'DNA':
+#         if cfg.branchlengths == 'linked':
+#             command = "--run_id GTRGAMMA -b 0 -i '%s' -u '%s' -m JC69 --print_site_lnl --constrained_lens -f 0.25,0.25,0.25,0.25" % (alignment_path, tree_path)
+#             #command = "--run_id GTRGAMMA -b 0 -i '%s' -u '%s' -m GTR --print_site_lnl --constrained_lens" % (alignment_path, tree_path)
+#         elif cfg.branchlengths == 'unlinked':
+#             command = "--run_id GTRGAMMA -b 0 -i '%s' -u '%s' -m GTR --print_site_lnl" % (
+#                 alignment_path, tree_path)
 
-    elif cfg.datatype == 'protein':
-        if cfg.branchlengths == 'linked':
-            command = "--run_id LGGAMMA -b 0 -d aa -i '%s' -u '%s' -m LG --print_site_lnl --constrained_lens" % (
-                alignment_path, tree_path)
-        elif cfg.branchlengths == 'unlinked':
-            command = "--run_id LGGAMMA -b 0 -d aa -i '%s' -u '%s' -m LG --print_site_lnl" % (
-                alignment_path, tree_path)
-    # when we run phyml we don't report errors, because we don't want to clutter the output
-    # the errors are still raised though. This is particular to running the kmeans output.
-    run_phyml(command, report_errors=False)
+#     elif cfg.datatype == 'protein':
+#         if cfg.branchlengths == 'linked':
+#             command = "--run_id LGGAMMA -b 0 -d aa -i '%s' -u '%s' -m LG --print_site_lnl --constrained_lens" % (
+#                 alignment_path, tree_path)
+#         elif cfg.branchlengths == 'unlinked':
+#             command = "--run_id LGGAMMA -b 0 -d aa -i '%s' -u '%s' -m LG --print_site_lnl" % (
+#                 alignment_path, tree_path)
+#     # when we run phyml we don't report errors, because we don't want to clutter the output
+#     # the errors are still raised though. This is particular to running the kmeans output.
+#     run_phyml(command, report_errors=False)
 
-def get_per_site_stats(phylip_file, cfg):
-    # Retreive a list of the site likelihoods
-    if cfg.datatype == 'DNA':
-        phyml_lk_fname = ("%s_phyml_lk_GTRGAMMA.txt" % phylip_file)
-    elif cfg.datatype == 'protein':
-        phyml_lk_fname = ("%s_phyml_lk_LGGAMMA.txt" % phylip_file)
-    # Open the phyml output and return the list of four lists (likelihoods,
-    # rates, likelihoods_and_rates, and likelihoods under different rate
-    # categories)
-    return likelihood_parser(phyml_lk_fname)
+# def get_per_site_stats(phylip_file, cfg):
+#     # Retreive a list of the site likelihoods
+#     if cfg.datatype == 'DNA':
+#         phyml_lk_fname = ("%s_phyml_lk_GTRGAMMA.txt" % phylip_file)
+#     elif cfg.datatype == 'protein':
+#         phyml_lk_fname = ("%s_phyml_lk_LGGAMMA.txt" % phylip_file)
+#     # Open the phyml output and return the list of four lists (likelihoods,
+#     # rates, likelihoods_and_rates, and likelihoods under different rate
+#     # categories)
+#     return likelihood_parser(phyml_lk_fname)
 
 def fabricate(lnl):
     result = PhymlResult(lnl, 0, 0)
     return result
+
+def get_CIs(cfg):
+    ci_list = []
+    fname = os.path.join(cfg.base_path, 'rates.txt')
+    the_cis = open(fname)
+    for ci in the_cis.readlines():
+        ci_list.append([logarithm(float(ci))])
+    return ci_list
+
+def rate_parser(rates_name):
+    rates_list = []
+    the_rates = open(rates_name)
+    for rate in the_rates.readlines():
+        rates_list.append([float(rate)])
+    return rates_list, None, None, None
+
+def run_rates(command, report_errors=True):
+    program_name = "fast_TIGER"
+    program_path = util.program_path
+    program_path = os.path.join(program_path, program_name)
+    # command = "\"%s\" %s" % (program_path, command)
+
+    command = "\"%s\" %s" % (program_path, command)
+
+    # Note: We use shlex.split as it does a proper job of handling command
+    # lines that are complex
+    p = subprocess.Popen(
+        shlex.split(command),
+        shell=False,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE)
+
+    # Capture the output, we might put it into the errors
+    stdout, stderr = p.communicate()
+    # p.terminate()
+
+    if p.returncode != 0:
+        if report_errors == True:
+            log.error("rates_calculator did not execute successfully")
+            log.error("rates_calculator output follows, in case it's helpful for finding the problem")
+            log.error("%s", stdout)
+            log.error("%s", stderr)
+        raise PhymlError(stdout, stderr)
+
+def gen_per_site_stats(cfg, alignment_path, tree_path):
+    if cfg.datatype == 'DNA':
+        command = " dna " + alignment_path
+    run_rates(command, report_errors=False)
+
+def get_per_site_stats(phylip_file, cfg):
+    rates_name = ("%s_r8s.txt" % phylip_file)
+
+    return rate_parser(rates_name)
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.DEBUG)
@@ -446,3 +512,4 @@ spp4     CTCGAGGTGAAAAATGGTGATGCT------CGTCTGGTGCTGGAAGTTCAGCAGCAGCTGGGTGGTGGCGT
         log.info("Result is %s", res)
 
     # shutil.rmtree(tmp)
+

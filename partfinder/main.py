@@ -83,8 +83,8 @@ def set_debug_regions(regions):
     return None
 
 def clean_folder(folder):
-    """ Delete all the files in a folder 
-    Thanks to StackOverflow for this:  
+    """ Delete all the files in a folder
+    Thanks to StackOverflow for this:
     http://stackoverflow.com/questions/185936/delete-folder-contents-in-python
     """
     for the_file in os.listdir(folder):
@@ -95,7 +95,7 @@ def clean_folder(folder):
         except Exception, e:
             log.error("Couldn't delete file from phylofiles folder: %s" % e)
             raise PartitionFinderError
-
+            
 def parse_args(datatype, cmdargs=None):
     usage = """usage: python %prog [options] <foldername>
 
@@ -155,6 +155,10 @@ def parse_args(datatype, cmdargs=None):
         "--save-phylofiles",
         action="store_true", dest="save_phylofiles",
         help="save all of the phyml or raxml output. This can take a lot of space(!)")
+    op.add_option(
+        "--rates-file",
+        action="store_true", dest="rates_file",
+        help="where to find a file of rates across sites to use for clustering")        
     op.add_option(
         "--dump-results",
         action="store_true", dest="dump_results",
@@ -253,8 +257,14 @@ def check_options(op, options):
             op.error("Invalid debug regions: %s" % bad)
 
     # Default to raxml for morphology
-    if options.datatype == 'morphology':
+    if options.raxml == 1:
+        options.phylogeny_program = 'raxml'
+    elif options.datatype == 'morphology':
 	    options.phylogeny_program = 'raxml'
+    else:
+        options.phylogeny_program = 'phyml'
+
+
 
 
     #A warning for people using the Pthreads version of RAxML
@@ -318,14 +328,14 @@ def main(name, datatype, passed_args=None):
     # Load, using the first argument as the folder
     try:
         # TODO: just pass the options in!
-        cfg = config.Configuration(datatype, 
+        cfg = config.Configuration(datatype,
                                    options.phylogeny_program,
-                                   options.save_phylofiles, 
+                                   options.save_phylofiles,
                                    options.cmdline_extras,
                                    options.cluster_weights,
                                    options.cluster_percent,
                                    options.kmeans_opt)
-
+                                   
         # Set up the progress callback
         progress.TextProgress(cfg)
         cfg.load_base_path(args[0])
@@ -335,6 +345,8 @@ def main(name, datatype, passed_args=None):
         else:
             try:
                 # Now try processing everything....
+                if not cfg.save_phylofiles:
+                    clean_folder(cfg.phylofiles_path)
                 method = analysis_method.choose_method(cfg.search)
                 reporter.TextReporter(cfg)
                 anal = method(cfg,
@@ -359,6 +371,7 @@ def main(name, datatype, passed_args=None):
 
         return 0
 
+
     except util.PartitionFinderError:
         log.error("Failed to run. See previous errors.")
         # Reraise if we were called by call_main, or if the options is set
@@ -370,6 +383,7 @@ def main(name, datatype, passed_args=None):
 
 
     return 1
+
 
 
 def call_main(datatype, cmdline):

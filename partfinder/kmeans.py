@@ -131,30 +131,35 @@ def kmeans_split_subset(cfg, alignment, a_subset, tree_path, number_of_ks = 2):
     # kmeans, the subset becomes unanalysable. In that instance, these will be
     # transferred to the new subset and the sum taken as a proxy for the
     # overal lnl
-    a_subset.site_lnls_GTRG = per_site_statistics[0]
+    if per_site_stat_list == None:
+        a_subset.fabricated = True
+        return 1
 
-    # Perform kmeans clustering on the likelihoods
-    kmeans_results = kmeans(per_site_stat_list,
-        number_of_ks)
+    else:
+        a_subset.site_lnls_GTRG = per_site_statistics[0]
 
-    centroids = kmeans_results[0]
-    split_categories = kmeans_results[1]
+        # Perform kmeans clustering on the likelihoods
+        kmeans_results = kmeans(per_site_stat_list,
+            number_of_ks)
 
-    list_of_sites = []
-    for k in range(len(split_categories)):
-        list_of_sites.append(split_categories[k])
+        centroids = kmeans_results[0]
+        split_categories = kmeans_results[1]
 
-    log.debug("Creating new subsets from k-means split")
-    # Make the new subsets
-    new_subsets = subset_ops.split_subset(a_subset, list_of_sites)
+        list_of_sites = []
+        for k in range(len(split_categories)):
+            list_of_sites.append(split_categories[k])
 
-    # Now add the site_lnl centroid to each new subset
-    marker = 0
-    for s in new_subsets:
-        s.centroid = centroids[marker]
-        marker += 1
+        log.debug("Creating new subsets from k-means split")
+        # Make the new subsets
+        new_subsets = subset_ops.split_subset(a_subset, list_of_sites)
 
-    return new_subsets
+        # Now add the site_lnl centroid to each new subset
+        marker = 0
+        for s in new_subsets:
+            s.centroid = centroids[marker]
+            marker += 1
+
+        return new_subsets
 
 
 def kmeans_wrapper(cfg, alignment, a_subset, tree_path, max_ks = 10):
@@ -203,6 +208,7 @@ def kmeans_wrapper(cfg, alignment, a_subset, tree_path, max_ks = 10):
     elif cfg.kmeans_opt == 4:
         raise ValueError("Search kmeans_wss cannot be used with kmeans" + 
             " option 4. Use option 1 or 2")
+
 
     count = 1
     new_wss = 0
@@ -287,3 +293,15 @@ def make_likelihood_list(likelihood_list, site_categories):
             one_list.append(likelihood[0])
         rate_list.append(one_list)
     return rate_list
+    
+def kmeans_var_ks(cfg, a_subset, number_of_ks, likelihood_list): 
+    '''Takes a desired number of k's and returns the newly
+    split subsets into however many k's were desired
+    '''
+    site_categories = kmeans(likelihood_list, number_of_ks = number_of_ks)[1]
+    new_likelihood_lists = make_likelihood_list(likelihood_list, site_categories)
+    list_of_sites = []
+    for k in site_categories:
+        list_of_sites.append(site_categories[k])
+    new_subsets = subset_ops.split_subset(a_subset, list_of_sites)
+    return new_subsets
