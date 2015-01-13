@@ -151,13 +151,6 @@ def parse_args(datatype, cmdargs=None):
         "--show-python-exceptions",
         action="store_true", dest="show_python_exceptions",
         help="If errors occur, print the python exceptions")
-
-    op.add_option(
-        "--rates-file",
-        action="store_true", dest="rates_file",
-        help="where to find a file of rates across sites to use for clustering")
-
-
     op.add_option(
         "--save-phylofiles",
         action="store_true", dest="save_phylofiles",

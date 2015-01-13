@@ -316,6 +316,7 @@ class RelaxedClusteringAnalysis(Analysis):
         self.cfg.reporter.write_best_scheme(self.results)
 
 
+
 class KmeansAnalysis(Analysis):
     def do_analysis(self):
         bic_score_list = []
@@ -328,9 +329,9 @@ class KmeansAnalysis(Analysis):
         start_scheme = scheme.create_scheme(
             self.cfg, "start_scheme", start_description)
 
+
         log.info("Analysing starting scheme (scheme %s)" % start_scheme.name)
         old_score = self.analyse_scheme(start_scheme)
-
 
         # Get first scheme
         best_scheme = start_scheme
