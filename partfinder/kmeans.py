@@ -293,7 +293,7 @@ def make_likelihood_list(likelihood_list, site_categories):
             one_list.append(likelihood[0])
         rate_list.append(one_list)
     return rate_list
-    
+
 def kmeans_var_ks(cfg, a_subset, number_of_ks, likelihood_list): 
     '''Takes a desired number of k's and returns the newly
     split subsets into however many k's were desired

@@ -476,7 +476,6 @@ def rate_parser(rates_name):
 def run_rates(command, report_errors=True):
     program_name = "fast_TIGER"
     program_path = util.program_path
-    print program_path
     program_path = os.path.join(program_path, program_name)
     # command = "\"%s\" %s" % (program_path, command)
 
@@ -505,19 +504,16 @@ def run_rates(command, report_errors=True):
 def gen_per_site_stats(cfg, alignment_path, tree_path):
     if cfg.datatype == 'DNA':
         command = " dna " + alignment_path
-    run_rates(command, report_errors=False)
 
-def gen_per_site_stats(cfg, alignment_path, tree_path):
-    if cfg.datatype == 'morphology':
-        command = " dna " + alignment_path
+    elif cfg.datatype == 'morphology':
+        command = " morphology " + alignment_path
     run_rates(command, report_errors=False)
 
 def get_per_site_stats(phylip_file, cfg):
     rates_name = ("%s_r8s.txt" % phylip_file)
 
     return rate_parser(rates_name)
- 
-    
+
 if __name__ == '__main__':
     logging.basicConfig(level=logging.DEBUG)
     pth = "./tests/misc/raxml_nucleotide.output"
