@@ -25,11 +25,10 @@ import shutil
 import sys
 import fnmatch
 import util
-from math import log as logarithm
 
 from pyparsing import (
     Word, Literal, nums, Suppress, ParseException,
-    SkipTo, OneOrMore, Regex
+    SkipTo, OneOrMore, Regex, restOfLine
 )
 
 import raxml_models as models
@@ -49,6 +48,7 @@ class RaxmlError(PhylogenyProgramError):
         self.stderr = stderr
         self.stdout = stdout
 
+
 def find_program():
     """Locate the binary ..."""
     pth = os.path.abspath(__file__)
@@ -58,7 +58,6 @@ def find_program():
     pth, notused = os.path.split(pth)
     pth = os.path.join(pth, "programs", _binary_name)
     pth = os.path.normpath(pth)
-
     log.debug("Checking for program %s", _binary_name)
     if not os.path.exists(pth) or not os.path.isfile(pth):
         log.error("No such file: '%s'", pth)
@@ -115,7 +114,6 @@ def dupfile(src, dst):
 def make_topology(alignment_path, datatype, cmdline_extras):
     '''Make a MP tree to start the analysis'''
     log.info("Making MP tree for %s", alignment_path)
-
     cmdline_extras = check_defaults(cmdline_extras)
 
     # First get the MP topology like this (-p is a hard-coded random number seed):
@@ -150,7 +148,6 @@ def make_branch_lengths(alignment_path, topology_path, datatype, cmdline_extras)
     log.debug("Copying %s to %s", topology_path, tree_path)
     dupfile(topology_path, tree_path)
     os.remove(topology_path)  # saves headaches later...
-
     if datatype == "DNA":
         log.info("Estimating GTR+G branch lengths on tree using RAxML")
         command = "-f e -s '%s' -t '%s' -m GTRGAMMA -n BLTREE -w '%s' %s" % (
@@ -164,6 +161,12 @@ def make_branch_lengths(alignment_path, topology_path, datatype, cmdline_extras)
     elif datatype == "morphology":
         log.info("Estimating MK+G branch lengths on tree using RAxML")
         command = "-f e -s '%s' -t '%s' -m MULTIGAMMA -K MK -n BLTREE -w '%s' %s" % (
+            alignment_path, tree_path, os.path.abspath(dir_path), cmdline_extras)
+        run_raxml(command)
+        dir, aln = os.path.split(alignment_path)
+        tree_path = os.path.join(dir, "RAxML_result.BLTREE")
+
+        command = "-f g -s '%s' -m MULTIGAMMA -K MK -z %s -n LNL -w '%s' %s" % (
             alignment_path, tree_path, os.path.abspath(dir_path), cmdline_extras)
         run_raxml(command)
     else:
@@ -235,7 +238,6 @@ def analyse(model, alignment_path, tree_path, branchlengths, cmdline_extras):
     command = " %s -s '%s' -t '%s' %s -n %s -w '%s' %s" % (
         bl, alignment_path, tree_path, model_params, analysis_ID, os.path.abspath(aln_dir), cmdline_extras)
     run_raxml(command)
-
 
 
 def raxml_analysis_ID(alignment_path, model):
@@ -328,7 +330,7 @@ class Parser(object):
         freq = Suppress("freq pi(") + L + Suppress("):") + FLOAT
         freq.setParseAction(self.set_freq)
         freqs = OneOrMore(freq)
-        
+
         # Just look for these things
         self.root_parser = seconds + lnl + alpha + tree_size + rates + freqs
         self.root_parser.ignore("LGM" + restOfLine)
@@ -365,6 +367,7 @@ class Parser(object):
 
         log.debug("Result is %s", self.result)
         return self.result
+
 
 def parse(text, datatype):
     the_parser = Parser(datatype)
@@ -408,34 +411,44 @@ program_name = "raxml"
 def program():
     return program_name
 
+def run_rates(command, report_errors=True):
+    program_name = "fast_TIGER"
+    program_path = util.program_path
+    program_path = os.path.join(program_path, program_name)
+    command = "\"%s\" %s" % (program_path, command)
+    # Note: We use shlex.split as it does a proper job of handling command
+    # lines that are complex
+    p = subprocess.Popen(
+    shlex.split(command),
+    shell=False,
+    stdout=subprocess.PIPE,
+    stderr=subprocess.PIPE)
+    # Capture the output, we might put it into the errors
+    stdout, stderr = p.communicate()
+    # p.terminate()
+    if p.returncode != 0:
+        if report_errors == True:
+            log.error("rates_calculator did not execute successfully")
+            log.error("rates_calculator output follows, in case it's \
+                        helpful for finding the problem")
+            log.error("%s", stdout)
+            log.error("%s", stderr)
+        raise RaxmlError(stdout, stderr)
+
+
 def gen_per_site_stats(cfg, alignment_path, tree_path):
-    #raxml doesn't append alignment names automatically, like PhyML, let's do that here
     if cfg.datatype == 'DNA':
-        analysis_ID = raxml_analysis_ID(alignment_path, 'GTRGAMMA')
+        command = " dna " + alignment_path
+    elif cfg.datatype == 'morphology':
+        command = " morphology " + alignment_path
+    run_rates(command, report_errors=False)
 
-        #force raxml to write to the dir with the alignment in it
-        #-e 1.0 sets the precision to 1 lnL unit. This is all that's required here, and helps with speed.
-        aln_dir, fname = os.path.split(alignment_path)
-        command = "-m GTRGAMMA -f g -s '%s' -z '%s' -n %s -w '%s'" % (
-            alignment_path, tree_path, analysis_ID, os.path.abspath(aln_dir))
-    elif cfg.datatype == 'protein':
-        analysis_ID = raxml_analysis_ID(alignment_path, 'LGGAMMA')
-
-        aln_dir, gname = os.path.split(alignment_path)
-        # log.error("RAxML kmeans splitting does not currently work with protein analyses")
-        # raise RaxmlError(0,0)
-        command = "-m PROTGAMMALG -f g -s '%s' -z '%s' -n '%s' -w '%s'" % (
-            alignment_path, tree_path, analysis_ID, os.path.abspath(aln_dir))
-
-    run_raxml(command)
-
-def get_per_site_stats(phylip_file, cfg):
+def get_per_site_stats(phylip_file, cfg, tree_path):
     # Retrieve a list the per site stats. The phylip files are called
     # e.g. "67e2419ede57ae4032c534fe97ba408a.phy" we want the the number
     # before the full stop
-    phylip_file_split = os.path.split(phylip_file)
+    phylip_file_split = os.path.split(tree_path)
     subset_code = phylip_file_split[1].split(".")[0]
-
     if cfg.datatype == 'DNA':
         raxml_lnl_file = os.path.join(phylip_file_split[0],
             ("RAxML_perSiteLLs.%s_GTRGAMMA.txt" % subset_code))
@@ -443,6 +456,10 @@ def get_per_site_stats(phylip_file, cfg):
     elif cfg.datatype == 'protein':
         raxml_lnl_file = os.path.join(phylip_file_split[0],
             ("RAxML_perSiteLLs.%s_LGGAMMA.txt" % subset_code))
+            
+    elif cfg.datatype == 'morphology':
+        raxml_lnl_file = os.path.join(phylip_file_split[0],
+            ("RAxML_perSiteLLs.LNL"))
 
     # Now we return a likelihood list with three empty slots. This is to
     # maintain consistency with the PhyML method which returns lists of rates
@@ -459,61 +476,6 @@ def fabricate(lnl):
     result.result.alpha = 0
     return result.result
 
-def get_CIs(cfg):
-    ci_list = []
-    the_cis = open(cfg.rates_file)
-    for ci in the_cis.readlines():
-        ci_list.append([logarithm(float(ci))])
-    return ci_list
-
-def rate_parser(rates_name):
-    rates_list = []
-    the_rates = open(rates_name)
-    for rate in the_rates.readlines():
-        rates_list.append([float(rate)])
-    return rates_list, None, None, None
-
-def run_rates(command, report_errors=True):
-    program_name = "fast_TIGER"
-    program_path = util.program_path
-    program_path = os.path.join(program_path, program_name)
-    # command = "\"%s\" %s" % (program_path, command)
-
-    command = "\"%s\" %s" % (program_path, command)
-
-    # Note: We use shlex.split as it does a proper job of handling command
-    # lines that are complex
-    p = subprocess.Popen(
-        shlex.split(command),
-        shell=False,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE)
-
-    # Capture the output, we might put it into the errors
-    stdout, stderr = p.communicate()
-    # p.terminate()
-
-    if p.returncode != 0:
-        if report_errors == True:
-            log.error("rates_calculator did not execute successfully")
-            log.error("rates_calculator output follows, in case it's helpful for finding the problem")
-            log.error("%s", stdout)
-            log.error("%s", stderr)
-        raise RaxmlError(stdout, stderr)
-
-def gen_per_site_stats(cfg, alignment_path, tree_path):
-    if cfg.datatype == 'DNA':
-        command = " dna " + alignment_path
-
-    elif cfg.datatype == 'morphology':
-        command = " morphology " + alignment_path
-    run_rates(command, report_errors=False)
-
-def get_per_site_stats(phylip_file, cfg):
-    rates_name = ("%s_r8s.txt" % phylip_file)
-
-    return rate_parser(rates_name)
-
 if __name__ == '__main__':
     logging.basicConfig(level=logging.DEBUG)
     pth = "./tests/misc/raxml_nucleotide.output"
@@ -527,3 +489,4 @@ if __name__ == '__main__':
     pth = "./tests/misc/raxml_morphology.output"
     p = Parser('morphology')
     result = p.parse(open(pth).read())
+

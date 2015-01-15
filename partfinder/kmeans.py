@@ -27,7 +27,6 @@ def kmeans(likelihood_list, number_of_ks=2, n_jobs=1):
     for site in likelihood_list:
         lk_list = site
         all_rates_list.append(lk_list)
-
     # Create and scale an array for input into kmeans function
     array = np.array(all_rates_list)
     # array = scale(array)
@@ -54,7 +53,6 @@ def kmeans(likelihood_list, number_of_ks=2, n_jobs=1):
     cluster_dict = defaultdict(list)
     for num in range(len(rate_categories)):
         cluster_dict[rate_categories[num]].append(num + 1)
-
     stop = time.clock()
     time_taken = "k-means splitting took %s seconds" % (stop - start)
     log.debug(time_taken)
@@ -104,8 +102,7 @@ def kmeans_split_subset(cfg, alignment, a_subset, tree_path, number_of_ks = 2):
     # can be site rates as well as likelihoods ToDo: Change the name of this
     # to something other than "likelihood_list" since this isn't really the
     # best description of what it is...
-    per_site_statistics = processor.get_per_site_stats(phylip_file, cfg)
-    
+    per_site_statistics = processor.get_per_site_stats(phylip_file, cfg, tree_path)
     # Now store all of the per_site_stats with the subset
     a_subset.add_per_site_statistics(per_site_statistics)
 
@@ -124,7 +121,7 @@ def kmeans_split_subset(cfg, alignment, a_subset, tree_path, number_of_ks = 2):
         # Set the per_site_stat_list to likelihoods under each gamma rate
         # category
         per_site_stat_list = per_site_statistics[1]
-    
+
     log.debug("Site info list for subset %s is %s" % (a_subset.name, per_site_stat_list))
 
     # We use this variable in the case that, as a result of the split with
@@ -148,16 +145,14 @@ def kmeans_split_subset(cfg, alignment, a_subset, tree_path, number_of_ks = 2):
         list_of_sites = []
         for k in range(len(split_categories)):
             list_of_sites.append(split_categories[k])
-
         log.debug("Creating new subsets from k-means split")
         # Make the new subsets
         new_subsets = subset_ops.split_subset(a_subset, list_of_sites)
-
         # Now add the site_lnl centroid to each new subset
         marker = 0
-        for s in new_subsets:
-            s.centroid = centroids[marker]
-            marker += 1
+#        for s in new_subsets:
+ #           s.centroid = centroids[marker]
+  #          marker += 1
 
         return new_subsets
 

@@ -77,8 +77,13 @@ class SchemeResult(object):
         #here we put in a catch for small subsets, where n<K+2
         #if this happens, the AICc actually starts rewarding very small datasets, which is wrong
         #a simple but crude catch for this is just to never allow n to go below k+2
-        self.aic = (-2.0 * lnL) + (2.0 * K)
-        self.bic = (-2.0 * lnL) + (K * logarithm(n))
+        if n <= 0.0:
+            log.info('Partition too small, skipping solution')
+            self.bic = 1000000
+            pass
+        else:
+            self.aic = (-2.0 * lnL) + (2.0 * K)
+            self.bic = (-2.0 * lnL) + (K * logarithm(n))
 
         if n < (K + 2):
             if self.model_selection.lower() == "aicc":
@@ -90,7 +95,7 @@ class SchemeResult(object):
             n = K + 2
 
         self.aicc = (-2.0 * lnL) + ((2.0 * K) * (n / (n - K - 1.0)))
-
+        print type(self)
     @property
     def score(self):
         return getattr(self, self.model_selection)

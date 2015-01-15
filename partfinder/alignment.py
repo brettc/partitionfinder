@@ -25,14 +25,13 @@ import logging
 log = logging.getLogger("alignment")
 
 import os
-
+import numpy as np
 from pyparsing import (
     Word, OneOrMore, alphas, nums, Suppress, Optional, Group, stringEnd,
     delimitedList, ParseException, line, lineno, col, restOfLine, LineEnd,
     White, Literal, Combine, Or, MatchFirst, ZeroOrMore)
 
 from util import PartitionFinderError
-
 
 class AlignmentError(PartitionFinderError):
     pass
@@ -67,6 +66,7 @@ class AlignmentParser(object):
 
         # Take a copy and disallow line breaks in the bases
         bases = self.BASES.copy()
+
         bases.setWhitespaceChars(" \t")
         seq_start = sequence_name("species") + bases(
             "sequence") + Suppress(LineEnd())
@@ -125,8 +125,8 @@ class AlignmentParser(object):
                 if len(seq) != slen:
                     log.error(
                         "Bad alignment file: Not all species have the same sequences length")
-                    raise AlignmentError
-
+                    raise AlignmentError 
+                    
         # Not all formats have a heading, but if we have one do some checking
         if self.sequence_length is not None:
             if self.sequence_length != slen:

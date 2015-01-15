@@ -217,7 +217,6 @@ class Analysis(object):
 
         # Now see if we're done
         for sub in sch:
-            print sub
             # ALL subsets should already be finalised in the task. We just
             # check again here
             if not sub.finalise(self.cfg):

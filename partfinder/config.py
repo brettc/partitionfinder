@@ -68,7 +68,7 @@ class Configuration(object):
         # Some basic checking of the setup, so that we don't hit too many
         # problems later
         if datatype != "DNA" and datatype != "protein" and datatype != "morphology":
-            log.error("datatype must be 'DNA' or 'protein'")
+            log.error("datatype must be 'DNA' or 'protein' or 'morphology'")
             raise ConfigurationError
 
         log.info("Setting datatype to '%s'", datatype)
