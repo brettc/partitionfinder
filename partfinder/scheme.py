@@ -41,7 +41,7 @@ class SchemeResult(object):
         # How you do this depends on whether brlens are linked or not.
         self.nsubs = len(sch.subsets)  # number of subsets
         sum_subset_k = sum([s.best_params for s in sch])  # sum of number of parameters in the best model of each subset
-        
+
         log.debug("Calculating number of parameters in scheme:")
         log.debug("Total parameters from subset models: %d" % (sum_subset_k))
 
@@ -77,17 +77,11 @@ class SchemeResult(object):
         #here we put in a catch for small subsets, where n<K+2
         #if this happens, the AICc actually starts rewarding very small datasets, which is wrong
         #a simple but crude catch for this is just to never allow n to go below k+2
-        if n <= 0.0:
-            log.info('Partition too small, skipping solution')
-            self.bic = 1000000
-            pass
-        else:
-            self.aic = (-2.0 * lnL) + (2.0 * K)
-            self.bic = (-2.0 * lnL) + (K * logarithm(n))
+        self.aic = (-2.0 * lnL) + (2.0 * K)
+        self.bic = (-2.0 * lnL) + (K * logarithm(n))
 
         if n < (K + 2):
-            if self.model_selection.lower() == "aicc":
-                log.warning("Scheme '%s' has a very small"
+            log.warning("Scheme '%s' has a very small"
                         " number of sites (%d) compared to the number of parameters"
                         " in the models that make up the subsets"
                         " This may give misleading AICc results, so please check carefully"
@@ -95,7 +89,7 @@ class SchemeResult(object):
             n = K + 2
 
         self.aicc = (-2.0 * lnL) + ((2.0 * K) * (n / (n - K - 1.0)))
-        print type(self)
+
     @property
     def score(self):
         return getattr(self, self.model_selection)
@@ -249,3 +243,4 @@ def generate_all_schemes(cfg):
         scheme_name += 1
 
     return scheme_list
+
