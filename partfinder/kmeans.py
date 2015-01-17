@@ -102,7 +102,7 @@ def kmeans_split_subset(cfg, alignment, a_subset, tree_path, number_of_ks = 2):
     # can be site rates as well as likelihoods ToDo: Change the name of this
     # to something other than "likelihood_list" since this isn't really the
     # best description of what it is...
-    per_site_statistics = processor.get_per_site_stats(phylip_file, cfg, tree_path)
+    per_site_statistics = processor.get_per_site_stats(phylip_file, cfg)
     # Now store all of the per_site_stats with the subset
     a_subset.add_per_site_statistics(per_site_statistics)
 
@@ -145,14 +145,15 @@ def kmeans_split_subset(cfg, alignment, a_subset, tree_path, number_of_ks = 2):
         list_of_sites = []
         for k in range(len(split_categories)):
             list_of_sites.append(split_categories[k])
+
         log.debug("Creating new subsets from k-means split")
         # Make the new subsets
         new_subsets = subset_ops.split_subset(a_subset, list_of_sites)
         # Now add the site_lnl centroid to each new subset
         marker = 0
-#        for s in new_subsets:
- #           s.centroid = centroids[marker]
-  #          marker += 1
+        for s in new_subsets:
+            s.centroid = centroids[marker]
+            marker += 1
 
         return new_subsets
 

@@ -411,6 +411,14 @@ program_name = "raxml"
 def program():
     return program_name
 
+def rate_parser(rates_name):
+    rates_list = []
+    the_rates = open(rates_name)
+    for rate in the_rates.readlines():
+        rates_list.append([float(rate)])
+    return rates_list, None, None, None
+
+
 def run_rates(command, report_errors=True):
     program_name = "fast_TIGER"
     program_path = util.program_path
@@ -442,7 +450,7 @@ def gen_per_site_stats(cfg, alignment_path, tree_path):
     elif cfg.datatype == 'morphology':
         command = " morphology " + alignment_path
     run_rates(command, report_errors=False)
-
+'''
 def get_per_site_stats(phylip_file, cfg, tree_path):
     # Retrieve a list the per site stats. The phylip files are called
     # e.g. "67e2419ede57ae4032c534fe97ba408a.phy" we want the the number
@@ -466,6 +474,11 @@ def get_per_site_stats(phylip_file, cfg, tree_path):
     # and other things as well
     likelihood_list = [likelihood_parser(raxml_lnl_file), None, None, None]
     return likelihood_list
+'''
+def get_per_site_stats(phylip_file, cfg):
+    rates_name = ("%s_r8s.txt" % phylip_file)
+
+    return rate_parser(rates_name)
 
 def fabricate(lnl):
     result = Parser('DNA')
