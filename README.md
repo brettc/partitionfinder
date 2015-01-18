@@ -35,4 +35,22 @@ This will run the included example analysis for PartitionFinder. More generally,
 where <PartitionFinder.py> is the full file-path to the PartitionFinder.py file
 and <foldername> is the full filepath to a folder with a phylip alignemnt and associated .cfg file.
 
+#Morphology notes.
+
+Currently, PartitionFinder works for morphology, when using the code in  branch feature/morphology2. To use this:
+
+1. Clone the repository, as above.
+2. Open Terminal (on a Mac) or Command Prompt (on Windows) and cd to the directory with PartitionFinder in it
+3. Type 'git checkout feature/morphology2'
+4. Now, PartitionFinder morphology can be executed. Similar to the nucelotide or protein versions, type:
+
+python PartitionFinderMorphology.py morph/ --cmdline-extras 'asc-corr=lewis'
+
+Morphology has some special caveats. If all the data in your dataset are binary, specify 'binary' on line 10.
+The command line option 'asc-corr=lewis' is an ascertainment bias correction. Unless you have collected invarient sites, you 
+need to specify an ascertainment correction. 'asc-corr=lewis' is the correction described in Paul Lewis' [2001](http://sysbio.oxfordjournals.org/content/50/6/913) paper introducing the Mk model. More information can be found on 
+the RAxML [website](http://sco.h-its.org/exelixis/resource/download/NewManual.pdf).
+In order to take advantage of these important corrections, make sure you are using at least version 8.1.13
+from the RAxML [github](https://github.com/stamatak/standard-RAxML/releases). 
+
 For more details, read the manual.
