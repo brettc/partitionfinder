@@ -43,9 +43,9 @@ Currently, PartitionFinder works for morphology, when using the code in  branch 
 2. Open Terminal (on a Mac) or Command Prompt (on Windows) and cd to the directory with PartitionFinder in it
 3. Type 'git checkout feature/morphology2'
 4. Now, PartitionFinder morphology can be executed. Similar to the nucelotide or protein versions, type:
-
-    python <PartitionFinderMorphology.py> <morph/> <--cmdline-extras 'asc-corr=lewis'>
-    
+```python
+    python PartitionFinderMorphology.py morph/ cmdline-extras 'asc-corr=lewis'
+```    
 to execute the example, or replace <morph/> with your own folder containing a Phylip file and .cfg.
 
 *Morphology has some special caveats.*
@@ -58,9 +58,13 @@ from the RAxML [github](https://github.com/stamatak/standard-RAxML/releases).
 + Phylip is not a standard format for morphology, but it is very simple. It is simply the a one-line header with the name of species 
 and characters, separated by a space. However, you do need to remove spaces from species names. If you would rather do this programmatically,
 in the helper_scripts directory, find the script converter.py. It is called via:
-
-    python <converter.py> <'path to files' 'extension of files' 'format of input files' 'format you'd like exported'>
-
+```python
+    python converter.py 'path to files' 'files extension' 'format of input files' 'format you need'
+```
+For example, to convert a nexus file in the current working directory, type:
+```python
+    python converter.py . .nex nexus phylip
+```
 This script depends on the Dendropy [library](https://pythonhosted.org/DendroPy/index.html).
 
 For more details, read the manual.
