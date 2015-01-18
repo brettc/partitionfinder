@@ -44,13 +44,23 @@ Currently, PartitionFinder works for morphology, when using the code in  branch 
 3. Type 'git checkout feature/morphology2'
 4. Now, PartitionFinder morphology can be executed. Similar to the nucelotide or protein versions, type:
 
-python PartitionFinderMorphology.py morph/ --cmdline-extras 'asc-corr=lewis'
+    python <PartitionFinderMorphology.py> <morph/> <--cmdline-extras 'asc-corr=lewis'>
+    
+to execute the example, or replace <morph/> with your own folder containing a Phylip file and .cfg.
 
-Morphology has some special caveats. If all the data in your dataset are binary, specify 'binary' on line 10.
-The command line option 'asc-corr=lewis' is an ascertainment bias correction. Unless you have collected invarient sites, you 
+*Morphology has some special caveats.*
++ If all the data in your dataset are binary, specify 'binary' on line 10.
++ The command line option 'asc-corr=lewis' is an ascertainment bias correction. Unless you have collected invarient sites, you 
 need to specify an ascertainment correction. 'asc-corr=lewis' is the correction described in Paul Lewis' [2001](http://sysbio.oxfordjournals.org/content/50/6/913) paper introducing the Mk model. More information can be found on 
 the RAxML [website](http://sco.h-its.org/exelixis/resource/download/NewManual.pdf).
-In order to take advantage of these important corrections, make sure you are using at least version 8.1.13
++ In order to take advantage of these important corrections, make sure you are using at least version 8.1.13
 from the RAxML [github](https://github.com/stamatak/standard-RAxML/releases). 
++ Phylip is not a standard format for morphology, but it is very simple. It is simply the a one-line header with the name of species 
+and characters, separated by a space. However, you do need to remove spaces from species names. If you would rather do this programmatically,
+in the helper_scripts directory, find the script converter.py. It is called via:
+
+    python <converter.py> <'path to files' 'extension of files' 'format of input files' 'format you'd like exported'>
+
+This script depends on the Dendropy [library](https://pythonhosted.org/DendroPy/index.html).
 
 For more details, read the manual.
