@@ -36,7 +36,7 @@ where <PartitionFinder.py> is the full file-path to the PartitionFinder.py file
 and <foldername> is the full filepath to a folder with a phylip alignemnt and associated .cfg file.
 
 #Morphology notes.
-
+*Partition Finder Morphology is in beta. Tests are passing, the software runs on test datasets. But it is still unreleased software. Please see the software terms of use for further info. See below for caveats on morphology.*
 Currently, PartitionFinder works for morphology, when using the code in  branch feature/morphology2. To use this:
 
 1. Clone the repository, as above.
@@ -49,7 +49,7 @@ Currently, PartitionFinder works for morphology, when using the code in  branch 
 to execute the example, or replace <morph/> with your own folder containing a Phylip file and .cfg.
 
 *Morphology has some special caveats.*
-+ If you use automated partition discovery, this is based on the [TIGER](http://bioinf.nuim.ie/tiger/) of Cummins and McInerney (2012). Because this identifies characters that are dissimilar to other characters in the matrix (see paper for a discussion), some partitions may be quite small. That a partitioning scheme is supported statistically is not a guarantee that you will estimate a more correct topology using it, or that a Bayesian topology search will arrive at convergence using this scheme. We strongly suggest comparing trees between partitioned and unpartitioned runs, and, as always, _performing multiple rounds of topology estimation for any given set of parameters._
++ If you use automated partition discovery, this is based on the [TIGER](http://bioinf.nuim.ie/tiger/) of Cummins and McInerney (2011). Because this identifies characters that are dissimilar to other characters in the matrix (see paper for a discussion), some partitions may be quite small. That a partitioning scheme is supported statistically is not a guarantee that you will estimate a more correct topology using it, or that a Bayesian topology search will arrive at convergence using this scheme. We strongly suggest comparing trees between partitioned and unpartitioned runs, and, as always, _performing multiple rounds of topology estimation for any given set of parameters._
 + If all the data in your dataset are binary, specify 'binary' on line 10.
 + The command line option 'asc-corr=lewis' is an ascertainment bias correction. Unless you have collected invarient sites, you 
 need to specify an ascertainment correction. 'asc-corr=lewis' is the correction described in Paul Lewis' [2001](http://sysbio.oxfordjournals.org/content/50/6/913) paper introducing the Mk model. More information can be found on 
