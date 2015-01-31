@@ -20,7 +20,6 @@ log = logging.getLogger("analysis")
 
 import os
 import shutil
-import shelve
 
 from alignment import Alignment, SubsetAlignment
 import threadpool
