@@ -36,3 +36,14 @@ where <PartitionFinder.py> is the full file-path to the PartitionFinder.py file
 and <foldername> is the full filepath to a folder with a phylip alignemnt and associated .cfg file.
 
 For more details, read the manual.
+
+# Special instructions for use of the iterative k-means algorithm
+
+Follow the same instructions given in the manual, but with two important modifications
+
+1.  In the partitionfinder.cfg file, specify one data block for the entire alignment, e.g. for an alignment with 5,000 sites you would specify a single data block that reads, all = 1-5000;.
+2.  In the partitionfinder.cfg file, modify the search to kmeans by specifying search = kmeans;
+
+With these modifications, your analysis should be ready to go using the normal PartitionFinder commands.
+
+Note that iterative kmeans has only been tested on Mac. It will also work on Linux, but the programs it is dependant on, i.e. raxml, phyml, and fast_TIGER need to be recompiled in Linux.
