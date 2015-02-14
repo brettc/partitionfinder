@@ -39,10 +39,11 @@ For more details, read the manual.
 
 # Special instructions for use of the iterative k-means algorithm
 
-Follow the same instructions given in the manual, but with two important modifications:
+Follow the same instructions given in the manual, but with three important modifications:
 
-1.  In the partitionfinder.cfg file, specify one data block for the entire alignment, e.g. for an alignment with 5,000 sites you would specify a single data block that reads, all = 1-5000;.
-2.  In the partitionfinder.cfg file, modify the search to kmeans by specifying search = kmeans;
+1.  The new algorithm relies on some python dependencies. These can easily be downloaded and installed using Anaconda. You can [download Anaconda here](http://continuum.io/downloads).
+2.  In the partitionfinder.cfg file, specify one data block for the entire alignment, e.g. for an alignment with 5,000 sites you would specify a single data block that reads, all = 1-5000;.
+3.  In the partitionfinder.cfg file, modify the search to kmeans by specifying search = kmeans;
 
 With these modifications, your analysis should be ready to go using the normal PartitionFinder commands.
 
