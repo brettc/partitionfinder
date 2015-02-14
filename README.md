@@ -39,7 +39,7 @@ For more details, read the manual.
 
 # Special instructions for use of the iterative k-means algorithm
 
-Follow the same instructions given in the manual, but with two important modifications
+Follow the same instructions given in the manual, but with two important modifications:
 
 1.  In the partitionfinder.cfg file, specify one data block for the entire alignment, e.g. for an alignment with 5,000 sites you would specify a single data block that reads, all = 1-5000;.
 2.  In the partitionfinder.cfg file, modify the search to kmeans by specifying search = kmeans;
