@@ -427,13 +427,12 @@ class KmeansAnalysis(Analysis):
                        m = [x%3 for x in s.columns]
                        l = float(len(s.columns))
                        props = [(float(m.count(1))/l), (float(m.count(2))/l), (float(m.count(0))/l)]
-                       log.info("%d subset has 1st, 2nd, 3rd props: %s" %(len(s.columns), str(props)))
 
 
 
 
             else:
-                log.info("Splitting this subset did not improve the %s score",
+                log.info("Splitting this subset into did not improve the %s score",
                          self.cfg.model_selection.upper())
                 # Move to the next subset in the all_subsets list
                 subset_index += 1
