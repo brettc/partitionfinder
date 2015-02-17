@@ -27,6 +27,17 @@ _base_models = {
     "GTR"   :   (5+3, "")
 }
 
+# number of free parameters in substitution model, listed as "parameters"
+# TODO we could include the GTR model, but then we'd have to calculate the number of params
+# TODO how many parameters does the RAxML MK model have????
+_base_multi_morphology_models = {
+    "MULTIGAMMA"     :   (0, "")	
+}
+
+_base_binary_morphology_models = {
+    "BINGAMMA"       :   (0, "")
+}
+
 # number of free parameters in substitution model, listed as "aa_frequencies"
 _base_protein_models = {
     "DAYHOFF"   :   (0, ""),
@@ -40,6 +51,8 @@ _base_protein_models = {
     "BLOSUM62"  :   (0, ""),
     "MTMAM"     :   (0, ""),
     "LG"        :   (0, ""),
+    "LG4M"      :   (0, ""),
+    "LG4X"      :   (5, ""), # it has 6 params, but one gets added automatically later
  }
 
 # All the functions in here return the same thing with the same parameters, 
@@ -70,13 +83,43 @@ def get_protein_models_gammaI():
     Return a list of all implemented _base__protein_models in RAxML with invariant sites
     '''
     model_list = []
-    for model in _base_protein_models.keys():
+
+    base = _base_protein_models.keys()
+    base.remove("LG4M") #doesn't work with +I
+    base.remove("LG4X") #doesn't work with +I
+
+    for model in base:
         model_list.append("%s+I+G"     %(model))
         model_list.append("%s+I+G+F"    %(model))
     return model_list
 
+@memoize
+def get_binary_morphology_models():
+    """RAxML has: MULTIGAMMA (no invarient, but has autamorphies) and
+     ASC_MULTIGAMMA (no invarient sites or autapomorphies)"""
+
+    model_list = []
+    for model in _base_binary_morphology_models.keys():
+        model_list.append("%s"      %(model))
+        model_list.append("%s+ASC"    %(model))	
+    return model_list
+
+@memoize
+def get_multi_morphology_models():
+    """RAxML has: BINGAMMA (no invarient, but has autamorphies) and
+    ASC_BINGAMMA (no invarient sites or autapomorphies)"""
+
+    model_list = []
+    for model in _base_multi_morphology_models.keys():
+        model_list.append("%s"    %(model))
+        model_list.append("%s+ASC"    %(model))	
+    return model_list
+
+
+@memoize
 def get_all_protein_models():
     model_list = get_protein_models_gamma() + get_protein_models_gammaI()
+
     return model_list
 
 @memoize
@@ -101,8 +144,13 @@ def get_all_dna_models():
     return model_list
 
 @memoize
+def get_all_morph_models():
+    model_list = get_binary_morphology_models() + get_multi_morphology_models()
+    return model_list
+
+@memoize
 def get_all_models():
-    model_list = get_all_DNA_models() + get_all_protein_models()
+    model_list = get_all_DNA_models() + get_all_protein_models() + get_all_morph_models()
     return model_list
 
 @memoize
@@ -116,19 +164,31 @@ def get_model_commandline(modelstring):
 
     # Everything but the first element
     extras = elements[1:]
+    log.debug("Building commandline for raxml, model = '%s'" % modelstring)
 
     if model_name in _base_models.keys(): #DNA models
         commandline = ''.join([commandline, "GTRGAMMA"])
         if "I" in extras:
             commandline = ''.join([commandline, "I"])
-    else: #protein models, look like this 'PROTGAMMAILGF
+    elif model_name in _base_protein_models: #protein models, look like this 'PROTGAMMAILGF
         commandline = ''.join([commandline, "PROTGAMMA"])
         if "I" in extras:
             commandline = ''.join([commandline, "I"])
         commandline = ''.join([commandline, model_name])        
         if "F" in extras:
             commandline = ''.join([commandline, "F"])
-
+    if model_name in _base_multi_morphology_models.keys():
+        # these look like this: "-m MULTIGAMMA -K MK" or ""-m MULTIGAMMA -K GTR"  
+        if "ASC" in extras: 
+           commandline = ''.join(["-m ASC_", model_name]) 
+        else: 
+            commandline = "-m %s" % model_name
+    elif model_name in _base_binary_morphology_models.keys():
+        # these look like this: "-m MULTIGAMMA -K MK" or ""-m MULTIGAMMA -K GTR"
+        commandline = "-m %s " % model_name
+        if "ASC" in extras:  
+           commandline = ''.join('ASC_', [commandline]) 
+            
     return commandline
 
 
@@ -141,12 +201,19 @@ def get_num_params(modelstring):
     model_name = elements[0]
     if model_name in _base_models.keys():
         model_params = _base_models[model_name][0]
-    else:
+    elif model_name in _base_protein_models.keys():
         model_params = _base_protein_models[model_name][0]
         if "F" in elements[1:]:
             model_params = model_params+19-1 #the -1 here is to account for the fact we add 1 for the + in '+F' below
+    elif model_name in _base_binary_morphology_models.keys():
+        model_params = _base_binary_morphology_models[model_name][0]
+    elif model_name in _base_multi_morphology_models.keys():
+        model_params = _base_multi_morphology_models[model_name][0]
+    else:
+        log.error("Unrecognised datatype: '%s'" % (datatype))
+        raise(RaxmlError)
     
-    extras = modelstring.count("+")
+    extras = modelstring.count("+") # this accounts for +I and +G
     total = model_params+extras
     log.debug("Model: %s Params: %d" %(modelstring, total))
 
@@ -204,6 +271,18 @@ if __name__ == "__main__":
         print str(get_model_difficulty(model)).ljust(10),
         print get_model_commandline(model)
     for i, model in enumerate(get_all_protein_models()):
+        print str(i+1).rjust(2), 
+        print model.ljust(15),
+        print str(get_num_params(model)).ljust(10),
+        print str(get_model_difficulty(model)).ljust(10),
+        print get_model_commandline(model)
+    for i, model in enumerate(get_binary_morphology_models()):
+        print str(i+1).rjust(2), 
+        print model.ljust(15),
+        print str(get_num_params(model)).ljust(10),
+        print str(get_model_difficulty(model)).ljust(10),
+        print get_model_commandline(model)
+    for i, model in enumerate(get_multi_morphology_models()):
         print str(i+1).rjust(2), 
         print model.ljust(15),
         print str(get_num_params(model)).ljust(10),

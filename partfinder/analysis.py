@@ -44,21 +44,18 @@ class Analysis(object):
         self.threads = threads
 
         self.results = results.AnalysisResults(self.cfg.model_selection)
-
         log.info("Beginning Analysis")
         self.process_restart(force_restart)
 
         # Check for old analyses to see if we can use the old data
         self.cfg.check_for_old_config()
-
         # Make some folders for the analysis
         self.cfg.make_output_folders()
         self.make_alignment(cfg.alignment_path)
         self.make_tree(cfg.user_tree_topology_path)
-
+        
         # We need this to block the threads for critical stuff
         self.lock = threading.Condition(threading.Lock())
-
     def process_restart(self, force_restart):
         if force_restart:
             # Remove everything
@@ -79,7 +76,6 @@ class Analysis(object):
         # Make the alignment
         self.alignment = Alignment()
         self.alignment.read(source_alignment_path)
-
         # We start by copying the alignment
         self.alignment_path = os.path.join(self.cfg.start_tree_path, 'source.phy')
         if os.path.exists(self.alignment_path):
@@ -117,8 +113,6 @@ class Analysis(object):
             self.cfg.start_tree_path,  'filtered_source.phy')
         self.filtered_alignment.write(self.filtered_alignment_path)
 
-        # Now we've written this alignment, we need to lock everything in
-        # place, no more adding partitions, or changing them from now on.
         # TODO: This checking should still be done...
         # self.cfg.partitions.check_against_alignment(self.alignment)
         # self.cfg.partitions.finalise()
@@ -159,11 +153,11 @@ class Analysis(object):
         self.tree_path = tree_path
         log.info("Starting tree with branch lengths is here: %s", self.tree_path)
 
-    def run_task(self, m, sub):
+    def run_task(self, model_name, sub):
         # This bit should run in parallel (forking the processor)
         try:
             self.cfg.processor.analyse(
-                m,
+                model_name,
                 sub.alignment_path,
                 self.tree_path,
                 self.cfg.branchlengths,
@@ -180,10 +174,10 @@ class Analysis(object):
         self.lock.acquire()
         try:
             if sub.analysis_error == None:
-                sub.parse_model_result(self.cfg, m)
+                sub.parse_model_result(self.cfg, model_name)
 
             else:
-                sub.fabricate_result(self.cfg, m)
+                sub.fabricate_result(self.cfg, model_name)
 
             # Try finalising, then the result will get written out earlier...
             sub.finalise(self.cfg)
@@ -193,7 +187,7 @@ class Analysis(object):
     def add_tasks_for_sub(self, tasks, sub):
         for m in sub.models_to_process:
             tasks.append((self.run_task, (m, sub)))
-
+         
     def run_concurrent(self, tasks):
         for func, args in tasks:
             func(*args)
@@ -202,18 +196,18 @@ class Analysis(object):
         if not tasks:
             return
         pool = threadpool.Pool(tasks, self.threads)
+        
         pool.join()
 
     def analyse_scheme(self, sch):
         # Progress
         self.cfg.progress.next_scheme()
-
+    
         # Prepare by reading everything in first
         tasks = []
         for sub in sch:
             sub.prepare(self.cfg, self.alignment)
             self.add_tasks_for_sub(tasks, sub)
-
         # Now do the analysis
         if self.threads == 1:
             self.run_concurrent(tasks)
@@ -232,5 +226,5 @@ class Analysis(object):
         number_of_seq = len(self.alignment.species)
         result = scheme.SchemeResult(sch, number_of_seq, self.cfg.branchlengths, self.cfg.model_selection)
         self.results.add_scheme_result(sch, result)
-
+        
         return result

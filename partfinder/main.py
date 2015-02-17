@@ -95,7 +95,7 @@ def clean_folder(folder):
         except Exception, e:
             log.error("Couldn't delete file from phylofiles folder: %s" % e)
             raise PartitionFinderError
-
+            
 def parse_args(datatype, cmdargs=None):
     usage = """usage: python %prog [options] <foldername>
 
@@ -151,17 +151,14 @@ def parse_args(datatype, cmdargs=None):
         "--show-python-exceptions",
         action="store_true", dest="show_python_exceptions",
         help="If errors occur, print the python exceptions")
-
-    op.add_option(
-        "--rates-file",
-        action="store_true", dest="rates_file",
-        help="where to find a file of rates across sites to use for clustering")
-
-
     op.add_option(
         "--save-phylofiles",
         action="store_true", dest="save_phylofiles",
         help="save all of the phyml or raxml output. This can take a lot of space(!)")
+    op.add_option(
+        "--rates-file",
+        action="store_true", dest="rates_file",
+        help="where to find a file of rates across sites to use for clustering")        
     op.add_option(
         "--dump-results",
         action="store_true", dest="dump_results",
@@ -260,11 +257,16 @@ def check_options(op, options):
             bad = ",".join(list(errors))
             op.error("Invalid debug regions: %s" % bad)
 
-    # Default to phyml
+    # Default to raxml for morphology
     if options.raxml == 1:
         options.phylogeny_program = 'raxml'
+    elif options.datatype == 'morphology':
+	    options.phylogeny_program = 'raxml'
     else:
         options.phylogeny_program = 'phyml'
+
+
+
 
     #A warning for people using the Pthreads version of RAxML
     if options.cmdline_extras.count("-T") > 0:
@@ -334,7 +336,7 @@ def main(name, datatype, passed_args=None):
                                    options.cluster_weights,
                                    options.cluster_percent,
                                    options.kmeans_opt)
-
+                                   
         # Set up the progress callback
         progress.TextProgress(cfg)
         cfg.load_base_path(args[0])
@@ -370,6 +372,7 @@ def main(name, datatype, passed_args=None):
 
         return 0
 
+
     except util.PartitionFinderError:
         log.error("Failed to run. See previous errors.")
         # Reraise if we were called by call_main, or if the options is set
@@ -381,6 +384,7 @@ def main(name, datatype, passed_args=None):
 
 
     return 1
+
 
 
 def call_main(datatype, cmdline):

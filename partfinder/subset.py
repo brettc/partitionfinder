@@ -363,3 +363,4 @@ class Subset(object):
         f = open(path, 'rb')
         self.__dict__.update(pickle.load(f))
         f.close()
+

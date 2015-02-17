@@ -27,7 +27,6 @@ def kmeans(likelihood_list, number_of_ks=2, n_jobs=1):
     for site in likelihood_list:
         lk_list = site
         all_rates_list.append(lk_list)
-
     # Create and scale an array for input into kmeans function
     array = np.array(all_rates_list)
     # array = scale(array)
@@ -54,7 +53,6 @@ def kmeans(likelihood_list, number_of_ks=2, n_jobs=1):
     cluster_dict = defaultdict(list)
     for num in range(len(rate_categories)):
         cluster_dict[rate_categories[num]].append(num + 1)
-
     stop = time.clock()
     time_taken = "k-means splitting took %s seconds" % (stop - start)
     log.debug(time_taken)
@@ -105,7 +103,6 @@ def kmeans_split_subset(cfg, alignment, a_subset, tree_path, number_of_ks = 2):
     # to something other than "likelihood_list" since this isn't really the
     # best description of what it is...
     per_site_statistics = processor.get_per_site_stats(phylip_file, cfg)
-    
     # Now store all of the per_site_stats with the subset
     a_subset.add_per_site_statistics(per_site_statistics)
 
@@ -124,7 +121,7 @@ def kmeans_split_subset(cfg, alignment, a_subset, tree_path, number_of_ks = 2):
         # Set the per_site_stat_list to likelihoods under each gamma rate
         # category
         per_site_stat_list = per_site_statistics[1]
-    
+
     log.debug("Site info list for subset %s is %s" % (a_subset.name, per_site_stat_list))
 
     # We use this variable in the case that, as a result of the split with
@@ -152,7 +149,6 @@ def kmeans_split_subset(cfg, alignment, a_subset, tree_path, number_of_ks = 2):
         log.debug("Creating new subsets from k-means split")
         # Make the new subsets
         new_subsets = subset_ops.split_subset(a_subset, list_of_sites)
-
         # Now add the site_lnl centroid to each new subset
         marker = 0
         for s in new_subsets:
@@ -208,6 +204,7 @@ def kmeans_wrapper(cfg, alignment, a_subset, tree_path, max_ks = 10):
     elif cfg.kmeans_opt == 4:
         raise ValueError("Search kmeans_wss cannot be used with kmeans" + 
             " option 4. Use option 1 or 2")
+
 
     count = 1
     new_wss = 0

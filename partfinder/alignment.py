@@ -25,14 +25,13 @@ import logging
 log = logging.getLogger("alignment")
 
 import os
-
+import numpy as np
 from pyparsing import (
     Word, OneOrMore, alphas, nums, Suppress, Optional, Group, stringEnd,
     delimitedList, ParseException, line, lineno, col, restOfLine, LineEnd,
     White, Literal, Combine, Or, MatchFirst, ZeroOrMore)
 
 from util import PartitionFinderError
-
 
 class AlignmentError(PartitionFinderError):
     pass
@@ -42,7 +41,7 @@ class AlignmentParser(object):
     """Parses an alignment and returns species sequence tuples"""
 
     # I think this covers it...
-    BASES = Word(alphas + "?.-")
+    BASES = Word(alphas + nums + "?.-")
 
     def __init__(self):
         self.sequence_length = None
@@ -67,6 +66,7 @@ class AlignmentParser(object):
 
         # Take a copy and disallow line breaks in the bases
         bases = self.BASES.copy()
+
         bases.setWhitespaceChars(" \t")
         seq_start = sequence_name("species") + bases(
             "sequence") + Suppress(LineEnd())
@@ -125,8 +125,8 @@ class AlignmentParser(object):
                 if len(seq) != slen:
                     log.error(
                         "Bad alignment file: Not all species have the same sequences length")
-                    raise AlignmentError
-
+                    raise AlignmentError 
+                    
         # Not all formats have a heading, but if we have one do some checking
         if self.sequence_length is not None:
             if self.sequence_length != slen:
@@ -247,7 +247,7 @@ class SubsetAlignment(Alignment):
                       "but the alignment only has %d sites. "
                       "Please check." % (site_max, source.sequence_len))
             raise AlignmentError
-
+#Possible place to change things over to arrays
         # Pull out the columns we need
         for species_name, old_sequence in source.species.iteritems():
             new_sequence = ''.join([old_sequence[i] for i in subset.columns])

@@ -514,3 +514,4 @@ spp4     CTCGAGGTGAAAAATGGTGATGCT------CGTCTGGTGCTGGAAGTTCAGCAGCAGCTGGGTGGTGGCGT
         log.info("Result is %s", res)
 
     # shutil.rmtree(tmp)
+

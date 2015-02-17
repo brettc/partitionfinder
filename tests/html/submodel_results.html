@@ -1,0 +1,34 @@
+source file: <b>/home/april/project_files/partitions/partitionfinder/tests/test_submodels.py</b><br>
+
+
+file stats: <b>23 lines, 23 executed: 100.0% covered</b>
+<pre>
+<font color="green">   1. from partfinder.submodels import get_submodels, count_all_schemes</font>
+<font color="black">   2. </font>
+<font color="green">   3. def test_consistency():</font>
+<font color="black">   4.     known_results = [</font>
+<font color="green">   5.         [0, 0, 0, 0],</font>
+<font color="green">   6.         [0, 0, 0, 1],</font>
+<font color="green">   7.         [0, 0, 1, 0],</font>
+<font color="green">   8.         [0, 0, 1, 1],</font>
+<font color="green">   9.         [0, 0, 1, 2],</font>
+<font color="green">  10.         [0, 1, 0, 0],</font>
+<font color="green">  11.         [0, 1, 0, 1],</font>
+<font color="green">  12.         [0, 1, 0, 2],</font>
+<font color="green">  13.         [0, 1, 1, 0],</font>
+<font color="green">  14.         [0, 1, 1, 1],</font>
+<font color="green">  15.         [0, 1, 1, 2],</font>
+<font color="green">  16.         [0, 1, 2, 0],</font>
+<font color="green">  17.         [0, 1, 2, 1],</font>
+<font color="green">  18.         [0, 1, 2, 2],</font>
+<font color="green">  19.         [0, 1, 2, 3],</font>
+<font color="black">  20.     ]</font>
+<font color="green">  21.     submodels = get_submodels(4)</font>
+<font color="green">  22.     assert submodels ==  known_results</font>
+<font color="black">  23. </font>
+<font color="green">  24. def test_scheme_lengths():</font>
+<font color="green">  25.     assert count_all_schemes(1) == 1</font>
+<font color="green">  26.     assert count_all_schemes(5) == 52</font>
+<font color="green">  27.     assert count_all_schemes(10) == 115975</font>
+</pre>
+

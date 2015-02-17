@@ -42,7 +42,6 @@ class Configuration(object):
         'model_selection': ['aic', 'aicc', 'bic'],
         'search': ['all', 'user', 'greedy', 'hcluster', 'rcluster', 'kmeans', 'kmeans_wss', 'kmeans_greedy', 'kmeans_var', 'kmeans_var_ci']
     }
-
     def __init__(self, datatype="DNA", phylogeny_program='phyml',
         save_phylofiles=False, cmdline_extras = "", cluster_weights = None,
         cluster_percent=10, kmeans_opt=1, rates_file=''):
@@ -68,8 +67,8 @@ class Configuration(object):
 
         # Some basic checking of the setup, so that we don't hit too many
         # problems later
-        if datatype != "DNA" and datatype != "protein":
-            log.error("datatype must be 'DNA' or 'protein'")
+        if datatype != "DNA" and datatype != "protein" and datatype != "morphology":
+            log.error("datatype must be 'DNA' or 'protein' or 'morphology'")
             raise ConfigurationError
 
         log.info("Setting datatype to '%s'", datatype)
@@ -149,7 +148,6 @@ class Configuration(object):
         if kmeans_opt < 1 or kmeans_opt > 4:
             log.error("The --kmeans-opt setting must be 1, 2, 3, or 4. Please check and restart")
             raise ConfigurationError
-
 
     def find_programs(self):
         pth = os.path.abspath(__file__)
@@ -250,7 +248,7 @@ class Configuration(object):
         handler.setFormatter(formatter)
         handler.setLevel(logging.DEBUG)
         logging.getLogger("").addHandler(handler)
-
+        
     def load(self, config_path):
         """We get the parser to construct the configuration"""
         log.info("Loading configuration at '%s'", config_path)
@@ -371,10 +369,11 @@ class Configuration(object):
             has_config = False
 
         if not has_subsets:
-            #we have no subsets so can't screw anything up, just copy the new cfg file settings, overwrite anything else
+            # we have no subsets so can't screw anything up, just copy the new
+            # cfg file settings, overwrite anything else
             if not os.path.exists(cfg_dir):
                 os.makedirs(cfg_dir)
-            #store a nice binary
+            # store a nice binary
             f = open(old_cfg_path, 'wb')
             pickle.dump(cfg_list, f, -1)
             f.close()
@@ -382,19 +381,23 @@ class Configuration(object):
 
         else:  # there are subsets
             if not has_config:
-                log.error("There are subsets stored, but PartitionFinder can't determine where they are from")
-                log.info("Please re-run the analysis using the '--force-restart' option at the command line")
-                log.warning("This will delete all of the analyses in the '/analysis' folder")
+                log.error(
+                    "There are subsets stored, but PartitionFinder can't determine where they are from")
+                log.info(
+                    "Please re-run the analysis using the '--force-restart' option at the command line")
+                log.warning(
+                    "This will delete all of the analyses in the '/analysis' folder")
                 raise ConfigurationError
             else:
-                #we have an old config, load it and compare the important bits
+                # we have an old config, load it and compare the important bits
                 f = open(old_cfg_path, 'rb')
                 old_cfg = pickle.load(f)
                 f.close()
                 fail = []
 
                 if len(old_cfg) != len(cfg_list):
-                    log.error("Your old configuration doesn't match with your new one")
+                    log.error(
+                        "Your old configuration doesn't match with your new one")
                     log.error("The most common cause of this error is trying to run a half-finished analysis"
                               " but switching PartitionFinder versions half way through")
                     log.error("The solution is to either go back to the same version of PartitionFinder"

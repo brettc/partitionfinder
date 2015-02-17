@@ -316,6 +316,7 @@ class RelaxedClusteringAnalysis(Analysis):
         self.cfg.reporter.write_best_scheme(self.results)
 
 
+
 class KmeansAnalysis(Analysis):
     def do_analysis(self):
         bic_score_list = []
@@ -331,7 +332,6 @@ class KmeansAnalysis(Analysis):
 
         log.info("Analysing starting scheme (scheme %s)" % start_scheme.name)
         old_score = self.analyse_scheme(start_scheme)
-
 
         # Get first scheme
         best_scheme = start_scheme
@@ -379,7 +379,6 @@ class KmeansAnalysis(Analysis):
             split_subsets = kmeans.kmeans_split_subset(self.cfg,
                 self.alignment, current_subset, tree_path)
 
-
             # kmeans_split_subset will return a 1 and flag the subset as
             # fabricated if for some reason it raises a PhylogenyProgramError,
             # this it to catch those fabricated subsets
@@ -399,6 +398,7 @@ class KmeansAnalysis(Analysis):
 
             test_scheme = scheme.Scheme(self.cfg, str(step-1),
                 updated_subsets)
+
 
             new_result = self.analyse_scheme(test_scheme)
 
@@ -427,9 +427,6 @@ class KmeansAnalysis(Analysis):
                        m = [x%3 for x in s.columns]
                        l = float(len(s.columns))
                        props = [(float(m.count(1))/l), (float(m.count(2))/l), (float(m.count(0))/l)]
-
-
-
 
             else:
                 log.info("Splitting this subset into did not improve the %s score",
@@ -520,7 +517,6 @@ class KmeansAnalysis(Analysis):
         self.cfg.reporter.write_best_scheme(self.results)
 
 
-
 class KmeansAnalysisWrapper(Analysis):
     def do_analysis(self):
         # Copied and pasted from greedy analysis
@@ -607,6 +603,7 @@ class KmeansAnalysisWrapper(Analysis):
             # Take a copy
             updated_subsets = all_subsets[:]
 
+
             # Replace the current one with the split one
             # Google "slice assignments"
             # This list is the key to avoiding recursion. It expands to contain
@@ -642,8 +639,6 @@ class KmeansAnalysisWrapper(Analysis):
                        props = [(float(m.count(1))/l), (float(m.count(2))/l), (float(m.count(0))/l)]
                        log.info("%d subset has 1st, 2nd, 3rd props: %s" %(len(s.columns), str(props)))
 
-
-
             else:
                 log.info("Splitting this subset did not improve the %s score",
                          self.cfg.model_selection.upper())
@@ -652,7 +647,6 @@ class KmeansAnalysisWrapper(Analysis):
 
         log.info("Best scheme has %s score of %.2f and %d subset(s)"
                  %(self.cfg.model_selection.upper(), best_result.score, len(best_scheme.subsets)))
-
 
         if fabricated_subsets:
             log.info("Finalising partitioning scheme")
@@ -1069,3 +1063,4 @@ def choose_method(search):
         log.error("Search algorithm '%s' is not yet implemented", search)
         raise AnalysisError
     return method
+

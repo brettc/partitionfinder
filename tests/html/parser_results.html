@@ -1,0 +1,46 @@
+source file: <b>/home/april/project_files/partitions/partitionfinder/tests/test_parser.py</b><br>
+
+
+file stats: <b>8 lines, 7 executed: 87.5% covered</b>
+<pre>
+<font color="green">   1. from partfinder.config import Configuration</font>
+<font color="green">   2. from partfinder.parser import Parser</font>
+<font color="black">   3. </font>
+<font color="green">   4. def test_one():</font>
+<font color="black">   5.     # Just use the defaults</font>
+<font color="green">   6.     c = Configuration()</font>
+<font color="green">   7.     p = Parser(c)</font>
+<font color="green">   8.     p.parse_configuration(test1)</font>
+<font color="red">   9.     print c.user_subsets</font>
+<font color="black">  10. </font>
+<font color="black">  11.     # Now do some testing on the Parsed stuff</font>
+<font color="black">  12. </font>
+<font color="black">  13. test1 = r&quot;&quot;&quot;</font>
+<font color="black">  14. alignment = test.phy;</font>
+<font color="black">  15. branchlengths = linked;</font>
+<font color="black">  16. models = all;</font>
+<font color="black">  17. model_selection = BIC;</font>
+<font color="black">  18. </font>
+<font color="black">  19. [data_blocks]</font>
+<font color="black">  20. Gene1_pos1 = 1-789\3;</font>
+<font color="black">  21. Gene1_pos2 = 2-789\3;</font>
+<font color="black">  22. Gene1_pos3 = 3-789\3;</font>
+<font color="black">  23. Gene2_pos1 = 790-1449\3;</font>
+<font color="black">  24. Gene2_pos2 = 791-1449\3;</font>
+<font color="black">  25. Gene2_pos3 = 792-1449\3;</font>
+<font color="black">  26. Gene3_pos1 = 1450-2208\3;</font>
+<font color="black">  27. Gene3_pos2 = 1451-2208\3;</font>
+<font color="black">  28. Gene3_pos3 = 1452-2208\3;</font>
+<font color="black">  29. </font>
+<font color="black">  30. [schemes]</font>
+<font color="black">  31. # search = greedy;</font>
+<font color="black">  32. search = user;</font>
+<font color="black">  33. allsame         = (Gene1_pos1, Gene1_pos2, Gene1_pos3, Gene2_pos1, Gene2_pos2, Gene2_pos3, Gene3_pos1, Gene3_pos2, Gene3_pos3);</font>
+<font color="black">  34. by_gene         = (Gene1_pos1, Gene1_pos2, Gene1_pos3) (Gene2_pos1, Gene2_pos2, Gene2_pos3) (Gene3_pos1, Gene3_pos2, Gene3_pos3);</font>
+<font color="black">  35. 1_2_3           = (Gene1_pos1, Gene2_pos1, Gene3_pos1) (Gene1_pos2, Gene2_pos2, Gene3_pos2) (Gene1_pos3, Gene2_pos3, Gene3_pos3);</font>
+<font color="black">  36. 1_2_3_by_gene   = (Gene1_pos1) (Gene1_pos2) (Gene1_pos3) (Gene2_pos1) (Gene2_pos2) (Gene2_pos3) (Gene3_pos1) (Gene3_pos2) (Gene3_pos3);</font>
+<font color="black">  37. 12_3            = (Gene1_pos1, Gene1_pos2, Gene2_pos1, Gene2_pos2, Gene3_pos1, Gene3_pos2) (Gene1_pos3, Gene2_pos3, Gene3_pos3);</font>
+<font color="black">  38. 12_3_by_gene    = (Gene1_pos1, Gene1_pos2) (Gene1_pos3) (Gene2_pos1, Gene2_pos2) (Gene2_pos3) (Gene3_pos1, Gene3_pos2) (Gene3_pos3);</font>
+<font color="green">  39. &quot;&quot;&quot;</font>
+</pre>
+
