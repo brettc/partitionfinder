@@ -16,13 +16,14 @@
 # and conditions as well.
 
 import logtools
+import pandas
 log = logtools.get_logger()
 
 import os
 
 scheme_header_template = "%-18s: %s\n"
 scheme_subset_template = "%-6s | %-10s | %-10s | %-100s\n"
-subset_template = "%-15s | %-15s | %-15s | %-15s | %-15s\n"
+subset_template = "%-15s | %-15s | %-15s | %-15s  | %-15s | %-15s\n"
 
 
 class TextReporter(object):
@@ -33,18 +34,38 @@ class TextReporter(object):
     def write_subset_summary(self, sub):
         pth = os.path.join(self.cfg.subsets_path, sub.subset_id + '.txt')
         # Sort everything
-        model_results = [(r.bic, r) for r in sub.results.values()]
-        model_results.sort()
+
+        cols = ['model_id', 'params', 'lnl', 'aicc', 'aic', 'bic']
+
+        #model_results = [(r.bic, r) for r in sub.results.values()]
+        #model_results.sort()
+
+        descr = self.cfg.data_layout.data_type.descr
+        indices = dict([(t[0], i) for i, t in enumerate(descr) if t[0] in cols])
+
+        sorted_results = [(row['aicc'], row) for row in sub.result_array]
+        sorted_results.sort()
+
+
         output = open(pth, 'w')
         # TODO change back to full name...
         # output.write("Model selection results for subset: %s\n" % sub.full_name)
         output.write("Model selection results for subset: %s\n" % sub.subset_id)
         output.write("Subset alignment stored here: %s\n" % sub.alignment_path)
         output.write("This subset contains the following data_blocks: %s\n" % sub)
-        output.write("Models are organised according to their BIC scores\n\n")
-        output.write(subset_template % ("Model", "lNL", "AIC", "AICc", "BIC"))
-        for bic, r in model_results:
-            output.write(subset_template % (r.model, r.lnl, r.aic, r.aicc, r.bic))
+        output.write("Models are organised according to their AICc scores\n\n")
+
+        output.write(subset_template % ("Model", "Parameters", "lNL", "AIC", "AICc", "BIC"))
+        for aicc, row in sorted_results:
+            output.write(subset_template % (row[indices['model_id']], 
+                                            row[indices['params']], 
+                                            row[indices['lnl']], 
+                                            row[indices['aicc']], 
+                                            row[indices['aic']],
+                                            row[indices['bic']]))  
+
+        #for bic, r in model_results:
+        #    output.write(subset_template % (r.model, r.lnl, r.aic, r.aicc, r.bic))
 
     def write_scheme_summary(self, sch, result):
         pth = os.path.join(self.cfg.schemes_path, sch.name + '.txt')
