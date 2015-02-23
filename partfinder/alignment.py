@@ -26,9 +26,10 @@ log = logtools.get_logger()
 
 import os
 from pyparsing import (Word, OneOrMore, alphas, nums, Suppress, stringEnd,
-                       ParseException, restOfLine, LineEnd, ZeroOrMore)
+                       ParseException, restOfLine, LineEnd, ZeroOrMore, Upcase)
 from util import PartitionFinderError
-
+import numpy
+import array
 
 class AlignmentError(PartitionFinderError):
     pass
@@ -38,7 +39,7 @@ class AlignmentParser(object):
     """Parses an alignment and returns species sequence tuples"""
 
     # I think this covers it...
-    BASES = Word(alphas + "?.-")
+    BASES = Upcase(Word(alphas + "?.-"))
 
     def __init__(self):
         self.sequence_length = None
@@ -113,7 +114,14 @@ class AlignmentParser(object):
 
         # Check that all the sequences are equal length
         slen = None
+        names = set()
         for nm, seq in self.sequences:
+            if nm in names:
+                log.error("Repeated species name '%s' is repeated "
+                          "in alignment", nm)
+                raise AlignmentError
+
+            names.add(nm)
             if slen is None:
                 # Use the first as the test case
                 slen = len(seq)
@@ -136,29 +144,28 @@ class AlignmentParser(object):
                           " number of sequences in file, please check")
                 raise AlignmentError
 
-        return self.sequences
-
-
-def parse(s):
-    return AlignmentParser().parse(s)
-
 
 class Alignment(object):
     def __init__(self):
-        self.species = {}
-        self.sequence_len = 0
+        self.species = []
+        self.sequence_length = 0
+        self.data = None
+
+    @property
+    def species_count(self):
+        return len(self.species)
 
     def __str__(self):
         return "Alignment(%s species, %s codons)"\
-               % (self.species, self.sequence_len)
+               % (self.species_count, self.sequence_length)
 
     def same_as(self, other):
-        if self.sequence_len != other.sequence_len:
+        if self.sequence_length != other.sequence_length:
             log.warning("Alignments not the same, length differs %s: %s",
-                        self.sequence_len, other.sequence_len)
+                        self.sequence_length, other.sequence_length)
             return False
 
-        if self.species != other.species:
+        if self.species_count != other.species_count:
             log.warning("Alignments not the same. "
                         "This alignment has %s species, the alignment from the previous "
                         "analysis had %s.", len(self.species), len(other.species))
@@ -166,35 +173,22 @@ class Alignment(object):
 
         return True
 
-    def from_parser_output(self, defs):
-        """A series of species / sequences tuples
-        e.g def = ("dog", "GATC"), ("cat", "GATT")
+    def parse(self, text):
+        """Parse the sequence, then transfer data from the parser
+        Note: parser returns tuples like ("dog", "GATC"), ("cat", "GATT")
         """
-        species = {}
-        sequence_len = None
-        for spec, seq in defs:
-            # log.debug("Found Sequence for %s: %s...", spec, seq[:20])
-            if spec in species:
-                log.error("Repeated species name '%s' is repeated "
-                          "in alignment", spec)
-                raise AlignmentError
+        p = AlignmentParser()
+        p.parse(text)
 
-            # Assign it
-            species[spec] = seq
-
-            if sequence_len is None:
-                sequence_len = len(seq)
-            else:
-                if len(seq) != sequence_len:
-                    log.error("Sequence length of %s "
-                              "differs from previous sequences", spec)
-                    raise AlignmentError
-        log.debug("Found %d species with sequence length %d",
-                  len(species), sequence_len)
-
-        # Overwrite these
-        self.species = species
-        self.sequence_len = sequence_len
+        # Allocate a numpy array using unsigned char
+        d = numpy.zeros((p.species_count, p.sequence_length), 'u1')
+        self.sequence_length = p.sequence_length
+        for i, (spec, codons) in enumerate(p.sequences):
+            self.species.append(spec)
+            # TODO: Is there a better way to do this directly into numpy?
+            # Typecode "B" makes a unsigned int
+            d[i] = array.array("B", codons)
+        self.data = d
 
     def read(self, pth):
         if not os.path.exists(pth):
@@ -203,27 +197,26 @@ class Alignment(object):
 
         log.debug("Reading alignment file '%s'", pth)
         text = open(pth, 'rU').read()
-        self.from_parser_output(parse(text))
+        self.parse(text)
 
     def write(self, pth):
-        self.write_phylip(pth)
-
-    def write_phylip(self, pth):
         fd = open(pth, 'w')
         log.debug("Writing phylip file '%s'", pth)
+        self.write_phylip(fd)
+        fd.close()
 
+    def write_phylip(self, stream):
         species_count = len(self.species)
-        sequence_len = len(iter(self.species.itervalues()).next())
-
-        fd.write("%d %d\n" % (species_count, sequence_len))
-        for species, sequence in self.species.iteritems():
+        stream.write("%d %d\n" % (species_count, self.sequence_length))
+        for i in range(species_count):
+            spec = self.species[i]
+            sequence = self.data[i]
             # We use a version of phylip which can have longer species names,
             # up to 100
-            shortened = "%s    " % (species[:99])
-            fd.write(shortened)
-            fd.write(sequence)
-            fd.write("\n")
-        fd.close()
+            shortened = "%s    " % (spec[:99])
+            stream.write(shortened)
+            stream.write(sequence.tostring())
+            stream.write("\n")
 
 
 class SubsetAlignment(Alignment):
@@ -237,23 +230,18 @@ class SubsetAlignment(Alignment):
         # aren't > alignment length
         site_max = max(subset.columns) + 1
         log.debug("Max site in data_blocks: %d; max site in alignment: %d"
-                  % (site_max, source.sequence_len))
-        if site_max > source.sequence_len:
+                  % (site_max, source.sequence_length))
+        if site_max > source.sequence_length:
             log.error("Site %d is specified in [data_blocks], "
                       "but the alignment only has %d sites. "
-                      "Please check." % (site_max, source.sequence_len))
+                      "Please check." % (site_max, source.sequence_length))
             raise AlignmentError
 
-        # Pull out the columns we need
-        for species_name, old_sequence in source.species.iteritems():
-            new_sequence = ''.join([old_sequence[i] for i in subset.columns])
-            self.species[species_name] = new_sequence
-
-        if not self.species:
-            log.error("No species found in %s", self)
-            raise AlignmentError
-
-        self.sequence_len = len(self.species.itervalues().next())
+        self.species = source.species
+        # Pull out the columns we need using the magic of numpy indexing
+        self.data = source.data[:,subset.columns]
+        self.sequence_length = len(subset.columns)
+        assert self.sequence_length == self.data.shape[1]
 
 
 class TestAlignment(Alignment):
@@ -261,4 +249,4 @@ class TestAlignment(Alignment):
     """Good for testing stuff"""
     def __init__(self, text):
         Alignment.__init__(self)
-        self.from_parser_output(parse(text))
+        self.parse(text)
