@@ -48,10 +48,9 @@ class TextReporter(object):
 
 
         output = open(pth, 'w')
-        # TODO change back to full name...
-        # output.write("Model selection results for subset: %s\n" % sub.full_name)
         output.write("Model selection results for subset: %s\n" % sub.subset_id)
-        output.write("Subset alignment stored here: %s\n" % sub.alignment_path)
+        if sub.alignment_path:
+            output.write("Subset alignment stored here: %s\n" % sub.alignment_path)
         output.write("This subset contains the following data_blocks: %s\n" % sub)
         output.write("Models are organised according to their AICc scores\n\n")
 
@@ -64,8 +63,6 @@ class TextReporter(object):
                                             row[indices['aic']],
                                             row[indices['bic']]))  
 
-        #for bic, r in model_results:
-        #    output.write(subset_template % (r.model, r.lnl, r.aic, r.aicc, r.bic))
 
     def write_scheme_summary(self, sch, result):
         pth = os.path.join(self.cfg.schemes_path, sch.name + '.txt')

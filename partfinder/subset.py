@@ -268,7 +268,6 @@ class Subset(object):
             # Remove the current model from remaining ones
             self.models_not_done.remove(model)
 
-            # Just used for below
             if not cfg.save_phylofiles:
                 # We remove all files that have the specified RUN ID
                 cfg.processor.remove_files(self.alignment_path, model)
