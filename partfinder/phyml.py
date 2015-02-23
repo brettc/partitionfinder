@@ -383,7 +383,7 @@ program_name = "phyml"
 def program():
     return program_name
 
-def gen_per_site_stats(cfg, alignment_path, tree_path):
+def gen_per_site_stats_likelihood(cfg, alignment_path, tree_path):
     if cfg.datatype == 'DNA':
         if cfg.branchlengths == 'linked':
             command = "--run_id GTRGAMMA -b 0 -i '%s' -u '%s' -m GTR --print_site_lnl --constrained_lens" % (
@@ -403,7 +403,7 @@ def gen_per_site_stats(cfg, alignment_path, tree_path):
     # the errors are still raised though. This is particular to running the kmeans output.
     run_phyml(command, report_errors=False)
 
-def get_per_site_stats(phylip_file, cfg):
+def get_per_site_stats_likelihood(phylip_file, cfg):
     # Retreive a list of the site likelihoods
     if cfg.datatype == 'DNA':
         phyml_lk_fname = ("%s_phyml_lk_GTRGAMMA.txt" % phylip_file)
@@ -417,6 +417,53 @@ def get_per_site_stats(phylip_file, cfg):
 def fabricate(lnl):
     result = PhymlResult(lnl, 0, 0)
     return result
+
+def rate_parser(rates_name):
+    rates_list = []
+    the_rates = open(rates_name)
+    for rate in the_rates.readlines():
+        rates_list.append([float(rate)])
+    return rates_list, None, None, None
+
+def run_rates(command, report_errors=True):
+    program_name = "fast_TIGER"
+    program_path = util.program_path
+    program_path = os.path.join(program_path, program_name)
+    # command = "\"%s\" %s" % (program_path, command)
+
+    command = "\"%s\" %s" % (program_path, command)
+
+    # Note: We use shlex.split as it does a proper job of handling command
+    # lines that are complex
+    p = subprocess.Popen(
+        shlex.split(command),
+        shell=False,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE)
+
+    # Capture the output, we might put it into the errors
+    stdout, stderr = p.communicate()
+    # p.terminate()
+
+    if p.returncode != 0:
+        if report_errors == True:
+            log.error("rates_calculator did not execute successfully")
+            log.error("rates_calculator output follows, in case it's helpful for finding the problem")
+            log.error("%s", stdout)
+            log.error("%s", stderr)
+        raise PhymlError(stdout, stderr)
+
+def gen_per_site_stats(cfg, alignment_path, tree_path):
+    if cfg.datatype == 'DNA':
+        command = " dna " + alignment_path
+    elif cfg.datatype == 'morphology':
+        command = " morphology " + alignment_path
+    run_rates(command, report_errors=False)
+
+def get_per_site_stats(phylip_file, cfg):
+    rates_name = ("%s_r8s.txt" % phylip_file)
+
+    return rate_parser(rates_name)
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.DEBUG)
