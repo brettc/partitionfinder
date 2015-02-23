@@ -1,6 +1,5 @@
 from partfinder import alignment
 from StringIO import StringIO
-import sys
 
 BASIC = """
 5 10
