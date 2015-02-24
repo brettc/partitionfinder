@@ -59,3 +59,6 @@ docs/.Rhistory
 docs/.Rhistory
 
 docs/.Rapp.history
+build/temp.macosx-10.5-x86_64-2.7/partfinder/_bitset.o
+build/temp.macosx-10.5-x86_64-2.7/partfinder/_tiger.o
+*.so
