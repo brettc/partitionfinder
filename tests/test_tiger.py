@@ -28,11 +28,15 @@ s4 CTCGAGGTGAAAAATGGTGATGCTCGTCTGGTGCTGGAAGTTCAGCAGCAGCTGGGTGGTGGCGTGGTTCGTACCAT
 """
 
 def test_creation():
+    print
     a = Alignment()
-    a.parse(TWO)
-    print slow_tiger(a)
+    a.parse(BIGGER)
+    # bitsets, rates = slow_tiger(a)
+    # print rates
+    # print bitsets[1]
     tigger = TigerDNA()
     tigger.from_alignment(a)
+    # print tigger.bitsets_as_array()[1]
     print tigger.calc_rates()
 
 def slow_tiger(alm):
@@ -61,31 +65,30 @@ def slow_tiger(alm):
     rates = []
     # Look at each set partition in the alignment
     for i, sp_i in enumerate(set_parts):
-        total_rate = 0.0
+        rate = 0.0
         # Now compare it against every other set partition in the alignment,
         # except for itself
         for j, sp_j in enumerate(set_parts):
             # Do not compare the site against itself
             if j == i:
                 continue
-            else:
-                # Keep track of the number of comparisons done
-                num = 0.0
-                # 'axpi' refers to the compatibility of one bitset to another. If
-                # the bitset is a subset of another, the axpi is 1, otherwise it
-                # is 0
-                axpi = 0.0
-                # Check each partition set from site pattern j to see if it is a
-                # site pattern i
-                for ps in sp_j:
-                    for ps2 in sp_i:
-                        if np.array_equal((ps & ps2), ps):
-                            axpi += 1.0
-                            break
-                    num += 1.0
 
-                pa = axpi/num
-                total_rate += pa
-        rate = total_rate/denom
+            # Keep track of the number of comparisons done
+            num = 0.0
+            # 'axpi' refers to the compatibility of one bitset to another. If
+            # the bitset is a subset of another, the axpi is 1, otherwise it
+            # is 0
+            axpi = 0.0
+            # Check each partition set from site pattern j to see if it is a
+            # site pattern i
+            for ps in sp_j:
+                for ps2 in sp_i:
+                    if np.array_equal((ps & ps2), ps):
+                        axpi += 1.0
+                        break
+                num += 1.0
+            rate += axpi / num
+
+        rate /= denom
         rates.append(rate)
-    return rates
+    return set_parts, rates

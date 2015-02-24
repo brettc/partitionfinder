@@ -238,8 +238,9 @@ void __Pyx_call_destructor(T* x) {
 #include "new"
 #include "stdexcept"
 #include "typeinfo"
-#include <boost/dynamic_bitset.hpp>
 #include "string.h"
+#include <string>
+#include <boost/dynamic_bitset.hpp>
 #include "stdio.h"
 #include "stdlib.h"
 #include "numpy/arrayobject.h"
@@ -801,8 +802,8 @@ typedef npy_clongdouble __pyx_t_5numpy_clongdouble_t;
  */
 typedef npy_cdouble __pyx_t_5numpy_complex_t;
 
-/* "partfinder/_tiger.pxd":28
- *     # cdef void to_string(dynamic_bitset[size_t], string s)
+/* "partfinder/_tiger.pxd":32
+ *     cdef void to_string(dynamic_bitset[size_t], string s)
  * 
  * ctypedef dynamic_bitset[size_t] c_Bitset             # <<<<<<<<<<<<<<
  * ctypedef vector[c_Bitset] c_ColumnBitsets
@@ -810,7 +811,7 @@ typedef npy_cdouble __pyx_t_5numpy_complex_t;
  */
 typedef boost::dynamic_bitset<size_t>  __pyx_t_10partfinder_6_tiger_c_Bitset;
 
-/* "partfinder/_tiger.pxd":29
+/* "partfinder/_tiger.pxd":33
  * 
  * ctypedef dynamic_bitset[size_t] c_Bitset
  * ctypedef vector[c_Bitset] c_ColumnBitsets             # <<<<<<<<<<<<<<
@@ -819,18 +820,18 @@ typedef boost::dynamic_bitset<size_t>  __pyx_t_10partfinder_6_tiger_c_Bitset;
  */
 typedef std::vector<__pyx_t_10partfinder_6_tiger_c_Bitset>  __pyx_t_10partfinder_6_tiger_c_ColumnBitsets;
 
-/* "partfinder/_tiger.pxd":30
+/* "partfinder/_tiger.pxd":34
  * ctypedef dynamic_bitset[size_t] c_Bitset
  * ctypedef vector[c_Bitset] c_ColumnBitsets
  * ctypedef vector[c_ColumnBitsets] c_AlignmentBitsets             # <<<<<<<<<<<<<<
  * 
- * # cdef class Bitset:
+ * cdef class TigerBase:
  */
 typedef std::vector<__pyx_t_10partfinder_6_tiger_c_ColumnBitsets>  __pyx_t_10partfinder_6_tiger_c_AlignmentBitsets;
 
-/* "partfinder/_tiger.pxd":38
- * #     cdef c_ColumnBitsets _this
- * #
+/* "partfinder/_tiger.pxd":36
+ * ctypedef vector[c_ColumnBitsets] c_AlignmentBitsets
+ * 
  * cdef class TigerBase:             # <<<<<<<<<<<<<<
  *     cdef:
  *         c_AlignmentBitsets _bitsets
@@ -1491,11 +1492,13 @@ static PyObject *__pyx_memoryviewslice_assign_item_from_object(struct __pyx_memo
 
 /* Module declarations from 'libcpp.vector' */
 
+/* Module declarations from 'libc.string' */
+
+/* Module declarations from 'libcpp.string' */
+
 /* Module declarations from 'cpython.buffer' */
 
 /* Module declarations from 'cpython.ref' */
-
-/* Module declarations from 'libc.string' */
 
 /* Module declarations from 'libc.stdio' */
 
@@ -1861,7 +1864,7 @@ static int __pyx_pf_10partfinder_6_tiger_9TigerBase___cinit__(CYTHON_UNUSED stru
   return __pyx_r;
 }
 
-/* "partfinder/_tiger.pxd":42
+/* "partfinder/_tiger.pxd":40
  *         c_AlignmentBitsets _bitsets
  *         readonly:
  *             size_t species_count, column_count             # <<<<<<<<<<<<<<
@@ -1889,7 +1892,7 @@ static PyObject *__pyx_pf_10partfinder_6_tiger_9TigerBase_13species_count___get_
   int __pyx_clineno = 0;
   __Pyx_RefNannySetupContext("__get__", 0);
   __Pyx_XDECREF(__pyx_r);
-  __pyx_t_1 = __Pyx_PyInt_FromSize_t(__pyx_v_self->species_count); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[1]; __pyx_lineno = 42; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_1 = __Pyx_PyInt_FromSize_t(__pyx_v_self->species_count); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[1]; __pyx_lineno = 40; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_1);
   __pyx_r = __pyx_t_1;
   __pyx_t_1 = 0;
@@ -1928,7 +1931,7 @@ static PyObject *__pyx_pf_10partfinder_6_tiger_9TigerBase_12column_count___get__
   int __pyx_clineno = 0;
   __Pyx_RefNannySetupContext("__get__", 0);
   __Pyx_XDECREF(__pyx_r);
-  __pyx_t_1 = __Pyx_PyInt_FromSize_t(__pyx_v_self->column_count); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[1]; __pyx_lineno = 42; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_1 = __Pyx_PyInt_FromSize_t(__pyx_v_self->column_count); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[1]; __pyx_lineno = 40; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_1);
   __pyx_r = __pyx_t_1;
   __pyx_t_1 = 0;
@@ -2529,18 +2532,18 @@ static PyObject *__pyx_pf_10partfinder_6_tiger_8TigerDNA_4calc_rates(struct __py
     goto __pyx_L0;
   }
 
-  /* "partfinder/_tiger.pyx":76
- *             size_t i, j, i_b, j_b
- *             double rate, axpi, num
- *             double denom = <double>self.column_count             # <<<<<<<<<<<<<<
- *             c_Bitset *i_bitset
- *             c_Bitset *j_bitset
- */
-  __pyx_v_denom = ((double)__pyx_v_self->__pyx_base.column_count);
-
-  /* "partfinder/_tiger.pyx":81
+  /* "partfinder/_tiger.pyx":80
  *             vector[double] rates
  * 
+ *         denom = <double>self.column_count - 1.0             # <<<<<<<<<<<<<<
+ *         for i in range(self.column_count):
+ *             rate = 0.0
+ */
+  __pyx_v_denom = (((double)__pyx_v_self->__pyx_base.column_count) - 1.0);
+
+  /* "partfinder/_tiger.pyx":81
+ * 
+ *         denom = <double>self.column_count - 1.0
  *         for i in range(self.column_count):             # <<<<<<<<<<<<<<
  *             rate = 0.0
  *             for j in range(self.column_count):
@@ -2550,7 +2553,7 @@ static PyObject *__pyx_pf_10partfinder_6_tiger_8TigerDNA_4calc_rates(struct __py
     __pyx_v_i = __pyx_t_4;
 
     /* "partfinder/_tiger.pyx":82
- * 
+ *         denom = <double>self.column_count - 1.0
  *         for i in range(self.column_count):
  *             rate = 0.0             # <<<<<<<<<<<<<<
  *             for j in range(self.column_count):
@@ -2612,7 +2615,7 @@ static PyObject *__pyx_pf_10partfinder_6_tiger_8TigerDNA_4calc_rates(struct __py
  *                 axpi = 0.0
  *                 for j_b in range(4):             # <<<<<<<<<<<<<<
  *                     j_bitset = &self._bitsets[j][j_b]
- *                     if j_bitset.empty():
+ *                     if j_bitset.none():
  */
       for (__pyx_t_7 = 0; __pyx_t_7 < 4; __pyx_t_7+=1) {
         __pyx_v_j_b = __pyx_t_7;
@@ -2621,7 +2624,7 @@ static PyObject *__pyx_pf_10partfinder_6_tiger_8TigerDNA_4calc_rates(struct __py
  *                 axpi = 0.0
  *                 for j_b in range(4):
  *                     j_bitset = &self._bitsets[j][j_b]             # <<<<<<<<<<<<<<
- *                     if j_bitset.empty():
+ *                     if j_bitset.none():
  *                         continue
  */
         __pyx_v_j_bitset = (&((__pyx_v_self->__pyx_base._bitsets[__pyx_v_j])[__pyx_v_j_b]));
@@ -2629,16 +2632,16 @@ static PyObject *__pyx_pf_10partfinder_6_tiger_8TigerDNA_4calc_rates(struct __py
         /* "partfinder/_tiger.pyx":92
  *                 for j_b in range(4):
  *                     j_bitset = &self._bitsets[j][j_b]
- *                     if j_bitset.empty():             # <<<<<<<<<<<<<<
+ *                     if j_bitset.none():             # <<<<<<<<<<<<<<
  *                         continue
  *                     num += 1.0
  */
-        __pyx_t_1 = (__pyx_v_j_bitset->empty() != 0);
+        __pyx_t_1 = (__pyx_v_j_bitset->none() != 0);
         if (__pyx_t_1) {
 
           /* "partfinder/_tiger.pyx":93
  *                     j_bitset = &self._bitsets[j][j_b]
- *                     if j_bitset.empty():
+ *                     if j_bitset.none():
  *                         continue             # <<<<<<<<<<<<<<
  *                     num += 1.0
  *                     for i_b in range(4):
@@ -2647,11 +2650,11 @@ static PyObject *__pyx_pf_10partfinder_6_tiger_8TigerDNA_4calc_rates(struct __py
         }
 
         /* "partfinder/_tiger.pyx":94
- *                     if j_bitset.empty():
+ *                     if j_bitset.none():
  *                         continue
  *                     num += 1.0             # <<<<<<<<<<<<<<
  *                     for i_b in range(4):
- *                         if i_bitset.empty():
+ *                         i_bitset = &self._bitsets[i][i_b]
  */
         __pyx_v_num = (__pyx_v_num + 1.0);
 
@@ -2659,8 +2662,8 @@ static PyObject *__pyx_pf_10partfinder_6_tiger_8TigerDNA_4calc_rates(struct __py
  *                         continue
  *                     num += 1.0
  *                     for i_b in range(4):             # <<<<<<<<<<<<<<
- *                         if i_bitset.empty():
- *                             continue
+ *                         i_bitset = &self._bitsets[i][i_b]
+ *                         if i_bitset.none():
  */
         for (__pyx_t_8 = 0; __pyx_t_8 < 4; __pyx_t_8+=1) {
           __pyx_v_i_b = __pyx_t_8;
@@ -2668,35 +2671,35 @@ static PyObject *__pyx_pf_10partfinder_6_tiger_8TigerDNA_4calc_rates(struct __py
           /* "partfinder/_tiger.pyx":96
  *                     num += 1.0
  *                     for i_b in range(4):
- *                         if i_bitset.empty():             # <<<<<<<<<<<<<<
+ *                         i_bitset = &self._bitsets[i][i_b]             # <<<<<<<<<<<<<<
+ *                         if i_bitset.none():
  *                             continue
- *                         i_bitset = &self._bitsets[i][i_b]
  */
-          __pyx_t_1 = (__pyx_v_i_bitset->empty() != 0);
+          __pyx_v_i_bitset = (&((__pyx_v_self->__pyx_base._bitsets[__pyx_v_i])[__pyx_v_i_b]));
+
+          /* "partfinder/_tiger.pyx":97
+ *                     for i_b in range(4):
+ *                         i_bitset = &self._bitsets[i][i_b]
+ *                         if i_bitset.none():             # <<<<<<<<<<<<<<
+ *                             continue
+ *                         if j_bitset.is_subset_of(deref(i_bitset)):
+ */
+          __pyx_t_1 = (__pyx_v_i_bitset->none() != 0);
           if (__pyx_t_1) {
 
-            /* "partfinder/_tiger.pyx":97
- *                     for i_b in range(4):
- *                         if i_bitset.empty():
- *                             continue             # <<<<<<<<<<<<<<
+            /* "partfinder/_tiger.pyx":98
  *                         i_bitset = &self._bitsets[i][i_b]
+ *                         if i_bitset.none():
+ *                             continue             # <<<<<<<<<<<<<<
  *                         if j_bitset.is_subset_of(deref(i_bitset)):
+ *                             axpi += 1.0
  */
             goto __pyx_L14_continue;
           }
 
-          /* "partfinder/_tiger.pyx":98
- *                         if i_bitset.empty():
- *                             continue
- *                         i_bitset = &self._bitsets[i][i_b]             # <<<<<<<<<<<<<<
- *                         if j_bitset.is_subset_of(deref(i_bitset)):
- *                             axpi += 1.0
- */
-          __pyx_v_i_bitset = (&((__pyx_v_self->__pyx_base._bitsets[__pyx_v_i])[__pyx_v_i_b]));
-
           /* "partfinder/_tiger.pyx":99
+ *                         if i_bitset.none():
  *                             continue
- *                         i_bitset = &self._bitsets[i][i_b]
  *                         if j_bitset.is_subset_of(deref(i_bitset)):             # <<<<<<<<<<<<<<
  *                             axpi += 1.0
  *                             break
@@ -2705,7 +2708,7 @@ static PyObject *__pyx_pf_10partfinder_6_tiger_8TigerDNA_4calc_rates(struct __py
           if (__pyx_t_1) {
 
             /* "partfinder/_tiger.pyx":100
- *                         i_bitset = &self._bitsets[i][i_b]
+ *                             continue
  *                         if j_bitset.is_subset_of(deref(i_bitset)):
  *                             axpi += 1.0             # <<<<<<<<<<<<<<
  *                             break

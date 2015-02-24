@@ -72,12 +72,12 @@ cdef class TigerDNA(TigerBase):
 
         cdef: 
             size_t i, j, i_b, j_b
-            double rate, axpi, num
-            double denom = <double>self.column_count
+            double rate, axpi, num, denom
             c_Bitset *i_bitset
             c_Bitset *j_bitset
             vector[double] rates
 
+        denom = <double>self.column_count - 1.0
         for i in range(self.column_count):
             rate = 0.0
             for j in range(self.column_count):
@@ -89,13 +89,13 @@ cdef class TigerDNA(TigerBase):
                 axpi = 0.0
                 for j_b in range(4):
                     j_bitset = &self._bitsets[j][j_b]
-                    if j_bitset.empty():
+                    if j_bitset.none():
                         continue
                     num += 1.0
                     for i_b in range(4):
-                        if i_bitset.empty():
-                            continue
                         i_bitset = &self._bitsets[i][i_b]
+                        if i_bitset.none():
+                            continue
                         if j_bitset.is_subset_of(deref(i_bitset)):
                             axpi += 1.0
                             break
