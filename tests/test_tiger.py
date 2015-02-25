@@ -40,7 +40,6 @@ def test_tigger(alignment_text):
     tigger.build_bitsets(a)
     fast_rates = tigger.calc_rates()
     assert np.allclose(slow_rates, fast_rates)
-    
 
 def slow_tiger(alm):
     denom = float(alm.sequence_length - 1)

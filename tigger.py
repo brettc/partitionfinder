@@ -3,6 +3,7 @@ from partfinder.alignment import Alignment
 from partfinder._tiger import TigerDNA
 from pathlib import Path
 import numpy
+import pandas as pd
 
 if __name__ == "__main__":
     a = Alignment()
@@ -14,6 +15,8 @@ if __name__ == "__main__":
     rates = tigger.calc_rates()
     output_path = str(filepath.with_suffix('.tigger8'))
     numpy.savetxt(output_path, rates, fmt="%5f", delimiter='\n')
+    x = pd.DataFrame(tigger.calc_array())
+    x.to_pickle('test.pickle')
 
 
     

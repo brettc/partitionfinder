@@ -75,6 +75,45 @@ cdef class TigerBase:
                         c_ret[i, j, k] = 1
         return ret
 
+    def calc_array(self):
+        if self.species_count == 0 or self.column_count == 0:
+            return None
+
+        ret = numpy.zeros((self.column_count, self.column_count), dtype='f8')
+        cdef: 
+            size_t i, j, i_b, j_b
+            double axpi, num
+            c_Bitset *i_bitset
+            c_Bitset *j_bitset
+            np.npy_double[:, :] c_ret = ret
+
+        for i in range(self.column_count):
+            for j in range(self.column_count):
+                # Don't compare to self
+                if i == j:
+                    c_ret[i, j] = 1.0
+                    continue
+
+                num = 0.0
+                axpi = 0.0
+                for j_b in range(4):
+                    j_bitset = &self._bitsets[j][j_b]
+                    if j_bitset.none():
+                        continue
+                    num += 1.0
+                    for i_b in range(4):
+                        i_bitset = &self._bitsets[i][i_b]
+                        if i_bitset.none():
+                            continue
+                        if j_bitset.is_subset_of(deref(i_bitset)):
+                            axpi += 1.0
+                            break
+
+                c_ret[i, j] = axpi / num
+
+        return ret
+
+
 cdef class TigerDNA(TigerBase):
     def __cinit__(self): 
         self.species_count = 0
