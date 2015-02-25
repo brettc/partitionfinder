@@ -28,6 +28,7 @@ import scheme
 import subset_ops
 import results
 import threading
+from config import the_config
 from util import PartitionFinderError
 import util
 
@@ -38,8 +39,7 @@ class AnalysisError(PartitionFinderError):
 class Analysis(object):
     """Performs the analysis and collects the results"""
     def __init__(self, cfg, force_restart, threads):
-        cfg.validate()
-        self.cfg = cfg
+        the_config.validate()
 
         # TODO: Remove -- put this all into "options"
         if threads == -1:
@@ -55,8 +55,8 @@ class Analysis(object):
         # restart.check_for_old_config(cfg)
 
         # Make some folders for the analysis
-        self.cfg.make_output_folders()
-        self.cfg.database = Database(self.cfg)
+        the_config.make_output_folders()
+        the_config.database = Database(the_config)
 
         # TODO: This is going to be in "Prepare"
         self.make_alignment(cfg.alignment_path)
@@ -66,23 +66,23 @@ class Analysis(object):
         self.lock = threading.Condition(threading.Lock())
 
         # Store the result in here
-        self.results = results.AnalysisResults(self.cfg.model_selection)
+        self.results = results.AnalysisResults(the_config.model_selection)
 
     def process_restart(self, force_restart):
         if force_restart:
             # Remove everything
-            if os.path.exists(self.cfg.output_path):
+            if os.path.exists(the_config.output_path):
                 log.warning("Deleting all previous workings in '%s'" %
-                            self.cfg.output_path)
-                shutil.rmtree(self.cfg.output_path)
+                            the_config.output_path)
+                shutil.rmtree(the_config.output_path)
         else:
             # Remove the schemes folder, and clean out the phylofiles folder
-            if os.path.exists(self.cfg.schemes_path):
-                log.debug("Removing files in '%s'" % self.cfg.schemes_path)
-                shutil.rmtree(self.cfg.schemes_path)
-            if os.path.exists(self.cfg.phylofiles_path):
-                log.debug("Removing files in '%s'" % self.cfg.phylofiles_path)
-                shutil.rmtree(self.cfg.phylofiles_path)
+            if os.path.exists(the_config.schemes_path):
+                log.debug("Removing files in '%s'" % the_config.schemes_path)
+                shutil.rmtree(the_config.schemes_path)
+            if os.path.exists(the_config.phylofiles_path):
+                log.debug("Removing files in '%s'" % the_config.phylofiles_path)
+                shutil.rmtree(the_config.phylofiles_path)
 
 
     def analyse(self):
@@ -90,7 +90,7 @@ class Analysis(object):
             self.do_analysis()
         finally:
             # TODO: Not really the right place for it?
-            self.cfg.database.close()
+            the_config.database.close()
         return self.results
 
     def make_alignment(self, source_alignment_path):
@@ -100,7 +100,7 @@ class Analysis(object):
 
         # TODO REMOVE -- this should be part of the checking procedure
         # We start by copying the alignment
-        self.alignment_path = os.path.join(self.cfg.start_tree_path, 'source.phy')
+        self.alignment_path = os.path.join(the_config.start_tree_path, 'source.phy')
         if os.path.exists(self.alignment_path):
             # Make sure it is the same
             old_align = Alignment()
@@ -131,49 +131,49 @@ class Analysis(object):
     def make_tree(self, user_path):
         # Begin by making a filtered alignment, containing ONLY those columns
         # that are defined in the subsets
-        subset_with_everything = subset_ops.merge_subsets(self.cfg.user_subsets)
+        subset_with_everything = subset_ops.merge_subsets(the_config.user_subsets)
         self.filtered_alignment = SubsetAlignment(
             self.alignment, subset_with_everything)
         self.filtered_alignment_path = os.path.join(
-            self.cfg.start_tree_path,  'filtered_source.phy')
+            the_config.start_tree_path,  'filtered_source.phy')
         self.filtered_alignment.write(self.filtered_alignment_path)
 
         # TODO: This checking should still be done...
-        # self.cfg.partitions.check_against_alignment(self.alignment)
-        # self.cfg.partitions.finalise()
+        # the_config.partitions.check_against_alignment(self.alignment)
+        # the_config.partitions.finalise()
 
         # We start by copying the alignment
         self.alignment_path = os.path.join(
-            self.cfg.start_tree_path, 'source.phy')
+            the_config.start_tree_path, 'source.phy')
 
         # Now check for the tree
-        tree_path = self.cfg.processor.make_tree_path(
+        tree_path = the_config.processor.make_tree_path(
             self.filtered_alignment_path)
 
         if self.need_new_tree(tree_path):
             log.debug("Estimating new starting tree, no old tree found")
 
             # If we have a user tree, then use that, otherwise, create a topology
-            util.clean_out_folder(self.cfg.start_tree_path,
+            util.clean_out_folder(the_config.start_tree_path,
                                   keep=["filtered_source.phy", "source.phy"])
 
             if user_path is not None and user_path != "":
                 # Copy it into the start tree folder
                 log.info("Using user supplied topology at %s" % user_path)
-                topology_path = os.path.join(self.cfg.start_tree_path, 'user_topology.phy')
-                self.cfg.processor.dupfile(user_path, topology_path)
+                topology_path = os.path.join(the_config.start_tree_path, 'user_topology.phy')
+                the_config.processor.dupfile(user_path, topology_path)
             else:
                 log.debug(
                     "didn't find tree at %s, making a new one" % tree_path)
-                topology_path = self.cfg.processor.make_topology(
-                    self.filtered_alignment_path, self.cfg.datatype, self.cfg.cmdline_extras)
+                topology_path = the_config.processor.make_topology(
+                    self.filtered_alignment_path, the_config.datatype, the_config.cmdline_extras)
 
             # Now estimate branch lengths
-            tree_path = self.cfg.processor.make_branch_lengths(
+            tree_path = the_config.processor.make_branch_lengths(
                 self.filtered_alignment_path,
                 topology_path,
-                self.cfg.datatype,
-                self.cfg.cmdline_extras)
+                the_config.datatype,
+                the_config.cmdline_extras)
 
         self.tree_path = tree_path
         log.debug("Starting tree with branch lengths is here: %s" %
@@ -181,12 +181,12 @@ class Analysis(object):
 
     def run_task(self, model_name, sub):
         # This bit should run in parallel (forking the processor)
-        self.cfg.processor.analyse(
+        the_config.processor.analyse(
             model_name,
             sub.alignment_path,
             self.tree_path,
-            self.cfg.branchlengths,
-            self.cfg.cmdline_extras
+            the_config.branchlengths,
+            the_config.cmdline_extras
         )
 
         # Not entirely sure that WE NEED to block here, but it is safer to do
@@ -194,13 +194,13 @@ class Analysis(object):
         self.lock.acquire()
         try:
             if sub.analysis_error is None:
-                sub.parse_model_result(self.cfg, model_name)
+                sub.parse_model_result(the_config, model_name)
 
             else:
-                sub.fabricate_result(self.cfg, model_name)
+                sub.fabricate_result(the_config, model_name)
 
             # Try finalising, then the result will get written out earlier...
-            sub.finalise(self.cfg)
+            sub.finalise(the_config)
         finally:
             self.lock.release()
 
@@ -232,7 +232,7 @@ class Analysis(object):
             elif sub.is_prepared:
                 self.add_tasks_for_sub(tasks, sub)
             else:
-                sub.prepare(self.cfg, self.alignment)
+                sub.prepare(the_config, self.alignment)
                 self.add_tasks_for_sub(tasks, sub)
 
         if tasks:
@@ -246,14 +246,14 @@ class Analysis(object):
         for sub in subsets:
             # ALL subsets should already be finalised in the task. We just
             # check again here
-            if not sub.finalise(self.cfg):
+            if not sub.finalise(the_config):
                 log.error("Failed to run models %s; not sure why" %
                           ", " "".join(list(sub.models_to_do)))
                 raise AnalysisError
 
     def analyse_scheme(self, sch):
         # Progress
-        self.cfg.progress.next_scheme()
+        the_config.progress.next_scheme()
 
         # analyse the subsets in the scheme that aren't done
         # NB for most schemes we will have all subsets done, so this saves time
@@ -266,7 +266,7 @@ class Analysis(object):
 
         # AIC needs the number of sequences
         number_of_seq = len(self.alignment.species)
-        result = scheme.SchemeResult(sch, number_of_seq, self.cfg.branchlengths, self.cfg.model_selection)
+        result = scheme.SchemeResult(sch, number_of_seq, the_config.branchlengths, the_config.model_selection)
         self.results.add_scheme_result(sch, result)
 
         return result
