@@ -342,14 +342,6 @@ class Configuration(object):
                       " See the manual for more details.")
             raise ConfigurationError
 
-        if option == "search" and "kmeans" in value and self.phylogeny_program != 'phyml' and self.kmeans_opt != 1:
-            log.error("You have chosen a kmeans option (--kmeans_opt) that does not work "
-                      "with the --raxml option. Please re-run your analysis in one of two ways: "
-                      "\n 1. Remove the --raxml commandline option, so that PhyML is used, or "
-                      "\n 2. Change the --kmeans_opt commandline option to 1 (or remove it) and leave the "
-                      "--raxml option in place.")
-            raise ConfigurationError
-
         log.info("Setting '%s' to '%s'", option, value)
         setattr(self, option, value)
 
