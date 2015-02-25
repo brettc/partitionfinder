@@ -42,7 +42,7 @@ class Configuration(object):
 
     def __init__(self, datatype="DNA", phylogeny_program='phyml',
                  save_phylofiles=False, cmdline_extras="", cluster_weights=None,
-                 cluster_percent=100.0, cluster_max=1000, kmeans_opt=1, quick=False):
+                 cluster_percent=100.0, cluster_max=1000, kmeans='entropy', quick=False):
 
         log.info("------------- Configuring Parameters -------------")
         # Only required if user adds them
@@ -57,7 +57,7 @@ class Configuration(object):
         self.cmdline_extras = cmdline_extras
         self.cluster_percent = float(cluster_percent)
         self.cluster_max = cluster_max
-        self.kmeans_opt = kmeans_opt
+        self.kmeans = kmeans
         self.quick = quick
 
         # Record this
@@ -181,9 +181,10 @@ class Configuration(object):
             log.debug("Setting rcluster-max to %d" % self.cluster_max)
 
     def validate_kmeans(self):
-        if self.kmeans_opt < 1 or self.kmeans_opt > 4:
+        print repr(self.kmeans)
+        if self.kmeans not in ('entropy', 'tiger'):
             log.error(
-                "The --kmeans-opt setting must be 1, 2, 3, or 4. Please check and restart")
+                "The --kmeans setting must be 'entropy' or 'tiger'. Please check and restart")
             raise ConfigurationError
 
     def find_programs(self):

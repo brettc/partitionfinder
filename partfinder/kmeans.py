@@ -24,6 +24,11 @@ import numpy as np
 from sklearn.cluster import KMeans
 from collections import defaultdict
 from util import PhylogenyProgramError
+from alignment import SubsetAlignment
+import util
+import os
+import subprocess
+import shlex
 
 import subset_ops
 
@@ -70,83 +75,99 @@ def kmeans(likelihood_list, number_of_ks, n_jobs):
     # Return centroids and dictionary with lists of sites for each k
     return centroid_list, dict(cluster_dict)
 
+def entropy_calc(p):
+    # Modify p to include only those elements that are not equal to 0
+    p=p[p!=0]
+    # The function returns the entropy result
+    return np.dot(-p,np.log2(p))
+
+def sitewise_entropies(alignment):
+    log.debug("Calculating entropies")
+    acgt = np.array([np.sum(alignment.data==ord("A"), axis=0),
+                     np.sum(alignment.data==ord("C"), axis=0),
+                     np.sum(alignment.data==ord("G"), axis=0),
+                     np.sum(alignment.data==ord("T"), axis=0)], dtype=float)
+
+    acgt = acgt.T
+    totals = np.sum(acgt, axis=1)
+    totals.shape = len(acgt),1
+
+    # for a column of all gaps, we'll have a zero total, so we just hack that here
+    totals = np.where(totals==0, 1, totals)
+
+    prob = acgt/totals
+
+    column_entropy = [[entropy_calc(t)] for t in prob]
+
+    return column_entropy
+
+def rate_parser(rates_name):
+    rates_list = []
+    the_rates = open(rates_name)
+    for rate in the_rates.readlines():
+        rates_list.append([float(rate)])
+    return rates_list
+
+def run_rates(command, report_errors=True):
+    program_name = "fast_TIGER"
+    program_path = util.program_path
+    program_path = os.path.join(program_path, program_name)
+    # command = "\"%s\" %s" % (program_path, command)
+
+    command = "\"%s\" %s" % (program_path, command)
+
+    # Note: We use shlex.split as it does a proper job of handling command
+    # lines that are complex
+    p = subprocess.Popen(
+        shlex.split(command),
+        shell=False,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE)
+
+    # Capture the output, we might put it into the errors
+    stdout, stderr = p.communicate()
+    # p.terminate()
+
+    if p.returncode != 0:
+        if report_errors == True:
+            log.error("fast_TIGER did not execute successfully")
+            log.error("fast_TIGER output follows, in case it's helpful for finding the problem")
+            log.error("%s", stdout)
+            log.error("%s", stderr)
+        raise PhylogenyProgramError(stdout, stderr)
+
+def sitewise_tiger_rates(cfg, phylip_file):
+    if cfg.datatype == 'DNA':
+        command = " dna " + phylip_file
+    elif cfg.datatype == 'morphology':
+        command = " morphology " + phylip_file
+    run_rates(command, report_errors=False)
+    rates_name = ("%s_r8s.txt" % phylip_file)
+    return rate_parser(rates_name)
+
+def get_per_site_stats(alignment, cfg, a_subset):
+    if cfg.kmeans == 'entropy':
+        sub_align = SubsetAlignment(alignment, a_subset)
+        return sitewise_entropies(sub_align)
+    elif cfg.kmeans == 'tiger':
+        a_subset.make_alignment(cfg, alignment)
+        phylip_file = a_subset.alignment_path
+        return sitewise_tiger_rates(cfg, str(phylip_file))
 
 def kmeans_split_subset(cfg, alignment, a_subset, tree_path,
                         n_jobs, number_of_ks=2):
     """Takes a subset and number of k's and returns
     subsets for however many k's are specified
     """
-    a_subset.make_alignment(cfg, alignment)
-    phylip_file = a_subset.alignment_path
-
-    # Add option to output likelihoods, *raxml version takes more
-    # modfying of the commands in the analyse function
-    log.debug("Received subset, now gathering likelihoods")
-    processor = cfg.processor
-
-    # This is where we catch and deal with errors from PhyML/RAxML
-    # we only catch very specific errors.
-    try:
-        processor.gen_per_site_stats(cfg, str(phylip_file),
-            str(tree_path))
-    except PhylogenyProgramError as e:
-        error1 = "that consist entirely of undetermined values"
-        if e.stdout.find(error1) != -1:
-            log.warning("The program was unable to calculate site" +
-                " likelihoods because of undetermined values for one or" +
-                " more taxon, we will move to the next subset")
-            a_subset.fabricated = True
-            a_subset.analysis_error = "entirely undetermined values"
-            return 1
-        elif e.stdout.find("base frequency for state number") != 1:
-            log.warning("The program was unable to calculate site" +
-                " likelihoods because the frequency for one of the" +
-                " nucleotides is equal to zero")
-            a_subset.fabricated = True
-            a_subset.analysis_error = "state frequency equal to zero"
-            return 1
-        elif e.stdout.find("Round_Optimize") != 1:
-            log.warning("The program couldn't analyse this subset" +
-                " because the optimisation failed")
-            a_subset.fabricated = True
-            a_subset.analysis_error = "Optimisation failed"
-            return 1
-
-        else:
-            raise PhylogenyProgramError
-
-    # Call processor to parse them likelihoods from the output file. NB these
-    # can be site rates as well as likelihoods 
-    per_site_statistics = processor.get_per_site_stats(phylip_file, cfg)
+    # Get either entropies or TIGER rates
+    per_site_stat_list = get_per_site_stats(alignment, cfg, a_subset)
 
     # Now store all of the per_site_stats with the subset
-    a_subset.add_per_site_statistics(per_site_statistics)
-
-    # Now figure out which list the user wants and use that for the kmeans
-    # splitting
-    if cfg.kmeans_opt == 1:
-        # Set the per_site_stat_list to site likelihoods only
-        per_site_stat_list = per_site_statistics[0]
-    if cfg.kmeans_opt == 2:
-        # Set the per_site_stat_list to site rates only
-        per_site_stat_list = per_site_statistics[2]
-    if cfg.kmeans_opt == 3:
-        # Set the per_site_stat_list to site rates and likelihoods together
-        per_site_stat_list = per_site_statistics[3]
-    if cfg.kmeans_opt == 4:
-        # Set the per_site_stat_list to likelihoods under each gamma rate
-        # category
-        per_site_stat_list = per_site_statistics[1]
+    a_subset.add_per_site_statistics(per_site_stat_list)
 
     log.debug("Site info list for subset %s is %s" % (a_subset.name, per_site_stat_list))
 
-    # We use this variable in the case that, as a result of the split with
-    # kmeans, the subset becomes unanalysable. In that instance, these will be
-    # transferred to the new subset and the sum taken as a proxy for the
-    # overal lnl
-    a_subset.site_lnls_GTRG = per_site_statistics[0]
-
-    # Perform kmeans clustering on the likelihoods
+    # Perform kmeans clustering on the per site stats
     kmeans_results = kmeans(per_site_stat_list, number_of_ks, n_jobs)
     centroids = kmeans_results[0]
     split_categories = kmeans_results[1]
@@ -154,6 +175,7 @@ def kmeans_split_subset(cfg, alignment, a_subset, tree_path,
     list_of_sites = []
     for k in range(len(split_categories)):
         list_of_sites.append(split_categories[k])
+
 
     log.debug("Creating new subsets from k-means split")
     # Make the new subsets
