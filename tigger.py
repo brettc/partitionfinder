@@ -12,7 +12,7 @@ if __name__ == "__main__":
     tigger = TigerDNA()
     tigger.from_alignment(a)
     rates = tigger.calc_rates()
-    output_path = str(filepath.with_suffix('.tigger8'))
+    output_path = str(filepath.with_suffix('.tigger8.txt'))
     numpy.savetxt(output_path, rates, fmt="%5f", delimiter='\n')
 
 
