@@ -288,10 +288,7 @@ class Subset(object):
                 raise
 
     def add_per_site_statistics(self, per_site_stats):
-        self.site_lnls = per_site_stats[0]
-        self.site_rates = per_site_stats[2]
-        self.lnls_rates = per_site_stats[3]
-        self.lnls_rate_cats = per_site_stats[1]
+        self.site_lnls = per_site_stats
 
     def fabricate_result(self, cfg, model):
         '''If the subset fails to be analyzed, we throw some "fabricated"

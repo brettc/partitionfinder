@@ -180,14 +180,11 @@ def parse_args(datatype, cmdargs=None):
              "more, and the alpha parameter the same as the model rate"
     )
     op.add_option(
-        "--kmeans-opt",
-        type="int", dest="kmeans_opt", default=1, metavar="N",
-        help="This defines which version of the kmeans algorithm to use. Different options "
-             "use differt measurements of sites to define which sites are similar. Currently: "
-             "\n--kmeans-opt 1: use site likelihoods only (works with PhyML and RAxML)"
-             "\n--kmeans-opt 2: use site rates only (only works with PhyML)"
-             "\n--kmeans-opt 3: use site likelihoods and site rates (only works with PhyML)"
-             "\n--kmeans-opt 4: use site likelihoods from gamma rate categories (only works with PhyML)"
+        "--kmeans",
+        type="str", dest="kmeans", default='entropy', metavar="N",
+        help="This defines which sitewise values to use: entropy or tiger"
+             "\n--kmeans entropy: use entropies for sitewise values"
+             "\n--kmeans tiger: use TIGER rates for sitewise values"
     )
     op.add_option(
         "--rcluster-percent",
@@ -352,7 +349,7 @@ def main(name, datatype, passed_args=None):
                                    options.cluster_weights,
                                    options.cluster_percent,
                                    options.cluster_max,
-                                   options.kmeans_opt, 
+                                   options.kmeans, 
                                    options.quick)
 
         # Set up the progress callback
