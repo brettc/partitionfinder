@@ -40,9 +40,13 @@ class Configuration(object):
             'kmeans_wss', 'kmeans_greedy']
     }
 
-    def __init__(self, datatype="DNA", phylogeny_program='phyml',
+    def __init__(self):
+        pass
+
+    def init(self, datatype="DNA", phylogeny_program='phyml',
                  save_phylofiles=False, cmdline_extras="", cluster_weights=None,
                  cluster_percent=100.0, cluster_max=1000, kmeans='entropy', quick=False):
+
 
         log.info("------------- Configuring Parameters -------------")
         # Only required if user adds them
@@ -361,3 +365,8 @@ class Configuration(object):
                 self.user_tree_topology_path))
             util.check_file_exists(self.user_tree_topology_path)
 
+the_config = Configuration()
+
+def init(*args, **kwargs):
+    the_config.init(*args, **kwargs)
+    return the_config

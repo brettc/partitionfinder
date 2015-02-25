@@ -28,34 +28,32 @@ import itertools
 import subset_ops
 from scipy import spatial
 from scipy.misc import comb
-import warnings
 import numpy as np
-
-from util import PhylogenyProgramError
+from config import the_config
 
 
 class UserAnalysis(Analysis):
     def do_analysis(self):
         log.info("Performing User analysis")
-        current_schemes = self.cfg.user_schemes
+        current_schemes = the_config.user_schemes
         scheme_count = len(current_schemes)
-        subset_count = len(self.cfg.user_subsets)
+        subset_count = len(the_config.user_subsets)
 
-        self.cfg.progress.begin(scheme_count, subset_count)
+        the_config.progress.begin(scheme_count, subset_count)
         if scheme_count > 0:
             for s in current_schemes:
                 res = self.analyse_scheme(s)
 
                 # Write out the scheme
-                self.cfg.reporter.write_scheme_summary(s, res)
+                the_config.reporter.write_scheme_summary(s, res)
         else:
             log.error(
                 "Search set to 'user', but no user schemes detected in .cfg file. Please check.")
             raise AnalysisError
 
-        self.cfg.progress.end()
+        the_config.progress.end()
 
-        self.cfg.reporter.write_best_scheme(self.results)
+        the_config.reporter.write_best_scheme(self.results)
 
 
 class StrictClusteringAnalysis(Analysis):
@@ -69,15 +67,15 @@ class StrictClusteringAnalysis(Analysis):
     def do_analysis(self):
         log.info("Performing strict clustering analysis")
 
-        partnum = len(self.cfg.user_subsets)
+        partnum = len(the_config.user_subsets)
         subset_count = 2 * partnum - 1
         scheme_count = partnum
-        self.cfg.progress.begin(scheme_count, subset_count)
+        the_config.progress.begin(scheme_count, subset_count)
 
         # Start with the most partitioned scheme
         start_description = range(partnum)
         start_scheme = scheme.create_scheme(
-            self.cfg, "start_scheme", start_description)
+            the_config, "start_scheme", start_description)
 
         # Analyse our first scheme
         log.info("Analysing starting scheme (scheme %s)" % start_scheme.name)
@@ -97,7 +95,7 @@ class StrictClusteringAnalysis(Analysis):
             # Could combine average site-rates, q matrices, and frequencies
             scheme_name = "step_%d" % (cur_s - 1)
             clustered_scheme = neighbour.get_nearest_neighbour_scheme(
-                start_scheme, scheme_name, self.cfg)
+                start_scheme, scheme_name, the_config)
 
             # Now analyse that new scheme
             cur_s += 1
@@ -111,32 +109,32 @@ class StrictClusteringAnalysis(Analysis):
                 # We keep going
                 start_scheme = clustered_scheme
 
-        self.cfg.progress.end()
-        self.cfg.reporter.write_best_scheme(self.results)
+        the_config.progress.end()
+        the_config.reporter.write_best_scheme(self.results)
 
 
 class AllAnalysis(Analysis):
     def do_analysis(self):
         log.info("Performing complete analysis")
-        partnum = len(self.cfg.user_subsets)
+        partnum = len(the_config.user_subsets)
 
         scheme_count = submodels.count_all_schemes(partnum)
         subset_count = submodels.count_all_subsets(partnum)
-        self.cfg.progress.begin(scheme_count, subset_count)
+        the_config.progress.begin(scheme_count, subset_count)
 
         # Iterate over submodels, which we can turn into schemes afterwards in the loop
         model_iterator = submodels.submodel_iterator([], 1, partnum)
 
         scheme_name = 1
         for m in model_iterator:
-            s = scheme.model_to_scheme(m, scheme_name, self.cfg)
+            s = scheme.model_to_scheme(m, scheme_name, the_config)
             scheme_name = scheme_name + 1
             res = self.analyse_scheme(s)
 
             # Write out the scheme
-            self.cfg.reporter.write_scheme_summary(s, res)
+            the_config.reporter.write_scheme_summary(s, res)
 
-        self.cfg.reporter.write_best_scheme(self.results)
+        the_config.reporter.write_best_scheme(self.results)
 
 
 class GreedyAnalysis(Analysis):
@@ -145,21 +143,21 @@ class GreedyAnalysis(Analysis):
     def do_analysis(self):
         '''A greedy algorithm for heuristic partitioning searches'''
 
-        partnum = len(self.cfg.user_subsets)
+        partnum = len(the_config.user_subsets)
         scheme_count = submodels.count_greedy_schemes(partnum)
         subset_count = submodels.count_greedy_subsets(partnum)
 
-        self.cfg.progress.begin(scheme_count, subset_count)
+        the_config.progress.begin(scheme_count, subset_count)
 
         # Start with the most partitioned scheme
         start_description = range(partnum)
         start_scheme = scheme.create_scheme(
-            self.cfg, "start_scheme", start_description)
+            the_config, "start_scheme", start_description)
 
         with logtools.indented(log, "Analysing starting scheme (scheme %s)" %
                           start_scheme.name):
             start_result = self.analyse_scheme(start_scheme)
-            self.cfg.reporter.write_scheme_summary(start_scheme, start_result)
+            the_config.reporter.write_scheme_summary(start_scheme, start_result)
 
         step = 1
 
@@ -199,23 +197,23 @@ class GreedyAnalysis(Analysis):
                     new_sub = subset_ops.merge_subsets(subset_grouping)
                     scheme_name = "%s_%d" % (name_prefix, sch_num)
                     lumped_scheme = neighbour.make_clustered_scheme(
-                        start_scheme, scheme_name, subset_grouping, new_sub, self.cfg)
+                        start_scheme, scheme_name, subset_grouping, new_sub, the_config)
                     sch_num = sch_num + 1
 
                     new_result = self.analyse_scheme(lumped_scheme)
                     log.debug("Difference in %s: %.1f" %
-                            (self.cfg.model_selection,
+                            (the_config.model_selection,
                             (new_result.score - old_best_score)))
 
                 if self.results.best_score != old_best_score:
                     log.info("""Analysed all schemes for this step. The best
                         scheme changed the %s score by %.1f units.""" % (
-                        self.cfg.model_selection,
+                        the_config.model_selection,
                         self.results.best_score - old_best_score
                     ))
 
                     self.results.best_scheme.name = "step_%d" % step
-                    self.cfg.reporter.write_scheme_summary(
+                    the_config.reporter.write_scheme_summary(
                         self.results.best_scheme, self.results.best_result)
 
                     # Now we find out which is the best lumping we know of for
@@ -234,10 +232,10 @@ class GreedyAnalysis(Analysis):
 
         log.info("Greedy algorithm finished after %d steps" % step)
         log.info("Best scoring scheme is scheme %s, with %s score of %.3f"
-                 % (self.results.best_scheme.name, self.cfg.model_selection,
+                 % (self.results.best_scheme.name, the_config.model_selection,
                     self.results.best_score))
 
-        self.cfg.reporter.write_best_scheme(self.results)
+        the_config.reporter.write_best_scheme(self.results)
 
 
 class RelaxedClusteringAnalysis(Analysis):
@@ -254,27 +252,27 @@ class RelaxedClusteringAnalysis(Analysis):
         log.info("Performing relaxed clustering analysis")
 
         # initialisation steps
-        model_selection = self.cfg.model_selection
-        partnum = len(self.cfg.user_subsets)
+        model_selection = the_config.model_selection
+        partnum = len(the_config.user_subsets)
 
         scheme_count = submodels.count_relaxed_clustering_schemes(
-            partnum, self.cfg.cluster_percent, self.cfg.cluster_max)
+            partnum, the_config.cluster_percent, the_config.cluster_max)
         subset_count = submodels.count_relaxed_clustering_subsets(
-            partnum, self.cfg.cluster_percent, self.cfg.cluster_max)
+            partnum, the_config.cluster_percent, the_config.cluster_max)
 
         log.info("PartitionFinder will have to analyse %d subsets to"
                  " complete this analyses" % subset_count)
-        self.cfg.progress.begin(scheme_count, subset_count)
+        the_config.progress.begin(scheme_count, subset_count)
 
         # Start with the most partitioned scheme, and record it.
         log.info("*** Analysing starting scheme ***")
-        self.cfg.progress.begin(scheme_count, partnum)
+        the_config.progress.begin(scheme_count, partnum)
         start_scheme = scheme.create_scheme(
-            self.cfg, "start_scheme", range(partnum))
+            the_config, "start_scheme", range(partnum))
         start_result = self.analyse_scheme(start_scheme)
         start_score = start_result.score
-        if not self.cfg.quick:
-            self.cfg.reporter.write_scheme_summary(
+        if not the_config.quick:
+            the_config.reporter.write_scheme_summary(
                 self.results.best_scheme, self.results.best_result)
 
         subsets = [s for s in start_scheme.subsets]
@@ -288,7 +286,7 @@ class RelaxedClusteringAnalysis(Analysis):
             max_schemes = comb(len(start_scheme.subsets), 2)
             log.info("Measuring the similarity of %d subset pairs" % max_schemes)
             d_matrix = neighbour.get_distance_matrix(subsets, 
-                self.cfg.cluster_weights)
+                the_config.cluster_weights)
 
             if step == 1:
                 # Now initialise a change in info score matrix to inf
@@ -297,13 +295,13 @@ class RelaxedClusteringAnalysis(Analysis):
                 c_matrix = spatial.distance.squareform(c_matrix)
 
             # 1. pick top N subset pairs from distance matrix
-            cutoff = int(math.ceil(max_schemes * (self.cfg.cluster_percent * 0.01)))
+            cutoff = int(math.ceil(max_schemes * (the_config.cluster_percent * 0.01)))
             if cutoff <= 0: cutoff = 1
-            if self.cfg.cluster_max != None and cutoff>self.cfg.cluster_max:
-                cutoff = self.cfg.cluster_max
+            if the_config.cluster_max != None and cutoff>the_config.cluster_max:
+                cutoff = the_config.cluster_max
             log.debug("Choosing the %d most similar subset pairs" % cutoff)
             closest_pairs = neighbour.get_N_closest_subsets(
-                subsets, self.cfg, cutoff, d_matrix)
+                subsets, the_config, cutoff, d_matrix)
 
             # 2. analyse K subsets in top N that have not yet been analysed
             pairs_todo = neighbour.get_pairs_todo(closest_pairs, c_matrix, subsets)
@@ -315,7 +313,7 @@ class RelaxedClusteringAnalysis(Analysis):
                 new_subs.append(new_sub)
                 sub_tuples.append((new_sub, pair))
 
-            self.cfg.progress.begin(scheme_count, len(new_subs))
+            the_config.progress.begin(scheme_count, len(new_subs))
             self.analyse_list_of_subsets(new_subs)
 
             # 3. for all K new subsets, update improvement matrix and find best pair
@@ -326,7 +324,7 @@ class RelaxedClusteringAnalysis(Analysis):
                 pair_merged = t[0]
                 pair = t[1]
                 new_scheme = neighbour.make_clustered_scheme(
-                        start_scheme, scheme_name, pair, pair_merged, self.cfg)
+                        start_scheme, scheme_name, pair, pair_merged, the_config)
                 r = self.analyse_scheme(new_scheme)
                 diff = r.score - start_score
                 diffs.append(diff)
@@ -340,7 +338,7 @@ class RelaxedClusteringAnalysis(Analysis):
 
             best_merged = subset_ops.merge_subsets(best_pair)
             best_scheme = neighbour.make_clustered_scheme(
-                start_scheme, scheme_name, best_pair, best_merged, self.cfg)                
+                start_scheme, scheme_name, best_pair, best_merged, the_config)                
             best_result = self.analyse_scheme(best_scheme)
 
             # the best change can get updated a fraction at this point
@@ -351,14 +349,14 @@ class RelaxedClusteringAnalysis(Analysis):
                 break
 
             log.info("The best scheme improves the %s score by %.2f to %.1f",
-                self.cfg.model_selection, 
+                the_config.model_selection, 
                 np.abs(best_change),
                 self.results.best_score)
             start_scheme = best_scheme
             start_score = best_result.score
 
-            if not self.cfg.quick:
-                self.cfg.reporter.write_scheme_summary(
+            if not the_config.quick:
+                the_config.reporter.write_scheme_summary(
                     best_scheme, best_result)
 
             # 5. reset_c_matrix and the subset list
@@ -377,7 +375,7 @@ class RelaxedClusteringAnalysis(Analysis):
 
 
 
-        self.cfg.reporter.write_best_scheme(self.results)
+        the_config.reporter.write_best_scheme(self.results)
 
 
 class KmeansAnalysis(Analysis):
@@ -389,7 +387,7 @@ class KmeansAnalysis(Analysis):
                 split_subs[sub] = [sub]
             else:
                 split = kmeans.kmeans_split_subset(
-                    self.cfg, self.alignment, sub, tree_path, n_jobs=self.threads)
+                    the_config, self.alignment, sub, tree_path, n_jobs=self.threads)
 
                 if split == 1:  # we couldn't analyse the big subset
                     split_subs[sub] = [sub]  # so we keep it whole
@@ -430,9 +428,9 @@ class KmeansAnalysis(Analysis):
 
                 start_scheme = neighbour.make_clustered_scheme(
                     start_scheme, scheme_name, [s, closest_sub], merged_sub,
-                    self.cfg)
+                    the_config)
                 start_result = self.analyse_scheme(start_scheme)
-                self.cfg.reporter.write_scheme_summary(start_scheme,
+                the_config.reporter.write_scheme_summary(start_scheme,
                                                        start_result)
 
                 fabricated_subsets = start_scheme.get_fabricated_subsets()
@@ -447,12 +445,12 @@ class KmeansAnalysis(Analysis):
             else:  # compare split to un-split
                 split_subsets = split_subs[sub]
                 split_scheme = neighbour.make_split_scheme(
-                    start_scheme, name_prefix, sub, split_subsets, self.cfg)
+                    start_scheme, name_prefix, sub, split_subsets, the_config)
 
                 new_result = self.analyse_scheme(split_scheme)
                 score_diff = new_result.score - start_result.score
                 log.info("Difference in %s: %.1f" %
-                         (self.cfg.model_selection.upper(),
+                         (the_config.model_selection.upper(),
                           score_diff))
                 if score_diff < 0:
                     new_scheme_subs = new_scheme_subs + split_subsets
@@ -471,25 +469,25 @@ class KmeansAnalysis(Analysis):
         log.info("** Kmeans algorithm finished after %d steps **" % (step))
         log.info("Best scoring scheme has %d subsets and a %s score of %.3f"
                  % (
-        len(self.results.best_scheme.subsets), self.cfg.model_selection,
+        len(self.results.best_scheme.subsets), the_config.model_selection,
         self.results.best_score))
-        self.cfg.reporter.write_best_scheme(self.results)
+        the_config.reporter.write_best_scheme(self.results)
 
     def setup(self):
-        partnum = len(self.cfg.user_subsets)
-        self.cfg.progress.begin(1, 1)
+        partnum = len(the_config.user_subsets)
+        the_config.progress.begin(1, 1)
 
         # Start with the most partitioned scheme
         start_description = range(partnum)
         start_scheme = scheme.create_scheme(
-            self.cfg, "start_scheme", start_description)
+            the_config, "start_scheme", start_description)
 
         log.info("Analysing starting scheme (scheme %s)" % start_scheme.name)
         start_result = self.analyse_scheme(start_scheme)
 
-        self.cfg.reporter.write_scheme_summary(start_scheme, start_result)
+        the_config.reporter.write_scheme_summary(start_scheme, start_result)
 
-        tree_path = self.cfg.processor.make_tree_path(
+        tree_path = the_config.processor.make_tree_path(
             self.filtered_alignment_path)
 
         return start_result, start_scheme, tree_path
@@ -518,14 +516,14 @@ class KmeansAnalysis(Analysis):
 
             n_splits = len(new_scheme_subs) - len(start_scheme.subsets)
             old_best_score = start_result.score
-            start_scheme = scheme.Scheme(self.cfg, name_prefix, new_scheme_subs)
+            start_scheme = scheme.Scheme(the_config, name_prefix, new_scheme_subs)
             start_result = self.analyse_scheme(start_scheme)
 
             log.info("""Analysed all subsets. Found %d subsets which can be
                      split. New scheme changes the %s score by %.1f units.""" % 
                      (
                          n_splits,
-                         self.cfg.model_selection,
+                         the_config.model_selection,
                          self.results.best_score - old_best_score
                      ))
             done = False
@@ -549,7 +547,7 @@ class KmeansAnalysis(Analysis):
             if done:
                 break
 
-            self.cfg.reporter.write_scheme_summary(start_scheme, start_result)
+            the_config.reporter.write_scheme_summary(start_scheme, start_result)
 
         # Ok, we're done. we just need deal with fabricated subsets
         start_result, start_scheme = self.finalise_fabrication(
