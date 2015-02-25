@@ -101,3 +101,18 @@ if __name__ == '__main__':
 
 	for i in column_entropy:
 		print i
+
+	# entropy tests all should be TRUE 
+	dist1=np.array([0.25,0.25,0.25,0.25])
+	dist2=np.array([0.125,0.125,0.25,0.5])
+	dist3=np.array([0,0,0.5,0.5])
+	dist4=np.array([0,0,0,1])
+	dist5=np.array([0,0,0,0])
+
+	print entropy_calc(dist1) == 2.0
+	print entropy_calc(dist2) == 1.75
+	print entropy_calc(dist3) == 1.0
+	print entropy_calc(dist4) == 0.0
+	print entropy_calc(dist5) == 0.0 # all gaps is the same as all one state
+
+
