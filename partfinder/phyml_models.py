@@ -17,11 +17,11 @@
 # conditions as well.
 
 import logtools
+from util import memoize
+from config import the_config
+from model_utils import get_num_params
 log = logtools.get_logger()
 
-from util import memoize
-
-# TODO need some error checking!
 
 # Number of free parameters in substitution model, listed as "model +
 # base_frequencies" and the model string for PhyML as the second of the tuple.
@@ -146,28 +146,6 @@ def get_protein_models():
     return model_list
 
 
-@memoize
-def get_num_params(modelstring):
-    """
-    Input a model string like HKY+I+G or LG+G+F, and get the number of
-    parameters
-    """
-    elements = modelstring.split("+")
-    model_name = elements[0]
-    if model_name in _base_models.keys():
-        model_params = _base_models[model_name][0]
-    else:
-        model_params = _base_protein_models[model_name][0]
-        if "F" in elements[1:]:
-            # the -1 here is to account for the fact we add 1 for the + in '+F'
-            # below
-            model_params = model_params + 19 - 1
-
-    extras = modelstring.count("+")
-    total = model_params + extras
-    log.debug("Model: %s Params: %d" % (modelstring, total))
-
-    return total
 
 
 @memoize
@@ -180,6 +158,7 @@ def get_model_difficulty(modelstring):
     to rank models for ordering the analysis. The return is a 'difficulty'
     score that can be used to rank models
     """
+
     elements = modelstring.split("+")
 
     model_params = get_num_params(modelstring)
@@ -203,34 +182,8 @@ def get_model_commandline(modelstring):
     Input a model string, and get the PhyML command line
     """
 
-    # This is always the same - optimise brlens and model, not tree
-    commandline = ["-o lr "]
-
-    elements = modelstring.split("+")
-    model_name = elements[0]
-
-    # Everything but the first element
-    extras = elements[1:]
-
-    if model_name in _base_models.keys():  # DNA models
-        commandline.append(_base_models[model_name][1])
-    else:  # protein models
-        commandline.append(_base_protein_models[model_name][1])
-        if "F" in extras:
-            commandline.append("-f e")  # emprical AA frequencies (+19 params)
-        else:
-            commandline.append(
-                "-f m")  # AA frequences from the model (+0 params)
-
-    if "I" in extras:
-        commandline.append("-v e")
-    if "G" in extras:
-        commandline.append("-a e")
-        commandline.append("-c 4")
-    else:
-        commandline.append("-c 1")
-
-    return " ".join(commandline)
+    commandline = the_config.available_models.query("name=='%s'" % modelstring).phyml_commandline.values[0]
+    return commandline
 
 if __name__ == "__main__":
     pass
