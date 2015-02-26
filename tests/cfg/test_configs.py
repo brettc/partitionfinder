@@ -25,13 +25,13 @@ def pytest_generate_tests(metafunc):
 
 def do_success(ftype, fname):
     pth = os.path.join(HERE, fname)
-    c = config.Configuration(datatype=ftype)
+    c = config.init(datatype=ftype)
     c.load(pth)
 
 
 def do_failure(ftype, fname):
     pth = os.path.join(HERE, fname)
-    c = config.Configuration(datatype=ftype)
+    c = config.init(datatype=ftype)
     with pytest.raises(util.PartitionFinderError):
         c.load(pth)
 

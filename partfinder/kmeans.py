@@ -29,6 +29,7 @@ import util
 import os
 import subprocess
 import shlex
+from config import the_config
 
 import subset_ops
 
@@ -82,20 +83,26 @@ def entropy_calc(p):
     return np.dot(-p,np.log2(p))
 
 def sitewise_entropies(alignment):
-    log.debug("Calculating entropies")
-    acgt = np.array([np.sum(alignment.data==ord("A"), axis=0),
-                     np.sum(alignment.data==ord("C"), axis=0),
-                     np.sum(alignment.data==ord("G"), axis=0),
-                     np.sum(alignment.data==ord("T"), axis=0)], dtype=float)
+    if the_config.datatype == 'DNA':
+        log.debug("Calculating DNA entropies")
+        dna_states = "ACGT"
+        dna_list = [np.sum(alignment.data == ord(nuc), axis = 0) for nuc in list(dna_states)]
+        states = np.array(dna_list, dtype=float)
 
-    acgt = acgt.T
-    totals = np.sum(acgt, axis=1)
-    totals.shape = len(acgt),1
+    elif the_config.datatype == 'protein':
+        log.debug("Calculating protein entropies")
+        aa_states = "ARNDCQEGHILKMFPSTWYV"
+        amino_list = [np.sum(alignment.data == ord(aa), axis = 0) for aa in list(aa_states)]
+        states = np.array(amino_list, dtype = float)
+
+    states = states.T
+    totals = np.sum(states, axis=1)
+    totals.shape = len(states),1
 
     # for a column of all gaps, we'll have a zero total, so we just hack that here
     totals = np.where(totals==0, 1, totals)
 
-    prob = acgt/totals
+    prob = states/totals
 
     column_entropy = [[entropy_calc(t)] for t in prob]
 

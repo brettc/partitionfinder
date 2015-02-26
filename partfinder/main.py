@@ -342,7 +342,7 @@ def main(name, datatype, passed_args=None):
     # Load, using the first argument as the folder
     try:
         # TODO: just pass the options in!
-        cfg = config.Configuration(datatype,
+        config.the_config.init(datatype,
                                    options.phylogeny_program,
                                    options.save_phylofiles,
                                    options.cmdline_extras,
@@ -351,6 +351,7 @@ def main(name, datatype, passed_args=None):
                                    options.cluster_max,
                                    options.kmeans, 
                                    options.quick)
+        cfg = config.the_config
 
         # Set up the progress callback
         progress.TextProgress(cfg)

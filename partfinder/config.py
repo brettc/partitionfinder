@@ -36,13 +36,16 @@ class Configuration(object):
     options = {
         'branchlengths': ['linked', 'unlinked'],
         'model_selection': ['aic', 'aicc', 'bic'],
-        'search': ['all', 'user', 'greedy', 'hcluster', 'rcluster', 'kmeans',
-            'kmeans_wss', 'kmeans_greedy']
+        'search': ['all', 'user', 'greedy', 'hcluster', 'rcluster', 'kmeans']
     }
 
-    def __init__(self, datatype="DNA", phylogeny_program='phyml',
+    def __init__(self):
+        pass
+
+    def init(self, datatype="DNA", phylogeny_program='phyml',
                  save_phylofiles=False, cmdline_extras="", cluster_weights=None,
                  cluster_percent=100.0, cluster_max=1000, kmeans='entropy', quick=False):
+
 
         log.info("------------- Configuring Parameters -------------")
         # Only required if user adds them
@@ -181,7 +184,6 @@ class Configuration(object):
             log.debug("Setting rcluster-max to %d" % self.cluster_max)
 
     def validate_kmeans(self):
-        print repr(self.kmeans)
         if self.kmeans not in ('entropy', 'tiger'):
             log.error(
                 "The --kmeans setting must be 'entropy' or 'tiger'. Please check and restart")
@@ -361,3 +363,8 @@ class Configuration(object):
                 self.user_tree_topology_path))
             util.check_file_exists(self.user_tree_topology_path)
 
+the_config = Configuration()
+
+def init(*args, **kwargs):
+    the_config.init(*args, **kwargs)
+    return the_config

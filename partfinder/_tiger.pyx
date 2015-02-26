@@ -1,7 +1,7 @@
 # distutils: include_dirs = NUMPY_PATH
 # cython: wraparound=False
 # cython: cdivision=True
-# xxxxcython: boundscheck=False
+# cython: boundscheck=False
 #
 # from _utility cimport dynamic_bitset
 cimport numpy as np
@@ -17,13 +17,70 @@ cdef class TigerBase:
     def __cinit__(self):
         pass
 
+    def calc_rates(self):
+        if self.species_count == 0 or self.column_count == 0:
+            return None
+
+        rates = numpy.zeros(self.column_count, dtype='f8')
+        cdef: 
+            size_t i, j, i_b, j_b
+            double rate, axpi, num, denom
+            c_Bitset *i_bitset
+            c_Bitset *j_bitset
+            np.npy_double[:] c_rates = rates
+
+        denom = <double>self.column_count - 1.0
+        for i in range(self.column_count):
+            rate = 0.0
+            for j in range(self.column_count):
+                # Don't compare to self
+                if i == j:
+                    continue
+
+                num = 0.0
+                axpi = 0.0
+                for j_b in range(4):
+                    j_bitset = &self._bitsets[j][j_b]
+                    if j_bitset.none():
+                        continue
+                    num += 1.0
+                    for i_b in range(4):
+                        i_bitset = &self._bitsets[i][i_b]
+                        if i_bitset.none():
+                            continue
+                        if j_bitset.is_subset_of(deref(i_bitset)):
+                            axpi += 1.0
+                            break
+
+                rate += axpi / num
+
+            rate /= denom
+            c_rates[i] = rate
+
+        return rates
+
+    def bitsets_as_array(self):
+        if self.species_count == 0 or self.column_count == 0:
+            return None
+
+        ret = numpy.zeros((self.column_count, 4, self.species_count), dtype='u1')
+        cdef: 
+            np.npy_uint8[:, :, :] c_ret = ret
+            size_t i, j, k
+
+        for i in range(self.column_count):
+            for j in range(4):
+                for k in range(self.species_count):
+                    if self._bitsets[i][j].test(k):
+                        c_ret[i, j, k] = 1
+        return ret
 
 cdef class TigerDNA(TigerBase):
     def __cinit__(self): 
         self.species_count = 0
         self.column_count = 0
 
-    def from_alignment(self, alignment):
+    def build_bitsets(self, alignment):
         cdef:
             size_t i, j, k, sp_count, col_count
             np.npy_uint8[:, :] data = alignment.data
@@ -65,126 +122,4 @@ cdef class TigerDNA(TigerBase):
                     G_bits.set(j)
                     T_bits.set(j)
 
-
-    def calc_rates(self):
-        if self.species_count == 0 or self.column_count == 0:
-            return None
-
-        cdef: 
-            size_t i, j, i_b, j_b
-            double rate, axpi, num, denom
-            c_Bitset *i_bitset
-            c_Bitset *j_bitset
-            vector[double] rates
-
-        denom = <double>self.column_count - 1.0
-        for i in range(self.column_count):
-            rate = 0.0
-            for j in range(self.column_count):
-                # Don't compare to self
-                if i == j:
-                    continue
-
-                num = 0.0
-                axpi = 0.0
-                for j_b in range(4):
-                    j_bitset = &self._bitsets[j][j_b]
-                    if j_bitset.none():
-                        continue
-                    num += 1.0
-                    for i_b in range(4):
-                        i_bitset = &self._bitsets[i][i_b]
-                        if i_bitset.none():
-                            continue
-                        if j_bitset.is_subset_of(deref(i_bitset)):
-                            axpi += 1.0
-                            break
-
-                rate += axpi / num
-
-            rate /= denom
-            rates.push_back(rate)
-
-        return rates
-
-
-    def bitsets_as_array(self):
-        if self.species_count == 0 or self.column_count == 0:
-            return None
-
-        ret = numpy.zeros((self.column_count, 4, self.species_count), dtype='u1')
-        cdef: 
-            np.npy_uint8[:, :, :] c_ret = ret
-            size_t i, j, k
-
-        for i in range(self.column_count):
-            for j in range(4):
-                for k in range(self.species_count):
-                    if self._bitsets[i][j].test(k):
-                        c_ret[i, j, k] = 1
-        return ret
-
-
-
-# cdef class Bitset:
-#     def __cinit__(self, size_t size):
-#         self._this.resize(size)
-#
-#     def test(self, size_t i):
-#         return self._this.test(i)
-#
-#     def __getitem__(self, size_t i):
-#         return self._this.test(i)
-#
-#     property size:
-#         def __get__(self):
-#             return self._this.size()
-#
-#     def as_array(self):
-#         vals = numpy.zeros(self.size, dtype='u1')
-#         cdef: 
-#             np.npy_uint8[:] v = vals
-#             size_t i
-#
-#         for i in range(self._this.size()):
-#             v[i] = self._this.test(i)
-#         return vals
-#
-#     def set(self, size_t i):
-#         self._this.set(i)
-#
-#     def reset(self, size_t i):
-#         self._this.reset(i)
-#
-#     def flip(self, size_t i):
-#         self._this.flip(i)
-#
-#     def __setitem__(self, size_t i, bint b):
-#         if b:
-#             self._this.set(i)
-#         else:
-#             self._this.reset(i)
-#
-#     def empty(self):
-#         return self._this.empty()
-#
-#     def is_subset_of(self, Bitset other):
-#         return self._this.is_subset_of(other._this)
-
-    # def __cmp__(self, ChannelStateFrozen other):
-    #     return bitset_cmp(self._this, other._this)
-
-    # def __repr__(self):
-    #     return "<ChannelsRO: {}>".format(self.__str__())
-
-    # def __copy__(self):
-    #     other = ChannelState()
-    #     other.init(self.world, self._this)
-    #     return other
-    #
-    # def copy(self):
-    #     return self.__copy__()
-
-    # def merge(self, ChannelStateFrozen other):
-    #     self._this |= other._this
 
