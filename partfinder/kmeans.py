@@ -30,6 +30,7 @@ import os
 import subprocess
 import shlex
 from config import the_config
+import entropy
 
 import subset_ops
 
@@ -75,39 +76,6 @@ def kmeans(likelihood_list, number_of_ks, n_jobs):
 
     # Return centroids and dictionary with lists of sites for each k
     return centroid_list, dict(cluster_dict)
-
-def entropy_calc(p):
-    # Modify p to include only those elements that are not equal to 0
-    p=p[p!=0]
-    # The function returns the entropy result
-    return np.dot(-p,np.log2(p))
-
-def sitewise_entropies(alignment):
-    if the_config.datatype == 'DNA' or the_config.datatype == 'protein':
-        if the_config.datatype == 'DNA':
-            log.debug("Calculating DNA entropies")
-            dna_states = "ACGT"
-            dna_list = [np.sum(alignment.data == ord(nuc), axis = 0) for nuc in list(dna_states)]
-            states = np.array(dna_list, dtype=float)
-
-        elif the_config.datatype == 'protein':
-            log.debug("Calculating protein entropies")
-            aa_states = "ARNDCQEGHILKMFPSTWYV"
-            amino_list = [np.sum(alignment.data == ord(aa), axis = 0) for aa in list(aa_states)]
-            states = np.array(amino_list, dtype = float)
-
-        states = states.T
-        totals = np.sum(states, axis=1)
-        totals.shape = len(states),1
-
-        # for a column of all gaps, we'll have a zero total, so we just hack that here
-        totals = np.where(totals==0, 1, totals)
-
-        prob = states/totals
-
-        column_entropy = [[entropy_calc(t)] for t in prob]
-
-        return column_entropy
 
 def rate_parser(rates_name):
     rates_list = []
@@ -157,7 +125,7 @@ def sitewise_tiger_rates(cfg, phylip_file):
 def get_per_site_stats(alignment, cfg, a_subset):
     if cfg.kmeans == 'entropy':
         sub_align = SubsetAlignment(alignment, a_subset)
-        return sitewise_entropies(sub_align)
+        return entropy.sitewise_entropies(sub_align)
     elif cfg.kmeans == 'tiger':
         a_subset.make_alignment(cfg, alignment)
         phylip_file = a_subset.alignment_path
