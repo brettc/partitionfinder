@@ -26,6 +26,7 @@ import subset
 import parser
 import util
 import progress
+import model_loader as mo
 
 class ConfigurationError(util.PartitionFinderError):
     pass
@@ -103,6 +104,8 @@ class Configuration(object):
         self.validate_cluster_weights(cluster_weights)
         self.validate_cluster()
         self.validate_kmeans()
+
+
 
     def set_default_options(self):
 
@@ -299,6 +302,7 @@ class Configuration(object):
         self.config_path = config_path
         p = parser.Parser(self)
         p.parse_file(config_path)
+
         log.info(
             "------------------------ BEGINNING NEW RUN -------------------------------")
 
