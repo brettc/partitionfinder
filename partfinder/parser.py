@@ -29,9 +29,8 @@ from pyparsing import (
 import scheme
 import subset
 import subset_ops
-import phyml_models
-import raxml_models
 import config
+import model_loader as mo
 from util import PartitionFinderError
 
 
@@ -90,22 +89,15 @@ class Parser(object):
 
         branch_def = simple_option('branchlengths')
 
-        MODEL_NAME = Word(alphas + nums + '+')
+        MODEL_NAME = Word(alphas + nums + '+' + ' ')
         model_list = delimitedList(MODEL_NAME)
-        model_def = Keyword("models") + EQUALS + Group((
-            CaselessKeyword("all") |
-            CaselessKeyword("mrbayes") |
-            CaselessKeyword("raxml") |
-            CaselessKeyword("beast") |
-            CaselessKeyword("all_protein") |
-            CaselessKeyword("all_protein_gamma") |
-            CaselessKeyword("all_protein_gammaI"))("predefined") |
-            Group(model_list)("userlist")) + SEMICOLON
+        model_def = 'models' + EQUALS + model_list + SEMICOLON
         model_def.setParseAction(self.set_models)
 
         model_selection_def = simple_option("model_selection")
         top_section = alignment_def + Optional(tree_def) + branch_def + \
             model_def + model_selection_def
+
 
         # Data Block Parsing
         column = Word(nums)
@@ -292,112 +284,17 @@ class Parser(object):
             raise PartitionFinderError
 
     def set_models(self, text, loc, tokens):
-        # TODO: Fix this ugly mess.
-        if self.cfg.phylogeny_program == "phyml":
-            self.phylo_models = phyml_models
-        elif self.cfg.phylogeny_program == "raxml":
-            self.phylo_models = raxml_models
-
-        all_dna_mods = set(self.phylo_models.get_all_dna_models())
-        all_protein_mods = set(self.phylo_models.get_all_protein_models())
-        total_mods = all_dna_mods | all_protein_mods
-
-        mods = tokens[1]
-        DNA_mods = 0
-        protein_mods = 0
-        if mods.userlist:
-            modlist = mods.userlist
-            log.info("Setting 'models' to a user-specified list")
-        else:
-            modsgroup = mods.predefined
-            if modsgroup.lower() == "all":
-                modlist = list(all_dna_mods)
-                DNA_mods += 1
-            elif modsgroup.lower() == "mrbayes":
-                modlist = set(phyml_models.get_mrbayes_models())
-                DNA_mods += 1
-            elif modsgroup.lower() == "beast":
-                modlist = set(phyml_models.get_beast_models())
-                DNA_mods += 1
-            elif modsgroup.lower() == "raxml":
-                modlist = set(phyml_models.get_raxml_models())
-                DNA_mods += 1
-            elif modsgroup.lower() == "all_protein":
-                modlist = set(self.phylo_models.get_all_protein_models())
-                protein_mods += 1
-            elif modsgroup.lower() == "all_protein_gamma":
-                if self.cfg.phylogeny_program == "raxml":
-                    modlist = set(raxml_models.get_protein_models_gamma())
-                    protein_mods += 1
-                else:
-                    log.error(
-                        """The models option 'all_protein_gamma' is only
-                        available with raxml  (the --raxml commandline option).
-                        Please check and try again""")
-                    raise ParserError
-            elif modsgroup.lower() == "all_protein_gammaI":
-                if self.cfg.phylogeny_program == "raxml":
-                    modlist = set(raxml_models.get_protein_models_gammaI())
-                    protein_mods += 1
-                else:
-                    log.error(
-                        """The models option 'all_protein_gammaI' is only
-                        available with raxml (the --raxml commandline option).
-                        Please check and try again""")
-                    raise ParserError
-            else:
-                pass
-
-            # never include the LG4X model in predefined model lists
-            # because it can't (yet) be used for partitionined analyses
-            modlist = filter(lambda x: x.count("LG4X")==0, modlist)
 
 
-            log.info("Setting 'models' to '%s'" % modsgroup)
+        mods = tokens[1:]
 
-        self.cfg.models = set()
-        for m in modlist:
-            if m not in total_mods:
-                raise ParserError(
-                    text, loc, "'%s' is not a valid model for phylogeny "
-                               "program %s. Please check the lists of valid models in the"
-                               " manual and try again" % (m, self.cfg.phylogeny_program))
+        log.info("You set 'models' to '%s'" % mods)
 
-            if m in all_dna_mods:
-                DNA_mods += 1
-            if m in all_protein_mods:
-                protein_mods += 1
+        self.cfg.models = list(mods)
 
-            self.cfg.models.add(m)
-
-        log.info("The models included in this analysis are: %s",
-                 ", ".join(self.cfg.models))
+        mo.load_models(self.cfg)
         self.cfg.model_count = len(self.cfg.models)
 
-        # Check data type against the model list that we've got a sensible
-        # model list
-        if DNA_mods > 0 and protein_mods == 0 and self.cfg.datatype == "DNA":
-            log.info("Setting datatype to 'DNA'")
-        elif DNA_mods == 0 and protein_mods > 0 and self.cfg.datatype == "protein":
-            log.info("Setting datatype to 'protein'")
-        elif DNA_mods == 0 and protein_mods > 0 and self.cfg.datatype == "DNA":
-            raise ParserError(
-                text, loc, "The models list contains only models of amino acid change."
-                           " PartitionFinder.py only works with nucleotide models (like the GTR model)."
-                           " If you're analysing an amino acid dataset, please use PartitionFinderProtein,"
-                           " which you can download here: www.robertlanfear.com/partitionfinder."
-                           " The models line in the .cfg file is")
-        elif DNA_mods > 0 and protein_mods == 0 and self.cfg.datatype == "protein":
-            raise ParserError(
-                text, loc, "The models list contains only models of nucleotide change."
-                           " PartitionFinderProtein.py only works with amino acid models (like the WAG model)."
-                           " If you're analysing a nucleotide dataset, please use PartitionFinder.py,"
-                           " which you can download here: www.robertlanfear.com/partitionfinder"
-                           " The models line in the .cfg file is")
-        else:  # we've got a mixture of models.
-            raise ParserError(
-                text, loc, "The models list contains a mixture of protein and nucleotide models."
-                           " If you're analysing a nucleotide dataset, please use PartitionFinder."
-                           " If you're analysing an amino acid dataset, please use PartitionFinderProtein."
-                           " You can download both of these programs from here: www.robertlanfear.com/partitionfinder"
-                           " The models line in the .cfg file is")
+
+
+

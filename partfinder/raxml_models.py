@@ -16,9 +16,11 @@
 # and conditions as well.
 
 import logtools
+import model_loader as mo
+from util import memoize
+from model_utils import get_num_params
 log = logtools.get_logger()
 
-# TODO need some error checking!
 
 # number of free parameters in substitution model, listed as "model+base_frequencies"
 _base_models = {
@@ -42,15 +44,6 @@ _base_protein_models = {
     "LG4X"      :   (5, ""), # it has 6 params, but one gets added automatically later
  }
 
-# All the functions in here return the same thing with the same parameters, 
-# this just caches the return ...
-def memoize(f):
-    cache= {}
-    def memf(*x):
-        if x not in cache:
-            cache[x] = f(*x)
-        return cache[x]
-    return memf
 
 @memoize
 def get_protein_models_gamma():
@@ -116,47 +109,12 @@ def get_model_commandline(modelstring):
     '''
     Input a model string, and get the piece of the raxml command line that defines that model
     '''
-    commandline = '-m '
-    elements = modelstring.split("+")
-    model_name = elements[0]
 
-    # Everything but the first element
-    extras = elements[1:]
-
-    if model_name in _base_models.keys(): #DNA models
-        commandline = ''.join([commandline, "GTRGAMMA"])
-        if "I" in extras:
-            commandline = ''.join([commandline, "I"])
-    else: #protein models, look like this 'PROTGAMMAILGF
-        commandline = ''.join([commandline, "PROTGAMMA"])
-        if "I" in extras:
-            commandline = ''.join([commandline, "I"])
-        commandline = ''.join([commandline, model_name])        
-        if "F" in extras:
-            commandline = ''.join([commandline, "F"])
+    commandline = mo.models.query("name=='%s'" % modelstring).raxml_commandline
 
     return commandline
 
 
-@memoize
-def get_num_params(modelstring):
-    '''
-    Input a model string like HKY+I+G or LG+G+F, and get the number of parameters
-    '''
-    elements = modelstring.split("+")
-    model_name = elements[0]
-    if model_name in _base_models.keys():
-        model_params = _base_models[model_name][0]
-    else:
-        model_params = _base_protein_models[model_name][0]
-        if "F" in elements[1:]:
-            model_params = model_params+19-1 #the -1 here is to account for the fact we add 1 for the + in '+F' below
-    
-    extras = modelstring.count("+") # this accounts for +I and +G
-    total = model_params+extras
-    log.debug("Model: %s Params: %d" %(modelstring, total))
-
-    return total
 
 @memoize
 def get_model_difficulty(modelstring):
