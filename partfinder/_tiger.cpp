@@ -454,7 +454,6 @@ static const char *__pyx_f[] = {
   "partfinder/_tiger.pxd",
   "__init__.pxd",
   "stringsource",
-  "stringsource",
   "type.pxd",
 };
 struct __pyx_memoryview_obj;
@@ -844,8 +843,8 @@ struct __pyx_obj_10partfinder_6_tiger_TigerBase {
 };
 
 
-/* "partfinder/_tiger.pyx":21
- * 
+/* "partfinder/_tiger.pyx":78
+ *         return ret
  * 
  * cdef class TigerDNA(TigerBase):             # <<<<<<<<<<<<<<
  *     def __cinit__(self):
@@ -1049,15 +1048,13 @@ static void __Pyx_RaiseArgtupleInvalid(const char* func_name, int exact,
 
 static CYTHON_INLINE int __Pyx_CheckKeywordStrings(PyObject *kwdict, const char* function_name, int kw_allowed);
 
-static CYTHON_INLINE void __Pyx_RaiseTooManyValuesError(Py_ssize_t expected);
+static CYTHON_INLINE PyObject *__Pyx_GetModuleGlobalName(PyObject *name);
 
-static CYTHON_INLINE void __Pyx_RaiseNeedMoreValuesError(Py_ssize_t index);
-
-static CYTHON_INLINE int __Pyx_IterFinish(void);
-
-static int __Pyx_IternextUnpackEndCheck(PyObject *retval, Py_ssize_t expected);
-
-static void __Pyx_RaiseBufferIndexError(int axis);
+#if CYTHON_COMPILING_IN_CPYTHON
+static CYTHON_INLINE PyObject* __Pyx_PyObject_Call(PyObject *func, PyObject *arg, PyObject *kw);
+#else
+#define __Pyx_PyObject_Call(func, arg, kw) PyObject_Call(func, arg, kw)
+#endif
 
 static CYTHON_INLINE int  __Pyx_GetBufferAndValidate(Py_buffer* buf, PyObject* obj,
     __Pyx_TypeInfo* dtype, int flags, int nd, int cast, __Pyx_BufFmt_StackElem* stack);
@@ -1088,13 +1085,13 @@ static CYTHON_INLINE int __pyx_sub_acquisition_count_locked(
 static CYTHON_INLINE void __Pyx_INC_MEMVIEW(__Pyx_memviewslice *, int, int);
 static CYTHON_INLINE void __Pyx_XDEC_MEMVIEW(__Pyx_memviewslice *, int, int);
 
-static CYTHON_INLINE PyObject *__Pyx_GetModuleGlobalName(PyObject *name);
+static CYTHON_INLINE void __Pyx_RaiseTooManyValuesError(Py_ssize_t expected);
 
-#if CYTHON_COMPILING_IN_CPYTHON
-static CYTHON_INLINE PyObject* __Pyx_PyObject_Call(PyObject *func, PyObject *arg, PyObject *kw);
-#else
-#define __Pyx_PyObject_Call(func, arg, kw) PyObject_Call(func, arg, kw)
-#endif
+static CYTHON_INLINE void __Pyx_RaiseNeedMoreValuesError(Py_ssize_t index);
+
+static CYTHON_INLINE int __Pyx_IterFinish(void);
+
+static int __Pyx_IternextUnpackEndCheck(PyObject *retval, Py_ssize_t expected);
 
 static CYTHON_INLINE void __Pyx_ErrRestore(PyObject *type, PyObject *value, PyObject *tb);
 static CYTHON_INLINE void __Pyx_ErrFetch(PyObject **type, PyObject **value, PyObject **tb);
@@ -1460,9 +1457,11 @@ static int __Pyx_ValidateAndInit_memviewslice(
                 __Pyx_memviewslice *memviewslice,
                 PyObject *original_obj);
 
-static CYTHON_INLINE __Pyx_memviewslice __Pyx_PyObject_to_MemoryviewSlice_dsds_nn_npy_uint8(PyObject *);
+static CYTHON_INLINE __Pyx_memviewslice __Pyx_PyObject_to_MemoryviewSlice_ds_nn_npy_double(PyObject *);
 
 static CYTHON_INLINE __Pyx_memviewslice __Pyx_PyObject_to_MemoryviewSlice_dsdsds_nn_npy_uint8(PyObject *);
+
+static CYTHON_INLINE __Pyx_memviewslice __Pyx_PyObject_to_MemoryviewSlice_dsds_nn_npy_uint8(PyObject *);
 
 static int __Pyx_check_binary_version(void);
 
@@ -1569,7 +1568,7 @@ static void __pyx_memoryview_refcount_objects_in_slice_with_gil(char *, Py_ssize
 static void __pyx_memoryview_refcount_objects_in_slice(char *, Py_ssize_t *, Py_ssize_t *, int, int); /*proto*/
 static void __pyx_memoryview_slice_assign_scalar(__Pyx_memviewslice *, int, size_t, void *, int); /*proto*/
 static void __pyx_memoryview__slice_assign_scalar(char *, Py_ssize_t *, Py_ssize_t *, int, size_t, void *); /*proto*/
-static PyObject *__pyx_convert_vector_to_py_double(const std::vector<double>  &); /*proto*/
+static __Pyx_TypeInfo __Pyx_TypeInfo_nn_npy_double = { "npy_double", NULL, sizeof(npy_double), { 0 }, 0, 'R', 0, 0 };
 static __Pyx_TypeInfo __Pyx_TypeInfo_nn_npy_uint8 = { "npy_uint8", NULL, sizeof(npy_uint8), { 0 }, 0, IS_UNSIGNED(npy_uint8) ? 'U' : 'I', IS_UNSIGNED(npy_uint8), 0 };
 #define __Pyx_MODULE_NAME "partfinder._tiger"
 int __pyx_module_is_main_partfinder___tiger = 0;
@@ -1586,12 +1585,12 @@ static PyObject *__pyx_builtin_xrange;
 static PyObject *__pyx_builtin_id;
 static PyObject *__pyx_builtin_IndexError;
 static int __pyx_pf_10partfinder_6_tiger_9TigerBase___cinit__(CYTHON_UNUSED struct __pyx_obj_10partfinder_6_tiger_TigerBase *__pyx_v_self); /* proto */
+static PyObject *__pyx_pf_10partfinder_6_tiger_9TigerBase_2calc_rates(struct __pyx_obj_10partfinder_6_tiger_TigerBase *__pyx_v_self); /* proto */
+static PyObject *__pyx_pf_10partfinder_6_tiger_9TigerBase_4bitsets_as_array(struct __pyx_obj_10partfinder_6_tiger_TigerBase *__pyx_v_self); /* proto */
 static PyObject *__pyx_pf_10partfinder_6_tiger_9TigerBase_13species_count___get__(struct __pyx_obj_10partfinder_6_tiger_TigerBase *__pyx_v_self); /* proto */
 static PyObject *__pyx_pf_10partfinder_6_tiger_9TigerBase_12column_count___get__(struct __pyx_obj_10partfinder_6_tiger_TigerBase *__pyx_v_self); /* proto */
 static int __pyx_pf_10partfinder_6_tiger_8TigerDNA___cinit__(struct __pyx_obj_10partfinder_6_tiger_TigerDNA *__pyx_v_self); /* proto */
-static PyObject *__pyx_pf_10partfinder_6_tiger_8TigerDNA_2from_alignment(struct __pyx_obj_10partfinder_6_tiger_TigerDNA *__pyx_v_self, PyObject *__pyx_v_alignment); /* proto */
-static PyObject *__pyx_pf_10partfinder_6_tiger_8TigerDNA_4calc_rates(struct __pyx_obj_10partfinder_6_tiger_TigerDNA *__pyx_v_self); /* proto */
-static PyObject *__pyx_pf_10partfinder_6_tiger_8TigerDNA_6bitsets_as_array(struct __pyx_obj_10partfinder_6_tiger_TigerDNA *__pyx_v_self); /* proto */
+static PyObject *__pyx_pf_10partfinder_6_tiger_8TigerDNA_2build_bitsets(struct __pyx_obj_10partfinder_6_tiger_TigerDNA *__pyx_v_self, PyObject *__pyx_v_alignment); /* proto */
 static int __pyx_pf_5numpy_7ndarray___getbuffer__(PyArrayObject *__pyx_v_self, Py_buffer *__pyx_v_info, int __pyx_v_flags); /* proto */
 static void __pyx_pf_5numpy_7ndarray_2__releasebuffer__(PyArrayObject *__pyx_v_self, Py_buffer *__pyx_v_info); /* proto */
 static int __pyx_array_MemoryView_5array___cinit__(struct __pyx_array_obj *__pyx_v_self, PyObject *__pyx_v_shape, Py_ssize_t __pyx_v_itemsize, PyObject *__pyx_v_format, PyObject *__pyx_v_mode, int __pyx_v_allocate_buffer); /* proto */
@@ -1650,6 +1649,7 @@ static char __pyx_k_q[] = "q";
 static char __pyx_k_Zd[] = "Zd";
 static char __pyx_k_Zf[] = "Zf";
 static char __pyx_k_Zg[] = "Zg";
+static char __pyx_k_f8[] = "f8";
 static char __pyx_k_id[] = "id";
 static char __pyx_k_u1[] = "u1";
 static char __pyx_k_obj[] = "obj";
@@ -1761,6 +1761,7 @@ static PyObject *__pyx_n_s_dtype;
 static PyObject *__pyx_n_s_dtype_is_object;
 static PyObject *__pyx_n_s_enumerate;
 static PyObject *__pyx_n_s_error;
+static PyObject *__pyx_n_s_f8;
 static PyObject *__pyx_n_s_flags;
 static PyObject *__pyx_n_s_format;
 static PyObject *__pyx_n_s_fortran;
@@ -1864,6 +1865,634 @@ static int __pyx_pf_10partfinder_6_tiger_9TigerBase___cinit__(CYTHON_UNUSED stru
   return __pyx_r;
 }
 
+/* "partfinder/_tiger.pyx":20
+ *         pass
+ * 
+ *     def calc_rates(self):             # <<<<<<<<<<<<<<
+ *         if self.species_count == 0 or self.column_count == 0:
+ *             return None
+ */
+
+/* Python wrapper */
+static PyObject *__pyx_pw_10partfinder_6_tiger_9TigerBase_3calc_rates(PyObject *__pyx_v_self, CYTHON_UNUSED PyObject *unused); /*proto*/
+static PyObject *__pyx_pw_10partfinder_6_tiger_9TigerBase_3calc_rates(PyObject *__pyx_v_self, CYTHON_UNUSED PyObject *unused) {
+  PyObject *__pyx_r = 0;
+  __Pyx_RefNannyDeclarations
+  __Pyx_RefNannySetupContext("calc_rates (wrapper)", 0);
+  __pyx_r = __pyx_pf_10partfinder_6_tiger_9TigerBase_2calc_rates(((struct __pyx_obj_10partfinder_6_tiger_TigerBase *)__pyx_v_self));
+
+  /* function exit code */
+  __Pyx_RefNannyFinishContext();
+  return __pyx_r;
+}
+
+static PyObject *__pyx_pf_10partfinder_6_tiger_9TigerBase_2calc_rates(struct __pyx_obj_10partfinder_6_tiger_TigerBase *__pyx_v_self) {
+  PyObject *__pyx_v_rates = NULL;
+  size_t __pyx_v_i;
+  size_t __pyx_v_j;
+  size_t __pyx_v_i_b;
+  size_t __pyx_v_j_b;
+  double __pyx_v_rate;
+  double __pyx_v_axpi;
+  double __pyx_v_num;
+  double __pyx_v_denom;
+  __pyx_t_10partfinder_6_tiger_c_Bitset *__pyx_v_i_bitset;
+  __pyx_t_10partfinder_6_tiger_c_Bitset *__pyx_v_j_bitset;
+  __Pyx_memviewslice __pyx_v_c_rates = { 0, 0, { 0 }, { 0 }, { 0 } };
+  PyObject *__pyx_r = NULL;
+  __Pyx_RefNannyDeclarations
+  int __pyx_t_1;
+  int __pyx_t_2;
+  PyObject *__pyx_t_3 = NULL;
+  PyObject *__pyx_t_4 = NULL;
+  PyObject *__pyx_t_5 = NULL;
+  PyObject *__pyx_t_6 = NULL;
+  __Pyx_memviewslice __pyx_t_7 = { 0, 0, { 0 }, { 0 }, { 0 } };
+  size_t __pyx_t_8;
+  size_t __pyx_t_9;
+  size_t __pyx_t_10;
+  size_t __pyx_t_11;
+  size_t __pyx_t_12;
+  size_t __pyx_t_13;
+  int __pyx_lineno = 0;
+  const char *__pyx_filename = NULL;
+  int __pyx_clineno = 0;
+  __Pyx_RefNannySetupContext("calc_rates", 0);
+
+  /* "partfinder/_tiger.pyx":21
+ * 
+ *     def calc_rates(self):
+ *         if self.species_count == 0 or self.column_count == 0:             # <<<<<<<<<<<<<<
+ *             return None
+ * 
+ */
+  __pyx_t_2 = ((__pyx_v_self->species_count == 0) != 0);
+  if (!__pyx_t_2) {
+  } else {
+    __pyx_t_1 = __pyx_t_2;
+    goto __pyx_L4_bool_binop_done;
+  }
+  __pyx_t_2 = ((__pyx_v_self->column_count == 0) != 0);
+  __pyx_t_1 = __pyx_t_2;
+  __pyx_L4_bool_binop_done:;
+  if (__pyx_t_1) {
+
+    /* "partfinder/_tiger.pyx":22
+ *     def calc_rates(self):
+ *         if self.species_count == 0 or self.column_count == 0:
+ *             return None             # <<<<<<<<<<<<<<
+ * 
+ *         rates = numpy.zeros(self.column_count, dtype='f8')
+ */
+    __Pyx_XDECREF(__pyx_r);
+    __Pyx_INCREF(Py_None);
+    __pyx_r = Py_None;
+    goto __pyx_L0;
+  }
+
+  /* "partfinder/_tiger.pyx":24
+ *             return None
+ * 
+ *         rates = numpy.zeros(self.column_count, dtype='f8')             # <<<<<<<<<<<<<<
+ *         cdef:
+ *             size_t i, j, i_b, j_b
+ */
+  __pyx_t_3 = __Pyx_GetModuleGlobalName(__pyx_n_s_numpy); if (unlikely(!__pyx_t_3)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 24; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __Pyx_GOTREF(__pyx_t_3);
+  __pyx_t_4 = __Pyx_PyObject_GetAttrStr(__pyx_t_3, __pyx_n_s_zeros); if (unlikely(!__pyx_t_4)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 24; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __Pyx_GOTREF(__pyx_t_4);
+  __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
+  __pyx_t_3 = __Pyx_PyInt_FromSize_t(__pyx_v_self->column_count); if (unlikely(!__pyx_t_3)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 24; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __Pyx_GOTREF(__pyx_t_3);
+  __pyx_t_5 = PyTuple_New(1); if (unlikely(!__pyx_t_5)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 24; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __Pyx_GOTREF(__pyx_t_5);
+  PyTuple_SET_ITEM(__pyx_t_5, 0, __pyx_t_3);
+  __Pyx_GIVEREF(__pyx_t_3);
+  __pyx_t_3 = 0;
+  __pyx_t_3 = PyDict_New(); if (unlikely(!__pyx_t_3)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 24; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __Pyx_GOTREF(__pyx_t_3);
+  if (PyDict_SetItem(__pyx_t_3, __pyx_n_s_dtype, __pyx_n_s_f8) < 0) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 24; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_6 = __Pyx_PyObject_Call(__pyx_t_4, __pyx_t_5, __pyx_t_3); if (unlikely(!__pyx_t_6)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 24; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __Pyx_GOTREF(__pyx_t_6);
+  __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
+  __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
+  __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
+  __pyx_v_rates = __pyx_t_6;
+  __pyx_t_6 = 0;
+
+  /* "partfinder/_tiger.pyx":30
+ *             c_Bitset *i_bitset
+ *             c_Bitset *j_bitset
+ *             np.npy_double[:] c_rates = rates             # <<<<<<<<<<<<<<
+ * 
+ *         denom = <double>self.column_count - 1.0
+ */
+  __pyx_t_7 = __Pyx_PyObject_to_MemoryviewSlice_ds_nn_npy_double(__pyx_v_rates);
+  if (unlikely(!__pyx_t_7.memview)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 30; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_v_c_rates = __pyx_t_7;
+  __pyx_t_7.memview = NULL;
+  __pyx_t_7.data = NULL;
+
+  /* "partfinder/_tiger.pyx":32
+ *             np.npy_double[:] c_rates = rates
+ * 
+ *         denom = <double>self.column_count - 1.0             # <<<<<<<<<<<<<<
+ *         for i in range(self.column_count):
+ *             rate = 0.0
+ */
+  __pyx_v_denom = (((double)__pyx_v_self->column_count) - 1.0);
+
+  /* "partfinder/_tiger.pyx":33
+ * 
+ *         denom = <double>self.column_count - 1.0
+ *         for i in range(self.column_count):             # <<<<<<<<<<<<<<
+ *             rate = 0.0
+ *             for j in range(self.column_count):
+ */
+  __pyx_t_8 = __pyx_v_self->column_count;
+  for (__pyx_t_9 = 0; __pyx_t_9 < __pyx_t_8; __pyx_t_9+=1) {
+    __pyx_v_i = __pyx_t_9;
+
+    /* "partfinder/_tiger.pyx":34
+ *         denom = <double>self.column_count - 1.0
+ *         for i in range(self.column_count):
+ *             rate = 0.0             # <<<<<<<<<<<<<<
+ *             for j in range(self.column_count):
+ *                 # Don't compare to self
+ */
+    __pyx_v_rate = 0.0;
+
+    /* "partfinder/_tiger.pyx":35
+ *         for i in range(self.column_count):
+ *             rate = 0.0
+ *             for j in range(self.column_count):             # <<<<<<<<<<<<<<
+ *                 # Don't compare to self
+ *                 if i == j:
+ */
+    __pyx_t_10 = __pyx_v_self->column_count;
+    for (__pyx_t_11 = 0; __pyx_t_11 < __pyx_t_10; __pyx_t_11+=1) {
+      __pyx_v_j = __pyx_t_11;
+
+      /* "partfinder/_tiger.pyx":37
+ *             for j in range(self.column_count):
+ *                 # Don't compare to self
+ *                 if i == j:             # <<<<<<<<<<<<<<
+ *                     continue
+ * 
+ */
+      __pyx_t_1 = ((__pyx_v_i == __pyx_v_j) != 0);
+      if (__pyx_t_1) {
+
+        /* "partfinder/_tiger.pyx":38
+ *                 # Don't compare to self
+ *                 if i == j:
+ *                     continue             # <<<<<<<<<<<<<<
+ * 
+ *                 num = 0.0
+ */
+        goto __pyx_L8_continue;
+      }
+
+      /* "partfinder/_tiger.pyx":40
+ *                     continue
+ * 
+ *                 num = 0.0             # <<<<<<<<<<<<<<
+ *                 axpi = 0.0
+ *                 for j_b in range(4):
+ */
+      __pyx_v_num = 0.0;
+
+      /* "partfinder/_tiger.pyx":41
+ * 
+ *                 num = 0.0
+ *                 axpi = 0.0             # <<<<<<<<<<<<<<
+ *                 for j_b in range(4):
+ *                     j_bitset = &self._bitsets[j][j_b]
+ */
+      __pyx_v_axpi = 0.0;
+
+      /* "partfinder/_tiger.pyx":42
+ *                 num = 0.0
+ *                 axpi = 0.0
+ *                 for j_b in range(4):             # <<<<<<<<<<<<<<
+ *                     j_bitset = &self._bitsets[j][j_b]
+ *                     if j_bitset.none():
+ */
+      for (__pyx_t_12 = 0; __pyx_t_12 < 4; __pyx_t_12+=1) {
+        __pyx_v_j_b = __pyx_t_12;
+
+        /* "partfinder/_tiger.pyx":43
+ *                 axpi = 0.0
+ *                 for j_b in range(4):
+ *                     j_bitset = &self._bitsets[j][j_b]             # <<<<<<<<<<<<<<
+ *                     if j_bitset.none():
+ *                         continue
+ */
+        __pyx_v_j_bitset = (&((__pyx_v_self->_bitsets[__pyx_v_j])[__pyx_v_j_b]));
+
+        /* "partfinder/_tiger.pyx":44
+ *                 for j_b in range(4):
+ *                     j_bitset = &self._bitsets[j][j_b]
+ *                     if j_bitset.none():             # <<<<<<<<<<<<<<
+ *                         continue
+ *                     num += 1.0
+ */
+        __pyx_t_1 = (__pyx_v_j_bitset->none() != 0);
+        if (__pyx_t_1) {
+
+          /* "partfinder/_tiger.pyx":45
+ *                     j_bitset = &self._bitsets[j][j_b]
+ *                     if j_bitset.none():
+ *                         continue             # <<<<<<<<<<<<<<
+ *                     num += 1.0
+ *                     for i_b in range(4):
+ */
+          goto __pyx_L11_continue;
+        }
+
+        /* "partfinder/_tiger.pyx":46
+ *                     if j_bitset.none():
+ *                         continue
+ *                     num += 1.0             # <<<<<<<<<<<<<<
+ *                     for i_b in range(4):
+ *                         i_bitset = &self._bitsets[i][i_b]
+ */
+        __pyx_v_num = (__pyx_v_num + 1.0);
+
+        /* "partfinder/_tiger.pyx":47
+ *                         continue
+ *                     num += 1.0
+ *                     for i_b in range(4):             # <<<<<<<<<<<<<<
+ *                         i_bitset = &self._bitsets[i][i_b]
+ *                         if i_bitset.none():
+ */
+        for (__pyx_t_13 = 0; __pyx_t_13 < 4; __pyx_t_13+=1) {
+          __pyx_v_i_b = __pyx_t_13;
+
+          /* "partfinder/_tiger.pyx":48
+ *                     num += 1.0
+ *                     for i_b in range(4):
+ *                         i_bitset = &self._bitsets[i][i_b]             # <<<<<<<<<<<<<<
+ *                         if i_bitset.none():
+ *                             continue
+ */
+          __pyx_v_i_bitset = (&((__pyx_v_self->_bitsets[__pyx_v_i])[__pyx_v_i_b]));
+
+          /* "partfinder/_tiger.pyx":49
+ *                     for i_b in range(4):
+ *                         i_bitset = &self._bitsets[i][i_b]
+ *                         if i_bitset.none():             # <<<<<<<<<<<<<<
+ *                             continue
+ *                         if j_bitset.is_subset_of(deref(i_bitset)):
+ */
+          __pyx_t_1 = (__pyx_v_i_bitset->none() != 0);
+          if (__pyx_t_1) {
+
+            /* "partfinder/_tiger.pyx":50
+ *                         i_bitset = &self._bitsets[i][i_b]
+ *                         if i_bitset.none():
+ *                             continue             # <<<<<<<<<<<<<<
+ *                         if j_bitset.is_subset_of(deref(i_bitset)):
+ *                             axpi += 1.0
+ */
+            goto __pyx_L14_continue;
+          }
+
+          /* "partfinder/_tiger.pyx":51
+ *                         if i_bitset.none():
+ *                             continue
+ *                         if j_bitset.is_subset_of(deref(i_bitset)):             # <<<<<<<<<<<<<<
+ *                             axpi += 1.0
+ *                             break
+ */
+          __pyx_t_1 = (__pyx_v_j_bitset->is_subset_of((*__pyx_v_i_bitset)) != 0);
+          if (__pyx_t_1) {
+
+            /* "partfinder/_tiger.pyx":52
+ *                             continue
+ *                         if j_bitset.is_subset_of(deref(i_bitset)):
+ *                             axpi += 1.0             # <<<<<<<<<<<<<<
+ *                             break
+ * 
+ */
+            __pyx_v_axpi = (__pyx_v_axpi + 1.0);
+
+            /* "partfinder/_tiger.pyx":53
+ *                         if j_bitset.is_subset_of(deref(i_bitset)):
+ *                             axpi += 1.0
+ *                             break             # <<<<<<<<<<<<<<
+ * 
+ *                 rate += axpi / num
+ */
+            goto __pyx_L15_break;
+          }
+          __pyx_L14_continue:;
+        }
+        __pyx_L15_break:;
+        __pyx_L11_continue:;
+      }
+
+      /* "partfinder/_tiger.pyx":55
+ *                             break
+ * 
+ *                 rate += axpi / num             # <<<<<<<<<<<<<<
+ * 
+ *             rate /= denom
+ */
+      __pyx_v_rate = (__pyx_v_rate + (__pyx_v_axpi / __pyx_v_num));
+      __pyx_L8_continue:;
+    }
+
+    /* "partfinder/_tiger.pyx":57
+ *                 rate += axpi / num
+ * 
+ *             rate /= denom             # <<<<<<<<<<<<<<
+ *             c_rates[i] = rate
+ * 
+ */
+    __pyx_v_rate = (__pyx_v_rate / __pyx_v_denom);
+
+    /* "partfinder/_tiger.pyx":58
+ * 
+ *             rate /= denom
+ *             c_rates[i] = rate             # <<<<<<<<<<<<<<
+ * 
+ *         return rates
+ */
+    __pyx_t_10 = __pyx_v_i;
+    *((npy_double *) ( /* dim=0 */ (__pyx_v_c_rates.data + __pyx_t_10 * __pyx_v_c_rates.strides[0]) )) = __pyx_v_rate;
+  }
+
+  /* "partfinder/_tiger.pyx":60
+ *             c_rates[i] = rate
+ * 
+ *         return rates             # <<<<<<<<<<<<<<
+ * 
+ *     def bitsets_as_array(self):
+ */
+  __Pyx_XDECREF(__pyx_r);
+  __Pyx_INCREF(__pyx_v_rates);
+  __pyx_r = __pyx_v_rates;
+  goto __pyx_L0;
+
+  /* "partfinder/_tiger.pyx":20
+ *         pass
+ * 
+ *     def calc_rates(self):             # <<<<<<<<<<<<<<
+ *         if self.species_count == 0 or self.column_count == 0:
+ *             return None
+ */
+
+  /* function exit code */
+  __pyx_L1_error:;
+  __Pyx_XDECREF(__pyx_t_3);
+  __Pyx_XDECREF(__pyx_t_4);
+  __Pyx_XDECREF(__pyx_t_5);
+  __Pyx_XDECREF(__pyx_t_6);
+  __PYX_XDEC_MEMVIEW(&__pyx_t_7, 1);
+  __Pyx_AddTraceback("partfinder._tiger.TigerBase.calc_rates", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __pyx_r = NULL;
+  __pyx_L0:;
+  __Pyx_XDECREF(__pyx_v_rates);
+  __PYX_XDEC_MEMVIEW(&__pyx_v_c_rates, 1);
+  __Pyx_XGIVEREF(__pyx_r);
+  __Pyx_RefNannyFinishContext();
+  return __pyx_r;
+}
+
+/* "partfinder/_tiger.pyx":62
+ *         return rates
+ * 
+ *     def bitsets_as_array(self):             # <<<<<<<<<<<<<<
+ *         if self.species_count == 0 or self.column_count == 0:
+ *             return None
+ */
+
+/* Python wrapper */
+static PyObject *__pyx_pw_10partfinder_6_tiger_9TigerBase_5bitsets_as_array(PyObject *__pyx_v_self, CYTHON_UNUSED PyObject *unused); /*proto*/
+static PyObject *__pyx_pw_10partfinder_6_tiger_9TigerBase_5bitsets_as_array(PyObject *__pyx_v_self, CYTHON_UNUSED PyObject *unused) {
+  PyObject *__pyx_r = 0;
+  __Pyx_RefNannyDeclarations
+  __Pyx_RefNannySetupContext("bitsets_as_array (wrapper)", 0);
+  __pyx_r = __pyx_pf_10partfinder_6_tiger_9TigerBase_4bitsets_as_array(((struct __pyx_obj_10partfinder_6_tiger_TigerBase *)__pyx_v_self));
+
+  /* function exit code */
+  __Pyx_RefNannyFinishContext();
+  return __pyx_r;
+}
+
+static PyObject *__pyx_pf_10partfinder_6_tiger_9TigerBase_4bitsets_as_array(struct __pyx_obj_10partfinder_6_tiger_TigerBase *__pyx_v_self) {
+  PyObject *__pyx_v_ret = NULL;
+  __Pyx_memviewslice __pyx_v_c_ret = { 0, 0, { 0 }, { 0 }, { 0 } };
+  size_t __pyx_v_i;
+  size_t __pyx_v_j;
+  size_t __pyx_v_k;
+  PyObject *__pyx_r = NULL;
+  __Pyx_RefNannyDeclarations
+  int __pyx_t_1;
+  int __pyx_t_2;
+  PyObject *__pyx_t_3 = NULL;
+  PyObject *__pyx_t_4 = NULL;
+  PyObject *__pyx_t_5 = NULL;
+  PyObject *__pyx_t_6 = NULL;
+  __Pyx_memviewslice __pyx_t_7 = { 0, 0, { 0 }, { 0 }, { 0 } };
+  size_t __pyx_t_8;
+  size_t __pyx_t_9;
+  size_t __pyx_t_10;
+  size_t __pyx_t_11;
+  size_t __pyx_t_12;
+  size_t __pyx_t_13;
+  size_t __pyx_t_14;
+  size_t __pyx_t_15;
+  int __pyx_lineno = 0;
+  const char *__pyx_filename = NULL;
+  int __pyx_clineno = 0;
+  __Pyx_RefNannySetupContext("bitsets_as_array", 0);
+
+  /* "partfinder/_tiger.pyx":63
+ * 
+ *     def bitsets_as_array(self):
+ *         if self.species_count == 0 or self.column_count == 0:             # <<<<<<<<<<<<<<
+ *             return None
+ * 
+ */
+  __pyx_t_2 = ((__pyx_v_self->species_count == 0) != 0);
+  if (!__pyx_t_2) {
+  } else {
+    __pyx_t_1 = __pyx_t_2;
+    goto __pyx_L4_bool_binop_done;
+  }
+  __pyx_t_2 = ((__pyx_v_self->column_count == 0) != 0);
+  __pyx_t_1 = __pyx_t_2;
+  __pyx_L4_bool_binop_done:;
+  if (__pyx_t_1) {
+
+    /* "partfinder/_tiger.pyx":64
+ *     def bitsets_as_array(self):
+ *         if self.species_count == 0 or self.column_count == 0:
+ *             return None             # <<<<<<<<<<<<<<
+ * 
+ *         ret = numpy.zeros((self.column_count, 4, self.species_count), dtype='u1')
+ */
+    __Pyx_XDECREF(__pyx_r);
+    __Pyx_INCREF(Py_None);
+    __pyx_r = Py_None;
+    goto __pyx_L0;
+  }
+
+  /* "partfinder/_tiger.pyx":66
+ *             return None
+ * 
+ *         ret = numpy.zeros((self.column_count, 4, self.species_count), dtype='u1')             # <<<<<<<<<<<<<<
+ *         cdef:
+ *             np.npy_uint8[:, :, :] c_ret = ret
+ */
+  __pyx_t_3 = __Pyx_GetModuleGlobalName(__pyx_n_s_numpy); if (unlikely(!__pyx_t_3)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 66; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __Pyx_GOTREF(__pyx_t_3);
+  __pyx_t_4 = __Pyx_PyObject_GetAttrStr(__pyx_t_3, __pyx_n_s_zeros); if (unlikely(!__pyx_t_4)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 66; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __Pyx_GOTREF(__pyx_t_4);
+  __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
+  __pyx_t_3 = __Pyx_PyInt_FromSize_t(__pyx_v_self->column_count); if (unlikely(!__pyx_t_3)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 66; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __Pyx_GOTREF(__pyx_t_3);
+  __pyx_t_5 = __Pyx_PyInt_FromSize_t(__pyx_v_self->species_count); if (unlikely(!__pyx_t_5)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 66; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __Pyx_GOTREF(__pyx_t_5);
+  __pyx_t_6 = PyTuple_New(3); if (unlikely(!__pyx_t_6)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 66; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __Pyx_GOTREF(__pyx_t_6);
+  PyTuple_SET_ITEM(__pyx_t_6, 0, __pyx_t_3);
+  __Pyx_GIVEREF(__pyx_t_3);
+  __Pyx_INCREF(__pyx_int_4);
+  PyTuple_SET_ITEM(__pyx_t_6, 1, __pyx_int_4);
+  __Pyx_GIVEREF(__pyx_int_4);
+  PyTuple_SET_ITEM(__pyx_t_6, 2, __pyx_t_5);
+  __Pyx_GIVEREF(__pyx_t_5);
+  __pyx_t_3 = 0;
+  __pyx_t_5 = 0;
+  __pyx_t_5 = PyTuple_New(1); if (unlikely(!__pyx_t_5)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 66; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __Pyx_GOTREF(__pyx_t_5);
+  PyTuple_SET_ITEM(__pyx_t_5, 0, __pyx_t_6);
+  __Pyx_GIVEREF(__pyx_t_6);
+  __pyx_t_6 = 0;
+  __pyx_t_6 = PyDict_New(); if (unlikely(!__pyx_t_6)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 66; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __Pyx_GOTREF(__pyx_t_6);
+  if (PyDict_SetItem(__pyx_t_6, __pyx_n_s_dtype, __pyx_n_s_u1) < 0) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 66; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_3 = __Pyx_PyObject_Call(__pyx_t_4, __pyx_t_5, __pyx_t_6); if (unlikely(!__pyx_t_3)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 66; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __Pyx_GOTREF(__pyx_t_3);
+  __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
+  __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
+  __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
+  __pyx_v_ret = __pyx_t_3;
+  __pyx_t_3 = 0;
+
+  /* "partfinder/_tiger.pyx":68
+ *         ret = numpy.zeros((self.column_count, 4, self.species_count), dtype='u1')
+ *         cdef:
+ *             np.npy_uint8[:, :, :] c_ret = ret             # <<<<<<<<<<<<<<
+ *             size_t i, j, k
+ * 
+ */
+  __pyx_t_7 = __Pyx_PyObject_to_MemoryviewSlice_dsdsds_nn_npy_uint8(__pyx_v_ret);
+  if (unlikely(!__pyx_t_7.memview)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 68; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_v_c_ret = __pyx_t_7;
+  __pyx_t_7.memview = NULL;
+  __pyx_t_7.data = NULL;
+
+  /* "partfinder/_tiger.pyx":71
+ *             size_t i, j, k
+ * 
+ *         for i in range(self.column_count):             # <<<<<<<<<<<<<<
+ *             for j in range(4):
+ *                 for k in range(self.species_count):
+ */
+  __pyx_t_8 = __pyx_v_self->column_count;
+  for (__pyx_t_9 = 0; __pyx_t_9 < __pyx_t_8; __pyx_t_9+=1) {
+    __pyx_v_i = __pyx_t_9;
+
+    /* "partfinder/_tiger.pyx":72
+ * 
+ *         for i in range(self.column_count):
+ *             for j in range(4):             # <<<<<<<<<<<<<<
+ *                 for k in range(self.species_count):
+ *                     if self._bitsets[i][j].test(k):
+ */
+    for (__pyx_t_10 = 0; __pyx_t_10 < 4; __pyx_t_10+=1) {
+      __pyx_v_j = __pyx_t_10;
+
+      /* "partfinder/_tiger.pyx":73
+ *         for i in range(self.column_count):
+ *             for j in range(4):
+ *                 for k in range(self.species_count):             # <<<<<<<<<<<<<<
+ *                     if self._bitsets[i][j].test(k):
+ *                         c_ret[i, j, k] = 1
+ */
+      __pyx_t_11 = __pyx_v_self->species_count;
+      for (__pyx_t_12 = 0; __pyx_t_12 < __pyx_t_11; __pyx_t_12+=1) {
+        __pyx_v_k = __pyx_t_12;
+
+        /* "partfinder/_tiger.pyx":74
+ *             for j in range(4):
+ *                 for k in range(self.species_count):
+ *                     if self._bitsets[i][j].test(k):             # <<<<<<<<<<<<<<
+ *                         c_ret[i, j, k] = 1
+ *         return ret
+ */
+        __pyx_t_1 = (((__pyx_v_self->_bitsets[__pyx_v_i])[__pyx_v_j]).test(__pyx_v_k) != 0);
+        if (__pyx_t_1) {
+
+          /* "partfinder/_tiger.pyx":75
+ *                 for k in range(self.species_count):
+ *                     if self._bitsets[i][j].test(k):
+ *                         c_ret[i, j, k] = 1             # <<<<<<<<<<<<<<
+ *         return ret
+ * 
+ */
+          __pyx_t_13 = __pyx_v_i;
+          __pyx_t_14 = __pyx_v_j;
+          __pyx_t_15 = __pyx_v_k;
+          *((npy_uint8 *) ( /* dim=2 */ (( /* dim=1 */ (( /* dim=0 */ (__pyx_v_c_ret.data + __pyx_t_13 * __pyx_v_c_ret.strides[0]) ) + __pyx_t_14 * __pyx_v_c_ret.strides[1]) ) + __pyx_t_15 * __pyx_v_c_ret.strides[2]) )) = 1;
+          goto __pyx_L12;
+        }
+        __pyx_L12:;
+      }
+    }
+  }
+
+  /* "partfinder/_tiger.pyx":76
+ *                     if self._bitsets[i][j].test(k):
+ *                         c_ret[i, j, k] = 1
+ *         return ret             # <<<<<<<<<<<<<<
+ * 
+ * cdef class TigerDNA(TigerBase):
+ */
+  __Pyx_XDECREF(__pyx_r);
+  __Pyx_INCREF(__pyx_v_ret);
+  __pyx_r = __pyx_v_ret;
+  goto __pyx_L0;
+
+  /* "partfinder/_tiger.pyx":62
+ *         return rates
+ * 
+ *     def bitsets_as_array(self):             # <<<<<<<<<<<<<<
+ *         if self.species_count == 0 or self.column_count == 0:
+ *             return None
+ */
+
+  /* function exit code */
+  __pyx_L1_error:;
+  __Pyx_XDECREF(__pyx_t_3);
+  __Pyx_XDECREF(__pyx_t_4);
+  __Pyx_XDECREF(__pyx_t_5);
+  __Pyx_XDECREF(__pyx_t_6);
+  __PYX_XDEC_MEMVIEW(&__pyx_t_7, 1);
+  __Pyx_AddTraceback("partfinder._tiger.TigerBase.bitsets_as_array", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __pyx_r = NULL;
+  __pyx_L0:;
+  __Pyx_XDECREF(__pyx_v_ret);
+  __PYX_XDEC_MEMVIEW(&__pyx_v_c_ret, 1);
+  __Pyx_XGIVEREF(__pyx_r);
+  __Pyx_RefNannyFinishContext();
+  return __pyx_r;
+}
+
 /* "partfinder/_tiger.pxd":40
  *         c_AlignmentBitsets _bitsets
  *         readonly:
@@ -1948,7 +2577,7 @@ static PyObject *__pyx_pf_10partfinder_6_tiger_9TigerBase_12column_count___get__
   return __pyx_r;
 }
 
-/* "partfinder/_tiger.pyx":22
+/* "partfinder/_tiger.pyx":79
  * 
  * cdef class TigerDNA(TigerBase):
  *     def __cinit__(self):             # <<<<<<<<<<<<<<
@@ -1977,7 +2606,7 @@ static int __pyx_pf_10partfinder_6_tiger_8TigerDNA___cinit__(struct __pyx_obj_10
   __Pyx_RefNannyDeclarations
   __Pyx_RefNannySetupContext("__cinit__", 0);
 
-  /* "partfinder/_tiger.pyx":23
+  /* "partfinder/_tiger.pyx":80
  * cdef class TigerDNA(TigerBase):
  *     def __cinit__(self):
  *         self.species_count = 0             # <<<<<<<<<<<<<<
@@ -1986,16 +2615,16 @@ static int __pyx_pf_10partfinder_6_tiger_8TigerDNA___cinit__(struct __pyx_obj_10
  */
   __pyx_v_self->__pyx_base.species_count = 0;
 
-  /* "partfinder/_tiger.pyx":24
+  /* "partfinder/_tiger.pyx":81
  *     def __cinit__(self):
  *         self.species_count = 0
  *         self.column_count = 0             # <<<<<<<<<<<<<<
  * 
- *     def from_alignment(self, alignment):
+ *     def build_bitsets(self, alignment):
  */
   __pyx_v_self->__pyx_base.column_count = 0;
 
-  /* "partfinder/_tiger.pyx":22
+  /* "partfinder/_tiger.pyx":79
  * 
  * cdef class TigerDNA(TigerBase):
  *     def __cinit__(self):             # <<<<<<<<<<<<<<
@@ -2009,28 +2638,28 @@ static int __pyx_pf_10partfinder_6_tiger_8TigerDNA___cinit__(struct __pyx_obj_10
   return __pyx_r;
 }
 
-/* "partfinder/_tiger.pyx":26
+/* "partfinder/_tiger.pyx":83
  *         self.column_count = 0
  * 
- *     def from_alignment(self, alignment):             # <<<<<<<<<<<<<<
+ *     def build_bitsets(self, alignment):             # <<<<<<<<<<<<<<
  *         cdef:
  *             size_t i, j, k, sp_count, col_count
  */
 
 /* Python wrapper */
-static PyObject *__pyx_pw_10partfinder_6_tiger_8TigerDNA_3from_alignment(PyObject *__pyx_v_self, PyObject *__pyx_v_alignment); /*proto*/
-static PyObject *__pyx_pw_10partfinder_6_tiger_8TigerDNA_3from_alignment(PyObject *__pyx_v_self, PyObject *__pyx_v_alignment) {
+static PyObject *__pyx_pw_10partfinder_6_tiger_8TigerDNA_3build_bitsets(PyObject *__pyx_v_self, PyObject *__pyx_v_alignment); /*proto*/
+static PyObject *__pyx_pw_10partfinder_6_tiger_8TigerDNA_3build_bitsets(PyObject *__pyx_v_self, PyObject *__pyx_v_alignment) {
   PyObject *__pyx_r = 0;
   __Pyx_RefNannyDeclarations
-  __Pyx_RefNannySetupContext("from_alignment (wrapper)", 0);
-  __pyx_r = __pyx_pf_10partfinder_6_tiger_8TigerDNA_2from_alignment(((struct __pyx_obj_10partfinder_6_tiger_TigerDNA *)__pyx_v_self), ((PyObject *)__pyx_v_alignment));
+  __Pyx_RefNannySetupContext("build_bitsets (wrapper)", 0);
+  __pyx_r = __pyx_pf_10partfinder_6_tiger_8TigerDNA_2build_bitsets(((struct __pyx_obj_10partfinder_6_tiger_TigerDNA *)__pyx_v_self), ((PyObject *)__pyx_v_alignment));
 
   /* function exit code */
   __Pyx_RefNannyFinishContext();
   return __pyx_r;
 }
 
-static PyObject *__pyx_pf_10partfinder_6_tiger_8TigerDNA_2from_alignment(struct __pyx_obj_10partfinder_6_tiger_TigerDNA *__pyx_v_self, PyObject *__pyx_v_alignment) {
+static PyObject *__pyx_pf_10partfinder_6_tiger_8TigerDNA_2build_bitsets(struct __pyx_obj_10partfinder_6_tiger_TigerDNA *__pyx_v_self, PyObject *__pyx_v_alignment) {
   size_t __pyx_v_i;
   size_t __pyx_v_j;
   CYTHON_UNUSED size_t __pyx_v_k;
@@ -2057,38 +2686,37 @@ static PyObject *__pyx_pf_10partfinder_6_tiger_8TigerDNA_2from_alignment(struct 
   size_t __pyx_t_11;
   size_t __pyx_t_12;
   size_t __pyx_t_13;
-  int __pyx_t_14;
   int __pyx_lineno = 0;
   const char *__pyx_filename = NULL;
   int __pyx_clineno = 0;
-  __Pyx_RefNannySetupContext("from_alignment", 0);
+  __Pyx_RefNannySetupContext("build_bitsets", 0);
 
-  /* "partfinder/_tiger.pyx":29
+  /* "partfinder/_tiger.pyx":86
  *         cdef:
  *             size_t i, j, k, sp_count, col_count
  *             np.npy_uint8[:, :] data = alignment.data             # <<<<<<<<<<<<<<
  *             unsigned char c
  *             c_Bitset *A_bits
  */
-  __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_v_alignment, __pyx_n_s_data); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 29; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_v_alignment, __pyx_n_s_data); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 86; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_1);
   __pyx_t_2 = __Pyx_PyObject_to_MemoryviewSlice_dsds_nn_npy_uint8(__pyx_t_1);
-  if (unlikely(!__pyx_t_2.memview)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 29; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  if (unlikely(!__pyx_t_2.memview)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 86; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
   __pyx_v_data = __pyx_t_2;
   __pyx_t_2.memview = NULL;
   __pyx_t_2.data = NULL;
 
-  /* "partfinder/_tiger.pyx":36
+  /* "partfinder/_tiger.pyx":93
  *             c_Bitset *T_bits
  * 
  *         sp_count, col_count = alignment.data.shape             # <<<<<<<<<<<<<<
  *         self.species_count = sp_count
  *         self.column_count = col_count
  */
-  __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_v_alignment, __pyx_n_s_data); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 36; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_v_alignment, __pyx_n_s_data); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 93; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_1);
-  __pyx_t_3 = __Pyx_PyObject_GetAttrStr(__pyx_t_1, __pyx_n_s_shape); if (unlikely(!__pyx_t_3)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 36; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_3 = __Pyx_PyObject_GetAttrStr(__pyx_t_1, __pyx_n_s_shape); if (unlikely(!__pyx_t_3)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 93; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_3);
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
   if ((likely(PyTuple_CheckExact(__pyx_t_3))) || (PyList_CheckExact(__pyx_t_3))) {
@@ -2101,7 +2729,7 @@ static PyObject *__pyx_pf_10partfinder_6_tiger_8TigerDNA_2from_alignment(struct 
     if (unlikely(size != 2)) {
       if (size > 2) __Pyx_RaiseTooManyValuesError(2);
       else if (size >= 0) __Pyx_RaiseNeedMoreValuesError(size);
-      {__pyx_filename = __pyx_f[0]; __pyx_lineno = 36; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+      {__pyx_filename = __pyx_f[0]; __pyx_lineno = 93; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     }
     #if CYTHON_COMPILING_IN_CPYTHON
     if (likely(PyTuple_CheckExact(sequence))) {
@@ -2114,15 +2742,15 @@ static PyObject *__pyx_pf_10partfinder_6_tiger_8TigerDNA_2from_alignment(struct 
     __Pyx_INCREF(__pyx_t_1);
     __Pyx_INCREF(__pyx_t_4);
     #else
-    __pyx_t_1 = PySequence_ITEM(sequence, 0); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 36; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __pyx_t_1 = PySequence_ITEM(sequence, 0); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 93; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     __Pyx_GOTREF(__pyx_t_1);
-    __pyx_t_4 = PySequence_ITEM(sequence, 1); if (unlikely(!__pyx_t_4)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 36; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __pyx_t_4 = PySequence_ITEM(sequence, 1); if (unlikely(!__pyx_t_4)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 93; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     __Pyx_GOTREF(__pyx_t_4);
     #endif
     __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
   } else {
     Py_ssize_t index = -1;
-    __pyx_t_5 = PyObject_GetIter(__pyx_t_3); if (unlikely(!__pyx_t_5)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 36; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __pyx_t_5 = PyObject_GetIter(__pyx_t_3); if (unlikely(!__pyx_t_5)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 93; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     __Pyx_GOTREF(__pyx_t_5);
     __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
     __pyx_t_6 = Py_TYPE(__pyx_t_5)->tp_iternext;
@@ -2130,7 +2758,7 @@ static PyObject *__pyx_pf_10partfinder_6_tiger_8TigerDNA_2from_alignment(struct 
     __Pyx_GOTREF(__pyx_t_1);
     index = 1; __pyx_t_4 = __pyx_t_6(__pyx_t_5); if (unlikely(!__pyx_t_4)) goto __pyx_L3_unpacking_failed;
     __Pyx_GOTREF(__pyx_t_4);
-    if (__Pyx_IternextUnpackEndCheck(__pyx_t_6(__pyx_t_5), 2) < 0) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 36; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    if (__Pyx_IternextUnpackEndCheck(__pyx_t_6(__pyx_t_5), 2) < 0) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 93; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     __pyx_t_6 = NULL;
     __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
     goto __pyx_L4_unpacking_done;
@@ -2138,17 +2766,17 @@ static PyObject *__pyx_pf_10partfinder_6_tiger_8TigerDNA_2from_alignment(struct 
     __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
     __pyx_t_6 = NULL;
     if (__Pyx_IterFinish() == 0) __Pyx_RaiseNeedMoreValuesError(index);
-    {__pyx_filename = __pyx_f[0]; __pyx_lineno = 36; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    {__pyx_filename = __pyx_f[0]; __pyx_lineno = 93; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     __pyx_L4_unpacking_done:;
   }
-  __pyx_t_7 = __Pyx_PyInt_As_size_t(__pyx_t_1); if (unlikely((__pyx_t_7 == (size_t)-1) && PyErr_Occurred())) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 36; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_7 = __Pyx_PyInt_As_size_t(__pyx_t_1); if (unlikely((__pyx_t_7 == (size_t)-1) && PyErr_Occurred())) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 93; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-  __pyx_t_8 = __Pyx_PyInt_As_size_t(__pyx_t_4); if (unlikely((__pyx_t_8 == (size_t)-1) && PyErr_Occurred())) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 36; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_8 = __Pyx_PyInt_As_size_t(__pyx_t_4); if (unlikely((__pyx_t_8 == (size_t)-1) && PyErr_Occurred())) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 93; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
   __pyx_v_sp_count = __pyx_t_7;
   __pyx_v_col_count = __pyx_t_8;
 
-  /* "partfinder/_tiger.pyx":37
+  /* "partfinder/_tiger.pyx":94
  * 
  *         sp_count, col_count = alignment.data.shape
  *         self.species_count = sp_count             # <<<<<<<<<<<<<<
@@ -2157,7 +2785,7 @@ static PyObject *__pyx_pf_10partfinder_6_tiger_8TigerDNA_2from_alignment(struct 
  */
   __pyx_v_self->__pyx_base.species_count = __pyx_v_sp_count;
 
-  /* "partfinder/_tiger.pyx":38
+  /* "partfinder/_tiger.pyx":95
  *         sp_count, col_count = alignment.data.shape
  *         self.species_count = sp_count
  *         self.column_count = col_count             # <<<<<<<<<<<<<<
@@ -2166,7 +2794,7 @@ static PyObject *__pyx_pf_10partfinder_6_tiger_8TigerDNA_2from_alignment(struct 
  */
   __pyx_v_self->__pyx_base.column_count = __pyx_v_col_count;
 
-  /* "partfinder/_tiger.pyx":42
+  /* "partfinder/_tiger.pyx":99
  *         # Create all the bitsets
  *         # NOTE: would be better if we could rely on emplace_back...
  *         for i in range(col_count):             # <<<<<<<<<<<<<<
@@ -2177,7 +2805,7 @@ static PyObject *__pyx_pf_10partfinder_6_tiger_8TigerDNA_2from_alignment(struct 
   for (__pyx_t_7 = 0; __pyx_t_7 < __pyx_t_8; __pyx_t_7+=1) {
     __pyx_v_i = __pyx_t_7;
 
-    /* "partfinder/_tiger.pyx":43
+    /* "partfinder/_tiger.pyx":100
  *         # NOTE: would be better if we could rely on emplace_back...
  *         for i in range(col_count):
  *             self._bitsets.push_back(c_ColumnBitsets())             # <<<<<<<<<<<<<<
@@ -2188,11 +2816,11 @@ static PyObject *__pyx_pf_10partfinder_6_tiger_8TigerDNA_2from_alignment(struct 
       __pyx_t_9 = __pyx_t_10partfinder_6_tiger_c_ColumnBitsets();
     } catch(...) {
       __Pyx_CppExn2PyErr();
-      {__pyx_filename = __pyx_f[0]; __pyx_lineno = 43; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+      {__pyx_filename = __pyx_f[0]; __pyx_lineno = 100; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     }
     __pyx_v_self->__pyx_base._bitsets.push_back(__pyx_t_9);
 
-    /* "partfinder/_tiger.pyx":44
+    /* "partfinder/_tiger.pyx":101
  *         for i in range(col_count):
  *             self._bitsets.push_back(c_ColumnBitsets())
  *             for k in range(4):             # <<<<<<<<<<<<<<
@@ -2202,7 +2830,7 @@ static PyObject *__pyx_pf_10partfinder_6_tiger_8TigerDNA_2from_alignment(struct 
     for (__pyx_t_10 = 0; __pyx_t_10 < 4; __pyx_t_10+=1) {
       __pyx_v_k = __pyx_t_10;
 
-      /* "partfinder/_tiger.pyx":45
+      /* "partfinder/_tiger.pyx":102
  *             self._bitsets.push_back(c_ColumnBitsets())
  *             for k in range(4):
  *                 self._bitsets.back().push_back(c_Bitset(sp_count))             # <<<<<<<<<<<<<<
@@ -2213,7 +2841,7 @@ static PyObject *__pyx_pf_10partfinder_6_tiger_8TigerDNA_2from_alignment(struct 
     }
   }
 
-  /* "partfinder/_tiger.pyx":47
+  /* "partfinder/_tiger.pyx":104
  *                 self._bitsets.back().push_back(c_Bitset(sp_count))
  * 
  *         for i in range(col_count):             # <<<<<<<<<<<<<<
@@ -2224,7 +2852,7 @@ static PyObject *__pyx_pf_10partfinder_6_tiger_8TigerDNA_2from_alignment(struct 
   for (__pyx_t_7 = 0; __pyx_t_7 < __pyx_t_8; __pyx_t_7+=1) {
     __pyx_v_i = __pyx_t_7;
 
-    /* "partfinder/_tiger.pyx":48
+    /* "partfinder/_tiger.pyx":105
  * 
  *         for i in range(col_count):
  *             A_bits = &self._bitsets[i][0]             # <<<<<<<<<<<<<<
@@ -2233,7 +2861,7 @@ static PyObject *__pyx_pf_10partfinder_6_tiger_8TigerDNA_2from_alignment(struct 
  */
     __pyx_v_A_bits = (&((__pyx_v_self->__pyx_base._bitsets[__pyx_v_i])[0]));
 
-    /* "partfinder/_tiger.pyx":49
+    /* "partfinder/_tiger.pyx":106
  *         for i in range(col_count):
  *             A_bits = &self._bitsets[i][0]
  *             C_bits = &self._bitsets[i][1]             # <<<<<<<<<<<<<<
@@ -2242,7 +2870,7 @@ static PyObject *__pyx_pf_10partfinder_6_tiger_8TigerDNA_2from_alignment(struct 
  */
     __pyx_v_C_bits = (&((__pyx_v_self->__pyx_base._bitsets[__pyx_v_i])[1]));
 
-    /* "partfinder/_tiger.pyx":50
+    /* "partfinder/_tiger.pyx":107
  *             A_bits = &self._bitsets[i][0]
  *             C_bits = &self._bitsets[i][1]
  *             G_bits = &self._bitsets[i][2]             # <<<<<<<<<<<<<<
@@ -2251,7 +2879,7 @@ static PyObject *__pyx_pf_10partfinder_6_tiger_8TigerDNA_2from_alignment(struct 
  */
     __pyx_v_G_bits = (&((__pyx_v_self->__pyx_base._bitsets[__pyx_v_i])[2]));
 
-    /* "partfinder/_tiger.pyx":51
+    /* "partfinder/_tiger.pyx":108
  *             C_bits = &self._bitsets[i][1]
  *             G_bits = &self._bitsets[i][2]
  *             T_bits = &self._bitsets[i][3]             # <<<<<<<<<<<<<<
@@ -2260,7 +2888,7 @@ static PyObject *__pyx_pf_10partfinder_6_tiger_8TigerDNA_2from_alignment(struct 
  */
     __pyx_v_T_bits = (&((__pyx_v_self->__pyx_base._bitsets[__pyx_v_i])[3]));
 
-    /* "partfinder/_tiger.pyx":52
+    /* "partfinder/_tiger.pyx":109
  *             G_bits = &self._bitsets[i][2]
  *             T_bits = &self._bitsets[i][3]
  *             for j in range(sp_count):             # <<<<<<<<<<<<<<
@@ -2271,7 +2899,7 @@ static PyObject *__pyx_pf_10partfinder_6_tiger_8TigerDNA_2from_alignment(struct 
     for (__pyx_t_11 = 0; __pyx_t_11 < __pyx_t_10; __pyx_t_11+=1) {
       __pyx_v_j = __pyx_t_11;
 
-      /* "partfinder/_tiger.pyx":53
+      /* "partfinder/_tiger.pyx":110
  *             T_bits = &self._bitsets[i][3]
  *             for j in range(sp_count):
  *                 c = data[j, i]             # <<<<<<<<<<<<<<
@@ -2280,16 +2908,9 @@ static PyObject *__pyx_pf_10partfinder_6_tiger_8TigerDNA_2from_alignment(struct 
  */
       __pyx_t_12 = __pyx_v_j;
       __pyx_t_13 = __pyx_v_i;
-      __pyx_t_14 = -1;
-      if (unlikely(__pyx_t_12 >= (size_t)__pyx_v_data.shape[0])) __pyx_t_14 = 0;
-      if (unlikely(__pyx_t_13 >= (size_t)__pyx_v_data.shape[1])) __pyx_t_14 = 1;
-      if (unlikely(__pyx_t_14 != -1)) {
-        __Pyx_RaiseBufferIndexError(__pyx_t_14);
-        {__pyx_filename = __pyx_f[0]; __pyx_lineno = 53; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
-      }
       __pyx_v_c = (*((npy_uint8 *) ( /* dim=1 */ (( /* dim=0 */ (__pyx_v_data.data + __pyx_t_12 * __pyx_v_data.strides[0]) ) + __pyx_t_13 * __pyx_v_data.strides[1]) )));
 
-      /* "partfinder/_tiger.pyx":62
+      /* "partfinder/_tiger.pyx":119
  *                 elif c == 'T':
  *                     T_bits.set(j)
  *                 elif c == 'N' or c == '?' or c == '-':             # <<<<<<<<<<<<<<
@@ -2298,7 +2919,7 @@ static PyObject *__pyx_pf_10partfinder_6_tiger_8TigerDNA_2from_alignment(struct 
  */
       switch (__pyx_v_c) {
 
-        /* "partfinder/_tiger.pyx":54
+        /* "partfinder/_tiger.pyx":111
  *             for j in range(sp_count):
  *                 c = data[j, i]
  *                 if c == 'A':             # <<<<<<<<<<<<<<
@@ -2307,7 +2928,7 @@ static PyObject *__pyx_pf_10partfinder_6_tiger_8TigerDNA_2from_alignment(struct 
  */
         case 'A':
 
-        /* "partfinder/_tiger.pyx":55
+        /* "partfinder/_tiger.pyx":112
  *                 c = data[j, i]
  *                 if c == 'A':
  *                     A_bits.set(j)             # <<<<<<<<<<<<<<
@@ -2317,7 +2938,7 @@ static PyObject *__pyx_pf_10partfinder_6_tiger_8TigerDNA_2from_alignment(struct 
         __pyx_v_A_bits->set(__pyx_v_j);
         break;
 
-        /* "partfinder/_tiger.pyx":56
+        /* "partfinder/_tiger.pyx":113
  *                 if c == 'A':
  *                     A_bits.set(j)
  *                 elif c == 'C':             # <<<<<<<<<<<<<<
@@ -2326,7 +2947,7 @@ static PyObject *__pyx_pf_10partfinder_6_tiger_8TigerDNA_2from_alignment(struct 
  */
         case 'C':
 
-        /* "partfinder/_tiger.pyx":57
+        /* "partfinder/_tiger.pyx":114
  *                     A_bits.set(j)
  *                 elif c == 'C':
  *                     C_bits.set(j)             # <<<<<<<<<<<<<<
@@ -2336,7 +2957,7 @@ static PyObject *__pyx_pf_10partfinder_6_tiger_8TigerDNA_2from_alignment(struct 
         __pyx_v_C_bits->set(__pyx_v_j);
         break;
 
-        /* "partfinder/_tiger.pyx":58
+        /* "partfinder/_tiger.pyx":115
  *                 elif c == 'C':
  *                     C_bits.set(j)
  *                 elif c == 'G':             # <<<<<<<<<<<<<<
@@ -2345,7 +2966,7 @@ static PyObject *__pyx_pf_10partfinder_6_tiger_8TigerDNA_2from_alignment(struct 
  */
         case 'G':
 
-        /* "partfinder/_tiger.pyx":59
+        /* "partfinder/_tiger.pyx":116
  *                     C_bits.set(j)
  *                 elif c == 'G':
  *                     G_bits.set(j)             # <<<<<<<<<<<<<<
@@ -2355,7 +2976,7 @@ static PyObject *__pyx_pf_10partfinder_6_tiger_8TigerDNA_2from_alignment(struct 
         __pyx_v_G_bits->set(__pyx_v_j);
         break;
 
-        /* "partfinder/_tiger.pyx":60
+        /* "partfinder/_tiger.pyx":117
  *                 elif c == 'G':
  *                     G_bits.set(j)
  *                 elif c == 'T':             # <<<<<<<<<<<<<<
@@ -2364,7 +2985,7 @@ static PyObject *__pyx_pf_10partfinder_6_tiger_8TigerDNA_2from_alignment(struct 
  */
         case 'T':
 
-        /* "partfinder/_tiger.pyx":61
+        /* "partfinder/_tiger.pyx":118
  *                     G_bits.set(j)
  *                 elif c == 'T':
  *                     T_bits.set(j)             # <<<<<<<<<<<<<<
@@ -2374,7 +2995,7 @@ static PyObject *__pyx_pf_10partfinder_6_tiger_8TigerDNA_2from_alignment(struct 
         __pyx_v_T_bits->set(__pyx_v_j);
         break;
 
-        /* "partfinder/_tiger.pyx":62
+        /* "partfinder/_tiger.pyx":119
  *                 elif c == 'T':
  *                     T_bits.set(j)
  *                 elif c == 'N' or c == '?' or c == '-':             # <<<<<<<<<<<<<<
@@ -2385,7 +3006,7 @@ static PyObject *__pyx_pf_10partfinder_6_tiger_8TigerDNA_2from_alignment(struct 
         case '?':
         case '-':
 
-        /* "partfinder/_tiger.pyx":63
+        /* "partfinder/_tiger.pyx":120
  *                     T_bits.set(j)
  *                 elif c == 'N' or c == '?' or c == '-':
  *                     A_bits.set(j)             # <<<<<<<<<<<<<<
@@ -2394,7 +3015,7 @@ static PyObject *__pyx_pf_10partfinder_6_tiger_8TigerDNA_2from_alignment(struct 
  */
         __pyx_v_A_bits->set(__pyx_v_j);
 
-        /* "partfinder/_tiger.pyx":64
+        /* "partfinder/_tiger.pyx":121
  *                 elif c == 'N' or c == '?' or c == '-':
  *                     A_bits.set(j)
  *                     C_bits.set(j)             # <<<<<<<<<<<<<<
@@ -2403,7 +3024,7 @@ static PyObject *__pyx_pf_10partfinder_6_tiger_8TigerDNA_2from_alignment(struct 
  */
         __pyx_v_C_bits->set(__pyx_v_j);
 
-        /* "partfinder/_tiger.pyx":65
+        /* "partfinder/_tiger.pyx":122
  *                     A_bits.set(j)
  *                     C_bits.set(j)
  *                     G_bits.set(j)             # <<<<<<<<<<<<<<
@@ -2412,7 +3033,7 @@ static PyObject *__pyx_pf_10partfinder_6_tiger_8TigerDNA_2from_alignment(struct 
  */
         __pyx_v_G_bits->set(__pyx_v_j);
 
-        /* "partfinder/_tiger.pyx":66
+        /* "partfinder/_tiger.pyx":123
  *                     C_bits.set(j)
  *                     G_bits.set(j)
  *                     T_bits.set(j)             # <<<<<<<<<<<<<<
@@ -2426,10 +3047,10 @@ static PyObject *__pyx_pf_10partfinder_6_tiger_8TigerDNA_2from_alignment(struct 
     }
   }
 
-  /* "partfinder/_tiger.pyx":26
+  /* "partfinder/_tiger.pyx":83
  *         self.column_count = 0
  * 
- *     def from_alignment(self, alignment):             # <<<<<<<<<<<<<<
+ *     def build_bitsets(self, alignment):             # <<<<<<<<<<<<<<
  *         cdef:
  *             size_t i, j, k, sp_count, col_count
  */
@@ -2443,594 +3064,10 @@ static PyObject *__pyx_pf_10partfinder_6_tiger_8TigerDNA_2from_alignment(struct 
   __Pyx_XDECREF(__pyx_t_3);
   __Pyx_XDECREF(__pyx_t_4);
   __Pyx_XDECREF(__pyx_t_5);
-  __Pyx_AddTraceback("partfinder._tiger.TigerDNA.from_alignment", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __Pyx_AddTraceback("partfinder._tiger.TigerDNA.build_bitsets", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __pyx_r = NULL;
   __pyx_L0:;
   __PYX_XDEC_MEMVIEW(&__pyx_v_data, 1);
-  __Pyx_XGIVEREF(__pyx_r);
-  __Pyx_RefNannyFinishContext();
-  return __pyx_r;
-}
-
-/* "partfinder/_tiger.pyx":69
- * 
- * 
- *     def calc_rates(self):             # <<<<<<<<<<<<<<
- *         if self.species_count == 0 or self.column_count == 0:
- *             return None
- */
-
-/* Python wrapper */
-static PyObject *__pyx_pw_10partfinder_6_tiger_8TigerDNA_5calc_rates(PyObject *__pyx_v_self, CYTHON_UNUSED PyObject *unused); /*proto*/
-static PyObject *__pyx_pw_10partfinder_6_tiger_8TigerDNA_5calc_rates(PyObject *__pyx_v_self, CYTHON_UNUSED PyObject *unused) {
-  PyObject *__pyx_r = 0;
-  __Pyx_RefNannyDeclarations
-  __Pyx_RefNannySetupContext("calc_rates (wrapper)", 0);
-  __pyx_r = __pyx_pf_10partfinder_6_tiger_8TigerDNA_4calc_rates(((struct __pyx_obj_10partfinder_6_tiger_TigerDNA *)__pyx_v_self));
-
-  /* function exit code */
-  __Pyx_RefNannyFinishContext();
-  return __pyx_r;
-}
-
-static PyObject *__pyx_pf_10partfinder_6_tiger_8TigerDNA_4calc_rates(struct __pyx_obj_10partfinder_6_tiger_TigerDNA *__pyx_v_self) {
-  size_t __pyx_v_i;
-  size_t __pyx_v_j;
-  size_t __pyx_v_i_b;
-  size_t __pyx_v_j_b;
-  double __pyx_v_rate;
-  double __pyx_v_axpi;
-  double __pyx_v_num;
-  double __pyx_v_denom;
-  __pyx_t_10partfinder_6_tiger_c_Bitset *__pyx_v_i_bitset;
-  __pyx_t_10partfinder_6_tiger_c_Bitset *__pyx_v_j_bitset;
-  std::vector<double>  __pyx_v_rates;
-  PyObject *__pyx_r = NULL;
-  __Pyx_RefNannyDeclarations
-  int __pyx_t_1;
-  int __pyx_t_2;
-  size_t __pyx_t_3;
-  size_t __pyx_t_4;
-  size_t __pyx_t_5;
-  size_t __pyx_t_6;
-  size_t __pyx_t_7;
-  size_t __pyx_t_8;
-  PyObject *__pyx_t_9 = NULL;
-  int __pyx_lineno = 0;
-  const char *__pyx_filename = NULL;
-  int __pyx_clineno = 0;
-  __Pyx_RefNannySetupContext("calc_rates", 0);
-
-  /* "partfinder/_tiger.pyx":70
- * 
- *     def calc_rates(self):
- *         if self.species_count == 0 or self.column_count == 0:             # <<<<<<<<<<<<<<
- *             return None
- * 
- */
-  __pyx_t_2 = ((__pyx_v_self->__pyx_base.species_count == 0) != 0);
-  if (!__pyx_t_2) {
-  } else {
-    __pyx_t_1 = __pyx_t_2;
-    goto __pyx_L4_bool_binop_done;
-  }
-  __pyx_t_2 = ((__pyx_v_self->__pyx_base.column_count == 0) != 0);
-  __pyx_t_1 = __pyx_t_2;
-  __pyx_L4_bool_binop_done:;
-  if (__pyx_t_1) {
-
-    /* "partfinder/_tiger.pyx":71
- *     def calc_rates(self):
- *         if self.species_count == 0 or self.column_count == 0:
- *             return None             # <<<<<<<<<<<<<<
- * 
- *         cdef:
- */
-    __Pyx_XDECREF(__pyx_r);
-    __Pyx_INCREF(Py_None);
-    __pyx_r = Py_None;
-    goto __pyx_L0;
-  }
-
-  /* "partfinder/_tiger.pyx":80
- *             vector[double] rates
- * 
- *         denom = <double>self.column_count - 1.0             # <<<<<<<<<<<<<<
- *         for i in range(self.column_count):
- *             rate = 0.0
- */
-  __pyx_v_denom = (((double)__pyx_v_self->__pyx_base.column_count) - 1.0);
-
-  /* "partfinder/_tiger.pyx":81
- * 
- *         denom = <double>self.column_count - 1.0
- *         for i in range(self.column_count):             # <<<<<<<<<<<<<<
- *             rate = 0.0
- *             for j in range(self.column_count):
- */
-  __pyx_t_3 = __pyx_v_self->__pyx_base.column_count;
-  for (__pyx_t_4 = 0; __pyx_t_4 < __pyx_t_3; __pyx_t_4+=1) {
-    __pyx_v_i = __pyx_t_4;
-
-    /* "partfinder/_tiger.pyx":82
- *         denom = <double>self.column_count - 1.0
- *         for i in range(self.column_count):
- *             rate = 0.0             # <<<<<<<<<<<<<<
- *             for j in range(self.column_count):
- *                 # Don't compare to self
- */
-    __pyx_v_rate = 0.0;
-
-    /* "partfinder/_tiger.pyx":83
- *         for i in range(self.column_count):
- *             rate = 0.0
- *             for j in range(self.column_count):             # <<<<<<<<<<<<<<
- *                 # Don't compare to self
- *                 if i == j:
- */
-    __pyx_t_5 = __pyx_v_self->__pyx_base.column_count;
-    for (__pyx_t_6 = 0; __pyx_t_6 < __pyx_t_5; __pyx_t_6+=1) {
-      __pyx_v_j = __pyx_t_6;
-
-      /* "partfinder/_tiger.pyx":85
- *             for j in range(self.column_count):
- *                 # Don't compare to self
- *                 if i == j:             # <<<<<<<<<<<<<<
- *                     continue
- * 
- */
-      __pyx_t_1 = ((__pyx_v_i == __pyx_v_j) != 0);
-      if (__pyx_t_1) {
-
-        /* "partfinder/_tiger.pyx":86
- *                 # Don't compare to self
- *                 if i == j:
- *                     continue             # <<<<<<<<<<<<<<
- * 
- *                 num = 0.0
- */
-        goto __pyx_L8_continue;
-      }
-
-      /* "partfinder/_tiger.pyx":88
- *                     continue
- * 
- *                 num = 0.0             # <<<<<<<<<<<<<<
- *                 axpi = 0.0
- *                 for j_b in range(4):
- */
-      __pyx_v_num = 0.0;
-
-      /* "partfinder/_tiger.pyx":89
- * 
- *                 num = 0.0
- *                 axpi = 0.0             # <<<<<<<<<<<<<<
- *                 for j_b in range(4):
- *                     j_bitset = &self._bitsets[j][j_b]
- */
-      __pyx_v_axpi = 0.0;
-
-      /* "partfinder/_tiger.pyx":90
- *                 num = 0.0
- *                 axpi = 0.0
- *                 for j_b in range(4):             # <<<<<<<<<<<<<<
- *                     j_bitset = &self._bitsets[j][j_b]
- *                     if j_bitset.none():
- */
-      for (__pyx_t_7 = 0; __pyx_t_7 < 4; __pyx_t_7+=1) {
-        __pyx_v_j_b = __pyx_t_7;
-
-        /* "partfinder/_tiger.pyx":91
- *                 axpi = 0.0
- *                 for j_b in range(4):
- *                     j_bitset = &self._bitsets[j][j_b]             # <<<<<<<<<<<<<<
- *                     if j_bitset.none():
- *                         continue
- */
-        __pyx_v_j_bitset = (&((__pyx_v_self->__pyx_base._bitsets[__pyx_v_j])[__pyx_v_j_b]));
-
-        /* "partfinder/_tiger.pyx":92
- *                 for j_b in range(4):
- *                     j_bitset = &self._bitsets[j][j_b]
- *                     if j_bitset.none():             # <<<<<<<<<<<<<<
- *                         continue
- *                     num += 1.0
- */
-        __pyx_t_1 = (__pyx_v_j_bitset->none() != 0);
-        if (__pyx_t_1) {
-
-          /* "partfinder/_tiger.pyx":93
- *                     j_bitset = &self._bitsets[j][j_b]
- *                     if j_bitset.none():
- *                         continue             # <<<<<<<<<<<<<<
- *                     num += 1.0
- *                     for i_b in range(4):
- */
-          goto __pyx_L11_continue;
-        }
-
-        /* "partfinder/_tiger.pyx":94
- *                     if j_bitset.none():
- *                         continue
- *                     num += 1.0             # <<<<<<<<<<<<<<
- *                     for i_b in range(4):
- *                         i_bitset = &self._bitsets[i][i_b]
- */
-        __pyx_v_num = (__pyx_v_num + 1.0);
-
-        /* "partfinder/_tiger.pyx":95
- *                         continue
- *                     num += 1.0
- *                     for i_b in range(4):             # <<<<<<<<<<<<<<
- *                         i_bitset = &self._bitsets[i][i_b]
- *                         if i_bitset.none():
- */
-        for (__pyx_t_8 = 0; __pyx_t_8 < 4; __pyx_t_8+=1) {
-          __pyx_v_i_b = __pyx_t_8;
-
-          /* "partfinder/_tiger.pyx":96
- *                     num += 1.0
- *                     for i_b in range(4):
- *                         i_bitset = &self._bitsets[i][i_b]             # <<<<<<<<<<<<<<
- *                         if i_bitset.none():
- *                             continue
- */
-          __pyx_v_i_bitset = (&((__pyx_v_self->__pyx_base._bitsets[__pyx_v_i])[__pyx_v_i_b]));
-
-          /* "partfinder/_tiger.pyx":97
- *                     for i_b in range(4):
- *                         i_bitset = &self._bitsets[i][i_b]
- *                         if i_bitset.none():             # <<<<<<<<<<<<<<
- *                             continue
- *                         if j_bitset.is_subset_of(deref(i_bitset)):
- */
-          __pyx_t_1 = (__pyx_v_i_bitset->none() != 0);
-          if (__pyx_t_1) {
-
-            /* "partfinder/_tiger.pyx":98
- *                         i_bitset = &self._bitsets[i][i_b]
- *                         if i_bitset.none():
- *                             continue             # <<<<<<<<<<<<<<
- *                         if j_bitset.is_subset_of(deref(i_bitset)):
- *                             axpi += 1.0
- */
-            goto __pyx_L14_continue;
-          }
-
-          /* "partfinder/_tiger.pyx":99
- *                         if i_bitset.none():
- *                             continue
- *                         if j_bitset.is_subset_of(deref(i_bitset)):             # <<<<<<<<<<<<<<
- *                             axpi += 1.0
- *                             break
- */
-          __pyx_t_1 = (__pyx_v_j_bitset->is_subset_of((*__pyx_v_i_bitset)) != 0);
-          if (__pyx_t_1) {
-
-            /* "partfinder/_tiger.pyx":100
- *                             continue
- *                         if j_bitset.is_subset_of(deref(i_bitset)):
- *                             axpi += 1.0             # <<<<<<<<<<<<<<
- *                             break
- * 
- */
-            __pyx_v_axpi = (__pyx_v_axpi + 1.0);
-
-            /* "partfinder/_tiger.pyx":101
- *                         if j_bitset.is_subset_of(deref(i_bitset)):
- *                             axpi += 1.0
- *                             break             # <<<<<<<<<<<<<<
- * 
- *                 rate += axpi / num
- */
-            goto __pyx_L15_break;
-          }
-          __pyx_L14_continue:;
-        }
-        __pyx_L15_break:;
-        __pyx_L11_continue:;
-      }
-
-      /* "partfinder/_tiger.pyx":103
- *                             break
- * 
- *                 rate += axpi / num             # <<<<<<<<<<<<<<
- * 
- *             rate /= denom
- */
-      __pyx_v_rate = (__pyx_v_rate + (__pyx_v_axpi / __pyx_v_num));
-      __pyx_L8_continue:;
-    }
-
-    /* "partfinder/_tiger.pyx":105
- *                 rate += axpi / num
- * 
- *             rate /= denom             # <<<<<<<<<<<<<<
- *             rates.push_back(rate)
- * 
- */
-    __pyx_v_rate = (__pyx_v_rate / __pyx_v_denom);
-
-    /* "partfinder/_tiger.pyx":106
- * 
- *             rate /= denom
- *             rates.push_back(rate)             # <<<<<<<<<<<<<<
- * 
- *         return rates
- */
-    __pyx_v_rates.push_back(__pyx_v_rate);
-  }
-
-  /* "partfinder/_tiger.pyx":108
- *             rates.push_back(rate)
- * 
- *         return rates             # <<<<<<<<<<<<<<
- * 
- * 
- */
-  __Pyx_XDECREF(__pyx_r);
-  __pyx_t_9 = __pyx_convert_vector_to_py_double(__pyx_v_rates); if (unlikely(!__pyx_t_9)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 108; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
-  __Pyx_GOTREF(__pyx_t_9);
-  __pyx_r = __pyx_t_9;
-  __pyx_t_9 = 0;
-  goto __pyx_L0;
-
-  /* "partfinder/_tiger.pyx":69
- * 
- * 
- *     def calc_rates(self):             # <<<<<<<<<<<<<<
- *         if self.species_count == 0 or self.column_count == 0:
- *             return None
- */
-
-  /* function exit code */
-  __pyx_L1_error:;
-  __Pyx_XDECREF(__pyx_t_9);
-  __Pyx_AddTraceback("partfinder._tiger.TigerDNA.calc_rates", __pyx_clineno, __pyx_lineno, __pyx_filename);
-  __pyx_r = NULL;
-  __pyx_L0:;
-  __Pyx_XGIVEREF(__pyx_r);
-  __Pyx_RefNannyFinishContext();
-  return __pyx_r;
-}
-
-/* "partfinder/_tiger.pyx":111
- * 
- * 
- *     def bitsets_as_array(self):             # <<<<<<<<<<<<<<
- *         if self.species_count == 0 or self.column_count == 0:
- *             return None
- */
-
-/* Python wrapper */
-static PyObject *__pyx_pw_10partfinder_6_tiger_8TigerDNA_7bitsets_as_array(PyObject *__pyx_v_self, CYTHON_UNUSED PyObject *unused); /*proto*/
-static PyObject *__pyx_pw_10partfinder_6_tiger_8TigerDNA_7bitsets_as_array(PyObject *__pyx_v_self, CYTHON_UNUSED PyObject *unused) {
-  PyObject *__pyx_r = 0;
-  __Pyx_RefNannyDeclarations
-  __Pyx_RefNannySetupContext("bitsets_as_array (wrapper)", 0);
-  __pyx_r = __pyx_pf_10partfinder_6_tiger_8TigerDNA_6bitsets_as_array(((struct __pyx_obj_10partfinder_6_tiger_TigerDNA *)__pyx_v_self));
-
-  /* function exit code */
-  __Pyx_RefNannyFinishContext();
-  return __pyx_r;
-}
-
-static PyObject *__pyx_pf_10partfinder_6_tiger_8TigerDNA_6bitsets_as_array(struct __pyx_obj_10partfinder_6_tiger_TigerDNA *__pyx_v_self) {
-  PyObject *__pyx_v_ret = NULL;
-  __Pyx_memviewslice __pyx_v_c_ret = { 0, 0, { 0 }, { 0 }, { 0 } };
-  size_t __pyx_v_i;
-  size_t __pyx_v_j;
-  size_t __pyx_v_k;
-  PyObject *__pyx_r = NULL;
-  __Pyx_RefNannyDeclarations
-  int __pyx_t_1;
-  int __pyx_t_2;
-  PyObject *__pyx_t_3 = NULL;
-  PyObject *__pyx_t_4 = NULL;
-  PyObject *__pyx_t_5 = NULL;
-  PyObject *__pyx_t_6 = NULL;
-  __Pyx_memviewslice __pyx_t_7 = { 0, 0, { 0 }, { 0 }, { 0 } };
-  size_t __pyx_t_8;
-  size_t __pyx_t_9;
-  size_t __pyx_t_10;
-  size_t __pyx_t_11;
-  size_t __pyx_t_12;
-  size_t __pyx_t_13;
-  size_t __pyx_t_14;
-  size_t __pyx_t_15;
-  int __pyx_t_16;
-  int __pyx_lineno = 0;
-  const char *__pyx_filename = NULL;
-  int __pyx_clineno = 0;
-  __Pyx_RefNannySetupContext("bitsets_as_array", 0);
-
-  /* "partfinder/_tiger.pyx":112
- * 
- *     def bitsets_as_array(self):
- *         if self.species_count == 0 or self.column_count == 0:             # <<<<<<<<<<<<<<
- *             return None
- * 
- */
-  __pyx_t_2 = ((__pyx_v_self->__pyx_base.species_count == 0) != 0);
-  if (!__pyx_t_2) {
-  } else {
-    __pyx_t_1 = __pyx_t_2;
-    goto __pyx_L4_bool_binop_done;
-  }
-  __pyx_t_2 = ((__pyx_v_self->__pyx_base.column_count == 0) != 0);
-  __pyx_t_1 = __pyx_t_2;
-  __pyx_L4_bool_binop_done:;
-  if (__pyx_t_1) {
-
-    /* "partfinder/_tiger.pyx":113
- *     def bitsets_as_array(self):
- *         if self.species_count == 0 or self.column_count == 0:
- *             return None             # <<<<<<<<<<<<<<
- * 
- *         ret = numpy.zeros((self.column_count, 4, self.species_count), dtype='u1')
- */
-    __Pyx_XDECREF(__pyx_r);
-    __Pyx_INCREF(Py_None);
-    __pyx_r = Py_None;
-    goto __pyx_L0;
-  }
-
-  /* "partfinder/_tiger.pyx":115
- *             return None
- * 
- *         ret = numpy.zeros((self.column_count, 4, self.species_count), dtype='u1')             # <<<<<<<<<<<<<<
- *         cdef:
- *             np.npy_uint8[:, :, :] c_ret = ret
- */
-  __pyx_t_3 = __Pyx_GetModuleGlobalName(__pyx_n_s_numpy); if (unlikely(!__pyx_t_3)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 115; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
-  __Pyx_GOTREF(__pyx_t_3);
-  __pyx_t_4 = __Pyx_PyObject_GetAttrStr(__pyx_t_3, __pyx_n_s_zeros); if (unlikely(!__pyx_t_4)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 115; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
-  __Pyx_GOTREF(__pyx_t_4);
-  __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
-  __pyx_t_3 = __Pyx_PyInt_FromSize_t(__pyx_v_self->__pyx_base.column_count); if (unlikely(!__pyx_t_3)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 115; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
-  __Pyx_GOTREF(__pyx_t_3);
-  __pyx_t_5 = __Pyx_PyInt_FromSize_t(__pyx_v_self->__pyx_base.species_count); if (unlikely(!__pyx_t_5)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 115; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
-  __Pyx_GOTREF(__pyx_t_5);
-  __pyx_t_6 = PyTuple_New(3); if (unlikely(!__pyx_t_6)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 115; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
-  __Pyx_GOTREF(__pyx_t_6);
-  PyTuple_SET_ITEM(__pyx_t_6, 0, __pyx_t_3);
-  __Pyx_GIVEREF(__pyx_t_3);
-  __Pyx_INCREF(__pyx_int_4);
-  PyTuple_SET_ITEM(__pyx_t_6, 1, __pyx_int_4);
-  __Pyx_GIVEREF(__pyx_int_4);
-  PyTuple_SET_ITEM(__pyx_t_6, 2, __pyx_t_5);
-  __Pyx_GIVEREF(__pyx_t_5);
-  __pyx_t_3 = 0;
-  __pyx_t_5 = 0;
-  __pyx_t_5 = PyTuple_New(1); if (unlikely(!__pyx_t_5)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 115; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
-  __Pyx_GOTREF(__pyx_t_5);
-  PyTuple_SET_ITEM(__pyx_t_5, 0, __pyx_t_6);
-  __Pyx_GIVEREF(__pyx_t_6);
-  __pyx_t_6 = 0;
-  __pyx_t_6 = PyDict_New(); if (unlikely(!__pyx_t_6)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 115; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
-  __Pyx_GOTREF(__pyx_t_6);
-  if (PyDict_SetItem(__pyx_t_6, __pyx_n_s_dtype, __pyx_n_s_u1) < 0) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 115; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
-  __pyx_t_3 = __Pyx_PyObject_Call(__pyx_t_4, __pyx_t_5, __pyx_t_6); if (unlikely(!__pyx_t_3)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 115; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
-  __Pyx_GOTREF(__pyx_t_3);
-  __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
-  __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
-  __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
-  __pyx_v_ret = __pyx_t_3;
-  __pyx_t_3 = 0;
-
-  /* "partfinder/_tiger.pyx":117
- *         ret = numpy.zeros((self.column_count, 4, self.species_count), dtype='u1')
- *         cdef:
- *             np.npy_uint8[:, :, :] c_ret = ret             # <<<<<<<<<<<<<<
- *             size_t i, j, k
- * 
- */
-  __pyx_t_7 = __Pyx_PyObject_to_MemoryviewSlice_dsdsds_nn_npy_uint8(__pyx_v_ret);
-  if (unlikely(!__pyx_t_7.memview)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 117; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
-  __pyx_v_c_ret = __pyx_t_7;
-  __pyx_t_7.memview = NULL;
-  __pyx_t_7.data = NULL;
-
-  /* "partfinder/_tiger.pyx":120
- *             size_t i, j, k
- * 
- *         for i in range(self.column_count):             # <<<<<<<<<<<<<<
- *             for j in range(4):
- *                 for k in range(self.species_count):
- */
-  __pyx_t_8 = __pyx_v_self->__pyx_base.column_count;
-  for (__pyx_t_9 = 0; __pyx_t_9 < __pyx_t_8; __pyx_t_9+=1) {
-    __pyx_v_i = __pyx_t_9;
-
-    /* "partfinder/_tiger.pyx":121
- * 
- *         for i in range(self.column_count):
- *             for j in range(4):             # <<<<<<<<<<<<<<
- *                 for k in range(self.species_count):
- *                     if self._bitsets[i][j].test(k):
- */
-    for (__pyx_t_10 = 0; __pyx_t_10 < 4; __pyx_t_10+=1) {
-      __pyx_v_j = __pyx_t_10;
-
-      /* "partfinder/_tiger.pyx":122
- *         for i in range(self.column_count):
- *             for j in range(4):
- *                 for k in range(self.species_count):             # <<<<<<<<<<<<<<
- *                     if self._bitsets[i][j].test(k):
- *                         c_ret[i, j, k] = 1
- */
-      __pyx_t_11 = __pyx_v_self->__pyx_base.species_count;
-      for (__pyx_t_12 = 0; __pyx_t_12 < __pyx_t_11; __pyx_t_12+=1) {
-        __pyx_v_k = __pyx_t_12;
-
-        /* "partfinder/_tiger.pyx":123
- *             for j in range(4):
- *                 for k in range(self.species_count):
- *                     if self._bitsets[i][j].test(k):             # <<<<<<<<<<<<<<
- *                         c_ret[i, j, k] = 1
- *         return ret
- */
-        __pyx_t_1 = (((__pyx_v_self->__pyx_base._bitsets[__pyx_v_i])[__pyx_v_j]).test(__pyx_v_k) != 0);
-        if (__pyx_t_1) {
-
-          /* "partfinder/_tiger.pyx":124
- *                 for k in range(self.species_count):
- *                     if self._bitsets[i][j].test(k):
- *                         c_ret[i, j, k] = 1             # <<<<<<<<<<<<<<
- *         return ret
- * 
- */
-          __pyx_t_13 = __pyx_v_i;
-          __pyx_t_14 = __pyx_v_j;
-          __pyx_t_15 = __pyx_v_k;
-          __pyx_t_16 = -1;
-          if (unlikely(__pyx_t_13 >= (size_t)__pyx_v_c_ret.shape[0])) __pyx_t_16 = 0;
-          if (unlikely(__pyx_t_14 >= (size_t)__pyx_v_c_ret.shape[1])) __pyx_t_16 = 1;
-          if (unlikely(__pyx_t_15 >= (size_t)__pyx_v_c_ret.shape[2])) __pyx_t_16 = 2;
-          if (unlikely(__pyx_t_16 != -1)) {
-            __Pyx_RaiseBufferIndexError(__pyx_t_16);
-            {__pyx_filename = __pyx_f[0]; __pyx_lineno = 124; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
-          }
-          *((npy_uint8 *) ( /* dim=2 */ (( /* dim=1 */ (( /* dim=0 */ (__pyx_v_c_ret.data + __pyx_t_13 * __pyx_v_c_ret.strides[0]) ) + __pyx_t_14 * __pyx_v_c_ret.strides[1]) ) + __pyx_t_15 * __pyx_v_c_ret.strides[2]) )) = 1;
-          goto __pyx_L12;
-        }
-        __pyx_L12:;
-      }
-    }
-  }
-
-  /* "partfinder/_tiger.pyx":125
- *                     if self._bitsets[i][j].test(k):
- *                         c_ret[i, j, k] = 1
- *         return ret             # <<<<<<<<<<<<<<
- * 
- * 
- */
-  __Pyx_XDECREF(__pyx_r);
-  __Pyx_INCREF(__pyx_v_ret);
-  __pyx_r = __pyx_v_ret;
-  goto __pyx_L0;
-
-  /* "partfinder/_tiger.pyx":111
- * 
- * 
- *     def bitsets_as_array(self):             # <<<<<<<<<<<<<<
- *         if self.species_count == 0 or self.column_count == 0:
- *             return None
- */
-
-  /* function exit code */
-  __pyx_L1_error:;
-  __Pyx_XDECREF(__pyx_t_3);
-  __Pyx_XDECREF(__pyx_t_4);
-  __Pyx_XDECREF(__pyx_t_5);
-  __Pyx_XDECREF(__pyx_t_6);
-  __PYX_XDEC_MEMVIEW(&__pyx_t_7, 1);
-  __Pyx_AddTraceback("partfinder._tiger.TigerDNA.bitsets_as_array", __pyx_clineno, __pyx_lineno, __pyx_filename);
-  __pyx_r = NULL;
-  __pyx_L0:;
-  __Pyx_XDECREF(__pyx_v_ret);
-  __PYX_XDEC_MEMVIEW(&__pyx_v_c_ret, 1);
   __Pyx_XGIVEREF(__pyx_r);
   __Pyx_RefNannyFinishContext();
   return __pyx_r;
@@ -8358,7 +8395,7 @@ static PyObject *__pyx_memoryview_convert_item_to_object(struct __pyx_memoryview
  * 
  */
         __Pyx_XDECREF(__pyx_r);
-        __pyx_t_1 = __Pyx_GetItemInt(__pyx_v_result, 0, long, 1, __Pyx_PyInt_From_long, 0, 0, 1); if (unlikely(__pyx_t_1 == NULL)) {__pyx_filename = __pyx_f[3]; __pyx_lineno = 448; __pyx_clineno = __LINE__; goto __pyx_L5_except_error;};
+        __pyx_t_1 = __Pyx_GetItemInt(__pyx_v_result, 0, long, 1, __Pyx_PyInt_From_long, 0, 0, 0); if (unlikely(__pyx_t_1 == NULL)) {__pyx_filename = __pyx_f[3]; __pyx_lineno = 448; __pyx_clineno = __LINE__; goto __pyx_L5_except_error;};
         __Pyx_GOTREF(__pyx_t_1);
         __pyx_r = __pyx_t_1;
         __pyx_t_1 = 0;
@@ -15668,69 +15705,6 @@ static void __pyx_memoryview__slice_assign_scalar(char *__pyx_v_data, Py_ssize_t
   /* function exit code */
 }
 
-/* "vector.to_py":78
- * 
- * @cname("__pyx_convert_vector_to_py_double")
- * cdef object __pyx_convert_vector_to_py_double(vector[X]& v):             # <<<<<<<<<<<<<<
- *     return [X_to_py(v[i]) for i in range(v.size())]
- * 
- */
-
-static PyObject *__pyx_convert_vector_to_py_double(const std::vector<double>  &__pyx_v_v) {
-  size_t __pyx_v_i;
-  PyObject *__pyx_r = NULL;
-  __Pyx_RefNannyDeclarations
-  PyObject *__pyx_t_1 = NULL;
-  size_t __pyx_t_2;
-  size_t __pyx_t_3;
-  PyObject *__pyx_t_4 = NULL;
-  int __pyx_lineno = 0;
-  const char *__pyx_filename = NULL;
-  int __pyx_clineno = 0;
-  __Pyx_RefNannySetupContext("__pyx_convert_vector_to_py_double", 0);
-
-  /* "vector.to_py":79
- * @cname("__pyx_convert_vector_to_py_double")
- * cdef object __pyx_convert_vector_to_py_double(vector[X]& v):
- *     return [X_to_py(v[i]) for i in range(v.size())]             # <<<<<<<<<<<<<<
- * 
- * 
- */
-  __Pyx_XDECREF(__pyx_r);
-  __pyx_t_1 = PyList_New(0); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[4]; __pyx_lineno = 79; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
-  __Pyx_GOTREF(__pyx_t_1);
-  __pyx_t_2 = __pyx_v_v.size();
-  for (__pyx_t_3 = 0; __pyx_t_3 < __pyx_t_2; __pyx_t_3+=1) {
-    __pyx_v_i = __pyx_t_3;
-    __pyx_t_4 = PyFloat_FromDouble((__pyx_v_v[__pyx_v_i])); if (unlikely(!__pyx_t_4)) {__pyx_filename = __pyx_f[4]; __pyx_lineno = 79; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
-    __Pyx_GOTREF(__pyx_t_4);
-    if (unlikely(__Pyx_ListComp_Append(__pyx_t_1, (PyObject*)__pyx_t_4))) {__pyx_filename = __pyx_f[4]; __pyx_lineno = 79; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
-    __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
-  }
-  __pyx_r = __pyx_t_1;
-  __pyx_t_1 = 0;
-  goto __pyx_L0;
-
-  /* "vector.to_py":78
- * 
- * @cname("__pyx_convert_vector_to_py_double")
- * cdef object __pyx_convert_vector_to_py_double(vector[X]& v):             # <<<<<<<<<<<<<<
- *     return [X_to_py(v[i]) for i in range(v.size())]
- * 
- */
-
-  /* function exit code */
-  __pyx_L1_error:;
-  __Pyx_XDECREF(__pyx_t_1);
-  __Pyx_XDECREF(__pyx_t_4);
-  __Pyx_AddTraceback("vector.to_py.__pyx_convert_vector_to_py_double", __pyx_clineno, __pyx_lineno, __pyx_filename);
-  __pyx_r = 0;
-  __pyx_L0:;
-  __Pyx_XGIVEREF(__pyx_r);
-  __Pyx_RefNannyFinishContext();
-  return __pyx_r;
-}
-
 static PyObject *__pyx_tp_new_10partfinder_6_tiger_TigerBase(PyTypeObject *t, CYTHON_UNUSED PyObject *a, CYTHON_UNUSED PyObject *k) {
   struct __pyx_obj_10partfinder_6_tiger_TigerBase *p;
   PyObject *o;
@@ -15768,6 +15742,8 @@ static PyObject *__pyx_getprop_10partfinder_6_tiger_9TigerBase_column_count(PyOb
 }
 
 static PyMethodDef __pyx_methods_10partfinder_6_tiger_TigerBase[] = {
+  {"calc_rates", (PyCFunction)__pyx_pw_10partfinder_6_tiger_9TigerBase_3calc_rates, METH_NOARGS, 0},
+  {"bitsets_as_array", (PyCFunction)__pyx_pw_10partfinder_6_tiger_9TigerBase_5bitsets_as_array, METH_NOARGS, 0},
   {0, 0, 0, 0}
 };
 
@@ -15844,9 +15820,7 @@ static PyObject *__pyx_tp_new_10partfinder_6_tiger_TigerDNA(PyTypeObject *t, PyO
 }
 
 static PyMethodDef __pyx_methods_10partfinder_6_tiger_TigerDNA[] = {
-  {"from_alignment", (PyCFunction)__pyx_pw_10partfinder_6_tiger_8TigerDNA_3from_alignment, METH_O, 0},
-  {"calc_rates", (PyCFunction)__pyx_pw_10partfinder_6_tiger_8TigerDNA_5calc_rates, METH_NOARGS, 0},
-  {"bitsets_as_array", (PyCFunction)__pyx_pw_10partfinder_6_tiger_8TigerDNA_7bitsets_as_array, METH_NOARGS, 0},
+  {"build_bitsets", (PyCFunction)__pyx_pw_10partfinder_6_tiger_8TigerDNA_3build_bitsets, METH_O, 0},
   {0, 0, 0, 0}
 };
 
@@ -16619,6 +16593,7 @@ static __Pyx_StringTabEntry __pyx_string_tab[] = {
   {&__pyx_n_s_dtype_is_object, __pyx_k_dtype_is_object, sizeof(__pyx_k_dtype_is_object), 0, 0, 1, 1},
   {&__pyx_n_s_enumerate, __pyx_k_enumerate, sizeof(__pyx_k_enumerate), 0, 0, 1, 1},
   {&__pyx_n_s_error, __pyx_k_error, sizeof(__pyx_k_error), 0, 0, 1, 1},
+  {&__pyx_n_s_f8, __pyx_k_f8, sizeof(__pyx_k_f8), 0, 0, 1, 1},
   {&__pyx_n_s_flags, __pyx_k_flags, sizeof(__pyx_k_flags), 0, 0, 1, 1},
   {&__pyx_n_s_format, __pyx_k_format, sizeof(__pyx_k_format), 0, 0, 1, 1},
   {&__pyx_n_s_fortran, __pyx_k_fortran, sizeof(__pyx_k_fortran), 0, 0, 1, 1},
@@ -16663,7 +16638,7 @@ static __Pyx_StringTabEntry __pyx_string_tab[] = {
   {0, 0, 0, 0, 0, 0, 0}
 };
 static int __Pyx_InitCachedBuiltins(void) {
-  __pyx_builtin_range = __Pyx_GetBuiltinName(__pyx_n_s_range); if (!__pyx_builtin_range) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 42; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_builtin_range = __Pyx_GetBuiltinName(__pyx_n_s_range); if (!__pyx_builtin_range) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 33; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __pyx_builtin_ValueError = __Pyx_GetBuiltinName(__pyx_n_s_ValueError); if (!__pyx_builtin_ValueError) {__pyx_filename = __pyx_f[2]; __pyx_lineno = 215; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __pyx_builtin_RuntimeError = __Pyx_GetBuiltinName(__pyx_n_s_RuntimeError); if (!__pyx_builtin_RuntimeError) {__pyx_filename = __pyx_f[2]; __pyx_lineno = 799; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __pyx_builtin_MemoryError = __Pyx_GetBuiltinName(__pyx_n_s_MemoryError); if (!__pyx_builtin_MemoryError) {__pyx_filename = __pyx_f[3]; __pyx_lineno = 142; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
@@ -17035,9 +17010,9 @@ PyMODINIT_FUNC PyInit__tiger(void)
   if (PyObject_SetAttrString(__pyx_m, "TigerBase", (PyObject *)&__pyx_type_10partfinder_6_tiger_TigerBase) < 0) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 16; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __pyx_ptype_10partfinder_6_tiger_TigerBase = &__pyx_type_10partfinder_6_tiger_TigerBase;
   __pyx_type_10partfinder_6_tiger_TigerDNA.tp_base = __pyx_ptype_10partfinder_6_tiger_TigerBase;
-  if (PyType_Ready(&__pyx_type_10partfinder_6_tiger_TigerDNA) < 0) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 21; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  if (PyType_Ready(&__pyx_type_10partfinder_6_tiger_TigerDNA) < 0) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 78; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __pyx_type_10partfinder_6_tiger_TigerDNA.tp_print = 0;
-  if (PyObject_SetAttrString(__pyx_m, "TigerDNA", (PyObject *)&__pyx_type_10partfinder_6_tiger_TigerDNA) < 0) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 21; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  if (PyObject_SetAttrString(__pyx_m, "TigerDNA", (PyObject *)&__pyx_type_10partfinder_6_tiger_TigerDNA) < 0) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 78; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __pyx_ptype_10partfinder_6_tiger_TigerDNA = &__pyx_type_10partfinder_6_tiger_TigerDNA;
   if (PyType_Ready(&__pyx_type___pyx_array) < 0) {__pyx_filename = __pyx_f[3]; __pyx_lineno = 99; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __pyx_type___pyx_array.tp_print = 0;
@@ -17073,7 +17048,7 @@ PyMODINIT_FUNC PyInit__tiger(void)
   #else
   sizeof(PyHeapTypeObject),
   #endif
-  0); if (unlikely(!__pyx_ptype_7cpython_4type_type)) {__pyx_filename = __pyx_f[5]; __pyx_lineno = 9; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  0); if (unlikely(!__pyx_ptype_7cpython_4type_type)) {__pyx_filename = __pyx_f[4]; __pyx_lineno = 9; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __pyx_ptype_5numpy_dtype = __Pyx_ImportType("numpy", "dtype", sizeof(PyArray_Descr), 0); if (unlikely(!__pyx_ptype_5numpy_dtype)) {__pyx_filename = __pyx_f[2]; __pyx_lineno = 155; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __pyx_ptype_5numpy_flatiter = __Pyx_ImportType("numpy", "flatiter", sizeof(PyArrayIterObject), 0); if (unlikely(!__pyx_ptype_5numpy_flatiter)) {__pyx_filename = __pyx_f[2]; __pyx_lineno = 165; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __pyx_ptype_5numpy_broadcast = __Pyx_ImportType("numpy", "broadcast", sizeof(PyArrayMultiIterObject), 0); if (unlikely(!__pyx_ptype_5numpy_broadcast)) {__pyx_filename = __pyx_f[2]; __pyx_lineno = 169; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
@@ -17250,12 +17225,12 @@ PyMODINIT_FUNC PyInit__tiger(void)
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
   PyType_Modified(__pyx_memoryviewslice_type);
 
-  /* "vector.to_py":78
+  /* "View.MemoryView":1361
  * 
- * @cname("__pyx_convert_vector_to_py_double")
- * cdef object __pyx_convert_vector_to_py_double(vector[X]& v):             # <<<<<<<<<<<<<<
- *     return [X_to_py(v[i]) for i in range(v.size())]
- * 
+ * @cname('__pyx_memoryview__slice_assign_scalar')
+ * cdef void _slice_assign_scalar(char *data, Py_ssize_t *shape,             # <<<<<<<<<<<<<<
+ *                               Py_ssize_t *strides, int ndim,
+ *                               size_t itemsize, void *item) nogil:
  */
 
   /*--- Wrapped vars code ---*/
@@ -17374,66 +17349,41 @@ invalid_keyword:
     return 0;
 }
 
-static CYTHON_INLINE void __Pyx_RaiseTooManyValuesError(Py_ssize_t expected) {
-    PyErr_Format(PyExc_ValueError,
-                 "too many values to unpack (expected %" CYTHON_FORMAT_SSIZE_T "d)", expected);
-}
-
-static CYTHON_INLINE void __Pyx_RaiseNeedMoreValuesError(Py_ssize_t index) {
-    PyErr_Format(PyExc_ValueError,
-                 "need more than %" CYTHON_FORMAT_SSIZE_T "d value%.1s to unpack",
-                 index, (index == 1) ? "" : "s");
-}
-
-static CYTHON_INLINE int __Pyx_IterFinish(void) {
+static CYTHON_INLINE PyObject *__Pyx_GetModuleGlobalName(PyObject *name) {
+    PyObject *result;
 #if CYTHON_COMPILING_IN_CPYTHON
-    PyThreadState *tstate = PyThreadState_GET();
-    PyObject* exc_type = tstate->curexc_type;
-    if (unlikely(exc_type)) {
-        if (likely(exc_type == PyExc_StopIteration) || PyErr_GivenExceptionMatches(exc_type, PyExc_StopIteration)) {
-            PyObject *exc_value, *exc_tb;
-            exc_value = tstate->curexc_value;
-            exc_tb = tstate->curexc_traceback;
-            tstate->curexc_type = 0;
-            tstate->curexc_value = 0;
-            tstate->curexc_traceback = 0;
-            Py_DECREF(exc_type);
-            Py_XDECREF(exc_value);
-            Py_XDECREF(exc_tb);
-            return 0;
-        } else {
-            return -1;
-        }
-    }
-    return 0;
-#else
-    if (unlikely(PyErr_Occurred())) {
-        if (likely(PyErr_ExceptionMatches(PyExc_StopIteration))) {
-            PyErr_Clear();
-            return 0;
-        } else {
-            return -1;
-        }
-    }
-    return 0;
-#endif
-}
-
-static int __Pyx_IternextUnpackEndCheck(PyObject *retval, Py_ssize_t expected) {
-    if (unlikely(retval)) {
-        Py_DECREF(retval);
-        __Pyx_RaiseTooManyValuesError(expected);
-        return -1;
+    result = PyDict_GetItem(__pyx_d, name);
+    if (likely(result)) {
+        Py_INCREF(result);
     } else {
-        return __Pyx_IterFinish();
+#else
+    result = PyObject_GetItem(__pyx_d, name);
+    if (!result) {
+        PyErr_Clear();
+#endif
+        result = __Pyx_GetBuiltinName(name);
     }
-    return 0;
+    return result;
 }
 
-static void __Pyx_RaiseBufferIndexError(int axis) {
-  PyErr_Format(PyExc_IndexError,
-     "Out of bounds on buffer access (axis %d)", axis);
+#if CYTHON_COMPILING_IN_CPYTHON
+static CYTHON_INLINE PyObject* __Pyx_PyObject_Call(PyObject *func, PyObject *arg, PyObject *kw) {
+    PyObject *result;
+    ternaryfunc call = func->ob_type->tp_call;
+    if (unlikely(!call))
+        return PyObject_Call(func, arg, kw);
+    if (unlikely(Py_EnterRecursiveCall((char*)" while calling a Python object")))
+        return NULL;
+    result = (*call)(func, arg, kw);
+    Py_LeaveRecursiveCall();
+    if (unlikely(!result) && unlikely(!PyErr_Occurred())) {
+        PyErr_SetString(
+            PyExc_SystemError,
+            "NULL result without error in PyObject_Call");
+    }
+    return result;
 }
+#endif
 
 static CYTHON_INLINE int __Pyx_IsLittleEndian(void) {
   unsigned int n = 1;
@@ -18119,41 +18069,61 @@ static CYTHON_INLINE void __Pyx_XDEC_MEMVIEW(__Pyx_memviewslice *memslice,
     }
 }
 
-static CYTHON_INLINE PyObject *__Pyx_GetModuleGlobalName(PyObject *name) {
-    PyObject *result;
-#if CYTHON_COMPILING_IN_CPYTHON
-    result = PyDict_GetItem(__pyx_d, name);
-    if (likely(result)) {
-        Py_INCREF(result);
-    } else {
-#else
-    result = PyObject_GetItem(__pyx_d, name);
-    if (!result) {
-        PyErr_Clear();
-#endif
-        result = __Pyx_GetBuiltinName(name);
-    }
-    return result;
+static CYTHON_INLINE void __Pyx_RaiseTooManyValuesError(Py_ssize_t expected) {
+    PyErr_Format(PyExc_ValueError,
+                 "too many values to unpack (expected %" CYTHON_FORMAT_SSIZE_T "d)", expected);
 }
 
-#if CYTHON_COMPILING_IN_CPYTHON
-static CYTHON_INLINE PyObject* __Pyx_PyObject_Call(PyObject *func, PyObject *arg, PyObject *kw) {
-    PyObject *result;
-    ternaryfunc call = func->ob_type->tp_call;
-    if (unlikely(!call))
-        return PyObject_Call(func, arg, kw);
-    if (unlikely(Py_EnterRecursiveCall((char*)" while calling a Python object")))
-        return NULL;
-    result = (*call)(func, arg, kw);
-    Py_LeaveRecursiveCall();
-    if (unlikely(!result) && unlikely(!PyErr_Occurred())) {
-        PyErr_SetString(
-            PyExc_SystemError,
-            "NULL result without error in PyObject_Call");
-    }
-    return result;
+static CYTHON_INLINE void __Pyx_RaiseNeedMoreValuesError(Py_ssize_t index) {
+    PyErr_Format(PyExc_ValueError,
+                 "need more than %" CYTHON_FORMAT_SSIZE_T "d value%.1s to unpack",
+                 index, (index == 1) ? "" : "s");
 }
+
+static CYTHON_INLINE int __Pyx_IterFinish(void) {
+#if CYTHON_COMPILING_IN_CPYTHON
+    PyThreadState *tstate = PyThreadState_GET();
+    PyObject* exc_type = tstate->curexc_type;
+    if (unlikely(exc_type)) {
+        if (likely(exc_type == PyExc_StopIteration) || PyErr_GivenExceptionMatches(exc_type, PyExc_StopIteration)) {
+            PyObject *exc_value, *exc_tb;
+            exc_value = tstate->curexc_value;
+            exc_tb = tstate->curexc_traceback;
+            tstate->curexc_type = 0;
+            tstate->curexc_value = 0;
+            tstate->curexc_traceback = 0;
+            Py_DECREF(exc_type);
+            Py_XDECREF(exc_value);
+            Py_XDECREF(exc_tb);
+            return 0;
+        } else {
+            return -1;
+        }
+    }
+    return 0;
+#else
+    if (unlikely(PyErr_Occurred())) {
+        if (likely(PyErr_ExceptionMatches(PyExc_StopIteration))) {
+            PyErr_Clear();
+            return 0;
+        } else {
+            return -1;
+        }
+    }
+    return 0;
 #endif
+}
+
+static int __Pyx_IternextUnpackEndCheck(PyObject *retval, Py_ssize_t expected) {
+    if (unlikely(retval)) {
+        Py_DECREF(retval);
+        __Pyx_RaiseTooManyValuesError(expected);
+        return -1;
+    } else {
+        return __Pyx_IterFinish();
+    }
+    return 0;
+}
 
 static CYTHON_INLINE void __Pyx_ErrRestore(PyObject *type, PyObject *value, PyObject *tb) {
 #if CYTHON_COMPILING_IN_CPYTHON
@@ -20243,18 +20213,18 @@ no_fail:
     return retval;
 }
 
-static CYTHON_INLINE __Pyx_memviewslice __Pyx_PyObject_to_MemoryviewSlice_dsds_nn_npy_uint8(PyObject *obj) {
+static CYTHON_INLINE __Pyx_memviewslice __Pyx_PyObject_to_MemoryviewSlice_ds_nn_npy_double(PyObject *obj) {
     __Pyx_memviewslice result = { 0, 0, { 0 }, { 0 }, { 0 } };
     __Pyx_BufFmt_StackElem stack[1];
-    int axes_specs[] = { (__Pyx_MEMVIEW_DIRECT | __Pyx_MEMVIEW_STRIDED), (__Pyx_MEMVIEW_DIRECT | __Pyx_MEMVIEW_STRIDED) };
+    int axes_specs[] = { (__Pyx_MEMVIEW_DIRECT | __Pyx_MEMVIEW_STRIDED) };
     int retcode;
     if (obj == Py_None) {
         result.memview = (struct __pyx_memoryview_obj *) Py_None;
         return result;
     }
     retcode = __Pyx_ValidateAndInit_memviewslice(axes_specs, 0,
-                                                 PyBUF_RECORDS, 2,
-                                                 &__Pyx_TypeInfo_nn_npy_uint8, stack,
+                                                 PyBUF_RECORDS, 1,
+                                                 &__Pyx_TypeInfo_nn_npy_double, stack,
                                                  &result, obj);
     if (unlikely(retcode == -1))
         goto __pyx_fail;
@@ -20276,6 +20246,28 @@ static CYTHON_INLINE __Pyx_memviewslice __Pyx_PyObject_to_MemoryviewSlice_dsdsds
     }
     retcode = __Pyx_ValidateAndInit_memviewslice(axes_specs, 0,
                                                  PyBUF_RECORDS, 3,
+                                                 &__Pyx_TypeInfo_nn_npy_uint8, stack,
+                                                 &result, obj);
+    if (unlikely(retcode == -1))
+        goto __pyx_fail;
+    return result;
+__pyx_fail:
+    result.memview = NULL;
+    result.data = NULL;
+    return result;
+}
+
+static CYTHON_INLINE __Pyx_memviewslice __Pyx_PyObject_to_MemoryviewSlice_dsds_nn_npy_uint8(PyObject *obj) {
+    __Pyx_memviewslice result = { 0, 0, { 0 }, { 0 }, { 0 } };
+    __Pyx_BufFmt_StackElem stack[1];
+    int axes_specs[] = { (__Pyx_MEMVIEW_DIRECT | __Pyx_MEMVIEW_STRIDED), (__Pyx_MEMVIEW_DIRECT | __Pyx_MEMVIEW_STRIDED) };
+    int retcode;
+    if (obj == Py_None) {
+        result.memview = (struct __pyx_memoryview_obj *) Py_None;
+        return result;
+    }
+    retcode = __Pyx_ValidateAndInit_memviewslice(axes_specs, 0,
+                                                 PyBUF_RECORDS, 2,
                                                  &__Pyx_TypeInfo_nn_npy_uint8, stack,
                                                  &result, obj);
     if (unlikely(retcode == -1))
