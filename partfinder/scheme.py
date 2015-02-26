@@ -18,7 +18,7 @@
 import logtools
 log = logtools.get_logger()
 
-from partfinder import subset_ops
+import subset_ops
 import submodels
 
 from util import PartitionFinderError, get_aic, get_aicc, get_bic

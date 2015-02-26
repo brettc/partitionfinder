@@ -21,6 +21,7 @@ log = logtools.get_logger()
 import hashlib
 import cPickle as pickle
 import subset
+from util import get_aic, get_aicc, get_bic
 
 
 def subset_unique_name(columns):
@@ -126,4 +127,41 @@ def split_subset(a_subset, cluster_list):
         tracker += 1
 
     return list_of_subsets
+
+def subset_list_score(list_of_subsets, the_config, alignment):
+    """Takes a list of subsets and return the aic, aicc, or bic score"""
+    sum_subset_k = 0
+    lnL = 0
+    subs_len = 0
+    for sub in list_of_subsets:
+        sum_subset_k += sub.best_params
+        lnL += sub.best_lnl
+        subs_len += len(sub.columns)
+    # Grab the number of species so we know how many params there are
+    num_taxa = len(alignment.species)
+    # Linked brlens - only one extra parameter per subset
+    if the_config.branchlengths == 'linked':
+        sum_k = sum_subset_k + (len(list_of_subsets) - 1) + (
+            (2 * num_taxa) - 3)
+        log.debug("Total parameters from brlens: %d" %
+                  ((2 * num_taxa) - 3))
+        log.debug("Parameters from subset multipliers: %d" %
+                  (len(list_of_subsets) -1))
+
+    # Unlinked brlens - every subset has its own set of brlens
+    elif the_config.branchlengths == 'unlinked':
+        sum_k = sum_subset_k + (len(list_of_subsets) * (
+            (2 * num_taxa) - 3))
+        log.debug("Total parameters from brlens: %d" % ((
+            2 * num_taxa) - 3) * (len(list_of_subsets)))
+
+    log.debug("Grand_total_parameters: %d", sum_k)
+
+    if the_config.model_selection == 'aic':
+        return get_aic(lnL, sum_k)
+    elif the_config.model_selection == 'aicc':
+        return get_aicc(lnL, sum_k, subs_len)
+    elif the_config.model_selection == 'bic':
+        return get_bic(lnL, sum_k, subs_len)
+
 
