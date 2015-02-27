@@ -32,7 +32,7 @@ from pyparsing import (
 )
 from math import log as logarithm
 
-import model_utils as models
+import phyml_models as models
 from database import DataRecord, DataLayout
 
 _binary_name = 'phyml'
