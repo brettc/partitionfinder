@@ -205,6 +205,8 @@ class Subset(object):
         }
         return param_values
 
+
+
     def finalise(self, cfg):
         if self.models_not_done:
             return False
@@ -253,6 +255,11 @@ class Subset(object):
         """Read in the results and parse them"""
         for m in list(self.models_not_done):
             self.parse_model_result(cfg, m)
+
+    def fabricate_model_result(self, cfg, model):
+        self.fabricated = True
+        self.dont_split = True
+        self.models_not_done.remove(model)
 
     def parse_model_result(self, cfg, model):
         pth, tree_path = cfg.processor.make_output_path(

@@ -29,7 +29,7 @@ import subset_ops
 import results
 import threading
 from config import the_config
-from util import PartitionFinderError
+from util import PartitionFinderError, PhylogenyProgramError
 import util
 
 class AnalysisError(PartitionFinderError):
@@ -181,23 +181,33 @@ class Analysis(object):
 
     def run_task(self, model_name, sub):
         # This bit should run in parallel (forking the processor)
-        the_config.processor.analyse(
-            model_name,
-            sub.alignment_path,
-            self.tree_path,
-            the_config.branchlengths,
-            the_config.cmdline_extras
-        )
+        try:
+            the_config.processor.analyse(
+                model_name,
+                sub.alignment_path,
+                self.tree_path,
+                the_config.branchlengths,
+                the_config.cmdline_extras
+            )
+            fabricate = False
+        except PhylogenyProgramError:
+            if the_config.search != 'kmeans':
+                raise
+
+            # If it is kmeans we assume that the error is because the subset
+            # is too small or unanalysable, so we fabricate it
+            log.warning("New subset could not be analysed. It will be merged "
+                        "at the end of the analysis")
+            fabricate = True
 
         # Not entirely sure that WE NEED to block here, but it is safer to do
         # It shouldn't hold things up toooo long...
         self.lock.acquire()
         try:
-            if sub.analysis_error is None:
-                sub.parse_model_result(the_config, model_name)
-
+            if fabricate:
+                sub.fabricate_model_result(the_config, model_name)
             else:
-                sub.fabricate_result(the_config, model_name)
+                sub.parse_model_result(the_config, model_name)
 
             # Try finalising, then the result will get written out earlier...
             sub.finalise(the_config)
@@ -248,7 +258,7 @@ class Analysis(object):
             # check again here
             if not sub.finalise(the_config):
                 log.error("Failed to run models %s; not sure why" %
-                          ", " "".join(list(sub.models_to_do)))
+                          ", " "".join(list(sub.models_not_done)))
                 raise AnalysisError
 
     def analyse_scheme(self, sch):

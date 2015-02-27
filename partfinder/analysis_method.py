@@ -411,39 +411,40 @@ class KmeansAnalysis(Analysis):
 
             while fabricated_subsets:
 
-                s = fabricated_subsets[0]
+                all_subs = start_subsets
+                s = fabricated_subsets.pop(0)
+                all_subs.remove(s)
+
                 centroid = s.centroid
                 best_match = None
 
                 # get closest subset to s
-                all_subs = start_subsets
-                all_subs.remove(s)
                 for sub in all_subs:
                     centroid_array = [sub.centroid, centroid]
-                    #warnings.simplefilter('ignore', DeprecationWarning)
+
                     euclid_dist = spatial.distance.pdist(centroid_array)
+
                     if euclid_dist < best_match or best_match is None:
                         best_match = euclid_dist
                         closest_sub = sub
 
                 # join s with closest_sub to make joined_sub
-                merged_sub = merge_subsets([s, closest_sub])
+                merged_sub = subset_ops.merge_subsets([s, closest_sub])
 
-                # pop closest sub and s from start subsets
-                start_subsets.pop(s)
-                start_subsets.pop(closest_sub)
+                # remove closest sub
+                all_subs.remove(closest_sub)
 
                 # analyse joined sub
                 self.analyse_list_of_subsets([merged_sub])
 
                 # if joined has to be fabricated, add to fabricated list
-                if sub.fabricated:
-                    fabricated_subsets.append(sub)
-                else: # else, add to start_subsets
-                    start_subsets.append(sub)
+                if merged_sub.fabricated:
+                    fabricated_subsets.append(merged_sub)
+                
+                all_subs.append(merged_sub)
 
         # now build a scheme from start_subs, and it should work
-        final_scheme = scheme.Scheme(the_config, "final_scheme", start_subsets)
+        final_scheme = scheme.Scheme(the_config, "final_scheme", all_subs)
 
         # return final scheme
         return final_scheme
@@ -558,9 +559,20 @@ class KmeansAnalysis(Analysis):
 
         start_result, start_scheme, tree_path = self.setup()
 
-        start_subsets = start_scheme.subsets # we only work on lists of subsets
-
         step = 0
+
+        start_subsets = list(start_scheme.subsets) # we only work on lists of subsets
+
+        self.analyse_list_of_subsets(start_subsets)
+
+        for s in start_subsets:
+            if s.fabricated:
+                log.error("""One or more of your starting datablocks could not 
+                          be analysed. Please check your data and try again. 
+                          One way to fix this is to join your small datablocks 
+                          together into larger datablocks""")
+                raise AnalysisError
+
         while True:
             step += 1
             with logtools.indented(log, "***k-means algorithm step %d***"

@@ -104,10 +104,7 @@ def run_raxml(command):
     # p.terminate()
 
     if p.returncode != 0:
-        log.error("RAxML did not execute successfully")
-        log.error("RAxML output follows, in case it's helpful for finding the problem")
-        log.error("%s", stdout)
-        log.error("%s", stderr)
+        log.warning("RAxML did not execute successfully")
         raise RaxmlError(stderr, stdout)
 
 

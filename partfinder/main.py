@@ -381,6 +381,11 @@ def main(name, datatype, passed_args=None):
 
         return 0
 
+    except util.PhylogenyProgramError as e:
+        log.error("The phylogeny program failed, output follows, in case it's helpful for finding the problem")
+        log.error("%s", e.stdout)
+        log.error("%s", e.stderr)
+
     except util.PartitionFinderError:
         log.error("Failed to run. See previous errors.")
         # Reraise if we were called by call_main, or if the options is set
