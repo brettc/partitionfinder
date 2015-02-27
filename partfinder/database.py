@@ -158,6 +158,9 @@ class Database(object):
             'subset_id == current_id', conditions)
         return matching
 
+    def is_empty(self):
+        return self.results.nrows == 0
+
     def save_result(self, subset, n):
         # We have to take a slice here, as pytables can't handle single
         # elements
