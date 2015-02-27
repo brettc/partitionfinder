@@ -18,11 +18,12 @@
 import logtools
 import pandas
 log = logtools.get_logger()
+from config import the_config
 
 import os
 
 scheme_header_template = "%-18s: %s\n"
-scheme_subset_template = "%-6s | %-10s | %-10s | %-100s\n"
+scheme_subset_template = "%-6s | %-10s | %-10s | %-32s | %-100s\n"
 subset_template = "%-15s | %-15s | %-15s | %-15s  | %-15s | %-15s\n"
 
 
@@ -51,7 +52,8 @@ class TextReporter(object):
         output.write("Model selection results for subset: %s\n" % sub.subset_id)
         if sub.alignment_path:
             output.write("Subset alignment stored here: %s\n" % sub.alignment_path)
-        output.write("This subset contains the following data_blocks: %s\n" % sub)
+        if the_config.search != 'kmeans':
+            output.write("This subset contains the following data_blocks: %s\n" % sub.name)
         output.write("Models are organised according to their AICc scores\n\n")
 
         output.write(subset_template % ("Model", "Parameters", "lNL", "AIC", "AICc", "BIC"))
@@ -113,7 +115,7 @@ class TextReporter(object):
     def write_subsets(self, sch, result, output, sorted_subsets):
         
         output.write(scheme_subset_template % (
-            "Subset", "Best Model", "# sites", "Partition names"))
+            "Subset", "Best Model", "# sites", "subset id", "Partition names"))
         number = 1
         # a way to print out the scheme in PF format
         pf_scheme_description = []
@@ -127,7 +129,8 @@ class TextReporter(object):
                 output.write(scheme_subset_template % (
                     number, 
                     sub.best_model, 
-                    num_sites, 
+                    num_sites,
+                    sub.subset_id, 
                     'NA',
                     ))
                 number += 1
@@ -139,6 +142,7 @@ class TextReporter(object):
                     number, 
                     sub.best_model, 
                     len(sub.columns), 
+                    sub.subset_id, 
                     sub.name,
                     ))
                 number += 1
@@ -221,3 +225,7 @@ class TextReporter(object):
         output.write('\n\nBest partitioning scheme\n\n')
         self.output_scheme(result.best_scheme, result.best_result, output)
         log.info("Information on best scheme is here: %s", pth)
+
+        for s in result.best_scheme:
+            self.write_subset_summary(s)
+

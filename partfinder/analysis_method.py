@@ -558,9 +558,21 @@ class KmeansAnalysis(Analysis):
 
         start_result, start_scheme, tree_path = self.setup()
 
-        start_subsets = start_scheme.subsets # we only work on lists of subsets
-
         step = 0
+
+        start_subsets = start_scheme.subsets # we only work on lists of subsets
+        
+        done, start_subsets = self.one_kmeans_step(
+                start_subsets, step, tree_path) # hi brett
+
+        for s in start_subsets:
+            if s.fabricated:
+                log.error("""One or more of your starting datablocks could not 
+                          be analysed. Please check your data and try again. 
+                          One way to fix this is to join your small datablocks 
+                          together into larger datablocks""")
+                raise AnalysisError
+
         while True:
             step += 1
             with logtools.indented(log, "***k-means algorithm step %d***"
