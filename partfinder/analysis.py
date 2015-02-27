@@ -51,12 +51,12 @@ class Analysis(object):
         log.info("Beginning Analysis")
         self.process_restart(force_restart)
 
-        # Check for old analyses to see if we can use the old data
-        # restart.check_for_old_config(cfg)
-
         # Make some folders for the analysis
         the_config.make_output_folders()
         the_config.database = Database(the_config)
+
+        # Check for old analyses to see if we can use the old data
+        the_config.check_for_old_config()
 
         # TODO: This is going to be in "Prepare"
         self.make_alignment(cfg.alignment_path)

@@ -171,6 +171,10 @@ class Alignment(object):
                         "analysis had %s.", len(self.species), len(other.species))
             return False
 
+        if not (self.data == other.data).all():
+            log.warning("Alignments not the same. Some of sequence differs.")
+            return False
+
         return True
 
     def parse(self, text):

@@ -26,7 +26,7 @@ import subset
 import parser
 import util
 import progress
-import model_loader as mo
+import cPickle as pickle
 
 class ConfigurationError(util.PartitionFinderError):
     pass
@@ -366,6 +366,96 @@ class Configuration(object):
             log.info("Looking for tree file '{}'...".format(
                 self.user_tree_topology_path))
             util.check_file_exists(self.user_tree_topology_path)
+
+    def check_for_old_config(self):
+        """
+        Check whether the analysis dictated by cfg has been run before, and if
+        the config has changed in any way that would make re-running it
+        invalid
+        """
+        # The important stuff in our analysis, that can't change if we want to re-use old subsets
+        log.info("Checking previously run configuration data...")
+        if self.user_tree is None:
+            topology = ""
+        else:
+            topology = open(self.user_tree_topology_path).read()
+
+        datablocks = [(s.names, s.description, s.column_set) for s in self.user_subsets]
+
+        restart_info = {
+            'alignment' : self.alignment,
+            'branchlengths': self.branchlengths,
+            'program' : self.phylogeny_program,
+            'datablocks' : datablocks,
+            'topology' : topology,
+            # self.partitions.partitions,
+        }
+
+        # We need to know if there's anything in the Database
+        has_subsets = not self.database.is_empty()
+
+        # We also need to know if there's an old conifg file saved
+        cfg_dir = os.path.join(self.output_path, 'cfg')
+        old_cfg_path = os.path.join(cfg_dir, 'oldcfg.bin')
+        if os.path.exists(old_cfg_path):
+            has_config = True
+        else:
+            has_config = False
+
+        if not has_subsets:
+            # We have no subsets so can't screw anything up, just copy the new
+            # cfg file settings, overwrite anything else
+            if not os.path.exists(cfg_dir):
+                os.makedirs(cfg_dir)
+            #store a nice binary
+            f = open(old_cfg_path, 'wb')
+            pickle.dump(restart_info, f, -1)
+            f.close()
+            return 0
+
+        if not has_config:
+            log.error("There are subsets stored, but PartitionFinder can't determine where they are from")
+            log.info("Please re-run the analysis using the '--force-restart' option at the command line")
+            log.warning("This will delete all of the analyses in the '/analysis' folder")
+            raise ConfigurationError
+
+        # We have an old config, load it and compare the important bits
+        f = open(old_cfg_path, 'rb')
+        old_restart_info = pickle.load(f)
+        f.close()
+        fail = []
+
+        # if len(old_restart_info) != len(restart_info):
+        #     log.error("Your old configuration doesn't match with your new one")
+        #     log.error("The most common cause of this error is trying to run a half-finished analysis"
+        #                 " but switching PartitionFinder versions half way through")
+        #     log.error("The solution is to either go back to the same version of PartitionFinder"
+        #                 " you used for the initial analysis, or to re-run the analysis using the "
+        #                 "--force-restart option at the command line.")
+
+        if not old_restart_info['alignment'] == restart_info['alignment']:
+            log.error("The alignment has changed between runs")
+            fail.append("alignment")
+
+        if not old_restart_info['branchlengths'] == restart_info['branchlengths']:
+            fail.append("branchlengths")
+        
+        if not old_restart_info['datablocks'] == restart_info['datablocks']:
+            fail.append("[data_blocks]")
+        
+        if not old_restart_info['program'] == restart_info['program']:
+            fail.append(
+                "phylogeny_program (the --raxml commandline option)")
+        #
+        if not old_restart_info['topology'] == restart_info['topology']:
+            fail.append("user_tree_topology")
+
+        if len(fail) > 0:
+            log.error("There are subsets stored, but PartitionFinder has detected that these were run using a different .cfg setup")
+            log.error("The following settings in the new .cfg file are incompatible with the previous analysis: %s" % (', '.join(fail)))
+            log.info("To run this analysis and overwrite previous output, re-run the analysis using '--force-restart' option")
+            log.info("To run this analysis without deleting the previous analysis, please place your alignment and .cfg in a new folder and try again")
+            raise ConfigurationError
 
 the_config = Configuration()
 
