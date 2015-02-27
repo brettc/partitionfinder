@@ -29,7 +29,7 @@ import subset_ops
 import results
 import threading
 from config import the_config
-from util import PartitionFinderError
+from util import PartitionFinderError, PhylogenyProgramError
 import util
 
 class AnalysisError(PartitionFinderError):
@@ -181,23 +181,29 @@ class Analysis(object):
 
     def run_task(self, model_name, sub):
         # This bit should run in parallel (forking the processor)
-        the_config.processor.analyse(
-            model_name,
-            sub.alignment_path,
-            self.tree_path,
-            the_config.branchlengths,
-            the_config.cmdline_extras
-        )
+        try:
+            the_config.processor.analyse(
+                model_name,
+                sub.alignment_path,
+                self.tree_path,
+                the_config.branchlengths,
+                the_config.cmdline_extras
+            )
+        except PhylogenyProgramError as e:
+            if self.cfg.search != 'kmeans':
+                raise
+
+            log.warning("Raxml failed on subset %s, model %s. Fabricating results",
+                        sub, model_name)
+            sub.fabricated = True
+            sub.dont_split = True
 
         # Not entirely sure that WE NEED to block here, but it is safer to do
         # It shouldn't hold things up toooo long...
         self.lock.acquire()
         try:
-            if sub.analysis_error is None:
+            if not sub.fabricated:
                 sub.parse_model_result(the_config, model_name)
-
-            else:
-                sub.fabricate_result(the_config, model_name)
 
             # Try finalising, then the result will get written out earlier...
             sub.finalise(the_config)
