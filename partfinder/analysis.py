@@ -189,20 +189,24 @@ class Analysis(object):
                 the_config.branchlengths,
                 the_config.cmdline_extras
             )
-        except PhylogenyProgramError as e:
-            if self.cfg.search != 'kmeans':
+            fabricate = False
+        except PhylogenyProgramError:
+            if the_config.search != 'kmeans':
                 raise
 
-            log.warning("Raxml failed on subset %s, model %s. Fabricating results",
-                        sub, model_name)
-            sub.fabricated = True
-            sub.dont_split = True
+            # If it is kmeans we assume that the error is because the subset
+            # is too small or unanalysable, so we fabricate it
+            log.warning("New subset could not be analysed. It will be merged "
+                        "at the end of the analysis")
+            fabricate = True
 
         # Not entirely sure that WE NEED to block here, but it is safer to do
         # It shouldn't hold things up toooo long...
         self.lock.acquire()
         try:
-            if not sub.fabricated:
+            if fabricate:
+                sub.fabricate_model_result(the_config, model_name)
+            else:
                 sub.parse_model_result(the_config, model_name)
 
             # Try finalising, then the result will get written out earlier...
@@ -254,7 +258,7 @@ class Analysis(object):
             # check again here
             if not sub.finalise(the_config):
                 log.error("Failed to run models %s; not sure why" %
-                          ", " "".join(list(sub.models_to_do)))
+                          ", " "".join(list(sub.models_not_done)))
                 raise AnalysisError
 
     def analyse_scheme(self, sch):
