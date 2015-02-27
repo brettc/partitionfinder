@@ -18,6 +18,8 @@
 import logtools
 import model_loader as mo
 from util import memoize
+from config import the_config
+
 from model_utils import get_num_params
 log = logtools.get_logger()
 
@@ -110,9 +112,9 @@ def get_model_commandline(modelstring):
     Input a model string, and get the piece of the raxml command line that defines that model
     '''
 
-    commandline = mo.models.query("name=='%s'" % modelstring).raxml_commandline
-
+    commandline = the_config.available_models.query("name=='%s'" % modelstring).raxml_commandline.values[0]
     return commandline
+
 
 
 
