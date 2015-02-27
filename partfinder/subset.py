@@ -88,6 +88,7 @@ class Subset(object):
         self.models_not_done = set(cfg.models)
 
         self.fabricated = False
+        self.dont_split = False
         self.analysis_error = None
         self.centroid = None
 
