@@ -23,8 +23,10 @@ import collections
 log = logtools.get_logger()
 from util import PartitionFinderError
 
-_available_lists = ["dna", 
-                    "protein", 
+_available_lists = ["dna",
+                    "dna_total", 
+                    "protein",
+                    "protein_total", 
                     "beast", 
                     "mrbayes", 
                     "protein_gamma", 
@@ -129,6 +131,15 @@ def expand_model_list(the_config):
     mod_list = the_config.models[0]
 
     the_config.models = list(the_config.available_models.query("%s==1" % mod_list).name)
+
+    if len(the_config.models)<1:
+        log.error("""The model list '%s' is not a compatible with 
+                  for phylogeny program %s and data type %s. 
+                  There are no models in that list which work with 
+                  that combination of program and data type. Please check and try again.""" 
+                  %(mod_list, the_config.phylogeny_program, the_config.datatype))
+        raise PartitionFinderError
+
 
 def get_mrbayes_models():
     """
