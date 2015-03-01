@@ -89,7 +89,7 @@ class Parser(object):
 
         branch_def = simple_option('branchlengths')
 
-        MODEL_NAME = Word(alphas + nums + '+' + ' ')
+        MODEL_NAME = Word(alphas + nums + '+' + ' ' + '_')
         model_list = delimitedList(MODEL_NAME)
         model_def = 'models' + EQUALS + model_list + SEMICOLON
         model_def.setParseAction(self.set_models)
