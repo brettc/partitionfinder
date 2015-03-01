@@ -181,7 +181,7 @@ def parse_args(datatype, cmdargs=None):
     )
     op.add_option(
         "--kmeans",
-        type="str", dest="kmeans", default='entropy', metavar="N",
+        type="str", dest="kmeans", default='entropy', metavar="type",
         help="This defines which sitewise values to use: entropy or tiger"
              "\n--kmeans entropy: use entropies for sitewise values"
              "\n--kmeans tiger: use TIGER rates for sitewise values"
