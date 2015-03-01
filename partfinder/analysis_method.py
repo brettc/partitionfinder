@@ -442,6 +442,8 @@ class KmeansAnalysis(Analysis):
                     fabricated_subsets.append(merged_sub)
                 
                 all_subs.append(merged_sub)
+        else:
+            all_subs = start_subsets
 
         # now build a scheme from start_subs, and it should work
         final_scheme = scheme.Scheme(the_config, "final_scheme", all_subs)
