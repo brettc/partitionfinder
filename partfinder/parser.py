@@ -288,7 +288,7 @@ class Parser(object):
 
         mods = tokens[1:]
 
-        log.info("You set 'models' to '%s'" % ', '.join(mods))
+        log.info("You set 'models' to: %s" % ', '.join(mods))
 
         self.cfg.models = list(mods)
 

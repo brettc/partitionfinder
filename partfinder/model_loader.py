@@ -96,6 +96,9 @@ def check_all_models(the_config):
         log.error("""'%s' is/are not a valid model(s) for phylogeny program %s
                   and data type %s, please check and try again""" 
                   %(', '.join(problems), the_config.phylogeny_program, the_config.datatype))
+        log.info("""If you are unsure which models are available, or why a model you think 
+                 should work does not, please check the manual and the models.csv file 
+                 (located in the /partfinder folder) for more information.""")
         raise PartitionFinderError
 
 def check_all_models_and_lists(the_config):
@@ -109,8 +112,12 @@ def check_all_models_and_lists(the_config):
     if problems:
         log.error("""'%s' is/are not a valid model(s) or lists of models 
                   for phylogeny program %s and data type %s, 
-                  please check and try again""" 
+                  please check and try again.""" 
                   %(', '.join(problems), the_config.phylogeny_program, the_config.datatype))
+
+        log.info("""If you are unsure which models are available, or why a model you think 
+                 should work does not, please check the manual and the models.csv file 
+                 (located in the /partfinder folder) for more information.""")
         raise PartitionFinderError
         
 
