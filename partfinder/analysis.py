@@ -191,7 +191,10 @@ class Analysis(object):
             )
             fabricate = False
         except PhylogenyProgramError:
-            if the_config.search != 'kmeans':
+            if the_config.search != 'kmeans' or the_config.supress == False:
+                # the_config.supress is just a flag we use for the kmeans 
+                # algorithm, so we can spit errors on the initial analysis
+                # of the user supplied partitioning scheme. 
                 raise
 
             # If it is kmeans we assume that the error is because the subset

@@ -567,6 +567,9 @@ class KmeansAnalysis(Analysis):
 
         self.analyse_list_of_subsets(start_subsets)
 
+        # now we suppress PhylogenyProgram errors for the rest of the algorithm
+        the_config.suppress = True
+
         for s in start_subsets:
             if s.fabricated:
                 log.error("""One or more of your starting datablocks could not 
