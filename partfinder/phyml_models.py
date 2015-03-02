@@ -168,6 +168,8 @@ def get_model_difficulty(modelstring):
         difficulty += 2000
     if "I" in elements[1:]:
         difficulty += 1000
+    if "F" or "X" in elements[1:]:
+        difficulty += 3000
 
     extras = modelstring.count("+")
     total = model_params + extras + difficulty
