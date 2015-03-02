@@ -38,9 +38,6 @@ class TextReporter(object):
 
         cols = ['model_id', 'params', 'lnl', 'aicc', 'aic', 'bic']
 
-        #model_results = [(r.bic, r) for r in sub.results.values()]
-        #model_results.sort()
-
         descr = self.cfg.data_layout.data_type.descr
         indices = dict([(t[0], i) for i, t in enumerate(descr) if t[0] in cols])
 
@@ -56,7 +53,7 @@ class TextReporter(object):
             output.write("This subset contains the following data_blocks: %s\n" % sub.name)
         output.write("Models are organised according to their AICc scores\n\n")
 
-        output.write(subset_template % ("Model", "Parameters", "lNL", "AIC", "AICc", "BIC"))
+        output.write(subset_template % ("Model", "Parameters", "lNL", "AICc", "AIC", "BIC"))
         for aicc, row in sorted_results:
             output.write(subset_template % (row[indices['model_id']], 
                                             row[indices['params']], 
