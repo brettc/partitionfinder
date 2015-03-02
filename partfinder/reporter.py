@@ -51,6 +51,7 @@ class TextReporter(object):
             output.write("Subset alignment stored here: %s\n" % sub.alignment_path)
         if the_config.search != 'kmeans':
             output.write("This subset contains the following data_blocks: %s\n" % sub.name)
+        output.write("Number of columns in subset: %d\n" % len(sub.columns))
         output.write("Models are organised according to their AICc scores\n\n")
 
         output.write(subset_template % ("Model", "Parameters", "lNL", "AICc", "AIC", "BIC"))
@@ -218,6 +219,10 @@ class TextReporter(object):
             else:
                 output.write(scheme_header_template % ("rcluster-max",
                                                        "all rcluster-percent schemes"))
+
+        if self.cfg.search == "kmeans-opt":
+            output.write(scheme_header_template % ("kmeans based on",
+                                                   self.cfg.kmeans))
 
         output.write('\n\nBest partitioning scheme\n\n')
         self.output_scheme(result.best_scheme, result.best_result, output)
