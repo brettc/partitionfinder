@@ -42,7 +42,8 @@ def load_models(the_config):
     # check user models will run
     parse_user_models(the_config)
 
-    log.info("This analysis will use the following models of molecular evolution")
+    log.info("This analysis will use the following %d models of molecular evolution"
+             % len(the_config.models))
     log.info("%s" % ', '.join(the_config.models))
 
 
@@ -63,7 +64,8 @@ def get_available_models(all_models, the_config):
     if len(available_models) == 0:
         log.error("""Phylogeny program '%s' does not implement any models that deal 
                   with %s data. Please check and try again. For morphological data,
-                  use RAxML (--raxml at the commandline)""")
+                  use RAxML (--raxml at the commandline)""" % 
+                  (the_config.phylogeny_program, the_config.datatype))
         raise PartitionFinderError
 
     return available_models
