@@ -32,14 +32,11 @@ float_type = numpy.float32
 
 def _model_string_maxlen():
     """Calculate the field size needed for model ids"""
-    all_models = \
-        raxml_models.get_all_dna_models() +\
-        raxml_models.get_all_protein_models() +\
-        phyml_models.get_all_dna_models() +\
-        phyml_models.get_all_protein_models()
+    # hardcoded for convenience. Could be dynamically set in future.
+    # the current longest is: BLOSUM62+I+G+X, i.e. 14 chars. 
+    # so we just over double it, for safety
 
-    lengths = [len(m) for m in all_models]
-    return max(lengths)
+    return 30
 
 
 class DataLayout(object):

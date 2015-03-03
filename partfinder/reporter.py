@@ -19,6 +19,8 @@ import logtools
 import pandas
 log = logtools.get_logger()
 from config import the_config
+from model_utils import get_raxml_protein_modelstring
+
 
 import os
 
@@ -154,7 +156,6 @@ class TextReporter(object):
         """Print out partition definitions in RaxML-like format, might be
         useful to some people
         """
-        from raxml_models import get_raxml_protein_modelstring
         output.write("\n\nRaxML-style partition definitions\n")
 
         subset_number = 1

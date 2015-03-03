@@ -24,87 +24,6 @@ from model_utils import get_num_params
 log = logtools.get_logger()
 
 
-# number of free parameters in substitution model, listed as "model+base_frequencies"
-_base_models = {
-    "GTR"   :   (5+3, "")
-}
-
-# number of free parameters in substitution model, listed as "aa_frequencies"
-_base_protein_models = {
-    "DAYHOFF"   :   (0, ""),
-    "DCMUT"     :   (0, ""),
-    "JTT"       :   (0, ""),
-    "MTREV"     :   (0, ""),
-    "WAG"       :   (0, ""),
-    "RTREV"     :   (0, ""),
-    "CPREV"     :   (0, ""),
-    "VT"        :   (0, ""),
-    "BLOSUM62"  :   (0, ""),
-    "MTMAM"     :   (0, ""),
-    "LG"        :   (0, ""),
-    "LG4M"      :   (0, ""),
-    "LG4X"      :   (5, ""), # it has 6 params, but one gets added automatically later
- }
-
-
-@memoize
-def get_protein_models_gamma():
-    '''
-    Return a list of all implemented _base__protein_models in RAxML
-    NB there are NO models in RAxML without Gamma
-    '''
-    model_list = []
-    for model in _base_protein_models.keys():
-        model_list.append("%s+G"     %(model))
-        model_list.append("%s+G+F"     %(model))
-    return model_list
-
-@memoize
-def get_protein_models_gammaI():
-    '''
-    Return a list of all implemented _base__protein_models in RAxML with invariant sites
-    '''
-    model_list = []
-
-    base = _base_protein_models.keys()
-    base.remove("LG4M") #doesn't work with +I
-    base.remove("LG4X") #doesn't work with +I
-
-    for model in base:
-        model_list.append("%s+I+G"     %(model))
-        model_list.append("%s+I+G+F"    %(model))
-    return model_list
-
-def get_all_protein_models():
-    model_list = get_protein_models_gamma() + get_protein_models_gammaI()
-
-    return model_list
-
-@memoize
-def get_dna_models_gamma():
-    '''
-    Just one model in RAxML with +G.
-    '''
-    model_list = ["GTR+G"]
-    return model_list
-
-@memoize
-def get_dna_models_gammaI():
-    '''
-    Just one model in RAxML with I+G.
-    '''
-    model_list = ["GTR+I+G"]
-    return model_list
-
-@memoize
-def get_all_dna_models():
-    model_list = get_dna_models_gamma() + get_dna_models_gammaI()
-    return model_list
-
-@memoize
-def get_all_models():
-    model_list = get_all_dna_models() + get_all_protein_models()
-    return model_list
 
 @memoize
 def get_model_commandline(modelstring):
@@ -116,53 +35,37 @@ def get_model_commandline(modelstring):
     return commandline
 
 
-
-
-@memoize
 def get_model_difficulty(modelstring):
-    '''
-    Input a model string like HKY+I+G or LG+G+F, and a guess about how long it takes to analyse
-    Right now, this is done with a simple hack. I just return a number that is the number of params
-    plus a modifier for extra stuff like +I and +G
-    the hardest models are +I+G, then +G, then +I
-    this is just used to rank models for ordering the analysis
-    The return is a 'difficulty' score that can be used to rank models
-    '''
+    """
+    Input a model string like HKY+I+G or LG+G+F, and a guess about how long it
+    takes to analyse Right now, this is done with a simple hack. I just return
+    a number that is the number of params plus a modifier for extra stuff like
+    +I and +G the hardest models are +I+G, then +G, then +I this is just used
+    to rank models for ordering the analysis. The return is a 'difficulty'
+    score that can be used to rank models for queing and do the hardest first
+    """
+
     elements = modelstring.split("+")
 
     model_params = get_num_params(modelstring)
-    
+
     difficulty = 0
     if "G" in elements[1:]:
         difficulty += 2000
     if "I" in elements[1:]:
         difficulty += 1000
-    
+    if "F" or "X" in elements[1:]:
+        difficulty += 3000
+
+    if the_config.datatype == protein and "GTR" in modelstring:
+        # that's a tough model with 189 free parameters
+        difficulty += 10000
+
     extras = modelstring.count("+")
-    total = model_params+extras+difficulty
-    log.debug("Model: %s Difficulty: %d" %(modelstring, total))
+    total = model_params + extras + difficulty
+    log.debug("Model: %s Difficulty: %d" % (modelstring, total))
 
     return total
-
-def get_raxml_protein_modelstring(modelstring):
-    """Start with a model like this: LG+I+G+F, return a model in raxml format like this:
-    LGF. This is only used for printing out RAxML partition files
-    NB. In RAxML you can't specify different rate hetero parameters in each protein model
-    you have to choose either ALL +G or ALL +I+G. PartitionFinder allows you to mix and 
-    match here, but if you're going to use RAxML downstream, you will need to be smarter
-    and run two analyses - one with just +I+G models, and one with +G models. 
-
-    So really all we do is add an F to the model name if it used +F.
-    """
-    elements = modelstring.split("+")
-    model_name = elements[0]
-    extras = elements[1:]
-
-    raxmlstring = model_name
-    if "F" in extras:
-        raxmlstring = ''.join([raxmlstring, "F"])
-    
-    return raxmlstring
 
 if __name__ == "__main__":
     print "  ",
