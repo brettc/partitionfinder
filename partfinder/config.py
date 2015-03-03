@@ -55,7 +55,7 @@ class Configuration(object):
         self.user_subsets_by_name = {}
         self.models = []
         self.database = None
-        self.suppress = False
+        self.suppress_errors = False
 
         self.save_phylofiles = save_phylofiles
         self.progress = progress.NoProgress(self)
