@@ -23,131 +23,6 @@ from model_utils import get_num_params
 log = logtools.get_logger()
 
 
-# Number of free parameters in substitution model, listed as "model +
-# base_frequencies" and the model string for PhyML as the second of the tuple.
-_base_models = {
-    "JC"    : (0+0, "-m 000000 -f '0.25, 0.25, 0.25, 0.25'"),
-    "K80"   : (1+0, "-m 010010 -f '0.25, 0.25, 0.25, 0.25'"),
-    "TrNef" : (2+0, "-m 010020 -f '0.25, 0.25, 0.25, 0.25'"),
-    "K81"   : (2+0, "-m 012210 -f '0.25, 0.25, 0.25, 0.25'"),
-    "TVMef" : (4+0, "-m 012314 -f '0.25, 0.25, 0.25, 0.25'"),
-    "TIMef" : (3+0, "-m 012230 -f '0.25, 0.25, 0.25, 0.25'"),
-    "SYM"   : (5+0, "-m 012345 -f '0.25, 0.25, 0.25, 0.25'"),
-    "F81"   : (0+3, "-m 000000 -f e"),
-    "HKY"   : (1+3, "-m 010010 -f e"),
-    "TrN"   : (2+3, "-m 010020 -f e"),
-    "K81uf" : (2+3, "-m 012210 -f e"),
-    "TVM"   : (4+3, "-m 012314 -f e"),
-    "TIM"   : (3+3, "-m 012230 -f e"),
-    "GTR"   : (5+3, "-m 012345 -f e")
-}
-
-# Number of free parameters in substitution model, listed as "aa_frequencies"
-# and the model string for PhyML as the second of the tuple
-_base_protein_models = {
-    "LG"       : (0, "-m LG        -d aa"),
-    "WAG"      : (0, "-m WAG       -d aa"),
-    "mtREV"    : (0, "-m mtREV     -d aa"),
-    "Dayhoff"  : (0, "-m Dayhoff   -d aa"),
-    "DCMut"    : (0, "-m DCMut     -d aa"),
-    "JTT"      : (0, "-m JTT       -d aa"),
-    "VT"       : (0, "-m VT        -d aa"),
-    "Blosum62" : (0, "-m Blosum62  -d aa"),
-    "CpREV"    : (0, "-m CpREV     -d aa"),
-    "RtREV"    : (0, "-m RtREV     -d aa"),
-    "MtMam"    : (0, "-m MtMam     -d aa"),
-    "MtArt"    : (0, "-m MtArt     -d aa"),
-    "HIVb"     : (0, "-m HIVb      -d aa"),
-    "HIVw"     : (0, "-m HIVw      -d aa"),
-}
-
-
-@memoize
-def get_all_dna_models():
-    """
-    Return a list of all implemented _base_models
-    """
-    model_list = []
-    for model in _base_models.keys():
-        model_list.append(model)
-        model_list.append("%s+I" % model)
-        model_list.append("%s+G" % model)
-        model_list.append("%s+I+G" % model)
-    return model_list
-
-
-@memoize
-def get_all_protein_models():
-    """
-    Return a list of all implemented _base__protein_models
-    """
-    model_list = []
-    for model in _base_protein_models.keys():
-        model_list.append(model)
-        model_list.append("%s+F" % model)
-        model_list.append("%s+I" % model)
-        model_list.append("%s+G" % model)
-        model_list.append("%s+I+G" % model)
-        model_list.append("%s+I+F" % model)
-        model_list.append("%s+G+F" % model)
-        model_list.append("%s+I+G+F" % model)
-    return model_list
-
-
-@memoize
-def get_mrbayes_models():
-    """
-    Return a list of all models implemented in MrBayes. Thanks to Ainsley Seago
-    for this.
-    """
-    mrbayes_base_models = ["JC", "F81", "K80", "HKY", "SYM", "GTR"]
-    model_list = []
-    for model in mrbayes_base_models:
-        model_list.append(model)
-        model_list.append("%s+I" % model)
-        model_list.append("%s+G" % model)
-        model_list.append("%s+I+G" % model)
-    return model_list
-
-
-def get_beast_models():
-    """
-    Return a list of all models implemented in BEAST v1.7.2.
-    """
-    beast_base_models = ["K80", "TrNef", "SYM", "HKY", "TrN", "GTR"]
-    model_list = []
-    for model in beast_base_models:
-        model_list.append(model)
-        model_list.append("%s+I" % model)
-        model_list.append("%s+G" % model)
-        model_list.append("%s+I+G" % model)
-    return model_list
-
-
-@memoize
-def get_raxml_models():
-    """
-    Return a list of all models implemented in RaxML. Thanks to Ainsley Seago
-    for this.
-    """
-    model_list = ["GTR+G", "GTR+I+G"]
-    return model_list
-
-
-@memoize
-def get_protein_models():
-    """
-    Return a list of all protein models implemented in PhyML
-    """
-    model_list = [
-        "LG",
-        "cheese"
-    ]
-    return model_list
-
-
-
-
 @memoize
 def get_model_difficulty(modelstring):
     """
@@ -156,7 +31,7 @@ def get_model_difficulty(modelstring):
     a number that is the number of params plus a modifier for extra stuff like
     +I and +G the hardest models are +I+G, then +G, then +I this is just used
     to rank models for ordering the analysis. The return is a 'difficulty'
-    score that can be used to rank models
+    score that can be used to rank models for queing and do the hardest first
     """
 
     elements = modelstring.split("+")
@@ -170,6 +45,10 @@ def get_model_difficulty(modelstring):
         difficulty += 1000
     if "F" or "X" in elements[1:]:
         difficulty += 3000
+
+    if the_config.datatype == protein and "GTR" in modelstring:
+        # that's a tough model with 189 free parameters
+        difficulty += 10000
 
     extras = modelstring.count("+")
     total = model_params + extras + difficulty
