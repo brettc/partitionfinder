@@ -405,7 +405,9 @@ class KmeansAnalysis(Analysis):
                 fabricated_subsets.append(s)
 
         if fabricated_subsets:
-            log.info("Finalising partitioning scheme")
+            log.info("""Finalising partitioning scheme, by incorporating
+                     the subsets that couldn't be analysed with their
+                     nearest neighbours""")
             log.debug("There are %d/%d fabricated subsets"
                       % (len(fabricated_subsets), len(start_subsets)))
 
@@ -472,7 +474,7 @@ class KmeansAnalysis(Analysis):
                     unsplit_score = subset_ops.subset_list_score([sub], the_config, self.alignment)
 
                     score_diff = split_score - unsplit_score
-                    log.info("Difference in %s: %.1f" %
+                    log.debug("Difference in %s: %.1f" %
                              (the_config.model_selection.upper(),
                               score_diff))
                     if score_diff < 0:
@@ -525,6 +527,7 @@ class KmeansAnalysis(Analysis):
         name_prefix = "step_%d" % (step)
 
         # 1. Make split subsets
+        log.info("Splitting %d subsets using K-means" % len(start_subsets))
         split_subs = self.split_subsets(start_subsets, tree_path)
 
         # 2. Analyse split subsets (this to take advantage of parallelisation)
@@ -542,15 +545,23 @@ class KmeansAnalysis(Analysis):
 
         # 4. Are we done yet?
         if len(new_scheme_subs) == len(list(start_subsets)):
-            log.info("""Analysed all subsets, but couldn't Find
-                            a split that improved the score. Quitting.""")
+            log.info("""The %s score of 0 subsets
+                     improved when split. Algorithm finished."""
+                     % (the_config.model_selection))
             done = True
         else:
             n_splits = len(new_scheme_subs) - len(start_subsets)
+
+            if n_splits > 1:
+                t = 'subsets'
+            else:
+                t = 'subset'
+            log.info("""The %s score of %d %s
+                     improved when split"""
+                     % (the_config.model_selection, n_splits, t))
+
             start_subsets = new_scheme_subs
 
-            log.info("""Analysed all subsets. Found %d subsets which can be
-                     split.""" % n_splits)
             done = False
 
         return done, start_subsets
