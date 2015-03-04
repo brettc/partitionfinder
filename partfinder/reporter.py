@@ -229,6 +229,69 @@ class TextReporter(object):
         self.output_scheme(result.best_scheme, result.best_result, output)
         log.info("Information on best scheme is here: %s", pth)
 
+        write_methods(self)
+
+        # now we write subset summaries for all the subsets in the best scheme
         for s in result.best_scheme:
             self.write_subset_summary(s)
+
+def write_methods(self):
+    """Tell users which papers to cite"""
+
+    ref_PF = """Lanfear, R., Calcott, B., Ho, S. Y., & Guindon, S. (2012). 
+                PartitionFinder: combined selection of partitioning schemes 
+                and substitution models for phylogenetic analyses. 
+                Molecular biology and evolution, 29(6), 1695-1701."""
+
+    ref_rcluster = """Lanfear, R., Calcott, B., Kainer, D., Mayer, C., 
+                      & Stamatakis, A. (2014). Selecting optimal 
+                      partitioning schemes for phylogenomic datasets. 
+                      BMC evolutionary biology, 14(1), 82."""
+
+    ref_kmeans = """Frandsen, P. B., Calcott, B., Mayer, C., & Lanfear, R. 
+                    (2015). Automatic selection of partitioning schemes for 
+                    phylogenetic analyses using iterative k-means clustering 
+                    of site rates. BMC Evolutionary Biology, 15(1), 13."""
+
+    ref_phyml = """Guindon, S., Dufayard, J. F., Lefort, V., Anisimova, M., 
+                   Hordijk, W., & Gascuel, O. (2010). New algorithms and 
+                   methods to estimate maximum-likelihood phylogenies: 
+                   assessing the performance of PhyML 3.0. 
+                   Systematic biology, 59(3), 307-321."""
+
+    ref_raxml = """Stamatakis, A. (2014). RAxML version 8: a tool for 
+                   phylogenetic analysis and post-analysis of large phylogenies. 
+                   Bioinformatics, 30(9), 1312-1313."""
+
+    log.info("")
+    log.info("""Thanks for using PartitionFinder.
+             PartitionFinder incorporates many years of hard work from many people,
+             so if you use this analysis in your published work, we would hugely
+             appreciate it if you could cite the following 
+             papers on which your analysis relied.""")
+
+    log.info("")
+    log.info("For the version of PartitionFinder you used, please cite:")
+    log.info("%s" % ref_PF)
+
+    if self.cfg.search == "rcluster" or self.cfg.search == "hcluster":
+        log.info("")
+        log.info("For the %s algorithm you used, please cite:" 
+                 % (self.cfg.search))
+        log.info("%s" % ref_rcluster)
+    elif self.cfg.search == "kmeans":
+        log.info("")
+        log.info("For the %s algorithm you used, please cite:" 
+                 % (self.cfg.search))
+        log.info("%s" % ref_kmeans)
+
+    if self.cfg.phylogeny_program == 'phyml':
+        log.info("")
+        log.info("Your analysis also used PhyML, so please cite:")
+        log.info("%s" % ref_phyml)
+    elif self.cfg.phylogeny_program == 'raxml':
+        log.info("")
+        log.info("Your analysis also used RAxML, so please cite:")
+        log.info("%s" % ref_raxml)
+    log.info("")
 
