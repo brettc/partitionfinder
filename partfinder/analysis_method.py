@@ -157,7 +157,9 @@ class GreedyAnalysis(Analysis):
         with logtools.indented(log, "Analysing starting scheme (scheme %s)" %
                           start_scheme.name):
             start_result = self.analyse_scheme(start_scheme)
-            the_config.reporter.write_scheme_summary(start_scheme, start_result)
+
+            if not the_config.quick:
+                the_config.reporter.write_scheme_summary(start_scheme, start_result)
 
         step = 1
 
@@ -213,8 +215,10 @@ class GreedyAnalysis(Analysis):
                     ))
 
                     self.results.best_scheme.name = "step_%d" % step
-                    the_config.reporter.write_scheme_summary(
-                        self.results.best_scheme, self.results.best_result)
+
+                    if not the_config.quick:
+                        the_config.reporter.write_scheme_summary(
+                            self.results.best_scheme, self.results.best_result)
 
                     # Now we find out which is the best lumping we know of for
                     # this step
