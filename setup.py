@@ -16,9 +16,9 @@ extensions = [
         extra_compile_args = [
             # '-ffast-math',
             '-Wno-unused-function', 
-            '-stdlib=libc++',
-            '-std=c++11', 
-            '-mmacosx-version-min=10.8',
+            # '-stdlib=libc++',
+            # '-std=c++11', 
+            # '-mmacosx-version-min=10.8',
         ],
         # depends = ['bricolage/pubsub2_c.h'],
         language = 'c++',
