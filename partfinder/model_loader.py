@@ -23,7 +23,8 @@ import collections
 log = logtools.get_logger()
 from util import PartitionFinderError
 
-_available_lists = ["dna",
+_available_lists = ["all",
+                    "dna",
                     "dna_total", 
                     "protein",
                     "protein_total", 
