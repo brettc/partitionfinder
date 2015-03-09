@@ -117,7 +117,7 @@ def get_distance_matrix(subsets, weights):
 def get_N_closest_subsets(subsets, cfg, N, distance_matrix = None):
     """Find the N most similar groups of subsets in a scheme
     """
-    if distance_matrix == None:
+    if not distance_matrix.any():
         distance_matrix = get_distance_matrix(subsets, cfg.cluster_weights)
     ranked_subset_groupings = get_ranked_list(distance_matrix, subsets, N)
     return ranked_subset_groupings

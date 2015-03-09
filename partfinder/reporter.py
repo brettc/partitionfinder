@@ -28,6 +28,8 @@ scheme_header_template = "%-18s: %s\n"
 scheme_subset_template = "%-6s | %-10s | %-10s | %-32s | %-100s\n"
 subset_template = "%-15s | %-15s | %-15s | %-15s  | %-15s | %-15s\n"
 
+# We write different output for these searches
+_odd_searches = ['kmeans', 'hybrid']
 
 class TextReporter(object):
     def __init__(self, config):
@@ -51,7 +53,7 @@ class TextReporter(object):
         output.write("Model selection results for subset: %s\n" % sub.subset_id)
         if sub.alignment_path:
             output.write("Subset alignment stored here: %s\n" % sub.alignment_path)
-        if the_config.search != 'kmeans':
+        if the_config.search not in _odd_searches:
             output.write("This subset contains the following data_blocks: %s\n" % sub.name)
         output.write("Number of columns in subset: %d\n" % len(sub.columns))
         output.write("Models are organised according to their AICc scores\n\n")
@@ -100,7 +102,7 @@ class TextReporter(object):
         subset_number = 1
         charpartition = []
         for sub in sorted_subsets:
-            if self.cfg.search == "kmeans":
+            if self.cfg.search in _odd_searches:
                 sites = [x + 1 for x in sub.columns]
                 partition_sites = str(sites).strip('[]')
             else:
@@ -120,7 +122,7 @@ class TextReporter(object):
         # a way to print out the scheme in PF format
         pf_scheme_description = []
             
-        if self.cfg.search == "kmeans":
+        if self.cfg.search in _odd_searches:
             for sub in sorted_subsets:
                 num_sites = len(sub.columns)
                 
@@ -160,7 +162,7 @@ class TextReporter(object):
 
         subset_number = 1
         for sub in sorted_subsets:
-            if self.cfg.search == "kmeans":
+            if self.cfg.search in _odd_searches:
                 sites = [x + 1 for x in sub.columns]
                 partition_sites = str(sites).strip('[]')
             else:

@@ -72,7 +72,7 @@ class TextProgress(Progress):
         num_subs_done = len(self.subsets_analysed)
         if old_num_done != num_subs_done:
 
-            if "kmeans" in self.cfg.search:
+            if "kmeans" in self.cfg.search or "hybrid" in self.cfg.search:
                 pass
             else:    
                 percent_done = (
