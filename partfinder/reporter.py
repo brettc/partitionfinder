@@ -238,7 +238,8 @@ class TextReporter(object):
             self.write_subset_summary(s)
 
         log.info("If you use this analysis "
-                 "in your published work, please cite the papers at "
+                 "in your published work, please cite the appropriate papers, "
+                 "which are listed at "
                  "the end of the best_schemes.txt file")
         for c in citation_text:
             output.write(c)
