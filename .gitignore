@@ -15,3 +15,5 @@ example/results.bin
 .ropeproject
 analysis
 .cache
+
+docs/.Rapp.history
