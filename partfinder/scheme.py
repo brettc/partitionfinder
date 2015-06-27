@@ -91,9 +91,10 @@ class Scheme(object):
         self.subsets = set(subsets)
         self.description = description
 
-        #if subset_ops.subsets_overlap(subsets):
-        #    log.error("Scheme '%s' contains overlapping subsets", name)
-        #    raise SchemeError
+        # TODO: Fix this!
+        if subset_ops.subsets_overlap(subsets):
+           log.error("Scheme '%s' contains overlapping subsets", name)
+           raise SchemeError
         #
         #if subset_ops.has_missing(subsets):
         #    log.error("Scheme '%s' has missing subsets", name)

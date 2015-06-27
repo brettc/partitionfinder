@@ -23,6 +23,11 @@ import cPickle as pickle
 import subset
 from util import get_aic, get_aicc, get_bic
 
+def columnset_to_string(colset):
+    s = list(colset)
+    s.sort()
+    # Add one, cos we converted to zero base...
+    return ', '.join([str(x+1) for x in s])
 
 def subset_unique_name(columns):
     """Return a unique string based on the subsets columns (which are unique)"""
@@ -88,21 +93,29 @@ def merge_subsets(subset_list):
 
     return newsub
 
-
 def subsets_overlap(subset_list):
     columns = set()
+    overlapping = []
 
     for sub in subset_list:
         # If the intersection is non-empty...
-        if sub.column_set & columns:
-            return True
+        ov = list(sub.column_set & columns)
+        if ov:
+            overlapping.append(ov)
         columns |= sub.column_set
 
-    return False
+    return ov
 
+def check_against_alignment(full_subset, alignment):
+    """Check the subset definition against the alignment"""
 
-def has_missing(subset_list):
-    return False
+    alignment_set = set(range(0, alignment.sequence_length))
+    leftout = alignment_set - full_subset.column_set
+    if leftout:
+        # This does not raise an error, just a warning
+        log.warning(
+            "These columns are missing from the block definitions: %s",
+            columnset_to_string(leftout))
 
 
 def split_subset(a_subset, cluster_list):
@@ -111,11 +124,9 @@ def split_subset(a_subset, cluster_list):
     # Take each site from the first list and add it to a new
     subset_list = a_subset.columns
     subset_columns = []
-    site_likelihoods = []
     list_of_subsets = []
     for cluster in cluster_list:
         list_of_sites = []
-        likelihood_for_site = []
         for site in cluster:
             list_of_sites.append(subset_list[site - 1])
         subset_columns.append(set(list_of_sites))

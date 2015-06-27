@@ -21,7 +21,7 @@ log = logtools.get_logger()
 from pyparsing import (
     Word, OneOrMore, alphas, nums, Suppress, Optional, Group, stringEnd,
     delimitedList, pythonStyleComment, line, lineno, col, Keyword,
-    CaselessKeyword, ParseException )
+    ParseException )
 
 # Use this for debugging
 # ParserElement.verbose_stacktrace = True
@@ -115,6 +115,7 @@ class Parser(object):
 
         block_def_list = OneOrMore(Group(user_subset_def))
         block_section = Suppress("[data_blocks]") + block_def_list
+        block_def_list.setParseAction(self.check_blocks)
 
         # Scheme Parsing
         scheme_name = Word(alphas + '_-' + nums)
@@ -208,6 +209,15 @@ class Parser(object):
         self.cfg.user_subsets.append(user_subset)
         self.cfg.user_subsets_by_name[part_def.name] = user_subset
 
+    def check_blocks(self, text, loc, partref):
+        # Make sure that the user subsets don't overlap.
+        ov = subset_ops.subsets_overlap(self.cfg.user_subsets)
+        if ov:
+            raise ParserError(text, loc, "The following sites overlap "
+                              " in your block definitions: %s. "
+                              "Please change the configuration so each "
+                              "site occurs in only one block" % ", ".join(map(str, ov)))
+
     def check_block_exists(self, text, loc, partref):
         if partref.name not in self.cfg.user_subsets_by_name:
             raise ParserError(text, loc, "Block %s not defined" %
@@ -284,8 +294,6 @@ class Parser(object):
             raise PartitionFinderError
 
     def set_models(self, text, loc, tokens):
-
-
         mods = tokens[1:]
 
         log.info("You set 'models' to: %s" % ', '.join(mods))

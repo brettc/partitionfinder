@@ -138,9 +138,8 @@ class Analysis(object):
             the_config.start_tree_path,  'filtered_source.phy')
         self.filtered_alignment.write(self.filtered_alignment_path)
 
-        # TODO: This checking should still be done...
-        # the_config.partitions.check_against_alignment(self.alignment)
-        # the_config.partitions.finalise()
+        # Check the full subset against the alignment
+        subset_ops.check_against_alignment(subset_with_everything, self.alignment)
 
         # We start by copying the alignment
         self.alignment_path = os.path.join(
