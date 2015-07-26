@@ -842,7 +842,9 @@ class KmeansAnalysis(Analysis):
                               score_diff))
 
                     # Do a Likelihood Ratio Test (suggested by Olivier Gascuel)
+                    LRT_p = subset_list_LRT(split_subsets, [sub])
 
+                    log.debug("LRT p value: %.1f" %(LRT_p))
 
                     if score_diff < 0:
                         new_scheme_subs = new_scheme_subs + split_subsets
