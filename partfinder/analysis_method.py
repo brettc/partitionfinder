@@ -289,7 +289,7 @@ class RelaxedClusteringAnalysis(Analysis):
             # get distances between subsets
             max_schemes = comb(len(start_scheme.subsets), 2)
             log.info("Measuring the similarity of %d subset pairs" % max_schemes)
-            d_matrix = neighbour.get_distance_matrix(subsets, 
+            d_matrix = neighbour.get_distance_matrix(subsets,
                 the_config.cluster_weights)
 
             if step == 1:
@@ -342,7 +342,7 @@ class RelaxedClusteringAnalysis(Analysis):
 
             best_merged = subset_ops.merge_subsets(best_pair)
             best_scheme = neighbour.make_clustered_scheme(
-                start_scheme, scheme_name, best_pair, best_merged, the_config)                
+                start_scheme, scheme_name, best_pair, best_merged, the_config)
             best_result = self.analyse_scheme(best_scheme)
 
             # the best change can get updated a fraction at this point
@@ -353,7 +353,7 @@ class RelaxedClusteringAnalysis(Analysis):
                 break
 
             log.info("The best scheme improves the %s score by %.2f to %.1f",
-                the_config.model_selection, 
+                the_config.model_selection,
                 np.abs(best_change),
                 self.results.best_score)
             start_scheme = best_scheme
@@ -444,7 +444,7 @@ class HybridAnalysis(Analysis):
                 # if joined has to be fabricated, add to fabricated list
                 if merged_sub.fabricated:
                     fabricated_subsets.append(merged_sub)
-                
+
                 all_subs.append(merged_sub)
         else:
             all_subs = start_subsets
@@ -543,7 +543,7 @@ class HybridAnalysis(Analysis):
 
         # 3. Build new list of subsets
         new_scheme_subs = self.build_new_subset_list(name_prefix, split_subs, start_subsets)
-        
+
 
         # 4. Are we done yet?
         if len(new_scheme_subs) == len(list(start_subsets)):
@@ -588,9 +588,9 @@ class HybridAnalysis(Analysis):
 
         for s in start_subsets:
             if s.fabricated:
-                log.error("""One or more of your starting datablocks could not 
-                          be analysed. Please check your data and try again. 
-                          One way to fix this is to join your small datablocks 
+                log.error("""One or more of your starting datablocks could not
+                          be analysed. Please check your data and try again.
+                          One way to fix this is to join your small datablocks
                           together into larger datablocks""")
                 raise AnalysisError
 
@@ -648,7 +648,7 @@ class HybridAnalysis(Analysis):
             # get distances between subsets
             max_schemes = comb(len(start_scheme.subsets), 2)
             log.info("Measuring the similarity of %d subset pairs" % max_schemes)
-            d_matrix = neighbour.get_distance_matrix(subsets, 
+            d_matrix = neighbour.get_distance_matrix(subsets,
                 the_config.cluster_weights)
 
             if step == 1:
@@ -701,7 +701,7 @@ class HybridAnalysis(Analysis):
 
             best_merged = subset_ops.merge_subsets(best_pair)
             best_scheme = neighbour.make_clustered_scheme(
-                start_scheme, scheme_name, best_pair, best_merged, the_config)                
+                start_scheme, scheme_name, best_pair, best_merged, the_config)
             best_result = self.analyse_scheme(best_scheme)
 
             # the best change can get updated a fraction at this point
@@ -712,7 +712,7 @@ class HybridAnalysis(Analysis):
                 break
 
             log.info("The best scheme improves the %s score by %.2f to %.1f",
-                the_config.model_selection, 
+                the_config.model_selection,
                 np.abs(best_change),
                 self.results.best_score)
             start_scheme = best_scheme
@@ -806,7 +806,7 @@ class KmeansAnalysis(Analysis):
                 # if joined has to be fabricated, add to fabricated list
                 if merged_sub.fabricated:
                     fabricated_subsets.append(merged_sub)
-                
+
                 all_subs.append(merged_sub)
         else:
             all_subs = start_subsets
@@ -834,13 +834,16 @@ class KmeansAnalysis(Analysis):
                     fabrications = fabrications + s.fabricated
 
                 if fabrications == 0:
-                    split_score = subset_ops.subset_list_score(split_subsets, the_config, self.alignment)
-                    unsplit_score = subset_ops.subset_list_score([sub], the_config, self.alignment)
 
-                    score_diff = split_score - unsplit_score
+                    score_diff = subset_list_score_diff(split_subsets, [sub])
+
                     log.debug("Difference in %s: %.1f" %
                              (the_config.model_selection.upper(),
                               score_diff))
+
+                    # Do a Likelihood Ratio Test (suggested by Olivier Gascuel)
+
+
                     if score_diff < 0:
                         new_scheme_subs = new_scheme_subs + split_subsets
                     else:
@@ -905,7 +908,7 @@ class KmeansAnalysis(Analysis):
 
         # 3. Build new list of subsets
         new_scheme_subs = self.build_new_subset_list(name_prefix, split_subs, start_subsets)
-        
+
 
         # 4. Are we done yet?
         if len(new_scheme_subs) == len(list(start_subsets)):
@@ -947,9 +950,9 @@ class KmeansAnalysis(Analysis):
 
         for s in start_subsets:
             if s.fabricated:
-                log.error("""One or more of your starting datablocks could not 
-                          be analysed. Please check your data and try again. 
-                          One way to fix this is to join your small datablocks 
+                log.error("""One or more of your starting datablocks could not
+                          be analysed. Please check your data and try again.
+                          One way to fix this is to join your small datablocks
                           together into larger datablocks""")
                 raise AnalysisError
 

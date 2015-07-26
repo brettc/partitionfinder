@@ -176,3 +176,9 @@ def subset_list_score(list_of_subsets, the_config, alignment):
         return get_bic(lnL, sum_k, subs_len)
 
 
+def subset_list_score_diff(list1, list2):
+    """Take two lists of subsets and return the score diff as list1 - list2"""
+    list1_score = subset_ops.subset_list_score(list1, the_config, self.alignment)
+    list2_score = subset_ops.subset_list_score(list2, the_config, self.alignment)
+
+    score_diff = list1_score - list2_score
