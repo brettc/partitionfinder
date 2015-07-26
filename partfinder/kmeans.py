@@ -141,8 +141,8 @@ def kmeans_split_subset(cfg, alignment, a_subset, tree_path,
 
     # Now store all of the per_site_stats with the subset
     a_subset.add_per_site_statistics(per_site_stat_list)
-    log.debug("The per site statistics for site 1 of subset %s is %s" 
-        % (a_subset.name, per_site_stat_list[0]))
+    log.debug("The per site statistics for the first 10 sites of subset %s are %s"
+        % (a_subset.name, per_site_stat_list[0:10]))
 
     # Perform kmeans clustering on the per site stats
     kmeans_results = kmeans(per_site_stat_list, number_of_ks, n_jobs)
@@ -164,5 +164,3 @@ def kmeans_split_subset(cfg, alignment, a_subset, tree_path,
         marker += 1
 
     return new_subsets
-    
-
