@@ -851,6 +851,12 @@ class KmeansAnalysis(Analysis):
                              (the_config.model_selection.upper(),
                               score_diff))
 
+                    lnL, sum_k, subs_len = subset_ops.subset_list_stats([sub], the_config, self.alignment)
+                    
+                    per_site_improvement = score_diff / subs_len
+
+                    log.info("Per site improvement: %.1f" % (per_site_improvement))
+
                     if score_diff < 0:
                         # We ONLY split the subset if the score improved and the LRT is significant
                         new_scheme_subs = new_scheme_subs + split_subsets
