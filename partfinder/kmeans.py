@@ -153,6 +153,8 @@ def kmeans_split_subset(cfg, alignment, a_subset, tree_path,
     for k in range(len(split_categories)):
         list_of_sites.append(split_categories[k])
 
+    log.debug("# split categories: %d" % len(split_categories))
+
     log.debug("Creating new subsets from k-means split")
     # Make the new subsets
     new_subsets = subset_ops.split_subset(a_subset, list_of_sites)

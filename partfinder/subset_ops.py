@@ -185,23 +185,10 @@ def subset_list_stats(list_of_subsets, the_config, alignment):
     return lnL, sum_k, subs_len
 
 
-def subset_list_LRT(list1, list2):
+def subset_list_score_diff(list1, list2, the_config, alignment):
     """Take two lists of subsets and return the score diff as list1 - list2"""
-
-    list1_lnL, list1_sum_k, list1_subs_len = subset_list_stats(list1, the_config, alignment)
-    list2_lnL, list2_sum_k, list2_subs_len = subset_list_stats(list2, the_config, alignment)
-
-    lrdf = (list2_sum_k - list1_sum_k)
-    lrstat = -2 * (list2_lnL - list1_lnL)
-    lr_pvalue = chi2.sf(lrstat, df=lrdf)
-
-    return lr_pvalue
-
-
-def subset_list_score_diff(list1, list2):
-    """Take two lists of subsets and return the score diff as list1 - list2"""
-    list1_score = subset_ops.subset_list_score(list1, the_config, self.alignment)
-    list2_score = subset_ops.subset_list_score(list2, the_config, self.alignment)
+    list1_score = subset_list_score(list1, the_config, alignment)
+    list2_score = subset_list_score(list2, the_config, alignment)
 
     score_diff = list1_score - list2_score
 

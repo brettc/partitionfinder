@@ -26,7 +26,7 @@ import neighbour
 import kmeans
 import itertools
 import subset_ops
-from scipy import spatial
+from scipy import spatial, exp
 from scipy.misc import comb
 import numpy as np
 from config import the_config
@@ -753,7 +753,13 @@ class KmeansAnalysis(Analysis):
                 split = kmeans.kmeans_split_subset(
                     the_config, self.alignment, sub, tree_path, n_jobs=self.threads)
 
+
                 if split == 1:  # we couldn't analyse the big subset
+                    sub.dont_split = True # never try to split this subset again
+                    split_subs[sub] = [sub]  # so we keep it whole
+                elif len(split) == 1:
+                    # in some cases (i.e. all site params are equal) kmeans
+                    # cannot split subsets, so we get back the same as we put in
                     sub.dont_split = True # never try to split this subset again
                     split_subs[sub] = [sub]  # so we keep it whole
                 else:  # we could analyse the big subset
@@ -824,9 +830,13 @@ class KmeansAnalysis(Analysis):
                 new_scheme_subs.append(sub)
 
             else:  # compare split to un-split
+                log.debug("Splitting new subset")
+                
                 # get list of split subsets from dictionary
                 split_subsets = split_subs[sub]
 
+                log.debug("# subs in this split: %d" % len(split_subsets))
+                log.debug("dont_split: %s" % split_subsets[0].dont_split)
 
                 # split subsets might be fabricated (i.e. unanalyseable)
                 fabrications = 0
@@ -835,18 +845,14 @@ class KmeansAnalysis(Analysis):
 
                 if fabrications == 0:
 
-                    score_diff = subset_list_score_diff(split_subsets, [sub])
+                    score_diff = subset_ops.subset_list_score_diff(split_subsets, [sub], the_config, self.alignment)
 
-                    log.debug("Difference in %s: %.1f" %
+                    log.info("Difference in %s: %.1f" %
                              (the_config.model_selection.upper(),
                               score_diff))
 
-                    # Do a Likelihood Ratio Test (suggested by Olivier Gascuel)
-                    LRT_p = subset_list_LRT(split_subsets, [sub])
-
-                    log.debug("LRT p value: %.1f" %(LRT_p))
-
                     if score_diff < 0:
+                        # We ONLY split the subset if the score improved and the LRT is significant
                         new_scheme_subs = new_scheme_subs + split_subsets
                     else:
                         sub.dont_split = True
