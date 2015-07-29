@@ -23,15 +23,21 @@ import collections
 log = logtools.get_logger()
 from util import PartitionFinderError
 
-_available_lists = ["all",
-                    "dna",
-                    "dna_total", 
-                    "protein",
-                    "protein_total", 
-                    "beast", 
-                    "mrbayes", 
-                    "protein_gamma", 
-                    "protein_gammaI"]
+_available_lists = ["all_dna", # all DNA models, excluding those with base frequencies estimated by ML
+                    "all_dnax", # all DNA models, including those with base frequencies estimated by ML
+                    "all_proteinx", # all protein models, excluding those with base frequencies estimated by ML
+                    "all_protein", # all protein models, including those with base frequencies estimated by ML
+                    "all", # all models, excluding those with base frequencies estimated by ML
+                    "allx", # all models, including those with base frequencies estimated by ML
+                    "beast", # all models available in BEAST 2
+                    "mrbayes", # all models available in MrBayes 3.3
+                    "just_gamma", # only models with +G (not + nothing, and not +I+G)
+                    "just_gammaI", # only modles with +I+G
+                    "protein_gamma", # only protein models with +G (included for back-compatibility only; 'just_gamma' is equivalent now)
+                    "protein_gammaI", # only protein models with +I+G (included for back-compatibility only; 'just_gammaI' is equivalent now)
+                    "raxml" # all models in raxml (included for back-compatibiligy only; 'all' is equivalent now)
+                    ]
+
 
 def load_models(the_config):
     HERE = os.path.abspath(os.path.dirname(__file__))
