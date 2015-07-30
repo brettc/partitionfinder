@@ -298,7 +298,9 @@ class Parser(object):
 
         log.info("You set 'models' to: %s" % ', '.join(mods))
 
-        self.cfg.models = list(mods)
+        mods = list(mods)
+
+        self.cfg.models = [x.upper() for x in mods]
 
         mo.load_models(self.cfg)
         self.cfg.model_count = len(self.cfg.models)

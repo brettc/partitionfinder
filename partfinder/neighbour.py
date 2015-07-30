@@ -114,9 +114,10 @@ def get_distance_matrix(subsets, weights):
 
     return final_dists
 
-def get_N_closest_subsets(subsets, cfg, N, distance_matrix = None):
+def get_N_closest_subsets(subsets, cfg, N, distance_matrix = np.matrix([])):
     """Find the N most similar groups of subsets in a scheme
     """
+
     if not distance_matrix.any():
         distance_matrix = get_distance_matrix(subsets, cfg.cluster_weights)
     ranked_subset_groupings = get_ranked_list(distance_matrix, subsets, N)
@@ -140,7 +141,7 @@ def make_split_scheme(start_scheme, scheme_name, subset_to_split, split_subsets,
     # 1. Then we define a new scheme with those merged subsets
     new_subsets = start_scheme.subsets - {subset_to_split}
 
-    # add all of the split subsets
+    # 2. add all of the split subsets
     for s in split_subsets:
         new_subsets.add(s)
 
