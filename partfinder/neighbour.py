@@ -58,23 +58,27 @@ def get_manhattan_matrix(rates, freqs, model, alpha, weights):
 
     if weights["rate"] > 0:
         r_dists = scipy.spatial.distance.pdist(np.array(rates), 'cityblock')
-        norm = float(weights["rate"])/float(np.amax(r_dists))
-        r_dists = np.multiply(r_dists, norm)
+        if np.amax(r_dists)>0:        
+            norm = float(weights["rate"])/float(np.amax(r_dists))
+            r_dists = np.multiply(r_dists, norm)
         distance_arrays.append(r_dists)
     if weights["freqs"] > 0:
         f_dists = scipy.spatial.distance.pdist(np.array(freqs), 'cityblock')
-        norm = float(weights["freqs"])/float(np.amax(f_dists))
-        f_dists = np.multiply(f_dists, norm)
+        if np.amax(f_dists)>0:
+            norm = float(weights["freqs"])/float(np.amax(f_dists))
+            f_dists = np.multiply(f_dists, norm)
         distance_arrays.append(f_dists)
     if weights["model"] > 0:
         m_dists = scipy.spatial.distance.pdist(np.array(model), 'cityblock')
-        norm = float(weights["model"])/float(np.amax(m_dists))
-        m_dists = np.multiply(m_dists, norm)
+        if np.amax(m_dists)>0:
+            norm = float(weights["model"])/float(np.amax(m_dists))
+            m_dists = np.multiply(m_dists, norm)
         distance_arrays.append(m_dists)
     if weights["alpha"] > 0:
         a_dists = scipy.spatial.distance.pdist(np.array(alpha), 'cityblock')
-        norm = float(weights["alpha"])/float(np.amax(a_dists))
-        a_dists = np.multiply(a_dists, norm)
+        if np.amax(a_dists)>0:
+            norm = float(weights["alpha"])/float(np.amax(a_dists))
+            a_dists = np.multiply(a_dists, norm)
         distance_arrays.append(a_dists)
 
     try: 
