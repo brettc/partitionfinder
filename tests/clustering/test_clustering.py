@@ -9,20 +9,20 @@ from partfinder.util import PartitionFinderError
 HERE = os.path.abspath(os.path.dirname(__file__))
 
 test_description = """
-DNA_hcluster1  | xfail Parser Error?  |
+DNA_hcluster1  | success              |
 DNA_hcluster2  | success              |
 DNA_hcluster3  | PartitionFinderError |
 DNA_hcluster4  | success              | --weights "1,1,1,1"
-DNA_hcluster5  | success              | --weights "0,0,0,0"
+DNA_hcluster5  | PartitionFinderError | --weights "0,0,0,0"
 DNA_hcluster6  | success              | --weights "1000,0.01,0.003,0"
 DNA_hcluster7  | PartitionFinderError | --weights "-1000,0.01,0.003,0"
 DNA_rcluster1  | success              |
 DNA_rcluster2  | success              |
 
-DNA_rcluster3  | xfail Raxml Bug      |
+DNA_rcluster3  | success              |
 
 DNA_rcluster4  | success              | --weights "1,1,1,1"
-DNA_rcluster5  | success              | --weights "0,0,0,0"
+DNA_rcluster5  | PartitionFinderError | --weights "0,0,0,0"
 DNA_rcluster6  | success              | --weights "1000, 0.01, 0.003, 0"
 DNA_rcluster7  | ConfigurationError   | --weights "-1000, 0.01, 0.003, 0"
 DNA_rcluster8  | success              | --rcluster-percent 0
