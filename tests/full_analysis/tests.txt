@@ -38,7 +38,7 @@ rerun13 unlinked    all             aicc        user        failure (shouldn't b
 rerun14	linked	    selection		bic         all         failure (I edited a sequence in the original alignment)
 rerun15	linked	    selection		bic         all         failure (I edited a spp name in the original alignment)
 rerun16	linked	    selection		bic         all         failure (I edited a data_block definition to change the boundaries)
-rerun17	linked	    selection		bic         all         success (I added a data_block)
+rerun17	linked	    selection		bic         all         failure (I added a data_block)
 rerun18	linked	    selection		bic         all         failure (I removed a data_block - this could work in theory but right now we have it conservatively set up to fail, this is OK in my opinion)
 rerun19	linked	    selection		bic         all         failure (I changed the alignment filename, but the alignment itself is identical to the original. Again, this is conservative but OK)
 rerun20	linked	    selection		bic         user        failure (I screwed up the user definitions to include a data_block that doesn't exist)
