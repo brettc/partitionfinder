@@ -8,8 +8,8 @@ HERE = os.path.abspath(os.path.dirname(__file__))
 organise_tests = {
     "dna"               : ["DNA%d" % n for n in range(1, 9)],
     "prot"              : ["prot%d" % n for n in range(1, 9)],
-    "rerun_success"     : ["rerun%02d" % int(n) for n in "1 2 3 4 5 6 7 8 17".split()],
-    "rerun_pf_error"    : ["rerun%02d" % int(n) for n in "9 10 11 12 13 16 20 21".split()],
+    "rerun_success"     : ["rerun%02d" % int(n) for n in "1 2 3 4 5 6 7 8".split()],
+    "rerun_pf_error"    : ["rerun%02d" % int(n) for n in "9 10 11 12 13 16 17 20 21".split()],
     "rerun_ana_error"   : ["rerun%02d" % int(n) for n in "14 15".split()],
     "rerun_conf_error"  : ["rerun%02d" % int(n) for n in "18 19".split()],
 }
