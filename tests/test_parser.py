@@ -4,10 +4,11 @@ from partfinder.parser import Parser
 def test_one():
     # Just use the defaults
     c = Configuration()
+    c.init()
     p = Parser(c)
     p.parse_configuration(test1)
-    print c.user_subsets
-    # Now do some testing on the Parsed stuff
+    assert len(c.user_subsets) == 9
+    assert len(c.user_schemes) == 6
 
 test1 = r"""
 alignment = test.phy;
