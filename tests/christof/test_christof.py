@@ -47,7 +47,7 @@ def test_alignment_error(caplog):
 def test_overlap_error(caplog):
     with pytest.raises(util.PartitionFinderError):
         main.call_main("protein", '"%s"' % path_from_function())
-    assert "contains overlapping subsets" in caplog.text()
+    assert "sites overlap in your block definitions" in caplog.text()
 
 def test_clustering_phyml_dna(caplog):
     with pytest.raises(util.PartitionFinderError):
