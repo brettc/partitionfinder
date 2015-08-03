@@ -34,10 +34,10 @@ _available_lists = ["ALL", # all models, excluding those with base frequencies e
 
 def load_models(the_config):
     HERE = os.path.abspath(os.path.dirname(__file__))
-    all_models = pd.read_csv(os.path.join(HERE, 'models.csv'))
+    the_config.all_models = pd.read_csv(os.path.join(HERE, 'models.csv'))
 
     # determine available models based on datatype and phylogeny program
-    the_config.available_models = get_available_models(all_models, the_config)
+    the_config.available_models = get_available_models(the_config)
 
     # check user models will run
     parse_user_models(the_config)
@@ -47,12 +47,12 @@ def load_models(the_config):
     log.info("%s" % ', '.join(the_config.models))
 
 
-def get_available_models(all_models, the_config):
+def get_available_models(the_config):
     # from the list of all models, which ones could we actually run
     if the_config.phylogeny_program == 'phyml':
-        available_models = all_models[pd.notnull(all_models.phyml_commandline)]
+        available_models = the_config.all_models[pd.notnull(the_config.all_models.phyml_commandline)]
     elif the_config.phylogeny_program == 'raxml':
-        available_models = all_models[pd.notnull(all_models.raxml_commandline)]
+        available_models = the_config.all_models[pd.notnull(the_config.all_models.raxml_commandline)]
 
     if the_config.datatype == 'DNA':
         available_models = available_models.query("datatype=='DNA'")
@@ -92,6 +92,7 @@ def check_all_models(the_config):
     models = the_config.models
     allowed = set(the_config.available_models.name)
 
+
     problems = set(models).difference(allowed)
 
     if problems:
@@ -108,6 +109,24 @@ def check_all_models_and_lists(the_config):
     # OR a valid option from the _available_models
     models = the_config.models
     allowed = set(_available_lists).union(set(the_config.available_models.name))
+
+    allmods = set(_available_lists).union(set(the_config.all_models.name))
+
+    # first we check for stuff that's not anywhere on our lists
+    mistakes = set(models).difference(allmods)
+
+    if mistakes:
+        if len(mistakes)>1: t = 'are not models/lists that are' 
+        else: t = 'is not a model/list that is'
+
+        log.error("""'%s' %s implemented in PartitionFinder. Perhaps 
+                  you made a mistake. Please check and try again""" 
+                  %(', '.join(mistakes), t))
+        log.info("""If you are unsure which models are available, or why a model you think 
+                 should work does not, please check the manual and the models.csv file 
+                 (located in the /partfinder folder) for more information.""")
+        raise PartitionFinderError
+
 
     problems = set(models).difference(allowed)
 

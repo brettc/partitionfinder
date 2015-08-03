@@ -57,22 +57,22 @@ def test_clustering_phyml_dna(caplog):
 def test_model_greedy_phyml01(caplog):
     with pytest.raises(util.PartitionFinderError):
         main.call_main("DNA", '"%s"' % path_from_function())
-    assert "'WAG+I+G+I' is not a valid model for phylogeny program phyml." in caplog.text()
+    assert "'WAG+I+G+I' is not a model/list that is implemented in PartitionFinder. Perhaps you made a mistake." in caplog.text()
 
 def test_model_greedy_phyml02(caplog):
     with pytest.raises(util.PartitionFinderError):
         main.call_main("DNA", '"%s"' % path_from_function())
-    assert "only works with nucleotide models" in caplog.text()
+    assert "'MTART+I+G+F, WAG+I+G' is/are not a valid model(s) or lists" in caplog.text()
 
 def test_model_greedy_phyml03(caplog):
     with pytest.raises(util.PartitionFinderError):
         main.call_main("DNA", '"%s"' % path_from_function())
-    assert "'WAG+LG+F+I' is not a valid model for phylogeny program phyml" in caplog.text()
+    assert "'WAG+LG+F+I' is not a model/list that is implemented in PartitionFinder." in caplog.text()
 
 def test_model_greedy_raxml01(caplog):
     with pytest.raises(util.PartitionFinderError):
         main.call_main("DNA", '"%s" --raxml' % path_from_function())
-    assert "WAG+F' is not a valid model for phylogeny program raxml" in caplog.text()
+    assert "'LG+I+F, WAG+F' is/are not a valid model(s) or lists of models" in caplog.text()
 
 def test_model_greedy_raxml02(caplog):
     with pytest.raises(util.PartitionFinderError):
@@ -82,5 +82,5 @@ def test_model_greedy_raxml02(caplog):
 def test_model_greedy_raxml03(caplog):
     with pytest.raises(util.PartitionFinderError):
         main.call_main("DNA", '"%s" --raxml' % path_from_function())
-    assert "MtArt+I+G+F' is not a valid model for phylogeny program raxml" in caplog.text()
+    assert "'MTART+I+G+F, WAG+I+G' is/are not a valid model(s)" in caplog.text()
 
