@@ -106,6 +106,8 @@ class Configuration(object):
         self.validate_cluster()
         self.validate_kmeans()
 
+        return self
+
 
 
     def set_default_options(self):
