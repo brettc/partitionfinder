@@ -36,7 +36,7 @@ prot_hcluster1 | success              |
 prot_hcluster2 | success              |
 prot_rcluster1 | ConfigurationError   | --weight  "1, 0, 100, egg"
 prot_rcluster2 | success              | --rcluster-percent 12 --weight "1,0,0,0"
-prot_rcluster3 | success              | --weight "0,0,0,0"
+prot_rcluster3 | PartitionFinderError | --weight "0,0,0,0"
 prot_rcluster4 | PartitionFinderError |
 prot_rcluster5 | success              |
 """

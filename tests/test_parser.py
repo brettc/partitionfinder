@@ -12,7 +12,7 @@ def test_one():
 test1 = r"""
 alignment = test.phy;
 branchlengths = linked;
-models = all;
+models = GTR;
 model_selection = BIC;
 
 [data_blocks]
