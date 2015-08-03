@@ -28,6 +28,7 @@ import scheme
 import subset_ops
 import results
 import threading
+import collections
 from config import the_config
 from util import PartitionFinderError, PhylogenyProgramError
 import util
@@ -93,6 +94,8 @@ class Analysis(object):
             the_config.database.close()
         return self.results
 
+
+
     def make_alignment(self, source_alignment_path):
         # Make the alignment
         self.alignment = Alignment()
@@ -109,6 +112,14 @@ class Analysis(object):
                 log.error("""Alignment file has changed since previous run. You
                      need to use the force-restart option.""")
                 raise AnalysisError
+
+            compare = lambda x, y: collections.Counter(x) == collections.Counter(y)
+
+            if not compare(old_align.species, self.alignment.species):
+                log.error("""Species names in alignment have changed since previous run. You
+                     need to use the force-restart option.""")
+                raise AnalysisError
+
 
         else:
             self.alignment.write(self.alignment_path)
