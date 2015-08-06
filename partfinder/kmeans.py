@@ -33,6 +33,7 @@ import subprocess
 import shlex
 from config import the_config
 import entropy
+
 import subset_ops
 
 # You can run kmeans in parallel, specify n_jobs as -1 and it will run
@@ -79,21 +80,67 @@ def kmeans(likelihood_list, number_of_ks, n_jobs):
     # Return centroids and dictionary with lists of sites for each k
     return centroid_list, dict(cluster_dict)
 
+def rate_parser(rates_name):
+    rates_list = []
+    the_rates = open(rates_name)
+    for rate in the_rates.readlines():
+        rates_list.append([float(rate)])
+    return rates_list
+
+def run_rates(command, report_errors=True):
+    program_name = "fast_TIGER"
+    program_path = util.program_path
+    program_path = os.path.join(program_path, program_name)
+    # command = "\"%s\" %s" % (program_path, command)
+
+    command = "\"%s\" %s" % (program_path, command)
+
+    # Note: We use shlex.split as it does a proper job of handling command
+    # lines that are complex
+    p = subprocess.Popen(
+        shlex.split(command),
+        shell=False,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE)
+
+    # Capture the output, we might put it into the errors
+    stdout, stderr = p.communicate()
+    # p.terminate()
+
+    if p.returncode != 0:
+        if report_errors == True:
+            log.error("fast_TIGER did not execute successfully")
+            log.error("fast_TIGER output follows, in case it's helpful for \
+                finding the problem")
+            log.error("%s", stdout)
+            log.error("%s", stderr)
+        raise PhylogenyProgramError(stdout, stderr)
+
+def sitewise_tiger_rates(cfg, phylip_file):
+    if cfg.datatype == 'DNA':
+        command = " dna " + phylip_file
+    elif cfg.datatype == 'morphology':
+        command = " morphology " + phylip_file
+    run_rates(command, report_errors=False)
+    rates_name = ("%s_r8s.txt" % phylip_file)
+    return rate_parser(rates_name)
+
+
 
 def get_per_site_stats(alignment, cfg, a_subset):
     if cfg.kmeans == 'entropy':
         sub_align = SubsetAlignment(alignment, a_subset)
         return entropy.sitewise_entropies(sub_align)
-    elif cfg.kmeans == 'tiger':
+    elif cfg.kmeans == 'fast_tiger':
+        a_subset.make_alignment(cfg, alignment)
+        phylip_file = a_subset.alignment_path
+        return sitewise_tiger_rates(cfg, str(phylip_file))
+    elif cfg. kmeans == 'tiger':
         rate_list = []
         sub_align = SubsetAlignment(alignment, a_subset)
         tiger = TigerDNA()
         tiger.build_bitsets(sub_align)
         rate_array = tiger.calc_rates()
-        # the kmeans function requires a two-dimensional array with each
-        # element in it's own array. I imagine there is a better way to do
-        # this than making a two-dimensional list then converting it back to
-        # an array...
         rate_list = [[rate] for rate in rate_array]
         return rate_list
 
