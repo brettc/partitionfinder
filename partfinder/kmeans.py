@@ -38,7 +38,7 @@ import subset_ops
 
 # You can run kmeans in parallel, specify n_jobs as -1 and it will run
 # on all cores available.
-def kmeans(likelihood_list, number_of_ks, n_jobs):
+def kmeans(rate_array, number_of_ks, n_jobs):
     '''Take as input a list of sites, performs k-means clustering on
     sites and returns k centroids and a dictionary with k's as keys
     and lists of sites belonging to that k as values
@@ -47,8 +47,7 @@ def kmeans(likelihood_list, number_of_ks, n_jobs):
     start = time.clock()
 
     # Create and scale an array for input into kmeans function
-    array = np.array(likelihood_list)
-    array = scale(array)
+    array = scale(rate_array)
 
     # Call scikit_learn's k-means, use "k-means++" to find centroids
     # kmeans_out = KMeans(init='k-means++', n_init = 100)
@@ -85,7 +84,8 @@ def rate_parser(rates_name):
     the_rates = open(rates_name)
     for rate in the_rates.readlines():
         rates_list.append([float(rate)])
-    return rates_list
+    rate_array = np.array(rates_list)
+    return rate_array
 
 def run_rates(command, report_errors=True):
     program_name = "fast_TIGER"
@@ -125,8 +125,6 @@ def sitewise_tiger_rates(cfg, phylip_file):
     rates_name = ("%s_r8s.txt" % phylip_file)
     return rate_parser(rates_name)
 
-
-
 def get_per_site_stats(alignment, cfg, a_subset):
     if cfg.kmeans == 'entropy':
         sub_align = SubsetAlignment(alignment, a_subset)
@@ -141,8 +139,8 @@ def get_per_site_stats(alignment, cfg, a_subset):
         tiger = TigerDNA()
         tiger.build_bitsets(sub_align)
         rate_array = tiger.calc_rates()
-        rate_list = [[rate] for rate in rate_array]
-        return rate_list
+        rate_array.shape = rate_array.shape[0], 1
+        return rate_array
 
 
 def kmeans_split_subset(cfg, alignment, a_subset, tree_path,

@@ -42,6 +42,7 @@ def get_morph_entropies(alignment):
         sum = np.sum(col)
         props = np.array([num/float(sum) for num in col])
         column_entropy.append(entropy_calc(props))
+    column_entropy = np.array(column_entropy)
     return column_entropy
 
 def sitewise_entropies(alignment):
@@ -73,6 +74,8 @@ def sitewise_entropies(alignment):
 
     column_entropy = [[entropy_calc(t)] for t in prob]
 
+    column_entropy = np.array(column_entropy)
+
     return column_entropy
 
 def sitewise_entropies_scaled(alignment): 
@@ -91,6 +94,7 @@ def sitewise_entropies_scaled(alignment):
         sum = np.sum(col)
         props = np.array([num/float(sum) for num in col])
         column_entropy.append([entropy_calc(props)]) 
+    column_entropy = np.array(column_entropy)
     return column_entropy
 
 
