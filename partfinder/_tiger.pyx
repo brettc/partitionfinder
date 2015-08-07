@@ -22,15 +22,16 @@ cdef class TigerBase:
             return None
 
         rates = numpy.zeros(self.column_count, dtype='f8')
+        dist_matrix = numpy.empty((self.column_count, self.column_count), dtype='f8')
         cdef: 
             size_t i, j, i_b, j_b
             double rate, axpi, num, denom
             c_Bitset *i_bitset
             c_Bitset *j_bitset
             np.npy_double[:] c_rates = rates
+            np.npy_double[:, :] c_dist_matrix = dist_matrix
 
         denom = <double>self.column_count - 1.0
-        dist_matrix = numpy.empty([self.column_count, self.column_count], dtype=float)
         for i in range(self.column_count):
             rate = 0.0
             for j in range(self.column_count):
@@ -55,7 +56,7 @@ cdef class TigerBase:
                                 break
 
                     rate += axpi / num
-                    dist_matrix[i][j] = (axpi / num)
+                    c_dist_matrix[i][j] = (axpi / num)
 
             rate /= denom
             c_rates[i] = rate
