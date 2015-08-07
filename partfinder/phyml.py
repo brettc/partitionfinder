@@ -133,7 +133,8 @@ def make_topology(alignment_path, datatype, cmdline_extras):
 
 
 def make_branch_lengths(alignment_path, topology_path, datatype, cmdline_extras):
-    # Now we re-estimate branchlengths using a GTR+I+G model on the (unpartitioned) dataset
+    # Now we re-estimate branchlengths using a GTR+I+G model on the
+    # (unpartitioned) dataset
     cmdline_extras = check_defaults(cmdline_extras)
     dir_path, fname = os.path.split(topology_path)
     tree_path = os.path.join(dir_path, 'topology_tree.phy')
@@ -159,7 +160,8 @@ def make_branch_lengths(alignment_path, topology_path, datatype, cmdline_extras)
 
 
 def check_defaults(cmdline_extras):
-    """We use some sensible defaults, but allow users to override them with extra cmdline options"""
+    """We use some sensible defaults, but allow users to override them with
+    extra cmdline options"""
 
     if cmdline_extras.count("--min_diff_lk_global") > 0:
         accuracy_global = ""
@@ -207,14 +209,14 @@ def analyse(model, alignment_path, tree_path, branchlengths, cmdline_extras):
 
 def make_tree_path(alignment_path):
     pth, ext = os.path.splitext(alignment_path)
-    return pth + ".phy_phyml_tree.txt"
+    return pth + ".phy_phyml_tree"
 
 
 def make_output_path(aln_path, model):
     # analyse_path = os.path.join(root_path, name + ".phy")
     pth, ext = os.path.splitext(aln_path)
-    stats_path = "%s.phy_phyml_stats_%s.txt" % (pth, model)
-    tree_path = "%s.phy_phyml_tree_%s.txt" % (pth, model)
+    stats_path = "%s.phy_phyml_stats_%s" % (pth, model)
+    tree_path = "%s.phy_phyml_tree_%s" % (pth, model)
     return stats_path, tree_path
 
 

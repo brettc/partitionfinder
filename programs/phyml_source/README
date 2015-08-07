@@ -1,7 +1,0 @@
-To install PhyML, type the following commands:
-./configure;
-make;
-
-To install PhyTime, type the following commands:
-./configure --enable-phytime;
-make;
