@@ -140,7 +140,7 @@ def get_per_site_stats(alignment, cfg, a_subset):
         sub_align = SubsetAlignment(alignment, a_subset)
         tiger = TigerDNA()
         tiger.build_bitsets(sub_align)
-        rate_array = tiger.calc_rates()
+        rate_array = tiger.calc_rates()[0]
         rate_list = [[rate] for rate in rate_array]
         return rate_list
 

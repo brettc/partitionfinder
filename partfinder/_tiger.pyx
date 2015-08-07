@@ -30,34 +30,37 @@ cdef class TigerBase:
             np.npy_double[:] c_rates = rates
 
         denom = <double>self.column_count - 1.0
+        dist_matrix = numpy.empty([self.column_count, self.column_count], dtype=float)
         for i in range(self.column_count):
             rate = 0.0
             for j in range(self.column_count):
                 # Don't compare to self
                 if i == j:
-                    continue
+                    dist_matrix[i][j] = 1
 
-                num = 0.0
-                axpi = 0.0
-                for j_b in range(4):
-                    j_bitset = &self._bitsets[j][j_b]
-                    if j_bitset.none():
-                        continue
-                    num += 1.0
-                    for i_b in range(4):
-                        i_bitset = &self._bitsets[i][i_b]
-                        if i_bitset.none():
+                else:
+                    num = 0.0
+                    axpi = 0.0
+                    for j_b in range(4):
+                        j_bitset = &self._bitsets[j][j_b]
+                        if j_bitset.none():
                             continue
-                        if j_bitset.is_subset_of(deref(i_bitset)):
-                            axpi += 1.0
-                            break
+                        num += 1.0
+                        for i_b in range(4):
+                            i_bitset = &self._bitsets[i][i_b]
+                            if i_bitset.none():
+                                continue
+                            if j_bitset.is_subset_of(deref(i_bitset)):
+                                axpi += 1.0
+                                break
 
-                rate += axpi / num
+                    rate += axpi / num
+                    dist_matrix[i][j] = (axpi / num)
 
             rate /= denom
             c_rates[i] = rate
 
-        return rates
+        return rates, dist_matrix
 
     def bitsets_as_array(self):
         if self.species_count == 0 or self.column_count == 0:
