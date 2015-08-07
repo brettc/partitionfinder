@@ -1,0 +1,3 @@
+[submodule "submodules/phyml"]
+	path = submodules/phyml
+	url = https://brettc@github.com/brettc/phyml.git
