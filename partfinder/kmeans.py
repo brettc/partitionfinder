@@ -26,13 +26,15 @@ from sklearn.preprocessing import scale
 from collections import defaultdict
 from util import PhylogenyProgramError
 from alignment import SubsetAlignment
-from _tiger import TigerDNA
 import util
 import os
 import subprocess
 import shlex
 from config import the_config
 import entropy
+from util import PartitionFinderError
+
+
 
 import subset_ops
 
@@ -112,6 +114,11 @@ def run_rates(command, report_errors=True):
             log.error("fast_TIGER did not execute successfully")
             log.error("fast_TIGER output follows, in case it's helpful for \
                 finding the problem")
+            log.error("You probably just need to recompile the fast_TIGER \
+                code for your system. But please note that this is an \
+                unsupported option. For empirical work we recommend using \
+                entropy calculations for site rates, which is the default \
+                behaviour for the kmeans algorithm in PF2.")
             log.error("%s", stdout)
             log.error("%s", stderr)
         raise PhylogenyProgramError(stdout, stderr)
@@ -133,15 +140,17 @@ def get_per_site_stats(alignment, cfg, a_subset):
         a_subset.make_alignment(cfg, alignment)
         phylip_file = a_subset.alignment_path
         return sitewise_tiger_rates(cfg, str(phylip_file))
-    elif cfg. kmeans == 'tiger':
+    elif cfg.kmeans == 'tiger':
         rate_list = []
         sub_align = SubsetAlignment(alignment, a_subset)
-        tiger = TigerDNA()
+        tiger = the_config.TigerDNA()
         tiger.build_bitsets(sub_align)
         rate_array = tiger.calc_rates()
         rate_array.shape = rate_array.shape[0], 1
         return rate_array
-
+    else: #wtf
+        log.error("Unkown option passed to 'kmeans'. Please check and try again")
+        raise(PhylogenyProgramError)
 
 def kmeans_split_subset(cfg, alignment, a_subset, tree_path,
                         n_jobs, number_of_ks=2):
