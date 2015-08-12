@@ -425,6 +425,8 @@ class HybridAnalysis(Analysis):
                 for sub in all_subs:
                     centroid_array = [sub.centroid, centroid]
 
+                    print centroid_array
+
                     euclid_dist = spatial.distance.pdist(centroid_array)
 
                     if euclid_dist < best_match or best_match is None:
@@ -784,14 +786,26 @@ class KmeansAnalysis(Analysis):
             while fabricated_subsets:
 
                 all_subs = start_subsets
+
+                # occasionally subsets with all value == 0.0 are given a
+                # centroid of None by scikit-learn. The true entropy here
+                # is 0.0 for all sites, so the true centroid is 0.0
+                for s in all_subs:
+                    if s.centroid == None: 
+                        s.centroid = [0.0]
+                        log.debug("Fixed a subset with a centroid of None")
+                        log.debug("The subset has %d columns" % len(s.columns))
+
                 s = fabricated_subsets.pop(0)
                 all_subs.remove(s)
 
                 centroid = s.centroid
+
                 best_match = None
 
                 # get closest subset to s
                 for sub in all_subs:
+
                     centroid_array = [sub.centroid, centroid]
 
                     euclid_dist = spatial.distance.pdist(centroid_array)
