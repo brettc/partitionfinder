@@ -18,15 +18,11 @@
 import logtools
 log = logtools.get_logger()
 
-import subprocess
-import shlex
 import os
-import shutil
 import sys
 import fnmatch
 import util
 from database import DataLayout, DataRecord
-import numpy as np
 
 from pyparsing import (
     Word, Literal, nums, Suppress, ParseException,
@@ -44,8 +40,7 @@ _dna_letters = "ATCG"
 _binary_name = 'raxml'
 if sys.platform == 'win32':
     _binary_name += ".exe"
-
-from util import PhylogenyProgramError
+_raxml_binary = None
 
 
 def make_data_layout(cfg):
@@ -56,70 +51,11 @@ def make_data_layout(cfg):
     return DataLayout(letters)
 
 
-class RaxmlError(PhylogenyProgramError):
-    def __init__(self, stderr, stdout):
-        self.stderr = stderr
-        self.stdout = stdout
-
-
-def find_program():
-    """Locate the binary ..."""
-    pth = os.path.abspath(__file__)
-
-    # Split off the name and the directory...
-    pth, notused = os.path.split(pth)
-    pth, notused = os.path.split(pth)
-    pth = os.path.join(pth, "programs", _binary_name)
-    pth = os.path.normpath(pth)
-
-    log.debug("Checking for program %s", _binary_name)
-    if not os.path.exists(pth) or not os.path.isfile(pth):
-        log.error("No such file: '%s'", pth)
-        raise RaxmlError
-    log.debug("Found program %s at '%s'", _binary_name, pth)
-    return pth
-
-_raxml_binary = None
-
-
 def run_raxml(command):
     global _raxml_binary
     if _raxml_binary is None:
-        _raxml_binary = find_program()
-
-    # Add in the command file
-    log.debug("Running 'raxml %s'", command)
-    command = "\"%s\" %s" % (_raxml_binary, command)
-
-    # Note: We use shlex.split as it does a proper job of handling command
-    # lines that are complex
-    p = subprocess.Popen(
-        shlex.split(command),
-        shell=False,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE)
-
-    # Capture the output, we might put it into the errors
-    stdout, stderr = p.communicate()
-    # p.terminate()
-
-    if p.returncode != 0:
-        log.warning("RAxML did not execute successfully")
-        raise RaxmlError(stderr, stdout)
-
-
-def dupfile(src, dst):
-    # Make a copy or a symlink so that we don't overwrite different model runs
-    # of the same alignment
-
-    # TODO maybe this should throw...?
-    try:
-        if os.path.exists(dst):
-            os.remove(dst)
-        shutil.copyfile(src, dst)
-    except OSError:
-        log.error("Cannot link/copy file %s to %s", src, dst)
-        raise RaxmlError
+        _raxml_binary = util.find_program(_binary_name)
+    util.run_program(_raxml_binary, command)
 
 
 def make_topology(alignment_path, datatype, cmdline_extras):
@@ -137,7 +73,7 @@ def make_topology(alignment_path, datatype, cmdline_extras):
             alignment_path, cmdline_extras)
     else:
         log.error("Unrecognised datatype: '%s'" % (datatype))
-        raise(RaxmlError)
+        raise util.PartitionFinderError
 
     # Force raxml to write to the dir with the alignment in it
     aln_dir, fname = os.path.split(alignment_path)
@@ -156,7 +92,7 @@ def make_branch_lengths(alignment_path, topology_path, datatype, cmdline_extras)
     dir_path, fname = os.path.split(topology_path)
     tree_path = os.path.join(dir_path, 'topology_tree.phy')
     log.debug("Copying %s to %s", topology_path, tree_path)
-    dupfile(topology_path, tree_path)
+    util.dupfile(topology_path, tree_path)
     os.remove(topology_path)  # saves headaches later...
 
     if datatype == "DNA":
@@ -211,7 +147,7 @@ def analyse(model, alignment_path, tree_path, branchlengths, cmdline_extras):
     else:
         # WTF?
         log.error("Unknown option for branchlengths: %s", branchlengths)
-        raise RaxmlError
+        raise util.PartitionFinderError
 
     cmdline_extras = check_defaults(cmdline_extras)
 
@@ -273,7 +209,7 @@ class Parser(object):
             letters = _dna_letters
         else:
             log.error("Unknown datatype '%s', please check" % self.cfg.datatype)
-            raise RaxmlError
+            raise util.PartitionFinderError
 
         self.rate_indexes = self.cfg.data_layout.rate_indexes
         self.freq_indexes = self.cfg.data_layout.letter_indexes
@@ -345,7 +281,7 @@ class Parser(object):
             self.root_parser.parseString(text)
         except ParseException, p:
             log.error(str(p))
-            raise RaxmlError
+            raise util.ParseError
 
         log.debug("Result is %s", self.result)
         return self.result
@@ -355,10 +291,6 @@ def parse(text, cfg):
     the_parser = Parser(cfg)
     return the_parser.parse(text)
 
-program_name = "raxml"
-
-def program():
-    return program_name
 
 def fabricate(lnl):
     result = Parser('DNA')
@@ -368,14 +300,3 @@ def fabricate(lnl):
     result.result.seconds = 0
     result.result.alpha = 0
     return result.result
-
-if __name__ == '__main__':
-    import logging
-    logging.basicConfig(level=logging.DEBUG)
-    pth = "./tests/misc/raxml_nucleotide.output"
-    p = Parser('DNA')
-    result = p.parse(open(pth).read())
-
-    pth = "./tests/misc/raxml_aminoacid.output"
-    p = Parser('protein')
-    result = p.parse(open(pth).read())

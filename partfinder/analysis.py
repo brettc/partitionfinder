@@ -30,7 +30,7 @@ import results
 import threading
 import collections
 from config import the_config
-from util import PartitionFinderError, PhylogenyProgramError
+from util import PartitionFinderError, ExternalProgramError
 import util
 
 class AnalysisError(PartitionFinderError):
@@ -171,7 +171,7 @@ class Analysis(object):
                 # Copy it into the start tree folder
                 log.info("Using user supplied topology at %s" % user_path)
                 topology_path = os.path.join(the_config.start_tree_path, 'user_topology.phy')
-                the_config.processor.dupfile(user_path, topology_path)
+                util.dupfile(user_path, topology_path)
             else:
                 log.debug(
                     "didn't find tree at %s, making a new one" % tree_path)
@@ -200,7 +200,7 @@ class Analysis(object):
                 the_config.cmdline_extras
             )
             fabricate = False
-        except PhylogenyProgramError:
+        except ExternalProgramError:
             if not the_config.suppress_errors:
                 # In the Kmeans algorithm we suppress errors and "fabricate"
                 # subsets (we assume the error is because the subset is too

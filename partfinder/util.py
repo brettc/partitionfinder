@@ -20,6 +20,9 @@ log = logtools.get_logger()
 
 import os
 import fnmatch
+import subprocess
+import shlex
+import shutil
 from math import log as logarithm
 
 
@@ -27,8 +30,12 @@ from math import log as logarithm
 class PartitionFinderError(Exception):
     pass
 
+class ExternalProgramError(PartitionFinderError):
+    def __init__(self, stderr, stdout):
+        self.stderr = stderr
+        self.stdout = stdout
 
-class PhylogenyProgramError(PartitionFinderError):
+class ParseError(PartitionFinderError):
     pass
 
 NO_CONFIG_ERROR = """
@@ -37,6 +44,57 @@ must be a file called 'partition_finder.cfg' located in the same folder as
 your alignment. Please check and try again.
 """
 
+
+def find_program(binary_name):
+    """Locate the binary ..."""
+    pth = os.path.abspath(__file__)
+
+    # Split off the name and the directory...
+    pth, notused = os.path.split(pth)
+    pth, notused = os.path.split(pth)
+    pth = os.path.join(pth, "programs", binary_name)
+    pth = os.path.normpath(pth)
+
+    log.debug("Checking for program %s", binary_name)
+    if not os.path.exists(pth) or not os.path.isfile(pth):
+        log.error("No such file: '%s'", pth)
+        raise PartitionFinderError
+    log.debug("Found program %s at '%s'", binary_name, pth)
+    return pth
+
+
+def run_program(binary, command):
+    # Add in the command file
+    log.debug("Running '%s %s'", binary, command)
+    command = "\"%s\" %s" % (binary, command)
+
+    # Note: We use shlex.split as it does a proper job of handling command
+    # lines that are complex
+    p = subprocess.Popen(
+        shlex.split(command),
+        shell=False,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE)
+
+    # Capture the output, we might put it into the errors
+    stdout, stderr = p.communicate()
+    # p.terminate()
+
+    if p.returncode != 0:
+        raise ExternalProgramError(stdout, stderr)
+
+def dupfile(src, dst):
+    # Make a copy or a symlink so that we don't overwrite different model runs
+    # of the same alignment
+
+    # TODO maybe this should throw...?
+    try:
+        if os.path.exists(dst):
+            os.remove(dst)
+        shutil.copyfile(src, dst)
+    except OSError:
+        log.error("Cannot link/copy file %s to %s", src, dst)
+        raise PartitionFinderError
 
 def check_file_exists(pth):
     if not os.path.exists(pth) or not os.path.isfile(pth):
@@ -144,6 +202,7 @@ def get_aicc(lnL, K, n):
 def get_bic(lnL, K, n):
     bic = (-2.0 * lnL) + (K * logarithm(n))
     return bic
+
 
 
 # def we_are_frozen():

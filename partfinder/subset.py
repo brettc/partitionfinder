@@ -22,7 +22,8 @@ import os
 import numpy
 
 from alignment import Alignment, SubsetAlignment
-from util import PartitionFinderError, remove_runID_files, get_aic, get_aicc, get_bic
+from util import (ParseError, PartitionFinderError, remove_runID_files, get_aic, get_aicc,
+                  get_bic)
 import subset_ops
 
 
@@ -280,7 +281,7 @@ class Subset(object):
                 # We remove all files that have the specified RUN ID
                 cfg.processor.remove_files(self.alignment_path, model)
 
-        except cfg.processor.PhylogenyProgramError:
+        except ParseError:
             # If we're loading old files, this is fine
             if self.status == FRESH:
                 log.warning("Failed loading parse output from %s."
