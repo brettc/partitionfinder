@@ -26,7 +26,7 @@ from database import DataLayout, DataRecord
 
 from pyparsing import (
     Word, Literal, nums, Suppress, ParseException,
-    SkipTo, OneOrMore, Regex, restOfLine
+    SkipTo, OneOrMore, Regex, restOfLine, Optional
 )
 
 import raxml_models as models
@@ -199,6 +199,7 @@ def remove_files(aln_path, model):
 class RaxmlResult(DataRecord):
     pass
 
+
 class Parser(object):
     def __init__(self, cfg):
         self.cfg = cfg
@@ -239,6 +240,9 @@ class Parser(object):
         tree_size = labeled_float(TREE_SIZE_LABEL)
         tree_size.setParseAction(self.set_tree_size)
 
+        LG4X_LINE = "LG4X" + restOfLine
+        lg4x = Optional(LG4X_LINE + LG4X_LINE)
+
         rate = Suppress("rate") + L + Suppress("<->") + L + COLON + FLOAT
         rate.setParseAction(self.set_rate)
         rates = OneOrMore(rate)
@@ -247,10 +251,17 @@ class Parser(object):
         freq.setParseAction(self.set_freq)
         freqs = OneOrMore(freq)
 
-        # Just look for these things
-        self.root_parser = seconds + lnl + alpha + tree_size + rates + freqs
-        self.root_parser.ignore("LGM" + restOfLine)
+        LGM_LINE = "LGM" + restOfLine
 
+        rate_block = Optional(LGM_LINE) + rates + freqs
+        rate_block.setParseAction(self.rate_block)
+
+        # Just look for these things
+        self.root_parser = seconds + lnl + alpha + tree_size +\
+            lg4x + OneOrMore(rate_block)
+
+    def rate_block(self, tokens):
+        self.current_block += 1
 
     def set_seconds(self, tokens):
         self.result.seconds = tokens[0]
@@ -265,11 +276,17 @@ class Parser(object):
         self.result.alpha = tokens[0]
 
     def set_rate(self, tokens):
+        # Ignore anything after the first rate block
+        if self.current_block > 1:
+            return
         basefrom, baseto, rate = tokens
         index = self.rate_indexes["%s_%s" % (basefrom, baseto)]
         self.result.rates[0, index] = rate
 
     def set_freq(self, tokens):
+        # Ignore anything after the first rate block
+        if self.current_block > 1:
+            return
         base, rate = tokens
         index = self.freq_indexes[base]
         self.result.freqs[0, index] = rate
@@ -277,6 +294,10 @@ class Parser(object):
     def parse(self, text):
         log.debug("Parsing raxml output...")
         self.result = RaxmlResult(self.cfg)
+
+        # The LGM produces multiple blocks of frequencies. We just want the
+        # first one, so we must remember where we are.
+        self.current_block = 1
         try:
             self.root_parser.parseString(text)
         except ParseException, p:
