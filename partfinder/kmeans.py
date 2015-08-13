@@ -24,17 +24,12 @@ import numpy as np
 from sklearn.cluster import KMeans
 from sklearn.preprocessing import scale
 from collections import defaultdict
-from util import PhylogenyProgramError
 from alignment import SubsetAlignment
 import util
-import os
-import subprocess
-import shlex
 from config import the_config
 import entropy
+import sys
 from util import PartitionFinderError
-
-
 
 import subset_ops
 
@@ -89,39 +84,29 @@ def rate_parser(rates_name):
     rate_array = np.array(rates_list)
     return rate_array
 
-def run_rates(command, report_errors=True):
-    program_name = "fast_TIGER"
-    program_path = util.program_path
-    program_path = os.path.join(program_path, program_name)
-    # command = "\"%s\" %s" % (program_path, command)
+_binary_name = 'fast_TIGER'
+if sys.platform == 'win32':
+    _binary_name += ".exe"
+_tiger_binary = None
 
-    command = "\"%s\" %s" % (program_path, command)
+def run_rates(command):
+    global _tiger_binary
+    if _tiger_binary is None:
+        _tiger_binary = util.find_program(_binary_name)
 
-    # Note: We use shlex.split as it does a proper job of handling command
-    # lines that are complex
-    p = subprocess.Popen(
-        shlex.split(command),
-        shell=False,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE)
+    try:
+        util.run_program(_tiger_binary, command)
+    except util.ExternalProgramError:
+        log.error("fast_TIGER did not execute successfully")
+        log.error("fast_TIGER output follows, in case it's helpful for \
+            finding the problem")
+        log.error("You probably just need to recompile the fast_TIGER \
+            code for your system. But please note that this is an \
+            unsupported option. For empirical work we recommend using \
+            entropy calculations for site rates, which is the default \
+            behaviour for the kmeans algorithm in PF2.")
+        raise
 
-    # Capture the output, we might put it into the errors
-    stdout, stderr = p.communicate()
-    # p.terminate()
-
-    if p.returncode != 0:
-        if report_errors == True:
-            log.error("fast_TIGER did not execute successfully")
-            log.error("fast_TIGER output follows, in case it's helpful for \
-                finding the problem")
-            log.error("You probably just need to recompile the fast_TIGER \
-                code for your system. But please note that this is an \
-                unsupported option. For empirical work we recommend using \
-                entropy calculations for site rates, which is the default \
-                behaviour for the kmeans algorithm in PF2.")
-            log.error("%s", stdout)
-            log.error("%s", stderr)
-        raise PhylogenyProgramError(stdout, stderr)
 
 def sitewise_tiger_rates(cfg, phylip_file):
     if cfg.datatype == 'DNA':
@@ -132,6 +117,7 @@ def sitewise_tiger_rates(cfg, phylip_file):
     rates_name = ("%s_r8s.txt" % phylip_file)
     return rate_parser(rates_name)
 
+
 def get_per_site_stats(alignment, cfg, a_subset):
     if cfg.kmeans == 'entropy':
         sub_align = SubsetAlignment(alignment, a_subset)
@@ -141,7 +127,6 @@ def get_per_site_stats(alignment, cfg, a_subset):
         phylip_file = a_subset.alignment_path
         return sitewise_tiger_rates(cfg, str(phylip_file))
     elif cfg.kmeans == 'tiger':
-        rate_list = []
         sub_align = SubsetAlignment(alignment, a_subset)
         tiger = the_config.TigerDNA()
         tiger.build_bitsets(sub_align)
@@ -150,7 +135,8 @@ def get_per_site_stats(alignment, cfg, a_subset):
         return rate_array
     else: #wtf
         log.error("Unkown option passed to 'kmeans'. Please check and try again")
-        raise(PhylogenyProgramError)
+        raise PartitionFinderError
+
 
 def kmeans_split_subset(cfg, alignment, a_subset, tree_path,
                         n_jobs, number_of_ks=2):

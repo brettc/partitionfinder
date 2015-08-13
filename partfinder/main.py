@@ -381,10 +381,20 @@ def main(name, datatype, passed_args=None):
 
         return 0
 
-    except util.PhylogenyProgramError as e:
-        log.error("The phylogeny program failed, output follows, in case it's helpful for finding the problem")
+    except util.ExternalProgramError as e:
+        log.error("""A program that Partitionfinder uses failed. Output
+                  follows, in case it's helpful for finding the problem""")
         log.error("%s", e.stdout)
         log.error("%s", e.stderr)
+        if options.show_python_exceptions or passed_args is not None:
+            raise
+
+    except util.ParseError:
+        log.error("""We failed to parse the output of an external program (See
+                  previous errors).  This is probably due to an update to the
+                  program which has changed the output.""")
+        if options.show_python_exceptions or passed_args is not None:
+            raise
 
     except util.PartitionFinderError:
         log.error("Failed to run. See previous errors.")
@@ -392,7 +402,7 @@ def main(name, datatype, passed_args=None):
         if options.show_python_exceptions or passed_args is not None:
             raise
 
-    except KeyboardInterrupt:
+    except (KeyboardInterrupt, SystemExit):
         log.error("User interrupted the Program")
 
     return 1
