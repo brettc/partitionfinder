@@ -209,7 +209,7 @@ class Analysis(object):
 
             # If it is kmeans we assume that the error is because the subset
             # is too small or unanalysable, so we fabricate it
-            log.warning("New subset could not be analysed. It will be merged "
+            log.debug("New subset could not be analysed. It will be merged "
                         "at the end of the analysis")
             fabricate = True
 

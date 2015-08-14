@@ -766,6 +766,8 @@ class KmeansAnalysis(Analysis):
                     split_subs[sub] = [sub]  # so we keep it whole
                 else:  # we could analyse the big subset
                     split_subs[sub] = split  # so we split it into >1
+                    log.info("..subset of %d sites split into %d and %d sites"
+                            %(len(sub.columns), len(split[0].columns), len(split[1].columns)))
 
         return split_subs
 
@@ -861,7 +863,7 @@ class KmeansAnalysis(Analysis):
 
                     score_diff = subset_ops.subset_list_score_diff(split_subsets, [sub], the_config, self.alignment)
 
-                    log.info("Difference in %s: %.1f" %
+                    log.info("..split changed %s by: %.1f" %
                              (the_config.model_selection.upper(),
                               score_diff))
 
@@ -869,7 +871,7 @@ class KmeansAnalysis(Analysis):
                     
                     per_site_improvement = score_diff / subs_len
 
-                    log.info("Per site improvement: %.1f" % (per_site_improvement))
+                    log.debug("Per site improvement: %.1f" % (per_site_improvement))
 
                     if score_diff < 0:
                         # We ONLY split the subset if the score improved and the LRT is significant
@@ -941,7 +943,7 @@ class KmeansAnalysis(Analysis):
         name_prefix = "step_%d" % (step)
 
         # 1. Make split subsets
-        log.info("Splitting %d subsets using K-means" % len(start_subsets))
+        log.info("Splitting subsets using k-means")
         split_subs = self.split_subsets(start_subsets, tree_path)
 
         # 2. Analyse split subsets (this to take advantage of parallelisation)
@@ -951,6 +953,9 @@ class KmeansAnalysis(Analysis):
         for vals in split_subs.values():
             subs.extend(vals)
 
+        log.info("%d subsets successfully split" %(len(subs) - len(start_subsets)))
+
+        log.info("Comparing scores of split to unsplit subsets")
         self.analyse_list_of_subsets(subs)
 
         # 3. Build new list of subsets
