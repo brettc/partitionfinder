@@ -337,6 +337,8 @@ class RelaxedClusteringAnalysis(Analysis):
             # 4. Find the best pair of subsets, and build a scheme based on that
             best_change = np.amin(c_matrix)
 
+            log.info("Biggest change in info score: %s", str(best_change))
+
             best_pair = neighbour.get_best_pair(c_matrix, best_change, subsets)
 
             best_merged = subset_ops.merge_subsets(best_pair)
@@ -345,6 +347,8 @@ class RelaxedClusteringAnalysis(Analysis):
             best_result = self.analyse_scheme(best_scheme)
 
             # the best change can get updated a fraction at this point
+            # because calaculting the info score on the whole alignment
+            # is a little different from doing it on the one subset
             best_change = self.results.best_score - start_score
 
             if best_change>=0:
@@ -358,9 +362,13 @@ class RelaxedClusteringAnalysis(Analysis):
             start_scheme = best_scheme
             start_score = best_result.score
 
+            log.info("Best pair: %s", str([s.name for s in best_pair]))
+            log.info("Merged into: %s", str([best_merged.name]))
 
             # 5. reset_c_matrix and the subset list
             c_matrix = neighbour.reset_c_matrix(c_matrix, list(best_pair), [best_merged], subsets)
+            # can we just do this:
+            # subsets = [s for s in best_scheme.subsets]
             subsets = neighbour.reset_subsets(subsets, list(best_pair), [best_merged])
 
             if not the_config.quick:
