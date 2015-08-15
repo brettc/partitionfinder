@@ -196,12 +196,22 @@ def update_c_matrix(c_matrix, sub_tuples, subsets, diffs):
 
 def get_best_pair(c_matrix, best_change, subsets):
 
+    log.info("C matrix: %s", str(c_matrix))
+
     if len(c_matrix.shape) == 1:
+        log.info("C matrix shape was == 1")
         c_matrix = scipy.spatial.distance.squareform(c_matrix)
+        log.info("C matrix: %s", str(c_matrix))
+
     l = np.where(c_matrix==best_change)
+
+
+    log.info("Location of best_change in c_matrix: %s", str(l))
 
     s1 = l[0][0] # the double index protects against >1 value == best_change
     s2 = l[1][0]    
+
+    log.info("Subsets to merge: %s and %s" %(s1, s2))
     sub1 = subsets[s1]
     sub2 = subsets[s2]
     return (sub1, sub2)

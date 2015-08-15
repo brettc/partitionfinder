@@ -302,7 +302,7 @@ class RelaxedClusteringAnalysis(Analysis):
             if cutoff <= 0: cutoff = 1
             if the_config.cluster_max != None and cutoff>the_config.cluster_max:
                 cutoff = the_config.cluster_max
-            log.debug("Choosing the %d most similar subset pairs" % cutoff)
+            log.info("Choosing the %d most similar subset pairs" % cutoff)
             closest_pairs = neighbour.get_N_closest_subsets(
                 subsets, the_config, cutoff, d_matrix)
 
@@ -336,8 +336,9 @@ class RelaxedClusteringAnalysis(Analysis):
 
             # 4. Find the best pair of subsets, and build a scheme based on that
             best_change = np.amin(c_matrix)
-
+            print best_change
             log.info("Biggest change in info score: %s", str(best_change))
+
 
             best_pair = neighbour.get_best_pair(c_matrix, best_change, subsets)
 
