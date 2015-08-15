@@ -358,13 +358,15 @@ class RelaxedClusteringAnalysis(Analysis):
             start_scheme = best_scheme
             start_score = best_result.score
 
-            if not the_config.quick:
-                the_config.reporter.write_scheme_summary(
-                    best_scheme, best_result)
 
             # 5. reset_c_matrix and the subset list
             c_matrix = neighbour.reset_c_matrix(c_matrix, list(best_pair), [best_merged], subsets)
             subsets = neighbour.reset_subsets(subsets, list(best_pair), [best_merged])
+
+            if not the_config.quick:
+                the_config.reporter.write_scheme_summary(
+                    best_scheme, best_result)
+
 
             if len(set(start_scheme.subsets)) == 1:
                 break

@@ -240,6 +240,12 @@ def reset_c_matrix(c_matrix, remove_list, add_list, subsets):
     return c_matrix
 
 def reset_subsets(subsets, remove_list, add_list):
+
+    log.info("Updating subset list")
+    log.info("Original subset list: %s", str([s.name for s in subsets]))
+    log.info("Subsets to remove: %s", str([s.name for s in remove_list]))
+    log.info("Subsets to add: %s", str([s.name for s in add_list]))
+
     for r in remove_list:
         subsets.pop(subsets.index(r))
     for a in add_list:
