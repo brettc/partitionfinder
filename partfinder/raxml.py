@@ -189,11 +189,12 @@ def remove_files(aln_path, model):
     '''remove all files from the alignment directory that are produced by raxml'''
     dir, file = os.path.split(aln_path)
     analysis_ID = raxml_analysis_ID(aln_path, model)
-    hex_ID = analysis_ID.split("_")[0]
     dir = os.path.abspath(dir)
     fs = os.listdir(dir)
-    fnames = fnmatch.filter(fs, '*%s*' % hex_ID)
-    util.delete_files(fnames)
+    fnames = fnmatch.filter(fs, '*%s*%s*' % ("RAxML", analysis_ID))
+
+    pths = [os.path.join(dir, p) for p in fnames]
+    util.delete_files(pths)
 
 
 class RaxmlResult(DataRecord):
