@@ -389,8 +389,6 @@ class RelaxedClusteringAnalysis(Analysis):
                  % (self.results.best_scheme.name, model_selection,
                     self.results.best_score))
 
-
-
         the_config.reporter.write_best_scheme(self.results)
 
 

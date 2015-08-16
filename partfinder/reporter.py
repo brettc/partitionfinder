@@ -237,22 +237,24 @@ class TextReporter(object):
         for s in result.best_scheme:
             self.write_subset_summary(s)
 
-        log.info("If you use this analysis "
-                 "in your published work, please cite the appropriate papers, "
-                 "which are listed at "
-                 "the end of the best_schemes.txt file")
+        log.info("\n")
+        log.info("\n")
+
         for c in citation_text:
+            log.info("%s", c)
             output.write(c)
+
+
 
 def write_citation_text(self):
     """Tell users which papers to cite"""
 
     citation_text = []
 
-    ref_PF1 = ("Lanfear, R., Calcott, B., Ho, S. Y., & Guindon, S. (2012). "
-             "PartitionFinder: combined selection of partitioning schemes "
-             "and substitution models for phylogenetic analyses. "
-             "Molecular biology and evolution, 29(6), 1695-1701.")
+    ref_PF2 = ("Lanfear, R., Calcott, B., Frandsen, P. Forthcoming. "
+             "PartitionFinder 2: new methods for selecting partitioning "
+             "schemes and models of molecular evolution for large datasets. "
+             "In preparation.")
 
     ref_rcluster = ("Lanfear, R., Calcott, B., Kainer, D., Mayer, C., "
                     "& Stamatakis, A. (2014). Selecting optimal "
@@ -274,37 +276,42 @@ def write_citation_text(self):
                  "phylogenetic analysis and post-analysis of large phylogenies. "
                  "Bioinformatics, 30(9), 1312-1313.")
 
-    citation_text.append("\n\n\nCitations for this analysis\n\n")
+    citation_text.append("\n\n\n*Citations for this analysis*\n")
+    citation_text.append("-----------------------------")
 
-    citation_text.append("Thanks for using PartitionFinder2. "
-        "PartitionFinder2 incorporates many years of hard work from many people, "
-        "so if you use this analysis in your published work, please cite "
-        "the following papers on which your analysis relied.\n\n")
+    citation_text.append("\n")
 
+    citation_text.append("If you use this analysis in your published "
+        "work, please cite "
+        "the following papers on which your analysis relied.\n")
+
+    citation_text.append("\n")
     citation_text.append("For the version of PartitionFinder you used, "
                          "please cite:\n")
 
-    citation_text.append("%s\n\n" % ref_PF1)
+    citation_text.append("%s\n" % ref_PF2)
 
+    citation_text.append("\n")
     citation_text.append("For the %s algorithm you used, please cite:\n" 
                          % (self.cfg.search))
 
     if self.cfg.search == "rcluster" or self.cfg.search == "hcluster":
-        citation_text.append("%s\n\n" % ref_rcluster)
+        citation_text.append("%s\n" % ref_rcluster)
 
     elif self.cfg.search == "kmeans":
-        citation_text.append("%s\n\n" % ref_kmeans)
+        citation_text.append("%s\n" % ref_kmeans)
 
     elif self.cfg.search == "greedy":
-        citation_text.append("%s\n\n" % ref_PF1)
+        citation_text.append("%s\n" % ref_PF1)
 
+    citation_text.append("\n")
     if self.cfg.phylogeny_program == 'phyml':
         citation_text.append("Your analysis also used PhyML, so please cite:\n")
-        citation_text.append("%s\n\n" % ref_phyml)
+        citation_text.append("%s\n" % ref_phyml)
 
     elif self.cfg.phylogeny_program == 'raxml':
         citation_text.append("Your analysis also used RAxML, so please cite:\n")
-        citation_text.append("%s\n\n" % ref_raxml)
+        citation_text.append("%s\n" % ref_raxml)
     citation_text.append("\n")
 
     return citation_text
