@@ -336,9 +336,8 @@ class RelaxedClusteringAnalysis(Analysis):
 
             # 4. Find the best pair of subsets, and build a scheme based on that
             best_change = np.amin(c_matrix)
-            print best_change
-            log.info("Biggest change in info score: %s", str(best_change))
 
+            log.debug("Biggest change in info score: %s", str(best_change))
 
             best_pair = neighbour.get_best_pair(c_matrix, best_change, subsets)
 
@@ -356,6 +355,9 @@ class RelaxedClusteringAnalysis(Analysis):
                 log.info("Found no schemes that improve the score, stopping")
                 break
 
+            log.info("Best scheme combines subsets: '%s' and '%s'" %(best_pair[0].name, best_pair[1].name))
+
+
             log.info("The best scheme improves the %s score by %.2f to %.1f",
                 the_config.model_selection,
                 np.abs(best_change),
@@ -363,8 +365,8 @@ class RelaxedClusteringAnalysis(Analysis):
             start_scheme = best_scheme
             start_score = best_result.score
 
-            log.info("Best pair: %s", str([s.name for s in best_pair]))
-            log.info("Merged into: %s", str([best_merged.name]))
+            log.debug("Best pair: %s", str([s.name for s in best_pair]))
+            log.debug("Merged into: %s", str([best_merged.name]))
 
             # 5. reset_c_matrix and the subset list
             c_matrix = neighbour.reset_c_matrix(c_matrix, list(best_pair), [best_merged], subsets)
@@ -436,7 +438,6 @@ class HybridAnalysis(Analysis):
                 for sub in all_subs:
                     centroid_array = [sub.centroid, centroid]
 
-                    print centroid_array
 
                     euclid_dist = spatial.distance.pdist(centroid_array)
 
