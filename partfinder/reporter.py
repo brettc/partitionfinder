@@ -29,7 +29,7 @@ scheme_subset_template = "%-6s | %-10s | %-10s | %-32s | %-100s\n"
 subset_template = "%-15s | %-15s | %-15s | %-15s  | %-15s | %-15s\n"
 
 # We write different output for these searches
-_odd_searches = ['kmeans', 'hybrid']
+_odd_searches = ['kmeans']
 
 class TextReporter(object):
     def __init__(self, config):
