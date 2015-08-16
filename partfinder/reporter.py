@@ -256,6 +256,11 @@ def write_citation_text(self):
              "schemes and models of molecular evolution for large datasets. "
              "In preparation.")
 
+    ref_PF1 = ("Lanfear, R., Calcott, B., Ho, S. Y., & Guindon, S. (2012). "
+             "PartitionFinder: combined selection of partitioning schemes "
+             "and substitution models for phylogenetic analyses. "
+             "Molecular biology and evolution, 29(6), 1695-1701.")
+
     ref_rcluster = ("Lanfear, R., Calcott, B., Kainer, D., Mayer, C., "
                     "& Stamatakis, A. (2014). Selecting optimal "
                     "partitioning schemes for phylogenomic datasets. "
