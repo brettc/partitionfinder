@@ -44,7 +44,8 @@ class UserAnalysis(Analysis):
                 res = self.analyse_scheme(s)
 
                 # Write out the scheme
-                the_config.reporter.write_scheme_summary(s, res)
+                if not the_config.quick:
+                    the_config.reporter.write_scheme_summary(s, res)
         else:
             log.error(
                 "Search set to 'user', but no user schemes detected in .cfg file. Please check.")
@@ -131,7 +132,8 @@ class AllAnalysis(Analysis):
             res = self.analyse_scheme(s)
 
             # Write out the scheme
-            the_config.reporter.write_scheme_summary(s, res)
+            if not the_config.quick:
+                the_config.reporter.write_scheme_summary(s, res)
 
         the_config.reporter.write_best_scheme(self.results)
 
@@ -576,7 +578,8 @@ class KmeansAnalysis(Analysis):
         with logtools.indented(log, "**Analysing starting scheme (scheme %s)**" % start_scheme.name):
             start_result = self.analyse_scheme(start_scheme)
 
-            the_config.reporter.write_scheme_summary(start_scheme, start_result)
+            if not the_config.quick:
+                the_config.reporter.write_scheme_summary(start_scheme, start_result)
 
             tree_path = the_config.processor.make_tree_path(
                 self.filtered_alignment_path)
@@ -619,7 +622,7 @@ class KmeansAnalysis(Analysis):
 
         log.info("%d subsets successfully split" %(len(subs) - len(start_subsets)))
 
-        with logtools.indented(log, "Calculating scores of all new subsets that can be split"):
+        with logtools.indented(log, "Calculating scores of all new subsets that can be analysed"):
             self.analyse_list_of_subsets(subs)
 
             # 3. Build new list of subsets
