@@ -180,8 +180,8 @@ class GreedyAnalysis(Analysis):
                     new_sub = subset_ops.merge_subsets(subset_grouping)
                     if not new_sub.is_done:
                         new_subs.append(new_sub)
-                    if len(new_subs)>9999:
-                        log.info("Analysing 10,000 subsets")
+                    if len(new_subs)>999:
+                        log.info("Analysing 1000 subsets")
                         self.analyse_list_of_subsets(new_subs)
                         new_subs = []
                         log.info("Building more subsets")
@@ -192,6 +192,7 @@ class GreedyAnalysis(Analysis):
                 new_subs = []
 
                 log.info("Analysing schemes")
+
                 # we repeat the iterator, for memory efficiency
                 lumped_subset_iterator = itertools.combinations(start_scheme.subsets, 2)
                 sch_num = 1
