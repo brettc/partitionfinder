@@ -34,7 +34,7 @@ Restart your terminal window, then install boost by typing, 'brew install boost'
 Install:
 
 - Open a new terminal window and change directories into your partitionfinder directory. An easy way to find the path to the partitionfinder directory is to drag it from finder into your terminal window.
-    - cd <path_to_partitionfinder directory
+    - cd <path_to_partitionfinder directory>
 - Then issue the following command:
     - python setup.py
 - This should compile the cython version of tiger for you.
