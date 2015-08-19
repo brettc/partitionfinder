@@ -29,7 +29,14 @@ You should have a compiler installed. You can follow the instructions given for 
 
 The easiest way to install the boost C++ library is to use homebrew. You can follow the directions on the homebrew website here (http://brew.sh). This involves issuing a single command to your terminal window and following the instructions.
 
-Restart your terminal window, then install boost by typing, 'brew install boost'. Once boost is installed you are ready to compile the cython version of tiger.
+Restart your terminal window, then install boost by typing, 'brew install boost'. Once boost is installed you are ready to compile the cython version of tiger. You may need to add the path to your CFLAGS. Something like this might work:
+
+export CFLAGS="-I <path_to_include_dir>"
+
+The default path to the include dir is often /usr/local/include, so this might do it:
+
+export CFLAGS="-I /usr/local/include"
+
 
 Install:
 
