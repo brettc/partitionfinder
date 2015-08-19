@@ -61,7 +61,7 @@ cdef class TigerBase:
             rate /= denom
             c_rates[i] = rate
 
-        return rates, dist_matrix
+        return rates, c_dist_matrix
 
     def bitsets_as_array(self):
         if self.species_count == 0 or self.column_count == 0:

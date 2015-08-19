@@ -990,6 +990,254 @@ class KmeansAnalysis(Analysis):
 
         return(final_scheme)
 
+class DbscanAnalysis(Analysis):
+
+    def split_subsets(self, start_subsets, tree_path):
+        split_subs = {}
+        for sub in start_subsets:
+            if len(sub.columns) == 1:
+                split_subs[sub] = [sub]
+            else:
+                split = kmeans.dbscan_cluster_subsets(
+                    the_config, self.alignment, sub, tree_path, epsilon=0.1)
+
+
+                if split == 1:  # we couldn't analyse the big subset
+                    sub.dont_split = True # never try to split this subset again
+                    split_subs[sub] = [sub]  # so we keep it whole
+                elif len(split) == 1:
+                    # in some cases (i.e. all site params are equal) kmeans
+                    # cannot split subsets, so we get back the same as we put in
+                    sub.dont_split = True # never try to split this subset again
+                    split_subs[sub] = [sub]  # so we keep it whole
+                else:  # we could analyse the big subset
+                    split_subs[sub] = split  # so we split it into >1
+
+        return split_subs
+
+    def finalise_fabrication(self, start_subsets, step):
+
+        fabricated_subsets = []
+        for s in start_subsets:
+            if s.fabricated:
+                fabricated_subsets.append(s)
+
+        if fabricated_subsets:
+            log.info("""Finalising partitioning scheme, by incorporating
+                     the subsets that couldn't be analysed with their
+                     nearest neighbours""")
+            log.debug("There are %d/%d fabricated subsets"
+                      % (len(fabricated_subsets), len(start_subsets)))
+
+            while fabricated_subsets:
+
+                all_subs = start_subsets
+                s = fabricated_subsets.pop(0)
+                all_subs.remove(s)
+
+                centroid = s.centroid
+                best_match = None
+
+                # get closest subset to s
+                for sub in all_subs:
+                    centroid_array = [sub.centroid, centroid]
+
+                    euclid_dist = spatial.distance.pdist(centroid_array)
+
+                    if euclid_dist < best_match or best_match is None:
+                        best_match = euclid_dist
+                        closest_sub = sub
+
+                # join s with closest_sub to make joined_sub
+                merged_sub = subset_ops.merge_subsets([s, closest_sub])
+
+                # remove closest sub
+                all_subs.remove(closest_sub)
+
+                # analyse joined sub
+                self.analyse_list_of_subsets([merged_sub])
+
+                # if joined has to be fabricated, add to fabricated list
+                if merged_sub.fabricated:
+                    fabricated_subsets.append(merged_sub)
+
+                all_subs.append(merged_sub)
+        else:
+            all_subs = start_subsets
+
+        # now build a scheme from start_subs, and it should work
+        final_scheme = scheme.Scheme(the_config, "final_scheme", all_subs)
+
+        # return final scheme
+        return final_scheme
+
+    def build_new_subset_list(self, name_prefix, split_subs, start_subsets):
+        new_scheme_subs = []
+        for sub in start_subsets:
+            if len(sub.columns) == 1 or sub.fabricated or sub.dont_split:
+                new_scheme_subs.append(sub)
+
+            else:  # compare split to un-split
+                log.debug("Splitting new subset")
+                
+                # get list of split subsets from dictionary
+                split_subsets = split_subs[sub]
+
+                log.debug("# subs in this split: %d" % len(split_subsets))
+                log.debug("dont_split: %s" % split_subsets[0].dont_split)
+
+                # split subsets might be fabricated (i.e. unanalyseable)
+                fabrications = 0
+                for s in split_subsets:
+                    fabrications = fabrications + s.fabricated
+
+                if fabrications == 0:
+
+                    score_diff = subset_ops.subset_list_score_diff(split_subsets, [sub], the_config, self.alignment)
+
+                    log.info("Difference in %s: %.1f" %
+                             (the_config.model_selection.upper(),
+                              score_diff))
+
+                    lnL, sum_k, subs_len = subset_ops.subset_list_stats([sub], the_config, self.alignment)
+                    
+                    per_site_improvement = score_diff / subs_len
+
+                    log.info("Per site improvement: %.1f" % (per_site_improvement))
+
+                    if score_diff < 0:
+                        # We ONLY split the subset if the score improved and the LRT is significant
+                        new_scheme_subs = new_scheme_subs + split_subsets
+                    else:
+                        sub.dont_split = True
+                        new_scheme_subs.append(sub)
+                elif fabrications == len(split_subsets):
+                    # none of the split subsets worked, so don't analyse the parent again
+                    sub.dont_split = True
+                    new_scheme_subs.append(sub)
+                else:
+                    new_scheme_subs = new_scheme_subs + split_subsets
+
+        return new_scheme_subs
+
+    def report(self, step):
+        # Since the AIC will likely be better before we dealt with the
+        # fabricated subsets, we need to set the best scheme and best result
+        # to those from the last merged_scheme. TODO: add a variable to scheme
+        # to take care of this problem so that the best AND analysable scheme
+        # is the one that gets automatically flagged as the best scheme
+        log.info("** Kmeans algorithm finished after %d steps **" % (step))
+        log.info("Best scoring scheme has %d subsets and a %s score of %.3f"
+                 % (
+        len(self.results.best_scheme.subsets), the_config.model_selection,
+        self.results.best_score))
+        the_config.reporter.write_best_scheme(self.results)
+
+    def setup(self):
+        partnum = len(the_config.user_subsets)
+        the_config.progress.begin(1, 1)
+
+        # Start with the most partitioned scheme
+        start_description = range(partnum)
+        start_scheme = scheme.create_scheme(
+            the_config, "start_scheme", start_description)
+
+        log.info("Analysing starting scheme (scheme %s)" % start_scheme.name)
+        start_result = self.analyse_scheme(start_scheme)
+
+        the_config.reporter.write_scheme_summary(start_scheme, start_result)
+
+        tree_path = the_config.processor.make_tree_path(
+            self.filtered_alignment_path)
+
+        return start_result, start_scheme, tree_path
+
+    def one_kmeans_step(self, start_subsets, step, tree_path):
+        name_prefix = "step_%d" % (step)
+
+        # 1. Make split subsets
+        log.info("Splitting %d subsets using K-means" % len(start_subsets))
+        split_subs = self.split_subsets(start_subsets, tree_path)
+
+        # 2. Analyse split subsets (this to take advantage of parallelisation)
+        subs = []
+
+        # make a list from the dictionary
+        for vals in split_subs.values():
+            subs.extend(vals)
+
+        self.analyse_list_of_subsets(subs)
+
+        # 3. Build new list of subsets
+        new_scheme_subs = self.build_new_subset_list(name_prefix, split_subs, start_subsets)
+
+
+        # 4. Are we done yet?
+        if len(new_scheme_subs) == len(list(start_subsets)):
+            log.info("""The %s score of 0 subsets
+                     improved when split. Algorithm finished."""
+                     % (the_config.model_selection))
+            done = True
+        else:
+            n_splits = len(new_scheme_subs) - len(start_subsets)
+
+            if n_splits > 1:
+                t = 'subsets'
+            else:
+                t = 'subset'
+            log.info("""The %s score of %d %s
+                     improved when split"""
+                     % (the_config.model_selection, n_splits, t))
+
+            start_subsets = new_scheme_subs
+
+            done = False
+
+        return done, start_subsets
+
+    @logtools.log_info(log, "Performing k-means Analysis")
+    def do_analysis(self):
+        '''A kmeans algorithm for heuristic partitioning searches'''
+
+        start_result, start_scheme, tree_path = self.setup()
+
+        step = 0
+
+        start_subsets = list(start_scheme.subsets) # we only work on lists of subsets
+
+        self.analyse_list_of_subsets(start_subsets)
+
+        # now we suppress PhylogenyProgram errors for the rest of the algorithm
+        the_config.suppress_errors = True
+
+        for s in start_subsets:
+            if s.fabricated:
+                log.error("""One or more of your starting datablocks could not
+                          be analysed. Please check your data and try again.
+                          One way to fix this is to join your small datablocks
+                          together into larger datablocks""")
+                raise AnalysisError
+
+        while True:
+            step += 1
+            with logtools.indented(log, "***k-means algorithm step %d***"
+                    % step):
+                done, start_subsets = self.one_kmeans_step(
+                    start_subsets, step, tree_path)
+
+            if done:
+                break
+
+        # Ok, we're done. we just need deal with fabricated subsets
+        final_scheme = self.finalise_fabrication(start_subsets, step)
+
+        log.info("Analysing final scheme")
+        final_result = self.analyse_scheme(final_scheme)
+
+        self.report(step)
+
+        return(final_scheme)
+
 
 def choose_method(search):
     if search == 'all':
@@ -1006,6 +1254,8 @@ def choose_method(search):
         method = KmeansAnalysis
     elif search == 'hybrid':
         method = HybridAnalysis
+    elif search == 'dbscan':
+        method = DbscanAnalysis
     else:
         log.error("Search algorithm '%s' is not yet implemented", search)
         raise AnalysisError

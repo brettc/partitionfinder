@@ -22,6 +22,8 @@ import time
 
 import numpy as np
 from sklearn.cluster import KMeans
+from sklearn.cluster import DBSCAN
+from sklearn import metrics
 from sklearn.preprocessing import scale
 from collections import defaultdict
 from util import PhylogenyProgramError
@@ -80,6 +82,15 @@ def kmeans(likelihood_list, number_of_ks, n_jobs):
     # Return centroids and dictionary with lists of sites for each k
     return centroid_list, dict(cluster_dict)
 
+def dbscan(distance_matrix, epsilon):
+    log.debug("Beginning DBCAN clustering")
+    X = distance_matrix
+    print distance_matrix
+    db = DBSCAN(eps=epsilon, min_samples=5, metric='precomputed').fit(X)
+    labels = db.labels_
+    return labels
+
+
 def rate_parser(rates_name):
     rates_list = []
     the_rates = open(rates_name)
@@ -126,7 +137,6 @@ def sitewise_tiger_rates(cfg, phylip_file):
     return rate_parser(rates_name)
 
 
-
 def get_per_site_stats(alignment, cfg, a_subset):
     if cfg.kmeans == 'entropy':
         sub_align = SubsetAlignment(alignment, a_subset)
@@ -143,6 +153,13 @@ def get_per_site_stats(alignment, cfg, a_subset):
         rate_array = tiger.calc_rates()[0]
         rate_list = [[rate] for rate in rate_array]
         return rate_list
+
+def get_dbscan_dist_mat(alignment, cfg, a_subset):
+    sub_align = SubsetAlignment(alignment, a_subset)
+    tiger = TigerDNA()
+    tiger.build_bitsets(sub_align)
+    dist_mat = tiger.calc_rates()[1]
+    return dist_mat
 
 
 def kmeans_split_subset(cfg, alignment, a_subset, tree_path,
@@ -180,3 +197,25 @@ def kmeans_split_subset(cfg, alignment, a_subset, tree_path,
         marker += 1
 
     return new_subsets
+
+def dbscan_cluster_subsets(cfg, alignment, a_subset, tree_path,
+                            epsilon):
+    """Takes a subset and clusters it using DBSCAN and the given
+    epsilon
+    """
+    # Get the distance matrix from the tiger rates
+    dist_mat = get_dbscan_dist_mat(alignment, cfg, a_subset)
+    # Perform DBSCAN on the precomputed distance matrix
+    dbscan_results = dbscan(dist_mat, epsilon)
+    split_categories = dbscan_results
+    list_of_sites = []
+    for k in range(len(split_categories)):
+        list_of_sites.append(split_categories[k])
+
+    log.debug("# split categories: %d" % len(split_categories))
+
+    log.debug("Creating new subsets from dbscan split")
+    new_subsets = subset_ops.split_subset(a_subset, list_of_sites)
+
+    return new_subsets
+
