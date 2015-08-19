@@ -113,7 +113,7 @@ def sitewise_tiger_rates(cfg, phylip_file):
         command = " dna " + phylip_file
     elif cfg.datatype == 'morphology':
         command = " morphology " + phylip_file
-    run_rates(command, report_errors=False)
+    run_rates(command)
     rates_name = ("%s_r8s.txt" % phylip_file)
     return rate_parser(rates_name)
 
