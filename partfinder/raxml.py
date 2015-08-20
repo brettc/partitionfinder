@@ -97,12 +97,12 @@ def make_branch_lengths(alignment_path, topology_path, datatype, cmdline_extras)
 
     if datatype == "DNA":
         log.info("Estimating GTR+G branch lengths on tree using RAxML")
-        command = "-f e -s '%s' -t '%s' -m GTRGAMMA -n BLTREE -w '%s' %s" % (
+        command = "-f e -s '%s' -t '%s' -m GTRGAMMA -n BLTREE -w '%s' %s -U" % (
             alignment_path, tree_path, os.path.abspath(dir_path), cmdline_extras)
         run_raxml(command)
     if datatype == "protein":
         log.info("Estimating LG+G branch lengths on tree using RAxML")
-        command = "-f e -s '%s' -t '%s' -m PROTGAMMALG -n BLTREE -w '%s' %s" % (
+        command = "-f e -s '%s' -t '%s' -m PROTGAMMALG -n BLTREE -w '%s' %s -U" % (
             alignment_path, tree_path, os.path.abspath(dir_path), cmdline_extras)
         run_raxml(command)
 
@@ -127,7 +127,7 @@ def check_defaults(cmdline_extras):
     # and we'll specify the -O option, so that the program doesn't exit if
     # there are undetermined seqs.  we'll put spaces at the start and end too,
     # just in case...
-    cmdline_extras = ''.join([" ", cmdline_extras, accuracy, "-O --silent --no-seq-check -U "])
+    cmdline_extras = ''.join([" ", cmdline_extras, accuracy, "-O --silent --no-seq-check "])
     return cmdline_extras
 
 
@@ -150,6 +150,10 @@ def analyse(model, alignment_path, tree_path, branchlengths, cmdline_extras):
         raise util.PartitionFinderError
 
     cmdline_extras = check_defaults(cmdline_extras)
+
+    # we can save memory on gappy alignments like this
+    if str(model).count('LG4')==0:
+        cmdline_extras = ' '.join([cmdline_extras, '-U '])
 
     #raxml doesn't append alignment names automatically, like PhyML, let's do that here
     analysis_ID = raxml_analysis_ID(alignment_path, model)
