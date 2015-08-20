@@ -378,7 +378,6 @@ class Configuration(object):
         invalid
         """
         # The important stuff in our analysis, that can't change if we want to re-use old subsets
-        log.info("Checking previously run configuration data...")
         if self.user_tree is None:
             topology = ""
         else:
@@ -424,6 +423,7 @@ class Configuration(object):
             raise ConfigurationError
 
         # We have an old config, load it and compare the important bits
+        log.info("Checking previously run configuration data...")
         f = open(old_cfg_path, 'rb')
         old_restart_info = pickle.load(f)
         f.close()
@@ -460,6 +460,8 @@ class Configuration(object):
             log.info("To run this analysis and overwrite previous output, re-run the analysis using '--force-restart' option")
             log.info("To run this analysis without deleting the previous analysis, please place your alignment and .cfg in a new folder and try again")
             raise ConfigurationError
+        
+
 
 the_config = Configuration()
 

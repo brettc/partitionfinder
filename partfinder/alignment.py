@@ -195,11 +195,11 @@ class Alignment(object):
         self.data = d
 
     def read(self, pth):
+        log.info("Reading alignment file '%s'", pth)
         if not os.path.exists(pth):
-            log.error("Cannot find sequence file '%s'", pth)
+            log.error("Cannot find alignment file '%s'", pth)
             raise AlignmentError
 
-        log.debug("Reading alignment file '%s'", pth)
         text = open(pth, 'rU').read()
         self.parse(text)
 
