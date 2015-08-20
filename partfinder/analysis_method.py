@@ -424,7 +424,7 @@ class KmeansAnalysis(Analysis):
                             %(i+1))
                 else:  # we could analyse the big subset
                     split_subs[sub] = split  # so we split it into >1
-                    log.info("Split %d: divided %d sites into %d and %d"
+                    log.info("Subset %d: %d sites split into %d and %d"
                             %(i+1, len(sub.columns), len(split[0].columns), len(split[1].columns)))
 
         return split_subs
@@ -528,7 +528,7 @@ class KmeansAnalysis(Analysis):
 
                     score_diff = subset_ops.subset_list_score_diff(split_subsets, [sub], the_config, self.alignment)
 
-                    log.info("Split %d: %s changed by: %.1f" %
+                    log.info("Subset %d: split changed %s by: %.1f" %
                              (i+1, the_config.model_selection.upper(),
                               score_diff))
 
