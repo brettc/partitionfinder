@@ -54,8 +54,10 @@ def get_model_difficulty(modelstring):
         difficulty += 2000
     if "I" in elements[1:]:
         difficulty += 1000
-    if "F" or "X" in elements[1:]:
+    if "F" in elements[1:]:
         difficulty += 3000
+    if "X" in elements[1:]:
+        difficulty += 4000
 
     if the_config.datatype == "protein" and "GTR" in modelstring:
         # that's a tough model with 189 free parameters
