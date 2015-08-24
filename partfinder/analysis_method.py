@@ -328,6 +328,7 @@ class RelaxedClusteringAnalysis(Analysis):
                     diffs = []
                     scheme_name = "step_%d" %(step)
                     for t in sub_tuples:
+                        log.info("Finding the best partitioning scheme")
                         pair_merged = t[0]
                         pair = t[1]
                         new_scheme = neighbour.make_clustered_scheme(
@@ -374,8 +375,11 @@ class RelaxedClusteringAnalysis(Analysis):
 
                 # 5. reset_c_matrix and the subset list
                 c_matrix = neighbour.reset_c_matrix(c_matrix, list(best_pair), [best_merged], subsets)
+                
                 # can we just do this:
-                # subsets = [s for s in best_scheme.subsets]
+                #subsets = [s for s in best_scheme.subsets]
+                
+                # we used to do this:
                 subsets = neighbour.reset_subsets(subsets, list(best_pair), [best_merged])
 
                 if not the_config.quick:

@@ -196,7 +196,7 @@ def update_c_matrix(c_matrix, sub_tuples, subsets, diffs):
 
 def get_best_pair(c_matrix, best_change, subsets):
 
-    log.debug("C matrix: %s", str(c_matrix))
+    log.info("C matrix: %s", str(c_matrix))
 
     if len(c_matrix.shape) == 1:
         log.debug("C matrix shape was == 1")
@@ -206,7 +206,7 @@ def get_best_pair(c_matrix, best_change, subsets):
     l = np.where(c_matrix==best_change)
 
 
-    log.debug("Location of best_change in c_matrix: %s", str(l))
+    log.info("Location of best_change in c_matrix: %s", str(l))
 
     l = l[0] # this guards agains >1 value == best_change
     s1 = l[0]
