@@ -24,7 +24,7 @@ mv -f ./submodules/phyml/src/phyml ./programs
 # Building Raxml ----------------------------------
 # We use the SSE as it is the most reliable
 cd submodules/raxml
-make -f Makefile.SSE3.mac
+make -f Makefile.SSE3.gcc
 
 cd ../..
 mv -f ./submodules/raxml/raxmlHPC-SSE3 ./programs/raxml
