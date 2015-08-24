@@ -31,7 +31,7 @@ DNA_rcluster10 | success              | --rcluster-percent 99.999999
 DNA_rcluster11 | success              | --rcluster-percent 100.00
 DNA_rcluster12 | ConfigurationError   | --rcluster-percent 100.001
 DNA_rcluster13 | ConfigurationError   | --rcluster-percent -0.001
-DNA_rcluster14 | success              | --rcluster-max 1000 --rcluster-percent 10
+DNA_rcluster14 | success              | --rcluster-max 1000 --rcluster-percent 10 -p 1
 
 prot_hcluster1 | success              |
 prot_hcluster2 | success              |

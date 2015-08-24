@@ -311,31 +311,32 @@ class RelaxedClusteringAnalysis(Analysis):
 
                 # 2. analyse K subsets in top N that have not yet been analysed
                 pairs_todo = neighbour.get_pairs_todo(closest_pairs, c_matrix, subsets)
-                log.info("Analysing %d new subset pairs" % len(pairs_todo))
-                new_subs = []
-                sub_tuples = []
-                for pair in pairs_todo:
-                    new_sub = subset_ops.merge_subsets(pair)
-                    new_subs.append(new_sub)
-                    sub_tuples.append((new_sub, pair))
+                if len(pairs_todo)>0:
+                    log.info("Analysing %d new subset pairs" % len(pairs_todo))
+                    new_subs = []
+                    sub_tuples = []
+                    for pair in pairs_todo:
+                        new_sub = subset_ops.merge_subsets(pair)
+                        new_subs.append(new_sub)
+                        sub_tuples.append((new_sub, pair))
 
-                the_config.progress.begin(scheme_count, len(new_subs))
-                self.analyse_list_of_subsets(new_subs)
+                    the_config.progress.begin(scheme_count, len(new_subs))
+                    self.analyse_list_of_subsets(new_subs)
 
-                # 3. for all K new subsets, update improvement matrix and find best pair
-                log.info("Finding the best partitioning scheme")
-                diffs = []
-                scheme_name = "step_%d" %(step)
-                for t in sub_tuples:
-                    pair_merged = t[0]
-                    pair = t[1]
-                    new_scheme = neighbour.make_clustered_scheme(
-                            start_scheme, scheme_name, pair, pair_merged, the_config)
-                    r = self.analyse_scheme(new_scheme)
-                    diff = r.score - start_score
-                    diffs.append(diff)
+                    # 3. for all K new subsets, update improvement matrix and find best pair
+                    log.info("Finding the best partitioning scheme")
+                    diffs = []
+                    scheme_name = "step_%d" %(step)
+                    for t in sub_tuples:
+                        pair_merged = t[0]
+                        pair = t[1]
+                        new_scheme = neighbour.make_clustered_scheme(
+                                start_scheme, scheme_name, pair, pair_merged, the_config)
+                        r = self.analyse_scheme(new_scheme)
+                        diff = r.score - start_score
+                        diffs.append(diff)
 
-                c_matrix = neighbour.update_c_matrix(c_matrix, sub_tuples, subsets, diffs)
+                    c_matrix = neighbour.update_c_matrix(c_matrix, sub_tuples, subsets, diffs)
 
                 # 4. Find the best pair of subsets, and build a scheme based on that
                 best_change = np.amin(c_matrix)
