@@ -19,7 +19,7 @@ is in the /docs folder.
 
 # Quick Start
 
-* Make sure you have the Anaconda Python distribution version 2.3.0 or higher, and make sure it's the one that ships with Python 2.7.x (you do not want Python 3.x). http://continuum.io/downloads
+* Make sure you have the Anaconda Python distribution version 2.3.0 or higher, and make sure it's the one that ships with Python 2, and that the version number of Python is at least 2.7.10 (you do not want the anaconda distribution that gives you Python 3.x). http://continuum.io/downloads.
 
 * For PartitionFinderProtein just substitute 'PartitionFinderProtein' for 'PartitionFinder' below
 
