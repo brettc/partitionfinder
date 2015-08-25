@@ -31,6 +31,7 @@ from util import PartitionFinderError
 import numpy
 import array
 
+
 class AlignmentError(PartitionFinderError):
     pass
 
@@ -243,13 +244,12 @@ class SubsetAlignment(Alignment):
 
         self.species = source.species
         # Pull out the columns we need using the magic of numpy indexing
-        self.data = source.data[:,subset.columns]
+        self.data = source.data[:, subset.columns]
         self.sequence_length = len(subset.columns)
         assert self.sequence_length == self.data.shape[1]
 
 
 class TestAlignment(Alignment):
-
     """Good for testing stuff"""
     def __init__(self, text):
         Alignment.__init__(self)

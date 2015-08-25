@@ -154,7 +154,7 @@ class GreedyAnalysis(Analysis):
             the_config, "start_scheme", start_description)
 
         with logtools.indented(log, "Analysing starting scheme (scheme %s)" %
-                          start_scheme.name):
+                               start_scheme.name):
             start_result = self.analyse_scheme(start_scheme)
 
             if not the_config.quick:
