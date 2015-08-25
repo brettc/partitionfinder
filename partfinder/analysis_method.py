@@ -340,9 +340,17 @@ class RelaxedClusteringAnalysis(Analysis):
                     c_matrix = neighbour.update_c_matrix(c_matrix, sub_tuples, subsets, diffs)
 
                 # 4. Find the best pair of subsets, and build a scheme based on that
+                # note that this matrix includes diagonals, which will all be zero
+                # since this is equivalent to comparing a scheme to itself.
+                # so we need to be careful to only proceed if we have a negative change
+                # which indicates an improvement in the score
                 best_change = np.amin(c_matrix)
 
-                log.debug("Biggest change in info score: %s", str(best_change))
+                log.debug("Biggest improvement in info score: %s", str(best_change))
+
+                if best_change>=0:
+                    log.info("Found no schemes that improve the score, stopping")
+                    break
 
                 best_pair = neighbour.get_best_pair(c_matrix, best_change, subsets)
 
@@ -356,9 +364,6 @@ class RelaxedClusteringAnalysis(Analysis):
                 # is a little different from doing it on the one subset
                 best_change = self.results.best_score - start_score
 
-                if best_change>=0:
-                    log.info("Found no schemes that improve the score, stopping")
-                    break
 
                 log.info("Best scheme combines subsets: '%s' and '%s'" %(best_pair[0].name, best_pair[1].name))
 
