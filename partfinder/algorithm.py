@@ -18,9 +18,10 @@
 from math import sqrt
 from itertools import izip
 
+
 def k_subsets_i(n, k):
     '''
-        from http://code.activestate.com/recipes/500268-all-k-subsets-from-an-n-set/
+    http://code.activestate.com/recipes/500268-all-k-subsets-from-an-n-set/
     Yield each subset of size k from the set of intergers 0 .. n - 1
     n -- an integer > 0
     k -- an integer > 0
@@ -48,7 +49,7 @@ def k_subsets_i(n, k):
 
 def k_subsets(s, k):
     '''
-        from http://code.activestate.com/recipes/500268-all-k-subsets-from-an-n-set/
+    http://code.activestate.com/recipes/500268-all-k-subsets-from-an-n-set/
     Yield all subsets of size k from set (or list) s
     s -- a set or list (any iterable will suffice)
     k -- an integer > 0
@@ -71,7 +72,8 @@ def lumpings(scheme):
         lump = list(scheme)
         sub = list(sub)
         sub.sort()
-        #now replace all the instance of one number in lump with the other in sub
+        # Now replace all the instance of one number in lump with the other in
+        # sub
         while lump.count(sub[1]) > 0:
             lump[lump.index(sub[1])] = sub[0]
         lumpings.append(lump)
@@ -85,25 +87,6 @@ def euclidean_distance(x, y):
         sum += (xval - yval) ** 2
     dist = sqrt(sum)
     return dist
-
-
-# def getLevels(cluster, levs):
-    # """
-    # Returns the levels of the cluster as list.
-    # """
-    # levs.append(cluster.level())
-
-    # left = cluster.items()[0]
-    # right = cluster.items()[1]
-    # if isinstance(left, Cluster):
-        # first = getLevels(left, levs)
-    # else:
-        # first = left
-    # if isinstance(right, Cluster):
-        # second = getLevels(right, levs)
-    # else:
-        # second = right
-    # return levs
 
 
 def levels_to_scheme(levels, namedict):

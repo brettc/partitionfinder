@@ -14,4 +14,3 @@
 # PyParsing library, all of which are protected by their own licenses and
 # conditions, using PartitionFinder implies that you agree with those licences
 # and conditions as well.
-

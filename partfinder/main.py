@@ -15,6 +15,8 @@
 # conditions, using PartitionFinder implies that you agree with those licences
 # and conditions as well.
 
+__VERSION__ = "1.1.1"
+
 import logging
 import sys
 import shlex
@@ -29,7 +31,6 @@ log = logtools.get_logger()
 from optparse import OptionParser
 
 # We import everything here as it forces all of debug regions to be loaded
-import version
 import config
 import analysis_method
 import util
@@ -317,7 +318,6 @@ def profile_analysis(cfg, options):
     # p.strip_dirs().sort_stats(-1).print_stats()
 
 def main(name, datatype, passed_args=None):
-    v = version.get_version()
 
     # If passed_args is None, this will use sys.argv
     options, args = parse_args(datatype, passed_args)
@@ -325,7 +325,7 @@ def main(name, datatype, passed_args=None):
         # Help has already been printed
         return 2
 
-    log.info("------------- %s %s -----------------" % (name, v))
+    log.info("------------- %s %s -----------------" % (name, __VERSION__))
     start_time = datetime.datetime.now().replace(
         microsecond=0)  # start the clock ticking
 
