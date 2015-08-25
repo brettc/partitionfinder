@@ -15,7 +15,7 @@
 # conditions, using PartitionFinder implies that you agree with those licences
 # and conditions as well.
 
-__VERSION__ = "1.1.1"
+__VERSION__ = "2.0.0"
 
 import logging
 import sys
