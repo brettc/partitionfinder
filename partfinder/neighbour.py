@@ -196,7 +196,7 @@ def update_c_matrix(c_matrix, sub_tuples, subsets, diffs):
 
 def get_best_pair(c_matrix, best_change, subsets):
 
-    log.debug("C matrix: %s", str(c_matrix))
+    log.info("C matrix: %s", str(c_matrix))
 
     if len(c_matrix.shape) == 1:
         log.debug("C matrix shape was == 1")
@@ -206,11 +206,17 @@ def get_best_pair(c_matrix, best_change, subsets):
     l = np.where(c_matrix==best_change)
 
 
-    log.debug("Location of best_change in c_matrix: %s", str(l))
+    log.info("Location of best_change in c_matrix: %s", str(l))
 
-    l = l[0] # this guards agains >1 value == best_change
-    s1 = l[0]
-    s2 = l[1]    
+    # this function is only called if the best_change is <0
+    # so we can be sure that we are on an off-diagonal
+    # still, we check and throw an error if there's an issue
+    s1 = l[0][0]
+    s2 = l[1][0] 
+
+    if s1==s2:
+        log.error("You can't merge a subset with itself, please check.")
+        raise PartitionFinderError
 
     log.debug("Subsets to merge: %s and %s" %(s1, s2))
     sub1 = subsets[s1]
