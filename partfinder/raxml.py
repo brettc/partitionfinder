@@ -152,8 +152,8 @@ def analyse(model, alignment_path, tree_path, branchlengths, cmdline_extras):
     cmdline_extras = check_defaults(cmdline_extras)
 
     # we can save memory on gappy alignments like this
-    if str(model).count('LG4')==0:
-        cmdline_extras = ' '.join([cmdline_extras, '-U '])
+    #if str(model).count('LG4')==0:
+    #    cmdline_extras = ' '.join([cmdline_extras, '-U '])
 
     #raxml doesn't append alignment names automatically, like PhyML, let's do that here
     analysis_ID = raxml_analysis_ID(alignment_path, model)
