@@ -82,6 +82,17 @@ def make_topology(alignment_path, datatype, cmdline_extras):
     run_raxml(command)
     dir, aln = os.path.split(alignment_path)
     tree_path = os.path.join(dir, "RAxML_parsimonyTree.MPTREE")
+
+    if not os.path.exists(tree_path):
+        log.error("RAxML tree topology should be here but can't be be found: '%s'" % (tree_path))
+        raise(RaxmlError)
+    else:
+        log.debug("RAxML tree with branch lengths ('%s') looks like this: ", tree_path)
+        with open(tree_path, 'r') as fin:
+            log.debug('%s', fin.read())
+
+    log.info("Topology estimation finished")
+
     return tree_path
 
 
@@ -97,17 +108,26 @@ def make_branch_lengths(alignment_path, topology_path, datatype, cmdline_extras)
 
     if datatype == "DNA":
         log.info("Estimating GTR+G branch lengths on tree using RAxML")
-        command = "-f e -s '%s' -t '%s' -m GTRGAMMA -n BLTREE -w '%s' %s -U" % (
+        command = "-f e -s '%s' -t '%s' -m GTRGAMMA -n BLTREE -w '%s' %s  " % (
             alignment_path, tree_path, os.path.abspath(dir_path), cmdline_extras)
         run_raxml(command)
     if datatype == "protein":
         log.info("Estimating LG+G branch lengths on tree using RAxML")
-        command = "-f e -s '%s' -t '%s' -m PROTGAMMALG -n BLTREE -w '%s' %s -U" % (
+        command = "-f e -s '%s' -t '%s' -m PROTGAMMALG -n BLTREE -w '%s' %s " % (
             alignment_path, tree_path, os.path.abspath(dir_path), cmdline_extras)
         run_raxml(command)
 
     dir, aln = os.path.split(alignment_path)
     tree_path = os.path.join(dir, "RAxML_result.BLTREE")
+
+    if not os.path.exists(tree_path):
+        log.error("RAxML tree topology should be here but can't be be found: '%s'" % (tree_path))
+        raise(RaxmlError)
+    else:
+        log.debug("RAxML tree with branch lengths ('%s') looks like this: ", tree_path)
+        with open(tree_path, 'r') as fin:
+            log.debug('%s', fin.read())
+
     log.info("Branchlength estimation finished")
 
     # Now return the path of the final tree with branch lengths
