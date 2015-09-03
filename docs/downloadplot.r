@@ -55,7 +55,7 @@ names(e) <- names(f) <- c("date", "value", "type")
 g <- rbind(e, f)
 
 quartz(width=10, height=5)
-p <- ggplot(g, aes(date, value, colour = type))
+p <- ggplot(f, aes(date, downloads.per.cite, colour = type))
 p + geom_point() + geom_smooth(stat="identity")
 dev.copy2pdf(file="~/Documents/github/partitionfinder/docs/citationsplot2.pdf")
 dev.off()
