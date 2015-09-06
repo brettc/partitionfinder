@@ -173,7 +173,10 @@ class GreedyAnalysis(Analysis):
 
                 # Make a list of all the new subsets, and get them analysed
                 # We do them in blocks of 10K, to avoid memory overload
-                lumped_subset_iterator = itertools.combinations(start_scheme.subsets, 2)
+                if step==1:
+                    lumped_subset_iterator = itertools.combinations(start_scheme.subsets, 2)                    
+                else:
+                    lumped_subset_iterator = itertools.product(lumped_sub, start_scheme.subsets)
                 new_subs = []
                 log.info("Building subsets")
                 for subset_grouping in lumped_subset_iterator:
@@ -194,7 +197,10 @@ class GreedyAnalysis(Analysis):
                 log.info("Analysing schemes")
 
                 # we repeat the iterator, for memory efficiency
-                lumped_subset_iterator = itertools.combinations(start_scheme.subsets, 2)
+                if step==1:
+                    lumped_subset_iterator = itertools.combinations(start_scheme.subsets, 2)                    
+                else:
+                    lumped_subset_iterator = itertools.product(lumped_sub, start_scheme.subsets)
                 sch_num = 1
                 for subset_grouping in lumped_subset_iterator:
                     # could do this without another merge, but this seems most robust
@@ -224,6 +230,9 @@ class GreedyAnalysis(Analysis):
 
                     # Now we find out which is the best lumping we know of for
                     # this step
+
+                    # this is the best lumped_subset that is used in the next step
+                    lumped_sub = self.results.best_scheme.subsets.difference(start_scheme.subsets)
                     start_scheme = self.results.best_scheme
                 else:
                     log.info("""Analysed all schemes for this step and found no
