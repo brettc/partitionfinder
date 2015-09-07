@@ -150,100 +150,141 @@ class GreedyAnalysis(Analysis):
 
         the_config.progress.begin(scheme_count, subset_count)
 
-        # Start with the most partitioned scheme
-        start_description = range(partnum)
-        start_scheme = scheme.create_scheme(
-            the_config, "start_scheme", start_description)
-
-        with logtools.indented(log, "Analysing starting scheme (scheme %s)" %
-                               start_scheme.name):
+        # Start with the most partitioned scheme, and record it.
+        with logtools.indented(log, "*** Analysing starting scheme ***"):
+            the_config.progress.begin(scheme_count, partnum)
+            start_scheme = scheme.create_scheme(
+                the_config, "start_scheme", range(partnum))
             start_result = self.analyse_scheme(start_scheme)
-
+            start_score = start_result.score
             if not the_config.quick:
-                the_config.reporter.write_scheme_summary(start_scheme, start_result)
+                the_config.reporter.write_scheme_summary(
+                    self.results.best_scheme, self.results.best_result)
+
+        subsets = [s for s in start_scheme.subsets]
 
         step = 1
-
-        # Now we try out all lumpings of the current scheme, to see if we can
-        # find a better one and if we do, we just keep going
         while True:
             with logtools.indented(log, "***Greedy algorithm step %d***" % step):
                 name_prefix = "step_%d" % (step)
-                old_best_score = self.results.best_score
 
-                # Make a list of all the new subsets, and get them analysed
-                # We do them in blocks of 10K, to avoid memory overload
-                if step==1:
-                    lumped_subset_iterator = itertools.combinations(start_scheme.subsets, 2)                    
-                else:
-                    lumped_subset_iterator = itertools.product(lumped_sub, start_scheme.subsets)
-                new_subs = []
-                log.info("Building subsets")
-                for subset_grouping in lumped_subset_iterator:
-                    new_sub = subset_ops.merge_subsets(subset_grouping)
-                    if not new_sub.is_done:
+                # get distances between subsets
+                max_schemes = comb(len(start_scheme.subsets), 2)
+
+                # this is a fake distance matrix, so that the greedy algorithm 
+                # can use all the tricks of the relaxed clustering algorithm
+                dim = len(subsets)
+                d_matrix = np.zeros((((dim*dim)-dim))/2)
+                d_matrix[:] = np.inf
+
+                if step == 1:
+                    # Now initialise a change in info score matrix to inf
+                    c_matrix = np.empty(d_matrix.shape)
+                    c_matrix[:] = np.inf
+                    c_matrix = spatial.distance.squareform(c_matrix)
+
+                # 1. pick top N subset pairs from distance matrix
+                cutoff = max_schemes
+
+                closest_pairs = neighbour.get_N_closest_subsets(
+                    subsets, the_config, cutoff, d_matrix)
+
+                # 2. analyse subsets in top N that have not yet been analysed
+                pairs_todo = neighbour.get_pairs_todo(closest_pairs, c_matrix, subsets)
+                if len(pairs_todo)>0:
+                    log.info("Analysing %d new subset pairs" % len(pairs_todo))
+                    new_subs = []
+                    sub_tuples = []
+                    for pair in pairs_todo:
+                        new_sub = subset_ops.merge_subsets(pair)
                         new_subs.append(new_sub)
-                    if len(new_subs)>999:
-                        log.info("Analysing 1000 subsets")
-                        self.analyse_list_of_subsets(new_subs)
-                        new_subs = []
-                        log.info("Building more subsets")
+                        sub_tuples.append((new_sub, pair))
 
-                # analyse what's left, and clean out list
-                log.info("Analysing %d subsets"%(len(new_subs)))
-                self.analyse_list_of_subsets(new_subs)
-                new_subs = []
+                    the_config.progress.begin(scheme_count, len(new_subs))
+                    self.analyse_list_of_subsets(new_subs)
 
-                log.info("Analysing schemes")
+                    # 3. for all K new subsets, update improvement matrix and find best pair
+                    log.info("Finding the best partitioning scheme")
+                    diffs = []
+                    scheme_name = "step_%d" %(step)
+                    for t in sub_tuples:
+                        pair_merged = t[0]
+                        pair = t[1]
+                        new_scheme = neighbour.make_clustered_scheme(
+                                start_scheme, scheme_name, pair, pair_merged, the_config)
+                        r = self.analyse_scheme(new_scheme)
+                        diff = r.score - start_score
+                        diffs.append(diff)
 
-                # we repeat the iterator, for memory efficiency
-                if step==1:
-                    lumped_subset_iterator = itertools.combinations(start_scheme.subsets, 2)                    
-                else:
-                    lumped_subset_iterator = itertools.product(lumped_sub, start_scheme.subsets)
-                sch_num = 1
-                for subset_grouping in lumped_subset_iterator:
-                    # could do this without another merge, but this seems most robust
-                    new_sub = subset_ops.merge_subsets(subset_grouping)
-                    scheme_name = "%s_%d" % (name_prefix, sch_num)
-                    lumped_scheme = neighbour.make_clustered_scheme(
-                        start_scheme, scheme_name, subset_grouping, new_sub, the_config)
-                    sch_num = sch_num + 1
+                    c_matrix = neighbour.update_c_matrix(c_matrix, sub_tuples, subsets, diffs)
 
-                    new_result = self.analyse_scheme(lumped_scheme)
-                    log.debug("Difference in %s: %.1f" %
-                            (the_config.model_selection,
-                            (new_result.score - old_best_score)))
 
-                if self.results.best_score != old_best_score:
-                    log.info("""Analysed all schemes for this step. The best
-                        scheme changed the %s score by %.1f units.""" % (
-                        the_config.model_selection,
-                        self.results.best_score - old_best_score
-                    ))
+                # 4. Find the best pair of subsets, and build a scheme based on that
+                # note that this matrix includes diagonals, which will all be zero
+                # since this is equivalent to comparing a scheme to itself.
+                # so we need to be careful to only proceed if we have a negative change
+                # which indicates an improvement in the score
+                log.info("self.results.best_score 1: %.2f", self.results.best_score)
 
-                    self.results.best_scheme.name = "step_%d" % step
+                best_change = np.amin(c_matrix)
+                log.info("self.results.best_score 2: %.2f", self.results.best_score)
 
-                    if not the_config.quick:
-                        the_config.reporter.write_scheme_summary(
-                            self.results.best_scheme, self.results.best_result)
+                log.info("Biggest improvement in info score: %s", str(best_change))
+                log.info("self.results.best_score 3: %.2f", self.results.best_score)
 
-                    # Now we find out which is the best lumping we know of for
-                    # this step
+                if best_change>=0:
+                    log.info("Found no schemes that improve the score, stopping")
+                    break
+                log.info("self.results.best_score 4: %.2f", self.results.best_score)
 
-                    # this is the best lumped_subset that is used in the next step
-                    lumped_sub = self.results.best_scheme.subsets.difference(start_scheme.subsets)
-                    start_scheme = self.results.best_scheme
-                else:
-                    log.info("""Analysed all schemes for this step and found no
-                        schemes that improve the score, stopping""")
+                best_pair = neighbour.get_best_pair(c_matrix, best_change, subsets)
+                log.info("self.results.best_score 5: %.2f", self.results.best_score)
+
+                best_merged = subset_ops.merge_subsets(best_pair)
+                log.info("self.results.best_score 6: %.2f", self.results.best_score)
+                best_scheme = neighbour.make_clustered_scheme(
+                    start_scheme, scheme_name, best_pair, best_merged, the_config)
+                log.info("self.results.best_score 7: %.2f", self.results.best_score)
+                best_result = self.analyse_scheme(best_scheme)
+                log.info("self.results.best_score 8: %.2f", self.results.best_score)
+
+                # the best change can get updated a fraction at this point
+                # because calaculting the info score on the whole alignment
+                # is a little different from doing it on the one subset
+                best_change = self.results.best_score - start_score
+
+                log.info("self.results.best_score 9: %.2f", self.results.best_score)
+
+                log.info("Best scheme combines subsets: '%s' and '%s'" %(best_pair[0].name, best_pair[1].name))
+
+
+                log.info("The best scheme improves the %s score by %.2f to %.1f",
+                    the_config.model_selection,
+                    np.abs(best_change),
+                    self.results.best_score)
+                start_scheme = best_scheme
+                start_score = best_result.score
+
+                log.info("self.results.best_score 10: %.2f", self.results.best_score)
+
+                log.debug("Best pair: %s", str([s.name for s in best_pair]))
+                log.debug("Merged into: %s", str([best_merged.name]))
+
+                # 5. reset_c_matrix and the subset list
+                c_matrix = neighbour.reset_c_matrix(c_matrix, list(best_pair), [best_merged], subsets)
+                                
+                # we updated the subset list in a special way, which matches how we update the c matrix:
+                subsets = neighbour.reset_subsets(subsets, list(best_pair), [best_merged])
+
+                if not the_config.quick:
+                    the_config.reporter.write_scheme_summary(
+                        best_scheme, best_result)
+
+
+                if len(set(start_scheme.subsets)) == 1:
                     break
 
-            # We're done if it's the scheme with everything together
-            if len(set(lumped_scheme.subsets)) == 1:
-                break
-
-            step += 1
+                step += 1
 
         log.info("Greedy algorithm finished after %d steps" % step)
         log.info("Best scoring scheme is scheme %s, with %s score of %.3f"
@@ -251,7 +292,6 @@ class GreedyAnalysis(Analysis):
                     self.results.best_score))
 
         the_config.reporter.write_best_scheme(self.results)
-
 
 class RelaxedClusteringAnalysis(Analysis):
     '''
@@ -337,7 +377,6 @@ class RelaxedClusteringAnalysis(Analysis):
                     diffs = []
                     scheme_name = "step_%d" %(step)
                     for t in sub_tuples:
-                        log.info("Finding the best partitioning scheme")
                         pair_merged = t[0]
                         pair = t[1]
                         new_scheme = neighbour.make_clustered_scheme(
@@ -389,11 +428,8 @@ class RelaxedClusteringAnalysis(Analysis):
 
                 # 5. reset_c_matrix and the subset list
                 c_matrix = neighbour.reset_c_matrix(c_matrix, list(best_pair), [best_merged], subsets)
-                
-                # can we just do this:
-                #subsets = [s for s in best_scheme.subsets]
-                
-                # we used to do this:
+                                
+                # we update the subset list in a way that means its structure tracks the c-matrix
                 subsets = neighbour.reset_subsets(subsets, list(best_pair), [best_merged])
 
                 if not the_config.quick:
