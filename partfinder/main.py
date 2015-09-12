@@ -203,6 +203,15 @@ def parse_args(datatype, cmdargs=None):
              "e.g. --rcluster-max 1000"
     )
     op.add_option(
+        "--min-subset-size",
+        type="int", dest="min_subset_size", default=100, metavar="N",
+        help="This defines the minimum subset size that you will accept for"
+             " the kmeans algorithm. Subsets smaller than this will still be "
+             "created during the algorithm, but they will be merged with other"
+             " subsets at the end of the algorithm."
+             "e.g. --min-subset-size 100"
+    )
+    op.add_option(
         '--debug-output',
         type='string',
         action='callback',
@@ -349,7 +358,8 @@ def main(name, datatype, passed_args=None):
                                    options.cluster_percent,
                                    options.cluster_max,
                                    options.kmeans, 
-                                   options.quick)
+                                   options.quick,
+                                   options.min_subset_size)
         cfg = config.the_config
 
         # Set up the progress callback

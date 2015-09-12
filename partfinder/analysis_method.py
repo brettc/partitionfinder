@@ -445,17 +445,16 @@ class KmeansAnalysis(Analysis):
     def split_subsets(self, start_subsets, tree_path):
         split_subs = {}
         for i, sub in enumerate(start_subsets):
-            if len(sub.columns) == 1:
+            if len(sub.columns) == 1 or len(sub.columns) < the_config.min_subset_size:
                 split_subs[sub] = [sub]
             else:
                 split = kmeans.kmeans_split_subset(
                     the_config, self.alignment, sub, tree_path, n_jobs=self.threads)
 
-
                 if split == 1:  # we couldn't analyse the big subset
                     sub.dont_split = True # never try to split this subset again
                     split_subs[sub] = [sub]  # so we keep it whole
-                    log.info("Split %d: not splittable"
+                    log.info("Subset %d: not splittable"
                             %(i+1))
 
                 elif len(split) == 1:
@@ -463,7 +462,7 @@ class KmeansAnalysis(Analysis):
                     # cannot split subsets, so we get back the same as we put in
                     sub.dont_split = True # never try to split this subset again
                     split_subs[sub] = [sub]  # so we keep it whole
-                    log.info("Split %d: not splittable"
+                    log.info("Subset %d: not splittable"
                             %(i+1))
                 else:  # we could analyse the big subset
                     split_subs[sub] = split  # so we split it into >1
@@ -476,13 +475,20 @@ class KmeansAnalysis(Analysis):
 
         fabricated_subsets = []
         for s in start_subsets:
+
+            # here we put a sensible lower limit on the size of subsets
+            if len(s.columns)<the_config.min_subset_size:
+                s.fabricated = True
+                log.debug("Small subset of %d sites found", len(s.columns))
+
             if s.fabricated:
                 fabricated_subsets.append(s)
+                log.debug("added %s to fabricated subset", s.name)
 
         if fabricated_subsets:
             log.info("""Finalising partitioning scheme, by incorporating
-                     the subsets that couldn't be analysed with their
-                     nearest neighbours""")
+                     small subsets and those that couldn't be analysed with
+                     their nearest neighbours""")
             log.debug("There are %d/%d fabricated subsets"
                       % (len(fabricated_subsets), len(start_subsets)))
 
@@ -500,6 +506,7 @@ class KmeansAnalysis(Analysis):
                         log.debug("The subset has %d columns" % len(s.columns))
 
                 s = fabricated_subsets.pop(0)
+
                 all_subs.remove(s)
 
                 centroid = s.centroid
@@ -523,8 +530,16 @@ class KmeansAnalysis(Analysis):
                 # remove closest sub
                 all_subs.remove(closest_sub)
 
+                # and if closest_sub was fabricated too, we remove it here
+                if fabricated_subsets.count(closest_sub):
+                    fabricated_subsets.remove(closest_sub)
+
                 # analyse joined sub
                 self.analyse_list_of_subsets([merged_sub])
+
+                # here we put a sensible lower limit on the size of subsets
+                if len(merged_sub.columns)<the_config.min_subset_size:
+                    merged_sub.fabricated = True
 
                 # if joined has to be fabricated, add to fabricated list
                 if merged_sub.fabricated:
@@ -611,6 +626,7 @@ class KmeansAnalysis(Analysis):
         the_config.reporter.write_best_scheme(self.results)
 
     def setup(self):
+
         partnum = len(the_config.user_subsets)
         the_config.progress.begin(1, 1)
 
@@ -618,6 +634,17 @@ class KmeansAnalysis(Analysis):
         start_description = range(partnum)
         start_scheme = scheme.create_scheme(
             the_config, "start_scheme", start_description)
+
+        site_max = sum([ len(s.columns) for s in start_scheme.subsets])
+
+        if the_config.min_subset_size > site_max:
+            log.error("The minimum subset size must be smaller than the \
+                total number of sites you want to analyse. Your minimum \
+                subset size is %d, and your alignment is %d sites. Please \
+                check and try again." %(the_config.min_subset_size, site_max)
+                )
+            raise AnalysisError
+            
 
         with logtools.indented(log, "**Analysing starting scheme (scheme %s)**" % start_scheme.name):
             start_result = self.analyse_scheme(start_scheme)
@@ -663,6 +690,7 @@ class KmeansAnalysis(Analysis):
             # make a list from the dictionary
             for vals in split_subs.values():
                 subs.extend(vals)
+
 
         log.info("%d subsets successfully split" %(len(subs) - len(start_subsets)))
 

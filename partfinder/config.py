@@ -45,7 +45,7 @@ class Configuration(object):
 
     def init(self, datatype="DNA", phylogeny_program='phyml',
                  save_phylofiles=False, cmdline_extras="", cluster_weights=None,
-                 cluster_percent=10.0, cluster_max=1000, kmeans='entropy', quick=False):
+                 cluster_percent=10.0, cluster_max=1000, kmeans='entropy', quick=False, min_subset_size = 100):
 
 
         log.info("------------- Configuring Parameters -------------")
@@ -64,6 +64,8 @@ class Configuration(object):
         self.cluster_max = cluster_max
         self.kmeans = kmeans
         self.quick = quick
+        self.min_subset_size = min_subset_size
+
 
         # Record this
         self.base_path = '.'
@@ -74,6 +76,10 @@ class Configuration(object):
 
         # Some basic checking of the setup, so that we don't hit too many
         # problems later
+
+
+
+
         if datatype != "DNA" and datatype != "protein":
             log.error("datatype must be 'DNA' or 'protein'")
             raise ConfigurationError
@@ -105,6 +111,7 @@ class Configuration(object):
         self.validate_cluster_weights(cluster_weights)
         self.validate_cluster()
         self.validate_kmeans()
+
 
         return self
 
