@@ -635,6 +635,14 @@ class KmeansAnalysis(Analysis):
         start_scheme = scheme.create_scheme(
             the_config, "start_scheme", start_description)
 
+        if len(start_scheme.subsets)>1:
+            log.error("The k-means algorithm is designed to analyse \
+                the entire alignment at once. To use it, please define a \
+                single data block that includes all of your sites, and \
+                again."
+                )
+            raise AnalysisError
+
         site_max = sum([ len(s.columns) for s in start_scheme.subsets])
 
         if the_config.min_subset_size > site_max:
