@@ -30,6 +30,7 @@ from scipy import spatial, exp
 from scipy.misc import comb
 import numpy as np
 from config import the_config
+from alignment import SubsetAlignment
 
 class UserAnalysis(Analysis):
     def do_analysis(self):
@@ -445,6 +446,24 @@ class KmeansAnalysis(Analysis):
     def split_subsets(self, start_subsets, tree_path):
         split_subs = {}
         for i, sub in enumerate(start_subsets):
+
+
+
+
+
+            
+            sub_alignment = SubsetAlignment(self.alignment, sub)
+            # here we can test if the alignment has all states:
+            print "alignment has all states?", alignment.has_all_states(sub_alignment)
+
+
+
+
+
+
+
+
+
             if len(sub.columns) == 1 or len(sub.columns) < the_config.min_subset_size:
                 split_subs[sub] = [sub]
             else:
