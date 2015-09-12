@@ -213,17 +213,16 @@ class TextReporter(object):
                                str(self.cfg.cluster_weights["model"]),
                                str(self.cfg.cluster_weights["alpha"]))
             output.write(scheme_header_template % ("weights", pretty_weights))
+
         if self.cfg.search == "rcluster":
             output.write(scheme_header_template % ("rcluster-percent",
                                                    self.cfg.cluster_percent))
-            if self.cfg.cluster_max != None:
-                output.write(scheme_header_template % ("rcluster-max",
+            output.write(scheme_header_template % ("rcluster-max",
                                                        self.cfg.cluster_max))
-            else:
-                output.write(scheme_header_template % ("rcluster-max",
-                                                       "all rcluster-percent schemes"))
 
-        if self.cfg.search == "kmeans-opt":
+        if self.cfg.search == "kmeans":
+            output.write(scheme_header_template % ("min-subset-size",
+                                                   self.cfg.min_subset_size))
             output.write(scheme_header_template % ("kmeans based on",
                                                    self.cfg.kmeans))
 
