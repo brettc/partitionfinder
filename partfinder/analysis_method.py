@@ -224,36 +224,26 @@ class GreedyAnalysis(Analysis):
                 # since this is equivalent to comparing a scheme to itself.
                 # so we need to be careful to only proceed if we have a negative change
                 # which indicates an improvement in the score
-                log.info("self.results.best_score 1: %.2f", self.results.best_score)
-
                 best_change = np.amin(c_matrix)
-                log.info("self.results.best_score 2: %.2f", self.results.best_score)
 
-                log.info("Biggest improvement in info score: %s", str(best_change))
-                log.info("self.results.best_score 3: %.2f", self.results.best_score)
+                log.debug("Biggest improvement in info score: %s", str(best_change))
 
                 if best_change>=0:
                     log.info("Found no schemes that improve the score, stopping")
                     break
-                log.info("self.results.best_score 4: %.2f", self.results.best_score)
 
                 best_pair = neighbour.get_best_pair(c_matrix, best_change, subsets)
-                log.info("self.results.best_score 5: %.2f", self.results.best_score)
 
                 best_merged = subset_ops.merge_subsets(best_pair)
-                log.info("self.results.best_score 6: %.2f", self.results.best_score)
                 best_scheme = neighbour.make_clustered_scheme(
                     start_scheme, scheme_name, best_pair, best_merged, the_config)
-                log.info("self.results.best_score 7: %.2f", self.results.best_score)
                 best_result = self.analyse_scheme(best_scheme)
-                log.info("self.results.best_score 8: %.2f", self.results.best_score)
 
                 # the best change can get updated a fraction at this point
                 # because calaculting the info score on the whole alignment
                 # is a little different from doing it on the one subset
                 best_change = self.results.best_score - start_score
 
-                log.info("self.results.best_score 9: %.2f", self.results.best_score)
 
                 log.info("Best scheme combines subsets: '%s' and '%s'" %(best_pair[0].name, best_pair[1].name))
 
@@ -264,8 +254,6 @@ class GreedyAnalysis(Analysis):
                     self.results.best_score)
                 start_scheme = best_scheme
                 start_score = best_result.score
-
-                log.info("self.results.best_score 10: %.2f", self.results.best_score)
 
                 log.debug("Best pair: %s", str([s.name for s in best_pair]))
                 log.debug("Merged into: %s", str([best_merged.name]))
