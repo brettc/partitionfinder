@@ -481,6 +481,16 @@ class KmeansAnalysis(Analysis):
                     split_subs[sub] = [sub]  # so we keep it whole
                     log.info("Subset %d: %d sites not splittable" %(i+1, len(sub.columns)))
 
+                elif (
+                        check_state_probs(self.alignment, split[0], the_config) == True or
+                        check_state_probs(self.alignment, split[1], the_config) == True
+                     )
+                    # we don't split it if either of the daughter subsets has problems with
+                    # the state frequencies
+                    sub.dont_split = True # never try to split this subset again
+                    split_subs[sub] = [sub]  # so we keep it whole
+                    log.info("Subset %d: %d sites not splittable" %(i+1, len(sub.columns)))
+
                 else:  # we could analyse the big subset
                     split_subs[sub] = split  # so we split it into >1
                     log.info("Subset %d: %d sites split into %d and %d"
