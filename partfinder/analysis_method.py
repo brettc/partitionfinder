@@ -30,7 +30,7 @@ from scipy import spatial, exp
 from scipy.misc import comb
 import numpy as np
 from config import the_config
-from alignment import SubsetAlignment
+from alignment import SubsetAlignment, check_state_probs
 
 class UserAnalysis(Analysis):
     def do_analysis(self):
@@ -447,25 +447,17 @@ class KmeansAnalysis(Analysis):
         split_subs = {}
         for i, sub in enumerate(start_subsets):
 
-
-
-
-
-            
-            sub_alignment = SubsetAlignment(self.alignment, sub)
             # here we can test if the alignment has all states:
-            print "alignment has all states?", alignment.has_all_states(sub_alignment)
+            state_probs = check_state_probs(self.alignment, sub, the_config)
 
-
-
-
-
-
-
-
-
-            if len(sub.columns) == 1 or len(sub.columns) < the_config.min_subset_size:
+            if  (
+                    len(sub.columns) == 1 or 
+                    len(sub.columns) < the_config.min_subset_size or 
+                    state_probs == True or
+                    sub.dont_split == True
+                ):
                 split_subs[sub] = [sub]
+                log.info("Subset %d: %d sites not splittable" %(i+1, len(sub.columns)))
             else:
                 split = kmeans.kmeans_split_subset(
                     the_config, self.alignment, sub, tree_path, n_jobs=self.threads)
@@ -473,8 +465,7 @@ class KmeansAnalysis(Analysis):
                 if split == 1:  # we couldn't analyse the big subset
                     sub.dont_split = True # never try to split this subset again
                     split_subs[sub] = [sub]  # so we keep it whole
-                    log.info("Subset %d: not splittable"
-                            %(i+1))
+                    log.info("Subset %d: %d sites not splittable" %(i+1, len(sub.columns)))
 
                 elif len(split) == 1:
                     # in some cases (i.e. all site params are equal) kmeans
@@ -505,7 +496,13 @@ class KmeansAnalysis(Analysis):
             # here we put a sensible lower limit on the size of subsets
             if len(s.columns)<the_config.min_subset_size:
                 s.fabricated = True
-                log.debug("Small subset of %d sites found", len(s.columns))
+                log.info("Subset %s has only %d sites found" %(s.subset_id, len(s.columns)))
+
+            # here we can test if the alignment has all states:
+            state_probs = check_state_probs(self.alignment, s, the_config)
+            if state_probs == True:
+                s.fabricated = True
+                log.debug("Subset %s does not have all states in the alignment", s.subset_id)
 
             if s.fabricated:
                 fabricated_subsets.append(s)
@@ -532,6 +529,8 @@ class KmeansAnalysis(Analysis):
                         log.debug("The subset has %d columns" % len(s.columns))
 
                 s = fabricated_subsets.pop(0)
+
+                log.debug("Working on fabricated subset %s with %d sites" %(s.subset_id, len(s.columns)))
 
                 all_subs.remove(s)
 
@@ -726,7 +725,7 @@ class KmeansAnalysis(Analysis):
                 subs.extend(vals)
 
 
-        log.info("%d subsets successfully split" %(len(subs) - len(start_subsets)))
+        log.debug("%d subsets successfully split" %(len(subs) - len(start_subsets)))
 
         with logtools.indented(log, "Calculating scores of all new subsets that can be analysed"):
             self.analyse_list_of_subsets(subs)
@@ -737,8 +736,7 @@ class KmeansAnalysis(Analysis):
 
         # 4. Are we done yet?
         if len(new_scheme_subs) == len(list(start_subsets)):
-            log.info("""The %s score of 0 subsets
-                     improved when split. Algorithm finished."""
+            log.info("""Could not improve %s score. Algorithm finished."""
                      % (the_config.model_selection))
             done = True
         else:
