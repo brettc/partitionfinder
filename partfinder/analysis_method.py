@@ -481,8 +481,15 @@ class KmeansAnalysis(Analysis):
                     # cannot split subsets, so we get back the same as we put in
                     sub.dont_split = True # never try to split this subset again
                     split_subs[sub] = [sub]  # so we keep it whole
-                    log.info("Subset %d: not splittable"
-                            %(i+1))
+                    log.info("Subset %d: %d sites not splittable" %(i+1, len(sub.columns)))
+
+                elif min([len(split[0].columns), len(split[1].columns)]) < the_config.min_subset_size:
+                    # we don't split it if either of the two daughter subset was
+                    # smaller than the minimum allowable size
+                    sub.dont_split = True # never try to split this subset again
+                    split_subs[sub] = [sub]  # so we keep it whole
+                    log.info("Subset %d: %d sites not splittable" %(i+1, len(sub.columns)))
+
                 else:  # we could analyse the big subset
                     split_subs[sub] = split  # so we split it into >1
                     log.info("Subset %d: %d sites split into %d and %d"
