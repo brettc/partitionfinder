@@ -45,7 +45,7 @@ class Configuration(object):
 
     def init(self, datatype="DNA", phylogeny_program='phyml',
                  save_phylofiles=False, cmdline_extras="", cluster_weights=None,
-                 cluster_percent=10.0, cluster_max=1000, kmeans='entropy', quick=False, min_subset_size = 100):
+                 cluster_percent=10.0, cluster_max=1000, kmeans='entropy', quick=False, min_subset_size = 100, all_states = False):
 
 
         log.info("------------- Configuring Parameters -------------")
@@ -65,6 +65,7 @@ class Configuration(object):
         self.kmeans = kmeans
         self.quick = quick
         self.min_subset_size = min_subset_size
+        self.all_states = all_states
 
 
         # Record this

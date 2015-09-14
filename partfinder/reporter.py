@@ -225,6 +225,10 @@ class TextReporter(object):
                                                    self.cfg.min_subset_size))
             output.write(scheme_header_template % ("kmeans based on",
                                                    self.cfg.kmeans))
+            if self.cfg.all_states == True:
+                output.write(scheme_header_template % ("--all_states setting used",
+                                                       self.cfg.all_states))
+
 
         output.write('\n\nBest partitioning scheme\n\n')
         self.output_scheme(result.best_scheme, result.best_result, output)

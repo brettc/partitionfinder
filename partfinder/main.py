@@ -223,6 +223,12 @@ def parse_args(datatype, cmdargs=None):
              " Possible regions are 'all' or any of {%s}."
              % ",".join(get_debug_regions())
     )
+    op.add_option(
+        "--all-states",
+        action="store_true", dest="all_states", default=False,
+        help="In the k-means algorithm, only produce subsets which have "
+             "all states represented (e.g. ACTG for DNA datasets)."
+    )
 
     op.add_option(
         '--profile',
@@ -359,7 +365,8 @@ def main(name, datatype, passed_args=None):
                                    options.cluster_max,
                                    options.kmeans, 
                                    options.quick,
-                                   options.min_subset_size)
+                                   options.min_subset_size,
+                                   options.all_states)
         cfg = config.the_config
 
         # Set up the progress callback
