@@ -484,7 +484,7 @@ class KmeansAnalysis(Analysis):
                 elif (
                         check_state_probs(self.alignment, split[0], the_config) == True or
                         check_state_probs(self.alignment, split[1], the_config) == True
-                     )
+                     ):
                     # we don't split it if either of the daughter subsets has problems with
                     # the state frequencies
                     sub.dont_split = True # never try to split this subset again
@@ -506,7 +506,7 @@ class KmeansAnalysis(Analysis):
             # here we put a sensible lower limit on the size of subsets
             if len(s.columns)<the_config.min_subset_size:
                 s.fabricated = True
-                log.info("Subset %s has only %d sites found" %(s.subset_id, len(s.columns)))
+                log.debug("Subset %s with only %d sites found" %(s.subset_id, len(s.columns)))
 
             # here we can test if the alignment has all states:
             state_probs = check_state_probs(self.alignment, s, the_config)
@@ -519,68 +519,69 @@ class KmeansAnalysis(Analysis):
                 log.debug("added %s to fabricated subset", s.name)
 
         if fabricated_subsets:
-            log.info("""Finalising partitioning scheme, by incorporating
-                     small subsets and those that couldn't be analysed with
-                     their nearest neighbours""")
-            log.debug("There are %d/%d fabricated subsets"
-                      % (len(fabricated_subsets), len(start_subsets)))
+            with logtools.indented(log, "Finalising partitioning scheme"):
+                log.debug("There are %d/%d fabricated subsets"
+                          % (len(fabricated_subsets), len(start_subsets)))
 
-            while fabricated_subsets:
+                i = 1
+                while fabricated_subsets:
 
-                all_subs = start_subsets
+                    all_subs = start_subsets
 
-                # occasionally subsets with all value == 0.0 are given a
-                # centroid of None by scikit-learn. The true entropy here
-                # is 0.0 for all sites, so the true centroid is 0.0
-                for s in all_subs:
-                    if s.centroid == None: 
-                        s.centroid = [0.0]
-                        log.debug("Fixed a subset with a centroid of None")
-                        log.debug("The subset has %d columns" % len(s.columns))
+                    # occasionally subsets with all value == 0.0 are given a
+                    # centroid of None by scikit-learn. The true entropy here
+                    # is 0.0 for all sites, so the true centroid is 0.0
+                    for s in all_subs:
+                        if s.centroid == None: 
+                            s.centroid = [0.0]
+                            log.debug("Fixed a subset with a centroid of None")
+                            log.debug("The subset has %d columns" % len(s.columns))
 
-                s = fabricated_subsets.pop(0)
+                    s = fabricated_subsets.pop(0)
 
-                log.debug("Working on fabricated subset %s with %d sites" %(s.subset_id, len(s.columns)))
+                    log.debug("Working on fabricated subset %s with %d sites" %(s.subset_id, len(s.columns)))
+                    log.info("Finalising subset %d", i)
+                    i = i+1
 
-                all_subs.remove(s)
+                    all_subs.remove(s)
 
-                centroid = s.centroid
+                    centroid = s.centroid
 
-                best_match = None
+                    best_match = None
 
-                # get closest subset to s
-                for sub in all_subs:
+                    # get closest subset to s
+                    for sub in all_subs:
 
-                    centroid_array = [sub.centroid, centroid]
+                        centroid_array = [sub.centroid, centroid]
 
-                    euclid_dist = spatial.distance.pdist(centroid_array)
+                        euclid_dist = spatial.distance.pdist(centroid_array)
 
-                    if euclid_dist < best_match or best_match is None:
-                        best_match = euclid_dist
-                        closest_sub = sub
+                        if euclid_dist < best_match or best_match is None:
+                            best_match = euclid_dist
+                            closest_sub = sub
 
-                # join s with closest_sub to make joined_sub
-                merged_sub = subset_ops.merge_subsets([s, closest_sub])
+                    # join s with closest_sub to make joined_sub
+                    merged_sub = subset_ops.merge_subsets([s, closest_sub])
 
-                # remove closest sub
-                all_subs.remove(closest_sub)
+                    # remove closest sub
+                    all_subs.remove(closest_sub)
 
-                # and if closest_sub was fabricated too, we remove it here
-                if fabricated_subsets.count(closest_sub):
-                    fabricated_subsets.remove(closest_sub)
+                    # and if closest_sub was fabricated too, we remove it here
+                    if fabricated_subsets.count(closest_sub):
+                        fabricated_subsets.remove(closest_sub)
 
-                # analyse joined sub
-                self.analyse_list_of_subsets([merged_sub])
+                    # analyse joined sub
+                    self.analyse_list_of_subsets([merged_sub])
 
-                # here we put a sensible lower limit on the size of subsets
-                if len(merged_sub.columns)<the_config.min_subset_size:
-                    merged_sub.fabricated = True
+                    # here we put a sensible lower limit on the size of subsets
+                    if len(merged_sub.columns)<the_config.min_subset_size:
+                        merged_sub.fabricated = True
 
-                # if joined has to be fabricated, add to fabricated list
-                if merged_sub.fabricated:
-                    fabricated_subsets.append(merged_sub)
+                    # if joined has to be fabricated, add to fabricated list
+                    if merged_sub.fabricated:
+                        fabricated_subsets.append(merged_sub)
 
-                all_subs.append(merged_sub)
+                    all_subs.append(merged_sub)
         else:
             all_subs = start_subsets
 
