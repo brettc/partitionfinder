@@ -30,6 +30,7 @@ from scipy import spatial, exp
 from scipy.misc import comb
 import numpy as np
 from config import the_config
+from alignment import SubsetAlignment, check_state_probs
 
 class UserAnalysis(Analysis):
     def do_analysis(self):
@@ -445,8 +446,18 @@ class KmeansAnalysis(Analysis):
     def split_subsets(self, start_subsets, tree_path):
         split_subs = {}
         for i, sub in enumerate(start_subsets):
-            if len(sub.columns) == 1 or len(sub.columns) < the_config.min_subset_size:
+
+            # here we can test if the alignment has all states:
+            state_probs = check_state_probs(self.alignment, sub, the_config)
+
+            if  (
+                    len(sub.columns) == 1 or 
+                    len(sub.columns) < the_config.min_subset_size or 
+                    state_probs == True or
+                    sub.dont_split == True
+                ):
                 split_subs[sub] = [sub]
+                log.info("Subset %d: %d sites not splittable" %(i+1, len(sub.columns)))
             else:
                 split = kmeans.kmeans_split_subset(
                     the_config, self.alignment, sub, tree_path, n_jobs=self.threads)
@@ -454,16 +465,32 @@ class KmeansAnalysis(Analysis):
                 if split == 1:  # we couldn't analyse the big subset
                     sub.dont_split = True # never try to split this subset again
                     split_subs[sub] = [sub]  # so we keep it whole
-                    log.info("Subset %d: not splittable"
-                            %(i+1))
+                    log.info("Subset %d: %d sites not splittable" %(i+1, len(sub.columns)))
 
                 elif len(split) == 1:
                     # in some cases (i.e. all site params are equal) kmeans
                     # cannot split subsets, so we get back the same as we put in
                     sub.dont_split = True # never try to split this subset again
                     split_subs[sub] = [sub]  # so we keep it whole
-                    log.info("Subset %d: not splittable"
-                            %(i+1))
+                    log.info("Subset %d: %d sites not splittable" %(i+1, len(sub.columns)))
+
+                elif min([len(split[0].columns), len(split[1].columns)]) < the_config.min_subset_size:
+                    # we don't split it if either of the two daughter subset was
+                    # smaller than the minimum allowable size
+                    sub.dont_split = True # never try to split this subset again
+                    split_subs[sub] = [sub]  # so we keep it whole
+                    log.info("Subset %d: %d sites not splittable" %(i+1, len(sub.columns)))
+
+                elif (
+                        check_state_probs(self.alignment, split[0], the_config) == True or
+                        check_state_probs(self.alignment, split[1], the_config) == True
+                     ):
+                    # we don't split it if either of the daughter subsets has problems with
+                    # the state frequencies
+                    sub.dont_split = True # never try to split this subset again
+                    split_subs[sub] = [sub]  # so we keep it whole
+                    log.info("Subset %d: %d sites not splittable" %(i+1, len(sub.columns)))
+
                 else:  # we could analyse the big subset
                     split_subs[sub] = split  # so we split it into >1
                     log.info("Subset %d: %d sites split into %d and %d"
@@ -479,73 +506,82 @@ class KmeansAnalysis(Analysis):
             # here we put a sensible lower limit on the size of subsets
             if len(s.columns)<the_config.min_subset_size:
                 s.fabricated = True
-                log.debug("Small subset of %d sites found", len(s.columns))
+                log.debug("Subset %s with only %d sites found" %(s.subset_id, len(s.columns)))
+
+            # here we can test if the alignment has all states:
+            state_probs = check_state_probs(self.alignment, s, the_config)
+            if state_probs == True:
+                s.fabricated = True
+                log.debug("Subset %s does not have all states in the alignment", s.subset_id)
 
             if s.fabricated:
                 fabricated_subsets.append(s)
                 log.debug("added %s to fabricated subset", s.name)
 
         if fabricated_subsets:
-            log.info("""Finalising partitioning scheme, by incorporating
-                     small subsets and those that couldn't be analysed with
-                     their nearest neighbours""")
-            log.debug("There are %d/%d fabricated subsets"
-                      % (len(fabricated_subsets), len(start_subsets)))
+            with logtools.indented(log, "Finalising partitioning scheme"):
+                log.debug("There are %d/%d fabricated subsets"
+                          % (len(fabricated_subsets), len(start_subsets)))
 
-            while fabricated_subsets:
+                i = 1
+                while fabricated_subsets:
 
-                all_subs = start_subsets
+                    all_subs = start_subsets
 
-                # occasionally subsets with all value == 0.0 are given a
-                # centroid of None by scikit-learn. The true entropy here
-                # is 0.0 for all sites, so the true centroid is 0.0
-                for s in all_subs:
-                    if s.centroid == None: 
-                        s.centroid = [0.0]
-                        log.debug("Fixed a subset with a centroid of None")
-                        log.debug("The subset has %d columns" % len(s.columns))
+                    # occasionally subsets with all value == 0.0 are given a
+                    # centroid of None by scikit-learn. The true entropy here
+                    # is 0.0 for all sites, so the true centroid is 0.0
+                    for s in all_subs:
+                        if s.centroid == None: 
+                            s.centroid = [0.0]
+                            log.debug("Fixed a subset with a centroid of None")
+                            log.debug("The subset has %d columns" % len(s.columns))
 
-                s = fabricated_subsets.pop(0)
+                    s = fabricated_subsets.pop(0)
 
-                all_subs.remove(s)
+                    log.debug("Working on fabricated subset %s with %d sites" %(s.subset_id, len(s.columns)))
+                    log.info("Finalising subset %d", i)
+                    i = i+1
 
-                centroid = s.centroid
+                    all_subs.remove(s)
 
-                best_match = None
+                    centroid = s.centroid
 
-                # get closest subset to s
-                for sub in all_subs:
+                    best_match = None
 
-                    centroid_array = [sub.centroid, centroid]
+                    # get closest subset to s
+                    for sub in all_subs:
 
-                    euclid_dist = spatial.distance.pdist(centroid_array)
+                        centroid_array = [sub.centroid, centroid]
 
-                    if euclid_dist < best_match or best_match is None:
-                        best_match = euclid_dist
-                        closest_sub = sub
+                        euclid_dist = spatial.distance.pdist(centroid_array)
 
-                # join s with closest_sub to make joined_sub
-                merged_sub = subset_ops.merge_subsets([s, closest_sub])
+                        if euclid_dist < best_match or best_match is None:
+                            best_match = euclid_dist
+                            closest_sub = sub
 
-                # remove closest sub
-                all_subs.remove(closest_sub)
+                    # join s with closest_sub to make joined_sub
+                    merged_sub = subset_ops.merge_subsets([s, closest_sub])
 
-                # and if closest_sub was fabricated too, we remove it here
-                if fabricated_subsets.count(closest_sub):
-                    fabricated_subsets.remove(closest_sub)
+                    # remove closest sub
+                    all_subs.remove(closest_sub)
 
-                # analyse joined sub
-                self.analyse_list_of_subsets([merged_sub])
+                    # and if closest_sub was fabricated too, we remove it here
+                    if fabricated_subsets.count(closest_sub):
+                        fabricated_subsets.remove(closest_sub)
 
-                # here we put a sensible lower limit on the size of subsets
-                if len(merged_sub.columns)<the_config.min_subset_size:
-                    merged_sub.fabricated = True
+                    # analyse joined sub
+                    self.analyse_list_of_subsets([merged_sub])
 
-                # if joined has to be fabricated, add to fabricated list
-                if merged_sub.fabricated:
-                    fabricated_subsets.append(merged_sub)
+                    # here we put a sensible lower limit on the size of subsets
+                    if len(merged_sub.columns)<the_config.min_subset_size:
+                        merged_sub.fabricated = True
 
-                all_subs.append(merged_sub)
+                    # if joined has to be fabricated, add to fabricated list
+                    if merged_sub.fabricated:
+                        fabricated_subsets.append(merged_sub)
+
+                    all_subs.append(merged_sub)
         else:
             all_subs = start_subsets
 
@@ -700,7 +736,7 @@ class KmeansAnalysis(Analysis):
                 subs.extend(vals)
 
 
-        log.info("%d subsets successfully split" %(len(subs) - len(start_subsets)))
+        log.debug("%d subsets successfully split" %(len(subs) - len(start_subsets)))
 
         with logtools.indented(log, "Calculating scores of all new subsets that can be analysed"):
             self.analyse_list_of_subsets(subs)
@@ -711,8 +747,7 @@ class KmeansAnalysis(Analysis):
 
         # 4. Are we done yet?
         if len(new_scheme_subs) == len(list(start_subsets)):
-            log.info("""The %s score of 0 subsets
-                     improved when split. Algorithm finished."""
+            log.info("""Could not improve %s score. Algorithm finished."""
                      % (the_config.model_selection))
             done = True
         else:

@@ -326,6 +326,7 @@ class Subset(object):
     def make_alignment(self, cfg, alignment):
         # Make an Alignment from the source, using this subset
         sub_alignment = SubsetAlignment(alignment, self)
+
         sub_path = os.path.join(cfg.phylofiles_path, self.subset_id + '.phy')
         # Add it into the sub, so we keep it around
         self.alignment_path = sub_path

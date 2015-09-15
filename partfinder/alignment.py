@@ -329,3 +329,114 @@ class TestAlignment(Alignment):
     def __init__(self, text):
         Alignment.__init__(self)
         self.parse(text)
+
+
+def check_state_probs(Alignment, subset, cfg):
+
+    # there's no problem if the user doesn't care
+    # about how many states are in a subset
+    if cfg.all_states == False:
+        return False
+
+    sub_aln = SubsetAlignment(Alignment, subset)
+
+
+    dna_states = set('ACGT')
+    amino_states = set(['Alanine',
+                       'Arginine',
+                       'Asparagine', 
+                       'Aspartic acid',
+                       'Cysteine',
+                       'Glutamine',
+                       'Glutamic acid',
+                       'Glycine',
+                       'Histidine',
+                       'Isoleucine',
+                       'Leucine',
+                       'Lysine',
+                       'Methionine',
+                       'Phenylalanine',
+                       'Proline',
+                       'Serine',
+                       'Threonine',
+                       'Tryptophan',
+                       'Tyrosine',
+                       'Valine'])
+
+
+    dna_dict = {'A': set('A'),
+                'G': set('G'),
+                'C': set('C'),
+                'T': set('T'),
+                'U': set('T'),
+                'M': set('AC'),
+                'R': set('AG'),
+                'W': set('AT'),
+                'S': set('CG'),
+                'Y': set('CT'),
+                'K': set('GT'),
+                'B': set('CGT'),
+                'D': set('AGT'),
+                'H': set('ACT'),
+                'V': set('ACG'),
+                'N': set('ACGT'),
+                '?': set('ACGT'),
+                '-': set('ACGT')
+    }
+
+    amino_dict = {'A': set(['Alanine']),
+                'R': set(['Arginine']),
+                'N': set(['Asparagine']), 
+                'B': set(['Asparagine']),
+                'D': set(['Aspartic acid']),
+                'C': set(['Cysteine']),
+                'Q': set(['Glutamine']),
+                'Z': set(['Glutamine']),
+                'E': set(['Glutamic acid']),
+                'G': set(['Glycine']),
+                'H': set(['Histidine']),
+                'I': set(['Isoleucine']),
+                'L': set(['Leucine']),
+                'K': set(['Lysine']),
+                'M': set(['Methionine']),
+                'F': set(['Phenylalanine']),
+                'P': set(['Proline']),
+                'S': set(['Serine']),
+                'T': set(['Threonine']),
+                'W': set(['Tryptophan']),
+                'Y': set(['Tyrosine']),
+                'V': set(['Valine']),
+                'X': amino_states,
+                '?': amino_states,
+                '-': amino_states
+                }
+
+    # 1. Get set of all states in the alignment, obs([])
+    observed_states = numpy.unique(sub_aln.data).tostring()
+
+    # 2. run through all states
+    # for each state, extend a set of observed states, e.g. obs.add(x)
+    expanded_states = set([])
+    if cfg.datatype == 'protein':
+        all_states = amino_states
+        state_dict = amino_dict
+    elif cfg.datatype == 'DNA':
+        all_states = dna_states
+        state_dict = dna_dict
+
+    for state in observed_states:
+        try:
+            ex = state_dict[state]
+        except: #just in case
+            ex = set(state)
+
+        expanded_states = expanded_states.union(ex)
+
+    #3. Compare set of observed states to set of all states. 
+    # If all states are in the observed states, return TRUE
+    # else return FALSE.
+    if len(all_states.difference(expanded_states)) > 0:
+        # some states are missing
+        return True
+    else:
+        return False
