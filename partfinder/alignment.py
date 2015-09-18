@@ -379,9 +379,9 @@ def check_state_probs(Alignment, subset, cfg):
                 'D': set('AGT'),
                 'H': set('ACT'),
                 'V': set('ACG'),
-                'N': set('ACGT'),
-                '?': set('ACGT'),
-                '-': set('ACGT')
+                'N': set(''),
+                '?': set(''),
+                '-': set('')
     }
 
     amino_dict = {'A': set(['Alanine']),
@@ -406,9 +406,9 @@ def check_state_probs(Alignment, subset, cfg):
                 'W': set(['Tryptophan']),
                 'Y': set(['Tyrosine']),
                 'V': set(['Valine']),
-                'X': amino_states,
-                '?': amino_states,
-                '-': amino_states
+                'X': set([]),
+                '?': set([]),
+                '-': set([])
                 }
 
     # 1. Get set of all states in the alignment, obs([])
