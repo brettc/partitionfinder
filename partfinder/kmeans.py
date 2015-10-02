@@ -49,7 +49,7 @@ def kmeans(rate_array, number_of_ks, n_jobs):
     # Call scikit_learn's k-means, use "k-means++" to find centroids
     # kmeans_out = KMeans(init='k-means++', n_init = 100)
     kmeans_out = KMeans(init='k-means++', n_clusters=number_of_ks,
-            n_init=100, n_jobs=n_jobs)
+            n_init=100, n_jobs=n_jobs, random_state = 2147483647)
     # Perform k-means clustering on the array of site likelihoods
     kmeans_out.fit(array)
 
