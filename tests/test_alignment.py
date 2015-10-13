@@ -2,7 +2,7 @@ import pytest
 import fnmatch
 import os
 from StringIO import StringIO
-from partfinder.alignment import Alignment, SubsetAlignment
+from partfinder.alignment import Alignment, SubsetAlignment, AlignmentError
 
 HERE = os.path.abspath(os.path.dirname(__file__))
 MISC_PATH = os.path.join(HERE, 'misc')
@@ -37,6 +37,22 @@ actaactaaa
 acagacagaa
 """
 
+TOO_FEW_SPECIES = """
+3 2
+a AT
+b AT
+c AT
+d AC
+"""
+
+TOO_MANY_SPECIES = """
+5 2
+a AT
+b AT
+c AT
+d AC
+"""
+
 
 def write_and_get_stream(align):
     # write out and read back in
@@ -67,6 +83,20 @@ def test_interleaved():
     assert a.species_count == 5
     assert a.sequence_length == 30
     assert a.data.shape == (5, 30)
+
+
+def test_too_few_species(caplog):
+    a = Alignment()
+    with pytest.raises(AlignmentError):
+        a.parse(TOO_FEW_SPECIES)
+    assert "too many species" in caplog.text()
+
+
+def test_too_many_species(caplog):
+    a = Alignment()
+    with pytest.raises(AlignmentError):
+        a.parse(TOO_MANY_SPECIES)
+    assert "Phyml format error" in caplog.text()
 
 
 class FakeSubset(object):

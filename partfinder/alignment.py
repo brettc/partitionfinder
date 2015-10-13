@@ -48,6 +48,7 @@ class AlignmentParser(object):
         self.end_base = 0
         self.valid_bases = valid_bases
         self.block_len = None
+        self.interleave_blocks_done = 0
 
         # This is the stuff we'll copy across
         self.species = []
@@ -83,7 +84,7 @@ class AlignmentParser(object):
 
         # Look for any further blocks
         while self.parse_interleave_block():
-            pass
+            self.interleave_blocks_done += 1
 
     def parse_header(self):
         while 1:
@@ -147,7 +148,12 @@ class AlignmentParser(object):
             self.current_line += 1
 
             if len(line) == 0:
-                log.error("Line %d, Found no data in file", self.current_line)
+                # We've run out of species! There must be too many species in
+                # the header.
+                log.error("""Phyml format error. Only found {} species,
+                            but header says there are {}.
+                          """.format(cur_species, self.species_count))
+                raise AlignmentError
 
             bits = line.split()
             num_bits = len(bits)
@@ -209,8 +215,14 @@ class AlignmentParser(object):
                 continue
 
             if blank_lines == 0:
-                log.error("""Line %d: Expected a blank line between blocks""",
-                          self.current_line)
+                if self.interleave_blocks_done == 0:
+                    # No blank line. And we've not yet done an interleave
+                    # block. Let's guess there are just too many species.
+                    log.error("""Line %d: Found too many species (there should be {})
+                              """.format(self.current_line, self.species_count))
+                else:
+                    log.error("""Line %d: Expected a blank line between blocks""",
+                              self.current_line)
                 raise AlignmentError
 
             self.check_block()
