@@ -19,6 +19,7 @@ extensions = [
             '-stdlib=libc++',
             '-std=c++11',
             '-mmacosx-version-min=10.8',
+            '-I/usr/local/include',
         ],
         language='c++',
     )
