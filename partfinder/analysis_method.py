@@ -16,21 +16,20 @@
 # and conditions as well.
 
 import logtools
-log = logtools.get_logger()
-
 import math
 import scheme
 import submodels
 from analysis import Analysis, AnalysisError
 import neighbour
 import kmeans
-import itertools
 import subset_ops
-from scipy import spatial, exp
+from scipy import spatial
 from scipy.misc import comb
 import numpy as np
 from config import the_config
-from alignment import SubsetAlignment, check_state_probs
+
+log = logtools.get_logger()
+
 
 class UserAnalysis(Analysis):
     def do_analysis(self):
@@ -448,7 +447,7 @@ class KmeansAnalysis(Analysis):
         for i, sub in enumerate(start_subsets):
 
             # here we can test if the alignment has all states:
-            state_probs = check_state_probs(self.alignment, sub, the_config)
+            state_probs = self.alignment.check_state_probs(sub, the_config)
 
             if  (
                     len(sub.columns) == 1 or 
@@ -482,8 +481,8 @@ class KmeansAnalysis(Analysis):
                     log.info("Subset %d: %d sites not splittable" %(i+1, len(sub.columns)))
 
                 elif (
-                        check_state_probs(self.alignment, split[0], the_config) == True or
-                        check_state_probs(self.alignment, split[1], the_config) == True
+                        self.alignment.check_state_probs(split[0], the_config) or
+                        self.alignment.check_state_probs(split[1], the_config)
                      ):
                     # we don't split it if either of the daughter subsets has problems with
                     # the state frequencies
@@ -504,13 +503,13 @@ class KmeansAnalysis(Analysis):
         for s in start_subsets:
 
             # here we put a sensible lower limit on the size of subsets
-            if len(s.columns)<the_config.min_subset_size:
+            if len(s.columns) < the_config.min_subset_size:
                 s.fabricated = True
                 log.debug("Subset %s with only %d sites found" %(s.subset_id, len(s.columns)))
 
             # here we can test if the alignment has all states:
-            state_probs = check_state_probs(self.alignment, s, the_config)
-            if state_probs == True:
+            state_probs = self.alignment.check_state_probs(s, the_config)
+            if state_probs:
                 s.fabricated = True
                 log.debug("Subset %s does not have all states in the alignment", s.subset_id)
 
