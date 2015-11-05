@@ -19,7 +19,7 @@ import logtools
 import pandas
 log = logtools.get_logger()
 from config import the_config
-from model_utils import get_raxml_protein_modelstring
+from model_utils import *
 
 
 import os
@@ -80,6 +80,7 @@ class TextReporter(object):
         self.write_subsets(sch, result, output, sorted_subsets)
         self.write_nexus_summary(output, sorted_subsets)
         self.write_raxml(sch, result, output, sorted_subsets)
+        self.write_mrbayes(sch, result, output, sorted_subsets)
 
     def write_scheme_header(self, sch, result, output):
         output.write(scheme_header_template % ("Scheme Name", sch.name))
@@ -159,6 +160,22 @@ class TextReporter(object):
         useful to some people
         """
         output.write("\n\nRaxML-style partition definitions\n")
+        output.write("Warning: RAxML allows for only a single model of rate"
+                     " heterogeneity in partitioned analyses. I.e. all "
+                     "partitions must be assigned either a +G model or a "
+                     "+I+G model. If the best models for your dataset"
+                     "contain both types of model, you will need to choose "
+                     "an appropriate rate heterogeneity model when you run "
+                     "RAxML. This is specified through the command line to "
+                     "RAxML. To rigorously choose the best model, run two "
+                     "further PF analyses (these will be fast), fixing "
+                     "the partitioning scheme to this scheme and "
+                     "'search=user;', in both. In one run, use only +I+G "
+                     "models ('models = all_protein_gammaI'); in the next, "
+                     "use only +G models ('models = all_protein_gamma;''). "
+                     "Choose the scheme with the lowest AIC/AICc/BIC score. "
+                     "Note that these re-runs will be quick!\n\n" 
+                    )
 
         subset_number = 1
         for sub in sorted_subsets:
@@ -179,22 +196,69 @@ class TextReporter(object):
             output.write("\n")
             subset_number += 1
 
-        output.write("\nWarning: RAxML allows for only a single model of rate"
-                     " heterogeneity in partitioned analyses. I.e. all "
-                     "partitions must be assigned either a +G model or a "
-                     "+I+G model. If the best models for your dataset"
-                     "contain both types of model, you will need to choose "
-                     "an appropriate rate heterogeneity model when you run "
-                     "RAxML. This is specified through the command line to "
-                     "RAxML. To rigorously choose the best model, run two "
-                     "further PF analyses (these will be fast), fixing "
-                     "the partitioning scheme to this scheme and "
-                     "'search=user;', in both. In one run, use only +I+G "
-                     "models ('models = all_protein_gammaI'); in the next, "
-                     "use only +G models ('models = all_protein_gamma;''). "
-                     "Choose the scheme with the lowest AIC/AICc/BIC score. "
-                     "Note that these re-runs will be quick!" 
+
+
+
+    def write_mrbayes(self, sch, result, output, sorted_subsets):
+        """Print out partition definitions in MrBayes format, might be
+        useful to some people
+        """
+        output.write("\n\nMrBayes block for partition definitions\n")
+
+        output.write("Warning: MrBayes only allows a relatively small "
+                     "collection of models. If any model in your analysis is not one that "
+                     "is included in MrBayes (e.g. by setting nst = 1, 2, or "
+                     "6 for DNA sequences; or is not in the available lis of protein models)" 
+                     "then this MrBayes block will just set that model "
+                     "to nst = 6 for DNA, or 'wag' for Protein. Similarly, the only additional parameters "
+                     "that this MrBayes block will include are +I and +G. Other "
+                     " parameters, such as +F and +X, are ignored" 
+                     "Please "
+                     "check the MrBayes block carefully before you use it.\n\n"
                     )
+
+        output.write("begin mrbayes;\n\n")
+        subset_number = 1
+        charpartition = []
+        for sub in sorted_subsets:
+            if self.cfg.search in _odd_searches:
+                sites = [x + 1 for x in sub.columns]
+                partition_sites = str(sites).strip('[]')
+            else:
+                partition_sites = sub.site_description
+
+            output.write("\tcharset Subset%s = %s;\n" % (subset_number, partition_sites))
+            charpartition.append("Group%s:Subset%s" % (subset_number, subset_number))
+            subset_number += 1
+        output.write('\n\tpartition PartitionFinder = %s;\n' % ', '.join(charpartition))
+        output.write('\tset partition=PartitionFinder;\n\n')
+
+        subset_number = 1
+        for sub in sorted_subsets:
+            if self.cfg.search in _odd_searches:
+                sites = [x + 1 for x in sub.columns]
+                partition_sites = str(sites).strip('[]')
+            else:
+                partition_sites = sub.site_description
+
+            if self.cfg.datatype == "DNA":
+                model_text = get_mrbayes_modeltext_DNA(sub.best_model, subset_number)
+            elif self.cfg.datatype == "protein":
+                model_text = get_mrbayes_modeltext_protein(sub.best_model, subset_number)
+            else:
+                raise RuntimeError
+
+            output.write(model_text)
+            subset_number += 1
+
+        output.write('\n\tprset applyto=(all) ratepr=variable;\n')
+        output.write('\tunlink statefreq=(all) revmat=(all) shape=(all) pinvar=(all) tratio=(all);\n')
+        if the_config.branchlengths == 'unlinked':
+            output.write('\tunlink brlens=(all);\n')
+
+        output.write('\nend;\n')
+
+
 
     def write_best_scheme(self, result):
         pth = os.path.join(self.cfg.output_path, 'best_scheme.txt')
