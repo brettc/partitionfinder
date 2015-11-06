@@ -496,6 +496,8 @@ class RelaxedClusteringAnalysis(Analysis):
 
 class KmeansAnalysis(Analysis):
 
+    # set the default subset size to 100 for kmeans analyses
+    the_config.min_subset_size = 100
 
     def split_subsets(self, start_subsets, tree_path):
         split_subs = {}
