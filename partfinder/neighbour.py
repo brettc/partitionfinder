@@ -128,6 +128,30 @@ def get_N_closest_subsets(subsets, cfg, N, distance_matrix = np.matrix([])):
     return ranked_subset_groupings
 
 
+
+def get_closest_subset(sub, subsets, cfg, distance_matrix = np.matrix([])):
+    """Find the most similar subsets to the focal subset 'sub'
+    """
+    if not distance_matrix.any():
+        distance_matrix = get_distance_matrix(subsets, cfg.cluster_weights)
+        distance_matrix = scipy.spatial.distance.squareform(distance_matrix)
+        
+    try:
+        col = subsets.index(sub)
+    except:
+        log.error("Couldn't find the subset you were looking for")
+        raise PartitionFinderError
+
+    sub_col = distance_matrix[col,]
+
+    sub_closest = np.min(sub_col[np.nonzero(sub_col)])
+
+    closest_index = int(np.where(sub_col == sub_closest)[0])
+
+    closest_subset = subsets[closest_index]
+
+    return([sub, closest_subset])
+
 def make_clustered_scheme(start_scheme, scheme_name, subsets_to_cluster, merged_sub, cfg):
 
     # 1. Then we define a new scheme with those merged subsets
