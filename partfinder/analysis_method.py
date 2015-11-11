@@ -367,6 +367,7 @@ class RelaxedClusteringAnalysis(Analysis):
                         raise AnalysisError
 
                 log.info("%d subsets merged because of --min-subset-size and/or --all-states settings" % merges)
+                log.info("%d subsets merged because of --min-subset-size and/or --all-states settings" % merges)
 
         subsets = [s for s in start_scheme.subsets]
         partnum = len(subsets)
@@ -375,8 +376,9 @@ class RelaxedClusteringAnalysis(Analysis):
         # previous steps. It's not ideal. But it means that the rest of the analysis
         # will definitely start from the basis that we compare thing to the starting
         # schem AFTER merging invalid subsets
-        self.results.best_result = self.analyse_scheme(start_scheme) 
-        self.results.best_score = start_scheme.score
+        best_result = self.analyse_scheme(start_scheme)
+        self.results.best_result = best_result 
+        self.results.best_score = best_result.score
         self.results.best_scheme = start_scheme
         step = 1
         while True:
