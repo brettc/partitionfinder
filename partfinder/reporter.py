@@ -30,11 +30,14 @@ subset_template = "%-15s | %-15s | %-15s | %-15s  | %-15s | %-15s\n"
 
 # We write different output for these searches
 _odd_searches = ['kmeans']
+_scheme_data_csv = 'scheme_data.csv'
 
 class TextReporter(object):
     def __init__(self, config):
         self.cfg = config
         self.cfg.reporter = self
+        self.header_done = False
+
 
     def write_subset_summary(self, sub):
         pth = os.path.join(self.cfg.subsets_path, sub.subset_id + '.txt')
@@ -58,7 +61,7 @@ class TextReporter(object):
         output.write("Number of columns in subset: %d\n" % len(sub.columns))
         output.write("Models are organised according to their AICc scores\n\n")
 
-        output.write(subset_template % ("Model", "Parameters", "lNL", "AICc", "AIC", "BIC"))
+        output.write(subset_template % ("Model", "Parameters", "lnL", "AICc", "AIC", "BIC"))
         for aicc, row in sorted_results:
             output.write(subset_template % (row[indices['model_id']], 
                                             row[indices['params']], 
@@ -72,6 +75,26 @@ class TextReporter(object):
         pth = os.path.join(self.cfg.schemes_path, sch.name + '.txt')
         output = open(pth, 'w')
         self.output_scheme(sch, result, output)
+        summary_pth = os.path.join(self.cfg.schemes_path, _scheme_data_csv)
+        summary_output = open(summary_pth, "a")
+        self.add_scheme_to_csv(sch, result, summary_output)
+
+    def add_scheme_to_csv(self, sch, result, summary_output):
+        if not self.header_done:
+            summary_output.write('name,sites,lnL,parameters,subsets,aic,aicc,bic\n')
+            self.header_done = True
+
+        summary_output.write('%s,%d,%.2f,%d,%d,%.2f,%.2f,%.2f\n'
+            %(sch.name,
+                result.nsites,
+                result.lnl,
+                result.sum_k,
+                result.nsubs,
+                result.aic,
+                result.aicc,
+                result.bic
+                )
+            )
 
     def output_scheme(self, sch, result, output):
         self.write_scheme_header(sch, result, output)
