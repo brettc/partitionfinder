@@ -291,6 +291,55 @@ class RelaxedClusteringAnalysis(Analysis):
     4. Quit if no improvements.
     '''
 
+    def clean_scheme(self, start_scheme):
+        # Here we look for and fix up subsets that are too small or don't have all states
+        keep_going = 1
+        merges = 0
+        if keep_going == 1:
+            with logtools.indented(log, "*** Checking subsets from scheme '%s' meet --min-subset-size and --all_states settings ***" %start_scheme.name):
+                while keep_going > 0:
+
+                    subsets = [s for s in start_scheme.subsets]
+                    
+                    # sort the subsets, to keep results consistent over re-runs
+                    subsets.sort(key = lambda x: 1.0/float(len(x.columns)))
+                    
+                    # run through all subsets
+                    for i, sub in enumerate(subsets):
+                        found = 0
+                        state_problems = self.alignment.check_state_probs(sub, the_config)
+
+                        if  (
+                                len(sub.columns) < the_config.min_subset_size or 
+                                state_problems == True
+                            ):
+
+                            # merge that subset with nearest neighbour
+                            new_pair = neighbour.get_closest_subset(sub, subsets, the_config)
+
+                            log.info("Subset '%s' will be merged with subset '%s'" %(new_pair[0].name, new_pair[1].name))
+                            new_pair_merged = subset_ops.merge_subsets(new_pair)
+                            start_scheme = neighbour.make_clustered_scheme(
+                                    start_scheme, "cleaned_scheme", new_pair, new_pair_merged, the_config)
+                            the_config.progress.begin(1, 1)
+                            self.analyse_scheme(start_scheme)
+                            subsets = [s for s in start_scheme.subsets]
+                            merges = merges + 1
+                            found = 1
+                            break
+
+
+                    # if we got to here, there were no subsets to merge
+                    if found == 0:
+                        keep_going = 0
+
+                    if len(subsets) == 1:
+                        log.error("The settings you have used for --all-states and/or --min-subset-size mean that all of your subsets have been merged into one prior to any analysis. Thus, no analysis is necessary. Please check and try again")
+                        raise AnalysisError
+
+                log.info("%d subsets merged because of --min-subset-size and/or --all-states settings" % merges)
+        return(start_scheme)
+
     @logtools.log_info(log, "Performing relaxed clustering analysis")
     def do_analysis(self):
 
@@ -318,8 +367,10 @@ class RelaxedClusteringAnalysis(Analysis):
                 the_config.reporter.write_scheme_summary(
                     self.results.best_scheme, self.results.best_result)
 
-        subsets = [s for s in start_scheme.subsets]
 
+
+        subsets = [s for s in start_scheme.subsets]
+        partnum = len(subsets)
         step = 1
         while True:
             with logtools.indented(log, "*** Relaxed clustering algorithm step %d of up to %d ***"
@@ -435,12 +486,25 @@ class RelaxedClusteringAnalysis(Analysis):
                  % (self.results.best_scheme.name, model_selection,
                     self.results.best_score))
 
+        if the_config.min_subset_size or the_config.all_states:
+            best_scheme = self.clean_scheme(best_scheme)
+            best_result = self.analyse_scheme(best_scheme)
+            self.results.best_result = best_result 
+            self.results.best_score = best_result.score
+            self.results.best_scheme = best_scheme
+            log.info("Best scoring scheme after cleaning is scheme %s, with %s score of %.3f"
+                     % (self.results.best_scheme.name, model_selection,
+                        self.results.best_score))
+
+
         the_config.reporter.write_best_scheme(self.results)
 
 
 
 class KmeansAnalysis(Analysis):
 
+    # set the default subset size to 100 for kmeans analyses
+    the_config.min_subset_size = 100
 
     def split_subsets(self, start_subsets, tree_path):
         split_subs = {}

@@ -183,7 +183,7 @@ def parse_args(datatype, cmdargs=None):
     op.add_option(
         "--kmeans",
         type="str", dest="kmeans", default='entropy', metavar="type",
-        help="This defines which sitewise values to use: entropy or tiger"
+        help="This defines which sitewise values to use: entropy or tiger "
              "\n--kmeans entropy: use entropies for sitewise values"
              "\n--kmeans tiger: use TIGER rates for sitewise values"
     )
@@ -192,7 +192,7 @@ def parse_args(datatype, cmdargs=None):
         type="float", dest="cluster_percent", default=10.0, metavar="N",
         help="This defines the proportion of possible schemes that the relaxed clustering"
              " algorithm will consider before it stops looking. The default is 10%."
-             "e.g. --rcluster-percent 10.0"
+             "\ne.g. --rcluster-percent 10.0"
     )
     op.add_option(
         "--rcluster-max",
@@ -200,16 +200,18 @@ def parse_args(datatype, cmdargs=None):
         help="This defines the number of possible schemes that the relaxed clustering"
              " algorithm will consider before it stops looking. The default is to look at "
              "just the top 1000 schemes."
-             "e.g. --rcluster-max 1000"
+             "\ne.g. --rcluster-max 1000"
     )
     op.add_option(
         "--min-subset-size",
-        type="int", dest="min_subset_size", default=100, metavar="N",
-        help="This defines the minimum subset size that you will accept for"
-             " the kmeans algorithm. Subsets smaller than this will still be "
-             "created during the algorithm, but they will be merged with other"
-             " subsets at the end of the algorithm."
-             "e.g. --min-subset-size 100"
+        type="int", dest="min_subset_size", default=False, metavar="N",
+        help="This defines the minimum subset size that the kmeans and rcluster"
+             " algorithm will accept. Subsets smaller than this "
+             " will be merged at with other subsets at the end of the algorithm"
+             " (for kmeans) or at the start of the algorithm (for rcluster)."
+             " See manual for details. The default value for kmeans is 100."
+             " The default value for rcluster is to ignore this option."
+             "\ne.g. --min-subset-size 100"
     )
     op.add_option(
         '--debug-output',
@@ -226,8 +228,11 @@ def parse_args(datatype, cmdargs=None):
     op.add_option(
         "--all-states",
         action="store_true", dest="all_states", default=False,
-        help="In the k-means algorithm, only produce subsets which have "
-             "all states represented (e.g. ACTG for DNA datasets)."
+        help="In the kmeans and rcluster algorithms, this stipulates that PartitionFinder "
+             "should not produce subsets that do not have all possible states present. E.g."
+             " for DNA sequence data, all subsets in the final scheme must have A, C, T, "
+             " and G nucleotides present. This can occasionally be useful for downstream "
+             " analyses, particularly concerning amino acid datasets."
     )
 
     op.add_option(
