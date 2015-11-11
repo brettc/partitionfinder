@@ -375,7 +375,9 @@ class RelaxedClusteringAnalysis(Analysis):
         # previous steps. It's not ideal. But it means that the rest of the analysis
         # will definitely start from the basis that we compare thing to the starting
         # schem AFTER merging invalid subsets
-        self.results.best_score = self.analyse_scheme(start_scheme).score
+        self.results.best_result = self.analyse_scheme(start_scheme) 
+        self.results.best_score = start_scheme.score
+        self.results.best_scheme = start_scheme
         step = 1
         while True:
             with logtools.indented(log, "*** Relaxed clustering algorithm step %d of up to %d ***"
