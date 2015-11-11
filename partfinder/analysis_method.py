@@ -320,7 +320,7 @@ class RelaxedClusteringAnalysis(Analysis):
                             log.info("Subset '%s' will be merged with subset '%s'" %(new_pair[0].name, new_pair[1].name))
                             new_pair_merged = subset_ops.merge_subsets(new_pair)
                             start_scheme = neighbour.make_clustered_scheme(
-                                    start_scheme, "start_scheme", new_pair, new_pair_merged, the_config)
+                                    start_scheme, "cleaned_scheme", new_pair, new_pair_merged, the_config)
                             the_config.progress.begin(1, 1)
                             self.analyse_scheme(start_scheme)
                             subsets = [s for s in start_scheme.subsets]
