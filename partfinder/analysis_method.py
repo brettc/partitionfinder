@@ -368,20 +368,9 @@ class RelaxedClusteringAnalysis(Analysis):
                     self.results.best_scheme, self.results.best_result)
 
 
-        if the_config.min_subset_size or the_config.all_states:
-            start_scheme = self.clean_scheme(start_scheme)
 
         subsets = [s for s in start_scheme.subsets]
         partnum = len(subsets)
-        # we do this analysis to guard against the rare (but possible) situation that 
-        # the best scheme is actually one with invalid subsets, that were merged in the
-        # previous steps. It's not ideal. But it means that the rest of the analysis
-        # will definitely start from the basis that we compare thing to the starting
-        # schem AFTER merging invalid subsets
-        best_result = self.analyse_scheme(start_scheme)
-        self.results.best_result = best_result 
-        self.results.best_score = best_result.score
-        self.results.best_scheme = start_scheme
         step = 1
         while True:
             with logtools.indented(log, "*** Relaxed clustering algorithm step %d of up to %d ***"
@@ -496,6 +485,17 @@ class RelaxedClusteringAnalysis(Analysis):
         log.info("Best scoring scheme is scheme %s, with %s score of %.3f"
                  % (self.results.best_scheme.name, model_selection,
                     self.results.best_score))
+
+        if the_config.min_subset_size or the_config.all_states:
+            best_scheme = self.clean_scheme(best_scheme)
+            best_result = self.analyse_scheme(best_scheme)
+            self.results.best_result = best_result 
+            self.results.best_score = best_result.score
+            self.results.best_scheme = best_scheme
+            log.info("Best scoring scheme after cleaning is scheme %s, with %s score of %.3f"
+                     % (self.results.best_scheme.name, model_selection,
+                        self.results.best_score))
+
 
         the_config.reporter.write_best_scheme(self.results)
 
