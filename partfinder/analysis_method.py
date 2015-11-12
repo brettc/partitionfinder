@@ -499,6 +499,227 @@ class RelaxedClusteringAnalysis(Analysis):
 
         the_config.reporter.write_best_scheme(self.results)
 
+class FastRelaxedClusteringAnalysis(Analysis):
+    '''
+    A fast relaxed clustering algorithm for heuristic partitioning searches
+
+    1. Rank subsets by their similarity (defined by clustering-weights)
+    2. Analyse min(cluster-percent or cluster-max) most similar schemes
+    3. Sequentially perform all groupings that imporve the AICc/BIC score, in order of improvement
+    4. Analyse resulting scheme, iterate to 2.
+    5. Quit if no improvements.
+    '''
+
+    def clean_scheme(self, start_scheme):
+        # Here we look for and fix up subsets that are too small or don't have all states
+        keep_going = 1
+        merges = 0
+        if keep_going == 1:
+            with logtools.indented(log, "*** Checking subsets from scheme '%s' meet --min-subset-size and --all_states settings ***" %start_scheme.name):
+                while keep_going > 0:
+
+                    subsets = [s for s in start_scheme.subsets]
+                    
+                    # sort the subsets, to keep results consistent over re-runs
+                    subsets.sort(key = lambda x: 1.0/float(len(x.columns)))
+                    
+                    # run through all subsets
+                    for i, sub in enumerate(subsets):
+                        found = 0
+                        state_problems = self.alignment.check_state_probs(sub, the_config)
+
+                        if  (
+                                len(sub.columns) < the_config.min_subset_size or 
+                                state_problems == True
+                            ):
+
+                            # merge that subset with nearest neighbour
+                            new_pair = neighbour.get_closest_subset(sub, subsets, the_config)
+
+                            log.info("Subset '%s' will be merged with subset '%s'" %(new_pair[0].name, new_pair[1].name))
+                            new_pair_merged = subset_ops.merge_subsets(new_pair)
+                            start_scheme = neighbour.make_clustered_scheme(
+                                    start_scheme, "cleaned_scheme", new_pair, new_pair_merged, the_config)
+                            the_config.progress.begin(1, 1)
+                            self.analyse_scheme(start_scheme)
+                            subsets = [s for s in start_scheme.subsets]
+                            merges = merges + 1
+                            found = 1
+                            break
+
+
+                    # if we got to here, there were no subsets to merge
+                    if found == 0:
+                        keep_going = 0
+
+                    if len(subsets) == 1:
+                        log.error("The settings you have used for --all-states and/or --min-subset-size mean that all of your subsets have been merged into one prior to any analysis. Thus, no analysis is necessary. Please check and try again")
+                        raise AnalysisError
+
+                log.info("%d subsets merged because of --min-subset-size and/or --all-states settings" % merges)
+        return(start_scheme)
+
+    @logtools.log_info(log, "Performing relaxed clustering analysis")
+    def do_analysis(self):
+
+        # initialisation steps
+        model_selection = the_config.model_selection
+        partnum = len(the_config.user_subsets)
+
+        scheme_count = submodels.count_relaxed_clustering_schemes(
+            partnum, the_config.cluster_percent, the_config.cluster_max)
+        subset_count = submodels.count_relaxed_clustering_subsets(
+            partnum, the_config.cluster_percent, the_config.cluster_max)
+
+        log.info("PartitionFinder will have to analyse %d subsets to"
+                 " complete this analyses" % subset_count)
+        the_config.progress.begin(scheme_count, subset_count)
+
+        # Start with the most partitioned scheme, and record it.
+        with logtools.indented(log, "*** Analysing starting scheme ***"):
+            the_config.progress.begin(scheme_count, partnum)
+            start_scheme = scheme.create_scheme(
+                the_config, "start_scheme", range(partnum))
+            start_result = self.analyse_scheme(start_scheme)
+            start_score = start_result.score
+            if not the_config.quick:
+                the_config.reporter.write_scheme_summary(
+                    self.results.best_scheme, self.results.best_result)
+
+
+
+        subsets = [s for s in start_scheme.subsets]
+        partnum = len(subsets)
+        step = 1
+        while True:
+            with logtools.indented(log, "*** Relaxed clustering algorithm step %d of up to %d ***"
+                % (step, partnum - 1)):
+
+                # get distances between subsets
+                max_schemes = comb(len(start_scheme.subsets), 2)
+                log.info("Measuring the similarity of %d subset pairs" % max_schemes)
+                d_matrix = neighbour.get_distance_matrix(subsets,
+                    the_config.cluster_weights)
+
+                if step == 1:
+                    # Now initialise a change in info score matrix to inf
+                    c_matrix = np.empty(d_matrix.shape)
+                    c_matrix[:] = np.inf
+                    c_matrix = spatial.distance.squareform(c_matrix)
+
+                # 1. pick top N subset pairs from distance matrix
+                cutoff = int(math.ceil(max_schemes * (the_config.cluster_percent * 0.01)))
+                if cutoff <= 0: cutoff = 1
+                if the_config.cluster_max != None and cutoff>the_config.cluster_max:
+                    cutoff = the_config.cluster_max
+                log.info("Choosing the %d most similar subset pairs" % cutoff)
+                closest_pairs = neighbour.get_N_closest_subsets(
+                    subsets, the_config, cutoff, d_matrix)
+
+                # 2. analyse K subsets in top N that have not yet been analysed
+                pairs_todo = neighbour.get_pairs_todo(closest_pairs, c_matrix, subsets)
+                if len(pairs_todo)>0:
+                    log.info("Analysing %d new subset pairs" % len(pairs_todo))
+                    new_subs = []
+                    sub_tuples = []
+                    for pair in pairs_todo:
+                        new_sub = subset_ops.merge_subsets(pair)
+                        new_subs.append(new_sub)
+                        sub_tuples.append((new_sub, pair))
+
+                    the_config.progress.begin(scheme_count, len(new_subs))
+                    self.analyse_list_of_subsets(new_subs)
+
+                    # 3. for all K new subsets, update improvement matrix and find best pair
+                    log.info("Finding the best partitioning scheme")
+                    diffs = []
+                    scheme_name = "step_%d" %(step)
+                    for t in sub_tuples:
+                        pair_merged = t[0]
+                        pair = t[1]
+                        new_scheme = neighbour.make_clustered_scheme(
+                                start_scheme, scheme_name, pair, pair_merged, the_config)
+                        r = self.analyse_scheme(new_scheme)
+                        diff = r.score - start_score
+                        diffs.append(diff)
+
+                    c_matrix = neighbour.update_c_matrix(c_matrix, sub_tuples, subsets, diffs)
+
+                # 4. Find the best pair of subsets, and build a scheme based on that
+                # note that this matrix includes diagonals, which will all be zero
+                # since this is equivalent to comparing a scheme to itself.
+                # so we need to be careful to only proceed if we have a negative change
+                # which indicates an improvement in the score
+                best_change = np.amin(c_matrix)
+                best_scheme = start_scheme
+
+
+                if best_change>=0:
+                    log.info("Found no schemes that improve the score, stopping")
+                    break
+
+                while best_change<0:
+ 
+                    best_pair = neighbour.get_best_pair(c_matrix, best_change, subsets)
+                    best_merged = subset_ops.merge_subsets(best_pair)
+                    best_scheme = neighbour.make_clustered_scheme(
+                        start_scheme, scheme_name, best_pair, best_merged, the_config)
+                    start_scheme = best_scheme
+
+                    log.info("Combining subsets: '%s' and '%s'" %(best_pair[0].name, best_pair[1].name))
+                    log.info("This improves the %s score by: %s", the_config.model_selection, str(abs(best_change)))
+   
+                    # reset_c_matrix and the subset list
+                    c_matrix = neighbour.reset_c_matrix(c_matrix, list(best_pair), [best_merged], subsets)
+                                    
+                    # we update the subset list in a way that means its structure tracks the c-matrix
+                    subsets = neighbour.reset_subsets(subsets, list(best_pair), [best_merged])
+
+                    best_change = np.amin(c_matrix)
+
+                # the best change can get updated a fraction at this point
+                # because calaculting the info score on the whole alignment
+                # is a little different from doing it on the one subset
+                best_result = self.analyse_scheme(best_scheme)
+                best_change = self.results.best_score - start_score
+
+
+                log.info("The best scheme has %d subsets and improves the %s score by %.2f to %.1f",
+                    len(best_scheme.subsets),
+                    the_config.model_selection,
+                    np.abs(best_change),
+                    self.results.best_score)
+                start_scheme = best_scheme
+                start_score = best_result.score
+
+
+                if not the_config.quick:
+                    the_config.reporter.write_scheme_summary(
+                        best_scheme, best_result)
+
+
+                if len(set(start_scheme.subsets)) == 1:
+                    break
+
+                step += 1
+
+        log.info("Relaxed clustering algorithm finished after %d steps" % step)
+        log.info("Best scoring scheme is scheme %s, with %s score of %.3f"
+                 % (self.results.best_scheme.name, model_selection,
+                    self.results.best_score))
+
+        if the_config.min_subset_size or the_config.all_states:
+            best_scheme = self.clean_scheme(best_scheme)
+            best_result = self.analyse_scheme(best_scheme)
+            self.results.best_result = best_result 
+            self.results.best_score = best_result.score
+            self.results.best_scheme = best_scheme
+            log.info("Best scoring scheme after cleaning is scheme %s, with %s score of %.3f"
+                     % (self.results.best_scheme.name, model_selection,
+                        self.results.best_score))
+
+
+        the_config.reporter.write_best_scheme(self.results)
 
 
 class KmeansAnalysis(Analysis):
@@ -885,6 +1106,8 @@ def choose_method(search):
         method = StrictClusteringAnalysis
     elif search == 'rcluster':
         method = RelaxedClusteringAnalysis
+    elif search == 'fcluster':
+        method = FastRelaxedClusteringAnalysis
     elif search == 'kmeans':
         method = KmeansAnalysis
     else:
