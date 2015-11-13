@@ -184,7 +184,7 @@ class GreedyAnalysis(Analysis):
                     c_matrix = spatial.distance.squareform(c_matrix)
 
                 # 1. pick top N subset pairs from distance matrix
-                cutoff = max_schemes
+                cutoff = max_schemes # this defines the greedy algorithm: we look at all schemes
 
                 closest_pairs = neighbour.get_N_closest_subsets(
                     subsets, the_config, cutoff, d_matrix)
