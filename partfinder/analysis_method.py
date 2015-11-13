@@ -392,7 +392,7 @@ class RelaxedClusteringAnalysis(Analysis):
                 # 1. pick top N subset pairs from distance matrix
                 cutoff = int(math.ceil(max_schemes * (the_config.cluster_percent * 0.01)))
                 if cutoff <= 0: cutoff = 1
-                if the_config.cluster_max != None and cutoff>the_config.cluster_max:
+                if the_config.cluster_max != None and cutoff > the_config.cluster_max:
                     cutoff = the_config.cluster_max
                 log.info("Choosing the %d most similar subset pairs" % cutoff)
                 closest_pairs = neighbour.get_N_closest_subsets(
