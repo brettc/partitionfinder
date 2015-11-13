@@ -293,7 +293,7 @@ class TextReporter(object):
         output.write(scheme_header_template % ("model_selection",
                                                 self.cfg.model_selection))
         output.write(scheme_header_template % ("search", self.cfg.search))
-        if self.cfg.search in ["rcluster", "hcluster", 'fcluster']:
+        if self.cfg.search in ["rcluster", "hcluster", "rclusterf"]:
             pretty_weights = "rate = %s, base = %s, model = %s, alpha = %s" %(
                                str(self.cfg.cluster_weights["rate"]),
                                str(self.cfg.cluster_weights["freqs"]),
@@ -356,7 +356,7 @@ def write_citation_text(self):
                     "partitioning schemes for phylogenomic datasets. "
                     "BMC evolutionary biology, 14(1), 82.")
 
-    ref_fcluster = ref_PF2
+    ref_rclusterf = ref_rcluster
 
     ref_kmeans = ("Frandsen, P. B., Calcott, B., Mayer, C., & Lanfear, R. "
                   "(2015). Automatic selection of partitioning schemes for "
@@ -401,8 +401,8 @@ def write_citation_text(self):
     elif self.cfg.search == "greedy":
         citation_text.append("%s\n" % ref_PF1)
 
-    elif self.cfg.search == "fcluster":
-        citation_text.append("%s\n" % ref_fcluster)
+    elif self.cfg.search == "rclusterf":
+        citation_text.append("%s\n" % ref_rclusterf)
 
 
     citation_text.append("\n")
