@@ -23,6 +23,11 @@ import cPickle as pickle
 import subset
 from util import get_aic, get_aicc, get_bic
 from scipy.stats import chi2 
+from util import PartitionFinderError
+
+class AnalysisError(PartitionFinderError):
+    pass
+
 
 def columnset_to_string(colset):
     s = list(colset)
@@ -107,16 +112,25 @@ def subsets_overlap(subset_list):
 
     return ov
 
-def check_against_alignment(full_subset, alignment):
+def check_against_alignment(full_subset, alignment, the_config):
     """Check the subset definition against the alignment"""
 
     alignment_set = set(range(0, alignment.sequence_length))
     leftout = alignment_set - full_subset.column_set
     if leftout:
-        # This does not raise an error, just a warning
         log.warning(
             "These columns are missing from the block definitions: %s",
             columnset_to_string(leftout))
+        if the_config.ml_tree:
+            log.error(
+                "You cannot use the --ml-tree option (to estimate a Maximum"
+                " Likelihood starting tree) when you have columns missing "
+                "from your data block defintions. You can do one of three "
+                "things: (i) change your block definitions to include all "
+                "sites; (ii) remove the sites you don't want from your "
+                "alignment; or (iii) do not use the --ml-tree option"
+            )
+            raise AnalysisError
 
 
 def split_subset(a_subset, cluster_list):
