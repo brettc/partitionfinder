@@ -157,6 +157,13 @@ def parse_args(datatype, cmdargs=None):
         action="store_true", dest="raxml",
         help="Use RAxML (rather than PhyML) to do the analysis. See the manual"
     )
+
+    op.add_option(
+        "-m", "--ml-tree",
+        action="store_true", dest="ml_tree", default=False,
+        help="Estimate a starting tree using maximum likelihood in RAxML"
+    )
+
     op.add_option(
         "--cmdline-extras",
         type="str", dest="cmdline_extras", default="", metavar="N",
@@ -371,7 +378,8 @@ def main(name, datatype, passed_args=None):
                                    options.kmeans, 
                                    options.quick,
                                    options.min_subset_size,
-                                   options.all_states)
+                                   options.all_states,
+                                   options.ml_tree)
         cfg = config.the_config
 
         # Set up the progress callback
