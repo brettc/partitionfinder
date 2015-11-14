@@ -23,6 +23,7 @@ import sys
 import fnmatch
 import util
 from database import DataLayout, DataRecord
+from reporter import write_raxml_partitions
 
 from pyparsing import (
     Word, Literal, nums, Suppress, ParseException,
@@ -38,9 +39,11 @@ _dna_letters = "ATCG"
 # bug when calculating site likelihoods, this needs to be changed back to
 # "raxml" once a newer version without the bug is compiled.
 _binary_name = 'raxml'
+_binary_name_pthreads = 'raxml_pthreads'
 if sys.platform == 'win32':
     _binary_name += ".exe"
 _raxml_binary = None
+_raxml_pthreads_binary = None
 
 
 def make_data_layout(cfg):
@@ -56,6 +59,66 @@ def run_raxml(command):
     if _raxml_binary is None:
         _raxml_binary = util.find_program(_binary_name)
     util.run_program(_raxml_binary, command)
+
+def run_raxml_pthreads(command, cpus):
+    global _raxml_pthreads_binary
+    if _raxml_pthreads_binary is None:
+        _raxml_pthreads_binary = util.find_program(_binary_name_pthreads)
+    command = " ".join([command, "-T", str(cpus), " "])
+    util.run_program(_raxml_pthreads_binary, command)
+
+
+def write_partition_file(scheme, alignment_path):
+    ''' Write a raxml partitions file to make an ML tree '''
+    aln_dir, fname = os.path.split(alignment_path)
+    partition_filepath = os.path.join(aln_dir, 'partitions.txt')
+    partition_filehandle = open(partition_filepath, 'w')
+    sorted_subsets = [sub for sub in scheme]
+    sorted_subsets.sort(key=lambda sub: min(sub.columns), reverse=False)
+    write_raxml_partitions(scheme, partition_filehandle, sorted_subsets)
+    return(partition_filepath)
+
+
+def make_ml_topology(alignment_path, datatype, cmdline_extras, scheme, cpus):
+    '''Make a ML tree to from a given partitioning scheme'''
+    log.info("Making Maximum Likelihood tree with RAxML for %s", alignment_path)
+
+    partition_file = write_partition_file(scheme, alignment_path)
+
+    cmdline_extras = check_defaults(cmdline_extras)
+
+    # First get the MP topology like this (-p is a hard-coded random number seed):
+    if datatype == "DNA":
+        command = "-s '%s' -m GTRGAMMA -O -n BLTREE -# 1 -p 123456789 -q %s %s " % (
+            alignment_path, partition_file, cmdline_extras)
+    elif datatype == "protein":
+        command = "-s '%s' -m PROTGAMMALG -n BLTREE -# 1 -p 123456789 -q %s %s " % (
+            alignment_path, partition_file, cmdline_extras)
+    else:
+        log.error("Unrecognised datatype: '%s'" % (datatype))
+        raise util.PartitionFinderError
+
+    # Force raxml to write to the dir with the alignment in it
+    aln_dir, fname = os.path.split(alignment_path)
+    command = ''.join([command, " -w '%s'" % os.path.abspath(aln_dir)])
+
+    run_raxml_pthreads(command, cpus)
+    dir, aln = os.path.split(alignment_path)
+    tree_path = os.path.join(dir, "RAxML_result.BLTREE")
+
+    if not os.path.exists(tree_path):
+        log.error("RAxML tree topology should be here but can't be be found: '%s'" % (tree_path))
+        raise(RaxmlError)
+    else:
+        log.debug("RAxML tree with branch lengths ('%s') looks like this: ", tree_path)
+        with open(tree_path, 'r') as fin:
+            log.debug('%s', fin.read())
+
+    log.info("ML topology estimation finished")
+
+    return tree_path
+
+
 
 
 def make_topology(alignment_path, datatype, cmdline_extras):
