@@ -32,6 +32,7 @@ import collections
 from config import the_config
 from util import PartitionFinderError, ExternalProgramError
 import util
+import raxml
 
 class AnalysisError(PartitionFinderError):
     pass
@@ -150,7 +151,7 @@ class Analysis(object):
         self.filtered_alignment.write(self.filtered_alignment_path)
 
         # Check the full subset against the alignment
-        subset_ops.check_against_alignment(subset_with_everything, self.alignment)
+        subset_ops.check_against_alignment(subset_with_everything, self.alignment, the_config)
 
         # We start by copying the alignment
         self.alignment_path = os.path.join(
@@ -172,18 +173,31 @@ class Analysis(object):
                 log.info("Using user supplied topology at %s" % user_path)
                 topology_path = os.path.join(the_config.start_tree_path, 'user_topology.phy')
                 util.dupfile(user_path, topology_path)
-            else:
+                need_bl = True
+            elif the_config.ml_tree == False:
                 log.debug(
                     "didn't find tree at %s, making a new one" % tree_path)
                 topology_path = the_config.processor.make_topology(
                     self.filtered_alignment_path, the_config.datatype, the_config.cmdline_extras)
+                need_bl = True
+            elif the_config.ml_tree == True:
+                log.debug(
+                    "didn't find tree at %s, making an ML tree with RAxML" % tree_path)
 
-            # Now estimate branch lengths
-            tree_path = the_config.processor.make_branch_lengths(
-                self.filtered_alignment_path,
-                topology_path,
-                the_config.datatype,
-                the_config.cmdline_extras)
+                tree_scheme = scheme.create_scheme(
+                    the_config, "tree_scheme", range(len(the_config.user_subsets)))
+
+                topology_path = raxml.make_ml_topology(
+                    self.filtered_alignment_path, the_config.datatype, the_config.cmdline_extras, tree_scheme, self.threads)
+                need_bl = False
+
+            if need_bl == True:
+                # Now estimate branch lengths
+                tree_path = the_config.processor.make_branch_lengths(
+                    self.filtered_alignment_path,
+                    topology_path,
+                    the_config.datatype,
+                    the_config.cmdline_extras)
 
         self.tree_path = tree_path
         log.debug("Starting tree with branch lengths is here: %s" %
