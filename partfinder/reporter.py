@@ -316,7 +316,7 @@ class TextReporter(object):
             output.write(c)
 
 
-def write_raxml_partitions(sch, output, sorted_subsets):
+def write_raxml_partitions(sch, output, sorted_subsets, use_lg = False):
     """Print out partition definitions in RaxML-like format, might be
     useful to some people
     """
@@ -332,7 +332,10 @@ def write_raxml_partitions(sch, output, sorted_subsets):
         if the_config.datatype == "DNA":
             model = 'DNA'
         elif the_config.datatype == "protein":
-            model = get_raxml_protein_modelstring(sub.best_model)
+            if use_lg == False:
+                model = get_raxml_protein_modelstring(sub.best_model)
+            else:
+                model = get_raxml_protein_modelstring("LG+G")
         else:
             raise RuntimeError
 

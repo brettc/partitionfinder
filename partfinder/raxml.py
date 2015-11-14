@@ -75,7 +75,7 @@ def write_partition_file(scheme, alignment_path):
     partition_filehandle = open(partition_filepath, 'w')
     sorted_subsets = [sub for sub in scheme]
     sorted_subsets.sort(key=lambda sub: min(sub.columns), reverse=False)
-    write_raxml_partitions(scheme, partition_filehandle, sorted_subsets)
+    write_raxml_partitions(scheme, partition_filehandle, sorted_subsets, use_lg = True)
     return(partition_filepath)
 
 
