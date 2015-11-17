@@ -130,7 +130,7 @@ class TextReporter(object):
                 sites = [x + 1 for x in sub.columns]
                 partition_sites = str(sites).strip('[]')
             else:
-                partition_sites = sub.site_description
+                partition_sites = sub.site_description_no_commas
 
             output.write("\tcharset Subset%s = %s;\n" % (subset_number, partition_sites))
             charpartition.append("Group%s:Subset%s" % (subset_number, subset_number))
@@ -231,7 +231,7 @@ class TextReporter(object):
         output.write("Warning: MrBayes only allows a relatively small "
                      "collection of models. If any model in your analysis is not one that "
                      "is included in MrBayes (e.g. by setting nst = 1, 2, or "
-                     "6 for DNA sequences; or is not in the available lis of protein models)" 
+                     "6 for DNA sequences; or is not in the available list of protein models for MrBayes)" 
                      "then this MrBayes block will just set that model "
                      "to nst = 6 for DNA, or 'wag' for Protein. Similarly, the only additional parameters "
                      "that this MrBayes block will include are +I and +G. Other "
@@ -248,21 +248,16 @@ class TextReporter(object):
                 sites = [x + 1 for x in sub.columns]
                 partition_sites = str(sites).strip('[]')
             else:
-                partition_sites = sub.site_description
+                partition_sites = sub.site_description_no_commas
 
             output.write("\tcharset Subset%s = %s;\n" % (subset_number, partition_sites))
-            charpartition.append("Group%s:Subset%s" % (subset_number, subset_number))
+            charpartition.append("Subset%s" % (subset_number))
             subset_number += 1
-        output.write('\n\tpartition PartitionFinder = %s;\n' % ', '.join(charpartition))
+        output.write('\n\tpartition PartitionFinder = %d:%s;\n' %(len(charpartition), ', '.join(charpartition)))
         output.write('\tset partition=PartitionFinder;\n\n')
 
         subset_number = 1
         for sub in sorted_subsets:
-            if self.cfg.search in _odd_searches:
-                sites = [x + 1 for x in sub.columns]
-                partition_sites = str(sites).strip('[]')
-            else:
-                partition_sites = sub.site_description
 
             if self.cfg.datatype == "DNA":
                 model_text = get_mrbayes_modeltext_DNA(sub.best_model, subset_number)

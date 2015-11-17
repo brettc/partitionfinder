@@ -112,8 +112,7 @@ class Subset(object):
         except:
             return "NA"
 
-    @property
-    def site_description(self):
+    def get_site_description(self, use_commas):
         try:
             s = []
             for desc in self.description:
@@ -123,10 +122,22 @@ class Subset(object):
                 else:
                     text = "%s-%s\\%s" % tuple(desc)
                 s.append(text)
-            site_description = ', '.join(s)
+
+            if use_commas:
+                site_description = ', '.join(s)
+            else: 
+                site_description = ' '.join(s)
             return site_description 
         except:
             return ', '.join(map(str, self.columns))
+
+    @property
+    def site_description(self):
+        return self.get_site_description(use_commas = True)
+
+    @property
+    def site_description_no_commas(self):
+        return self.get_site_description(False)
 
     def __repr__(self):
         return "Subset(%s..)" % self.name[:5]
