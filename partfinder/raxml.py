@@ -85,15 +85,14 @@ def make_ml_topology(alignment_path, datatype, cmdline_extras, scheme, cpus):
 
     partition_file = write_partition_file(scheme, alignment_path)
 
-    cmdline_extras = check_defaults(cmdline_extras)
-
-    # First get the MP topology like this (-p is a hard-coded random number seed):
+    # First get the ML topology like this (-p is a hard-coded random number seed):
+    # we do this to an accuracy of 10 log likelihood units with -e 10
     if datatype == "DNA":
-        command = "-s '%s' -m GTRGAMMA -O -n BLTREE -# 1 -p 123456789 -q %s %s " % (
-            alignment_path, partition_file, cmdline_extras)
+        command = "-s '%s' -m GTRGAMMA -O -n BLTREE -# 1 -p 123456789 -q %s -e 10 " % (
+            alignment_path, partition_file)
     elif datatype == "protein":
-        command = "-s '%s' -m PROTGAMMALG -n BLTREE -# 1 -p 123456789 -q %s %s " % (
-            alignment_path, partition_file, cmdline_extras)
+        command = "-s '%s' -m PROTGAMMALG -n BLTREE -# 1 -p 123456789 -q %s -e 10 " % (
+            alignment_path, partition_file)
     else:
         log.error("Unrecognised datatype: '%s'" % (datatype))
         raise util.PartitionFinderError
