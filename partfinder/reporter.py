@@ -296,7 +296,7 @@ class TextReporter(object):
                                str(self.cfg.cluster_weights["alpha"]))
             output.write(scheme_header_template % ("weights", pretty_weights))
 
-        if self.cfg.search == "rcluster":
+        if self.cfg.search.startswith("rcluster"):
             output.write(scheme_header_template % ("rcluster-percent",
                                                    self.cfg.cluster_percent))
             output.write(scheme_header_template % ("rcluster-max",
