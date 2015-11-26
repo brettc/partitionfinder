@@ -184,7 +184,7 @@ class GreedyAnalysis(Analysis):
                     c_matrix = spatial.distance.squareform(c_matrix)
 
                 # 1. pick top N subset pairs from distance matrix
-                cutoff = max_schemes
+                cutoff = max_schemes # this defines the greedy algorithm: we look at all schemes
 
                 closest_pairs = neighbour.get_N_closest_subsets(
                     subsets, the_config, cutoff, d_matrix)
@@ -283,12 +283,13 @@ class GreedyAnalysis(Analysis):
 
 class RelaxedClusteringAnalysis(Analysis):
     '''
-    A relaxed clustering algorithm for heuristic partitioning searches
+    A fast relaxed clustering algorithm for heuristic partitioning searches
 
     1. Rank subsets by their similarity (defined by clustering-weights)
     2. Analyse min(cluster-percent or cluster-max) most similar schemes
-    3. Take the scheme that improves the AIC/BIC score the most
-    4. Quit if no improvements.
+    3. Sequentially perform all groupings that imporve the AICc/BIC score, in order of improvement
+    4. Analyse resulting scheme, iterate to 2.
+    5. Quit if no improvements.
     '''
 
     def clean_scheme(self, start_scheme):
@@ -391,7 +392,7 @@ class RelaxedClusteringAnalysis(Analysis):
                 # 1. pick top N subset pairs from distance matrix
                 cutoff = int(math.ceil(max_schemes * (the_config.cluster_percent * 0.01)))
                 if cutoff <= 0: cutoff = 1
-                if the_config.cluster_max != None and cutoff>the_config.cluster_max:
+                if the_config.cluster_max != None and cutoff > the_config.cluster_max:
                     cutoff = the_config.cluster_max
                 log.info("Choosing the %d most similar subset pairs" % cutoff)
                 closest_pairs = neighbour.get_N_closest_subsets(
@@ -432,44 +433,52 @@ class RelaxedClusteringAnalysis(Analysis):
                 # so we need to be careful to only proceed if we have a negative change
                 # which indicates an improvement in the score
                 best_change = np.amin(c_matrix)
+                best_scheme = start_scheme
 
-                log.debug("Biggest improvement in info score: %s", str(best_change))
 
                 if best_change>=0:
                     log.info("Found no schemes that improve the score, stopping")
                     break
 
-                best_pair = neighbour.get_best_pair(c_matrix, best_change, subsets)
+                while best_change<0:
+ 
+                    best_pair = neighbour.get_best_pair(c_matrix, best_change, subsets)
+                    best_merged = subset_ops.merge_subsets(best_pair)
+                    best_scheme = neighbour.make_clustered_scheme(
+                        start_scheme, scheme_name, best_pair, best_merged, the_config)
+                    start_scheme = best_scheme
 
-                best_merged = subset_ops.merge_subsets(best_pair)
-                best_scheme = neighbour.make_clustered_scheme(
-                    start_scheme, scheme_name, best_pair, best_merged, the_config)
-                best_result = self.analyse_scheme(best_scheme)
+                    log.info("Combining subsets: '%s' and '%s'" %(best_pair[0].name, best_pair[1].name))
+                    log.info("This improves the %s score by: %s", the_config.model_selection, str(abs(best_change)))
+   
+                    # reset_c_matrix and the subset list
+                    c_matrix = neighbour.reset_c_matrix(c_matrix, list(best_pair), [best_merged], subsets)
+                                    
+                    # we update the subset list in a way that means its structure tracks the c-matrix
+                    subsets = neighbour.reset_subsets(subsets, list(best_pair), [best_merged])
+
+                    best_change = np.amin(c_matrix)
+
+                    if the_config.search == 'rcluster':
+                        break
+                        # otherwise we are using rclusterf, which continues in this loop
+
 
                 # the best change can get updated a fraction at this point
                 # because calaculting the info score on the whole alignment
                 # is a little different from doing it on the one subset
+                best_result = self.analyse_scheme(best_scheme)
                 best_change = self.results.best_score - start_score
 
 
-                log.info("Best scheme combines subsets: '%s' and '%s'" %(best_pair[0].name, best_pair[1].name))
-
-
-                log.info("The best scheme improves the %s score by %.2f to %.1f",
+                log.info("The best scheme has %d subsets and improves the %s score by %.2f to %.1f",
+                    len(best_scheme.subsets),
                     the_config.model_selection,
                     np.abs(best_change),
                     self.results.best_score)
                 start_scheme = best_scheme
                 start_score = best_result.score
 
-                log.debug("Best pair: %s", str([s.name for s in best_pair]))
-                log.debug("Merged into: %s", str([best_merged.name]))
-
-                # 5. reset_c_matrix and the subset list
-                c_matrix = neighbour.reset_c_matrix(c_matrix, list(best_pair), [best_merged], subsets)
-                                
-                # we update the subset list in a way that means its structure tracks the c-matrix
-                subsets = neighbour.reset_subsets(subsets, list(best_pair), [best_merged])
 
                 if not the_config.quick:
                     the_config.reporter.write_scheme_summary(
@@ -487,8 +496,10 @@ class RelaxedClusteringAnalysis(Analysis):
                     self.results.best_score))
 
         if the_config.min_subset_size or the_config.all_states:
-            best_scheme = self.clean_scheme(best_scheme)
+            best_scheme = self.clean_scheme(self.results.best_scheme)
             best_result = self.analyse_scheme(best_scheme)
+
+            # scores after cleaning can be worse, so we reset these trackers...
             self.results.best_result = best_result 
             self.results.best_score = best_result.score
             self.results.best_scheme = best_scheme
@@ -498,7 +509,6 @@ class RelaxedClusteringAnalysis(Analysis):
 
 
         the_config.reporter.write_best_scheme(self.results)
-
 
 
 class KmeansAnalysis(Analysis):
@@ -884,6 +894,8 @@ def choose_method(search):
     elif search == 'hcluster':
         method = StrictClusteringAnalysis
     elif search == 'rcluster':
+        method = RelaxedClusteringAnalysis
+    elif search == 'rclusterf':
         method = RelaxedClusteringAnalysis
     elif search == 'kmeans':
         method = KmeansAnalysis

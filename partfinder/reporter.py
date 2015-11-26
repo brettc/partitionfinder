@@ -130,7 +130,7 @@ class TextReporter(object):
                 sites = [x + 1 for x in sub.columns]
                 partition_sites = str(sites).strip('[]')
             else:
-                partition_sites = sub.site_description
+                partition_sites = sub.site_description_no_commas
 
             output.write("\tcharset Subset%s = %s;\n" % (subset_number, partition_sites))
             charpartition.append("Group%s:Subset%s" % (subset_number, subset_number))
@@ -212,7 +212,7 @@ class TextReporter(object):
         output.write("Warning: MrBayes only allows a relatively small "
                      "collection of models. If any model in your analysis is not one that "
                      "is included in MrBayes (e.g. by setting nst = 1, 2, or "
-                     "6 for DNA sequences; or is not in the available lis of protein models)" 
+                     "6 for DNA sequences; or is not in the available list of protein models for MrBayes)" 
                      "then this MrBayes block will just set that model "
                      "to nst = 6 for DNA, or 'wag' for Protein. Similarly, the only additional parameters "
                      "that this MrBayes block will include are +I and +G. Other "
@@ -229,21 +229,16 @@ class TextReporter(object):
                 sites = [x + 1 for x in sub.columns]
                 partition_sites = str(sites).strip('[]')
             else:
-                partition_sites = sub.site_description
+                partition_sites = sub.site_description_no_commas
 
             output.write("\tcharset Subset%s = %s;\n" % (subset_number, partition_sites))
-            charpartition.append("Group%s:Subset%s" % (subset_number, subset_number))
+            charpartition.append("Subset%s" % (subset_number))
             subset_number += 1
-        output.write('\n\tpartition PartitionFinder = %s;\n' % ', '.join(charpartition))
+        output.write('\n\tpartition PartitionFinder = %d:%s;\n' %(len(charpartition), ', '.join(charpartition)))
         output.write('\tset partition=PartitionFinder;\n\n')
 
         subset_number = 1
         for sub in sorted_subsets:
-            if self.cfg.search in _odd_searches:
-                sites = [x + 1 for x in sub.columns]
-                partition_sites = str(sites).strip('[]')
-            else:
-                partition_sites = sub.site_description
 
             if self.cfg.datatype == "DNA":
                 model_text = get_mrbayes_modeltext_DNA(sub.best_model, subset_number)
@@ -274,7 +269,7 @@ class TextReporter(object):
         output.write(scheme_header_template % ("model_selection",
                                                 self.cfg.model_selection))
         output.write(scheme_header_template % ("search", self.cfg.search))
-        if self.cfg.search in ["rcluster", "hcluster"]:
+        if self.cfg.search in ["rcluster", "hcluster", "rclusterf"]:
             pretty_weights = "rate = %s, base = %s, model = %s, alpha = %s" %(
                                str(self.cfg.cluster_weights["rate"]),
                                str(self.cfg.cluster_weights["freqs"]),
@@ -282,7 +277,7 @@ class TextReporter(object):
                                str(self.cfg.cluster_weights["alpha"]))
             output.write(scheme_header_template % ("weights", pretty_weights))
 
-        if self.cfg.search == "rcluster":
+        if self.cfg.search.startswith("rcluster"):
             output.write(scheme_header_template % ("rcluster-percent",
                                                    self.cfg.cluster_percent))
             output.write(scheme_header_template % ("rcluster-max",
@@ -364,6 +359,8 @@ def write_citation_text(self):
                     "partitioning schemes for phylogenomic datasets. "
                     "BMC evolutionary biology, 14(1), 82.")
 
+    ref_rclusterf = ref_rcluster
+
     ref_kmeans = ("Frandsen, P. B., Calcott, B., Mayer, C., & Lanfear, R. "
                   "(2015). Automatic selection of partitioning schemes for "
                   "phylogenetic analyses using iterative k-means clustering "
@@ -406,6 +403,10 @@ def write_citation_text(self):
 
     elif self.cfg.search == "greedy":
         citation_text.append("%s\n" % ref_PF1)
+
+    elif self.cfg.search == "rclusterf":
+        citation_text.append("%s\n" % ref_rclusterf)
+
 
     citation_text.append("\n")
     if self.cfg.phylogeny_program == 'phyml':
