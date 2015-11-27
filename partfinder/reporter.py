@@ -178,10 +178,13 @@ class TextReporter(object):
         output.write("\n\nScheme Description in PartitionFinder format\n")
         output.write("Scheme_%s = %s;" % (sch.name, pf_scheme_description))
 
+
     def write_raxml(self, sch, result, output, sorted_subsets):
-        """Print out partition definitions in RaxML-like format, might be
-        useful to some people
-        """
+        self.write_raxml_warning(output)
+        write_raxml_partitions(sch, output, sorted_subsets)
+
+
+    def write_raxml_warning(self, output):
         output.write("\n\nRaxML-style partition definitions\n")
         output.write("Warning: RAxML allows for only a single model of rate"
                      " heterogeneity in partitioned analyses. I.e. all "
@@ -199,28 +202,6 @@ class TextReporter(object):
                      "Choose the scheme with the lowest AIC/AICc/BIC score. "
                      "Note that these re-runs will be quick!\n\n" 
                     )
-
-        subset_number = 1
-        for sub in sorted_subsets:
-            if self.cfg.search in _odd_searches:
-                sites = [x + 1 for x in sub.columns]
-                partition_sites = str(sites).strip('[]')
-            else:
-                partition_sites = sub.site_description
-
-            if self.cfg.datatype == "DNA":
-                model = 'DNA'
-            elif self.cfg.datatype == "protein":
-                model = get_raxml_protein_modelstring(sub.best_model)
-            else:
-                raise RuntimeError
-
-            output.write("%s, Subset%s = %s" % (model, subset_number, partition_sites))
-            output.write("\n")
-            subset_number += 1
-
-
-
 
     def write_mrbayes(self, sch, result, output, sorted_subsets):
         """Print out partition definitions in MrBayes format, might be
@@ -329,6 +310,33 @@ class TextReporter(object):
             log.info("%s", c)
             output.write(c)
 
+
+def write_raxml_partitions(sch, output, sorted_subsets, use_lg = False):
+    """Print out partition definitions in RaxML-like format, might be
+    useful to some people
+    """
+
+    subset_number = 1
+    for sub in sorted_subsets:
+        if the_config.search in _odd_searches:
+            sites = [x + 1 for x in sub.columns]
+            partition_sites = str(sites).strip('[]')
+        else:
+            partition_sites = sub.site_description
+
+        if the_config.datatype == "DNA":
+            model = 'DNA'
+        elif the_config.datatype == "protein":
+            if use_lg == False:
+                model = get_raxml_protein_modelstring(sub.best_model)
+            else:
+                model = get_raxml_protein_modelstring("LG+G")
+        else:
+            raise RuntimeError
+
+        output.write("%s, Subset%s = %s" % (model, subset_number, partition_sites))
+        output.write("\n")
+        subset_number += 1
 
 
 def write_citation_text(self):

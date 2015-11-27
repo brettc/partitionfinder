@@ -45,7 +45,7 @@ class Configuration(object):
 
     def init(self, datatype="DNA", phylogeny_program='phyml',
                  save_phylofiles=False, cmdline_extras="", cluster_weights=None,
-                 cluster_percent=10.0, cluster_max=1000, kmeans='entropy', quick=False, min_subset_size = 100, all_states = False):
+                 cluster_percent=10.0, cluster_max=1000, kmeans='entropy', quick=False, min_subset_size = 100, all_states = False, ml_tree = False):
 
 
         log.info("------------- Configuring Parameters -------------")
@@ -66,6 +66,7 @@ class Configuration(object):
         self.quick = quick
         self.min_subset_size = min_subset_size
         self.all_states = all_states
+        self.ml_tree = ml_tree
 
 
         # Record this
@@ -399,6 +400,7 @@ class Configuration(object):
             'program' : self.phylogeny_program,
             'datablocks' : datablocks,
             'topology' : topology,
+            'start_tree': self.ml_tree
             # self.partitions.partitions,
         }
 
@@ -458,9 +460,13 @@ class Configuration(object):
         if not old_restart_info['program'] == restart_info['program']:
             fail.append(
                 "phylogeny_program (the --raxml commandline option)")
-        #
+        
         if not old_restart_info['topology'] == restart_info['topology']:
             fail.append("user_tree_topology")
+
+        if not old_restart_info['start_tree'] == restart_info['start_tree']:
+            fail.append("starting tree (i.e. the --ml-tree option)")
+
 
         if len(fail) > 0:
             log.error("There are subsets stored, but PartitionFinder has detected that these were run using a different .cfg setup")
