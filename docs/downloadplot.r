@@ -46,16 +46,7 @@ d <- c[c(2:nrow(c)),]
 d$downloads <- m$downloads[19:length(m$downloads)] + m$downloads[19:length(m$downloads)]
 d$downloads.per.cite <- d$downloads / d$citations.googlescholar
 
-e <- d[,c(1,2)]
-e$type <- "citations"
-f <- d[,c(1,4)]
-f$type <- "downloads.per.citation"
-
-names(e) <- names(f) <- c("date", "value", "type")
-g <- rbind(e, f)
-
-quartz(width=10, height=5)
-p <- ggplot(f, aes(date, downloads.per.cite, colour = type))
+p <- ggplot(d, aes(x = date, y = downloads.per.cite))
 p + geom_point() + geom_smooth(stat="identity")
 dev.copy2pdf(file="~/Documents/github/partitionfinder/docs/citationsplot2.pdf")
 dev.off()
