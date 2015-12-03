@@ -435,15 +435,13 @@ class RelaxedClusteringAnalysis(Analysis):
                 best_change = np.amin(c_matrix)
                 best_scheme = start_scheme
 
-
                 if best_change>=0:
                     log.info("Found no schemes that improve the score, stopping")
                     break
 
                 median_improvement = np.median(c_matrix[c_matrix<0])
 
-
-                while best_change<median_improvement:
+                while best_change <= median_improvement:
  
                     best_pair = neighbour.get_best_pair(c_matrix, best_change, subsets)
                     best_merged = subset_ops.merge_subsets(best_pair)
