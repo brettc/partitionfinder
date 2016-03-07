@@ -73,7 +73,7 @@ def lumpings(scheme):
         sub = list(sub)
         sub.sort()
         #now replace all the instance of one number in lump with the other in sub
-        while lump.count(sub[1]) > 0:
+        while len(sub) > 1 and lump.count(sub[1]) > 0:
             lump[lump.index(sub[1])] = sub[0]
         lumpings.append(lump)
 
