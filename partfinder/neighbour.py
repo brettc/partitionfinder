@@ -58,7 +58,7 @@ def get_manhattan_matrix(rates, freqs, model, alpha, weights):
 
     if weights["rate"] > 0:
         r_dists = scipy.spatial.distance.pdist(np.array(rates), 'cityblock')
-        if np.amax(r_dists)>0:        
+        if r_dists and np.amax(r_dists)>0:
             norm = float(weights["rate"])/float(np.amax(r_dists))
             r_dists = np.multiply(r_dists, norm)
         distance_arrays.append(r_dists)
