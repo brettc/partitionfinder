@@ -20,7 +20,7 @@ DNA6    linked      all             bic         greedy      success
 DNA7    unlinked    all             aicc        all         success
 DNA8    unlinked    all             bic         greedy      success
 
-rerun01^linked	    selection*		bic         all         success (this is a direct rerun)
+rerun01 linked	    selection*		bic         all         success (this is a direct rerun)
 rerun02	linked	    selection*		aic         all         success (just changed selection to aic)
 rerun03	linked	    selection*		aicc        all         success (just changed selection to aicc)
 rerun04	linked	    selection*		bic         greedy      success (changed search to greedy)
@@ -29,16 +29,16 @@ rerun06	linked	    selection2**	bic         user        success (new set of mode
 rerun07	linked	    selection3***	bic         user        success (added one extra model)
 rerun08	linked	    selection4****	bic         user        success (removed three models)
 
-rerun09 unlinked    selection       bic         all         failure (shouldn't be able to switch to unlinked after linked, the subsets will need to be deleted and re-analysed)  
-rerun10 unlinked    selection       aic         all         failure (shouldn't be able to switch to unlinked after linked, the subsets will need to be deleted and re-analysed)  
-rerun11 unlinked    selection       aic         greedy      failure (shouldn't be able to switch to unlinked after linked, the subsets will need to be deleted and re-analysed)  
-rerun12 unlinked    selection       aicc        user        failure (shouldn't be able to switch to unlinked after linked, the subsets will need to be deleted and re-analysed)  
+rerun09 unlinked    selection       bic         all         failure (shouldn't be able to switch to unlinked after linked, the subsets will need to be deleted and re-analysed)
+rerun10 unlinked    selection       aic         all         failure (shouldn't be able to switch to unlinked after linked, the subsets will need to be deleted and re-analysed)
+rerun11 unlinked    selection       aic         greedy      failure (shouldn't be able to switch to unlinked after linked, the subsets will need to be deleted and re-analysed)
+rerun12 unlinked    selection       aicc        user        failure (shouldn't be able to switch to unlinked after linked, the subsets will need to be deleted and re-analysed)
 rerun13 unlinked    all             aicc        user        failure (shouldn't be able to switch to unlinked after linked, the subsets will need to be deleted and re-analysed)
 
 rerun14	linked	    selection		bic         all         failure (I edited a sequence in the original alignment)
 rerun15	linked	    selection		bic         all         failure (I edited a spp name in the original alignment)
 rerun16	linked	    selection		bic         all         failure (I edited a data_block definition to change the boundaries)
-rerun17	linked	    selection		bic         all         success (I added a data_block)
+rerun17	linked	    selection		bic         all         failure (I added a data_block)
 rerun18	linked	    selection		bic         all         failure (I removed a data_block - this could work in theory but right now we have it conservatively set up to fail, this is OK in my opinion)
 rerun19	linked	    selection		bic         all         failure (I changed the alignment filename, but the alignment itself is identical to the original. Again, this is conservative but OK)
 rerun20	linked	    selection		bic         user        failure (I screwed up the user definitions to include a data_block that doesn't exist)

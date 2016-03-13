@@ -1,210 +1,180 @@
-#Copyright (C) 2012 Robert Lanfear and Brett Calcott
+# Copyright (C) 2012 Robert Lanfear and Brett Calcott
 #
-#This program is free software: you can redistribute it and/or modify it
-#under the terms of the GNU General Public License as published by the
-#Free Software Foundation, either version 3 of the License, or (at your
-#option) any later version.
+# This program is free software: you can redistribute it and/or modify it under
+# the terms of the GNU General Public License as published by the Free Software
+# Foundation, either version 3 of the License, or (at your option) any later
+# version.
 #
-#This program is distributed in the hope that it will be useful, but
-#WITHOUT ANY WARRANTY; without even the implied warranty of
-#MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-#General Public License for more details. You should have received a copy
-#of the GNU General Public License along with this program.  If not, see
-#<http://www.gnu.org/licenses/>. PartitionFinder also includes the PhyML
-#program, the RAxML program, and the PyParsing library,
-#all of which are protected by their own licenses and conditions, using
-#PartitionFinder implies that you agree with those licences and conditions as well.
+# This program is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+# details. You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+# PartitionFinder also includes the PhyML program, the RAxML program, and the
+# PyParsing library, all of which are protected by their own licenses and
+# conditions, using PartitionFinder implies that you agree with those licences
+# and conditions as well.
 
-import subset
+import subset_ops
 import scheme
-from algorithm import euclidean_distance
+import numpy as np
+import scipy.spatial.distance
+import itertools
+from util import PartitionFinderError
 
-import logging
-log = logging.getLogger("cluster")
+import logtools
+log = logtools.get_logger()
 
 
-def get_ranked_list(final_distances):
+def get_ranked_list(distance_matrix, subsets, N):
     """
-    Return the closest subsets defined by a distance matrix usually there will
-    just be a pair that's closer than all other pairs BUT, it's feasible (if
-    unlikely) that >2 subsets are equally close.  This is possible if, e.g. all
-    weights are zero. Then we just want to group all the equally close
-    subsets...
-
-    So, we return a list of all the closest subsets
+    Return the N closest pairs of subsets in 'subsets' 
     """
 
-    # Let's make a dict keyed by the distance in the matrix, using setdefault
-    # to add things, in case there are subsets with identical pairwise
-    # distances
-    distances = {}
-    for pair in final_distances:
-        d = final_distances[pair]
+    # TODO. If/when anaconda moves to numpy v1.8, we can use
+    # a ~7x faster solution here, which uses np.argpartition()
+    # see here: http://stackoverflow.com/questions/20540889/
+    # extract-the-n-closest-pairs-from-a-numpy-distance-array
+    closest = distance_matrix.argsort()[:N]
+    n = len(subsets)
+    ti = np.triu_indices(n, 1)
+    r  = zip(ti[0][closest] + 1, ti[1][closest] + 1)
 
-        # Get any subs that we already know are that distance apart as a set
-        # default to empty set if it's a new distance
-        subs = distances.setdefault(d, set())
-
-        # Add subs that correspond to this cell
-        subs.add(pair[0])
-        subs.add(pair[1])
-
+    # and we look up all the subsets that correspond to each distance
+    # and add it to our ordered list of subset lists
     ordered_subsets = []
-    unique_distances = list(distances.keys())
-    unique_distances.sort()
-
-    for d in unique_distances:
-        ordered_subsets.append(list(distances[d]))
+    for i, pair in enumerate(r):
+        subset_group = [subsets[i-1] for i in pair]
+        ordered_subsets.append(subset_group)
 
     return ordered_subsets
 
+def get_manhattan_matrix(rates, freqs, model, alpha, weights):
 
-def get_pairwise_dists(subsets, rates, freqs, model, alpha, weights):
+    # get distances between all pairs for all nonzero weights
+    # for each matrix we then normalise and weight it
+    # by multiplying by the weight/max
+    distance_arrays = []
 
-    import itertools
-    #set up all pairwise combinations as iterators
-    s = itertools.combinations(subsets, 2)
-    r = itertools.combinations(rates, 2)
-    f = itertools.combinations(freqs, 2)
-    m = itertools.combinations(model, 2)
-    a = itertools.combinations(alpha, 2)
+    if weights["rate"] > 0:
+        r_dists = scipy.spatial.distance.pdist(np.array(rates), 'cityblock')
+        if np.amax(r_dists)>0:        
+            norm = float(weights["rate"])/float(np.amax(r_dists))
+            r_dists = np.multiply(r_dists, norm)
+        distance_arrays.append(r_dists)
+    if weights["freqs"] > 0:
+        f_dists = scipy.spatial.distance.pdist(np.array(freqs), 'cityblock')
+        if np.amax(f_dists)>0:
+            norm = float(weights["freqs"])/float(np.amax(f_dists))
+            f_dists = np.multiply(f_dists, norm)
+        distance_arrays.append(f_dists)
+    if weights["model"] > 0:
+        m_dists = scipy.spatial.distance.pdist(np.array(model), 'cityblock')
+        if np.amax(m_dists)>0:
+            norm = float(weights["model"])/float(np.amax(m_dists))
+            m_dists = np.multiply(m_dists, norm)
+        distance_arrays.append(m_dists)
+    if weights["alpha"] > 0:
+        a_dists = scipy.spatial.distance.pdist(np.array(alpha), 'cityblock')
+        if np.amax(a_dists)>0:
+            norm = float(weights["alpha"])/float(np.amax(a_dists))
+            a_dists = np.multiply(a_dists, norm)
+        distance_arrays.append(a_dists)
 
-    #now we can izip over ALL of them at once (isn't python great!)
-    subset_pairs = []
-    r_dists = []
-    f_dists = []
-    m_dists = []
-    a_dists = []
+    try: 
+        final_dists = distance_arrays[0]
+    except:
+        # no distance arrays, something odd happened
+        log.error("Problem calculating subset similarity. Please check that you included"
+                " at least one non-zero weight in your clustering weights")
+        raise PartitionFinderError
 
-    for pair in itertools.izip(s, r, f, m, a):
-        subset_pair = pair[0]
-        subset_pairs.append(subset_pair)
+    for a in distance_arrays[1:]:
+        try:
+            final_dists = np.add(final_dists, a)
+        except:
+            log.error("Distance matrices from different parameters are not the same size")
+            raise PartitionFinderError
 
-        r_dist = euclidean_distance(pair[1][0], pair[1][1])
-        f_dist = euclidean_distance(pair[2][0], pair[2][1])
-        m_dist = euclidean_distance(pair[3][0], pair[3][1])
-        a_dist = euclidean_distance(pair[4][0], pair[4][1])
+    return final_dists
 
-        r_dists.append(r_dist)
-        f_dists.append(f_dist)
-        m_dists.append(m_dist)
-        a_dists.append(a_dist)
+def get_distance_matrix(subsets, weights):
 
-        #print pair
-
-    #and now we get the minmax values
-    max_r = max(r_dists)
-    max_f = max(f_dists)
-    max_m = max(m_dists)
-    max_a = max(a_dists)
-
-    #now we go over them again, and normalise, weight, and sum
-    final_dists = {}
-    closest_pairs = []
-    mindist = None
-    for i, pair in enumerate(itertools.izip(r_dists, f_dists, m_dists, a_dists, subset_pairs)):
-
-        if max_r > 0.0:
-            r_final = pair[0] * float(weights["rate"]) / float(max_r)
-        else:
-            r_final = 0.0
-        if max_f > 0.0:
-            f_final = pair[1] * float(weights["freqs"]) / float(max_f)
-        else:
-            f_final = 0.0
-        if max_m > 0.0:
-            m_final = pair[2] * float(weights["model"]) / float(max_m)
-        else:
-            m_final = 0.0
-        if max_a > 0:
-            a_final = pair[3] * float(weights["alpha"]) / float(max_a)
-        else:
-            a_final = 0.0
-
-        #print i, pair
-
-        total_dist = r_final + f_final + m_final + a_final
-
-        final_dists[pair[4]] = total_dist
-
-        #check to see if this is the closest
-        if (total_dist < mindist or mindist is None):
-            mindist = total_dist
-            closest_pairs = pair[4]  # pair[4] is the tuple of two subsets
-        elif total_dist == mindist:
-            #we want a tuple with all of the subsets that are equally close
-            #with no replicates, so we use tuple(set())
-            closest_pairs = tuple(set(closest_pairs + (pair[4])))
-
-    return final_dists, closest_pairs
-
-def get_distance_matrix(start_scheme, weights):
     #1. get the parameter lists for each subset
-    subsets = []  # a list of subset names, so we know the order things appear in the list
     rates = []  # tree length
     freqs = []  # amino acid or base frequencies
     model = []  # model parameters e.g. A<->C
-    alpha = [] #alpha parameter of the gamma distribution of rates across sites
+    alpha = []  #alpha parameter of the gamma distribution of rates across sites
 
-    for s in start_scheme.subsets:
+    for s in subsets:
         param_dict = s.get_param_values()
-        subsets.append(s)
         rates.append([param_dict["rate"]])
         freqs.append(param_dict["freqs"])
         model.append(param_dict["model"])
         alpha.append([param_dict["alpha"]])
 
-    #get pairwise euclidean distances, and minmax values, for all parameters
-    final_dists, closest_pairs = get_pairwise_dists(subsets, rates, freqs, model, alpha, weights)
+    # get pairwise manhattan distances between subsets (a square numpy array)
+    final_dists = get_manhattan_matrix(rates, freqs, model, alpha, weights)
 
-    return final_dists, closest_pairs
+    return final_dists
 
-def get_closest_subsets(start_scheme, weights):
-    """Find the closest subsets in a scheme
+def get_N_closest_subsets(subsets, cfg, N, distance_matrix = np.matrix([])):
+    """Find the N most similar groups of subsets in a scheme
     """
-    final_dists, closest_pairs = get_distance_matrix(start_scheme, weights)
 
-    return closest_pairs
-
-
-def get_ranked_clustered_subsets(start_scheme, cfg):
-    """
-    The idea here is to take a scheme, and perform some analyses to find out
-    how the subsets in that scheme cluster.
-
-    We then just return the list of schemes, ordered by closest to most distant
-    in the clustering space
-    """
-    final_dists, closest_pairs = get_distance_matrix(
-        start_scheme, cfg.cluster_weights)
-
-    ranked_subset_groupings = get_ranked_list(final_dists)
+    if not distance_matrix.any():
+        distance_matrix = get_distance_matrix(subsets, cfg.cluster_weights)
+    ranked_subset_groupings = get_ranked_list(distance_matrix, subsets, N)
     return ranked_subset_groupings
 
 
-def make_clustered_scheme(start_scheme, scheme_name, subsets_to_cluster, cfg):
 
-    #1. Create a new subset that merges the subsets_to_cluster
-    newsub_parts = []
+def get_closest_subset(sub, subsets, cfg, distance_matrix = np.matrix([])):
+    """Find the most similar subsets to the focal subset 'sub'
+    """
+    if not distance_matrix.any():
+        distance_matrix = get_distance_matrix(subsets, cfg.cluster_weights)
+        distance_matrix = scipy.spatial.distance.squareform(distance_matrix)
+        
+    try:
+        col = subsets.index(sub)
+    except:
+        log.error("Couldn't find the subset you were looking for")
+        raise PartitionFinderError
 
-    #log.info("Clustering %d subsets" % len(subsets_to_cluster))
+    sub_col = distance_matrix[col,]
 
-    for s in subsets_to_cluster:
-        newsub_parts = newsub_parts + list(s.partitions)
-    newsub = subset.Subset(*tuple(newsub_parts))
+    sub_closest = np.min(sub_col[np.nonzero(sub_col)])
 
-    #2. Then we define a new scheme with those merged subsets
-    all_subs = [s for s in start_scheme.subsets]
+    closest_index = int(np.where(sub_col == sub_closest)[0])
 
-    #pop out the subsets we're going to join together
-    for s in subsets_to_cluster:
-        all_subs.remove(s)
+    closest_subset = subsets[closest_index]
 
-    #and now we add back in our new subset...
-    all_subs.append(newsub)
+    return([sub, closest_subset])
 
-    #and finally create the clustered scheme
-    final_scheme = (scheme.Scheme(cfg, str(scheme_name), all_subs))
+def make_clustered_scheme(start_scheme, scheme_name, subsets_to_cluster, merged_sub, cfg):
+
+    # 1. Then we define a new scheme with those merged subsets
+    new_subsets = start_scheme.subsets - set(subsets_to_cluster)
+    new_subsets.add(merged_sub)
+
+    #3. Create the clustered scheme
+    final_scheme = scheme.Scheme(cfg, str(scheme_name), new_subsets)
+
+    return final_scheme
+
+
+def make_split_scheme(start_scheme, scheme_name, subset_to_split, split_subsets, cfg):
+
+    # 1. Then we define a new scheme with those merged subsets
+    new_subsets = start_scheme.subsets - {subset_to_split}
+
+    # 2. add all of the split subsets
+    for s in split_subsets:
+        new_subsets.add(s)
+
+    #3. Create the clustered scheme
+    final_scheme = scheme.Scheme(cfg, str(scheme_name), new_subsets)
 
     return final_scheme
 
@@ -217,13 +187,125 @@ def get_nearest_neighbour_scheme(start_scheme, scheme_name, cfg):
     to work well with PartitionFinder
     """
 
-    #1. First we get the closest subsets, based on some weights. This will almost always
-    #   be two subsets, but it's generalised so that it could be all of them...
-    #   cluster weights is a dictionary of weights, keyed by: rate, freqs, model
-    #   for the overall subset rate, the base/aminoacid frequencies, and the model parameters
-    closest_subsets = get_closest_subsets(start_scheme, cfg.cluster_weights)
+    # we use [0] becuase the function returns a ranked list of lists of length 1
+    subsets = [s for s in start_scheme.subsets]
+    closest_subsets = get_N_closest_subsets(subsets, cfg, 1)[0]
+
+    merged_sub = subset_ops.merge_subsets(closest_subsets) 
 
     scheme = make_clustered_scheme(
-        start_scheme, scheme_name, closest_subsets, cfg)
+        start_scheme, scheme_name, closest_subsets, merged_sub, cfg)
 
     return scheme
+
+
+
+
+def update_c_matrix(c_matrix, sub_tuples, subsets, diffs):
+    """
+    Update a symmetric matrix of measurements between subsets.
+    Each subset_tuple contains a new subset that is just merged
+    from a collection of old subsets.
+    """
+    if len(c_matrix.shape) == 1:
+        c_matrix = scipy.spatial.distance.squareform(c_matrix)
+
+    for t, diff in itertools.izip(sub_tuples, diffs):
+        old_subs = t[1]
+        i = subsets.index(old_subs[0])
+        j = subsets.index(old_subs[1])
+        c_matrix[i,j] = c_matrix[j,i] = diff
+
+    return c_matrix
+
+def get_best_pair(c_matrix, best_change, subsets):
+
+    log.debug("C matrix: %s", str(c_matrix))
+
+    if len(c_matrix.shape) == 1:
+        log.debug("C matrix shape was == 1")
+        c_matrix = scipy.spatial.distance.squareform(c_matrix)
+        log.debug("C matrix: %s", str(c_matrix))
+
+    l = np.where(c_matrix==best_change)
+
+    log.debug("C matrix dimensions: %s", str(c_matrix.shape))
+    log.debug("Number of subsets: %d", len(subsets))
+    log.debug("Location of best_change in c_matrix: %s", str(l))
+
+    # this function is only called if the best_change is <0
+    # so we can be sure that we are on an off-diagonal
+    # still, we check and throw an error if there's an issue
+    s1 = l[0][0]
+    s2 = l[1][0] 
+
+    if s1==s2:
+        log.error("You can't merge a subset with itself, please check.")
+        raise PartitionFinderError
+
+    log.debug("Subsets to merge: %s and %s" %(s1, s2))
+    sub1 = subsets[s1]
+    sub2 = subsets[s2]
+    return (sub1, sub2)
+
+def reset_c_matrix(c_matrix, remove_list, add_list, subsets):
+
+    if len(c_matrix.shape) == 1:
+        c_matrix = scipy.spatial.distance.squareform(c_matrix)
+
+    indices = []
+    removals = []
+    for r in remove_list:
+        indices.append(subsets.index(r))
+        removals = removals + r.names
+
+    c_matrix = np.delete(c_matrix, indices, 1)
+    c_matrix = np.delete(c_matrix, indices, 0)
+
+    additions = []
+    for a in add_list:
+        additions = additions + a.names
+        row = np.array((c_matrix.shape[0]) * [np.inf])
+        col = c_matrix.shape[0] * [np.inf]
+        col.append(0)
+        col = np.array(col)[:, None]
+        c_matrix = np.vstack((c_matrix, row))
+        c_matrix = np.hstack((c_matrix, col))
+
+    # we can only do this if we've removed the same stuff as we added, check
+    if not additions.sort() == removals.sort():
+        log.error("Removal and addition of subsets don't add up")
+        log.error("Removing: %s", str(removals))
+        log.error("Adding: %s", str(additions))
+        raise PartitionFinderError
+
+    return c_matrix
+
+def reset_subsets(subsets, remove_list, add_list):
+
+    log.debug("Updating subset list")
+    log.debug("Original subset list: %s", str([s.name for s in subsets]))
+    log.debug("Subsets to remove: %s", str([s.name for s in remove_list]))
+    log.debug("Combined subsets to add: %s", str([s.name for s in add_list]))
+
+    for r in remove_list:
+        subsets.pop(subsets.index(r))
+    for a in add_list:
+        subsets.append(a)
+    return subsets
+
+
+def get_pairs_todo(closest_pairs, c_matrix, subsets):
+    pairs_todo = []
+    if len(c_matrix.shape) == 1:
+        c_matrix = scipy.spatial.distance.squareform(c_matrix)
+
+    for p in closest_pairs:
+        i = subsets.index(p[0])
+        j = subsets.index(p[1])
+        if c_matrix[i,j] == np.inf:
+            pairs_todo.append(p)
+
+    return pairs_todo
+
+

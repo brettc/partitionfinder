@@ -28,6 +28,7 @@ DNA_rcluster13  linked      GTR+G           bic         hcluster    failure (rcl
 
 Prot_hcluster1  linked      all_protein     bic         hcluster    success
 Prot_hcluster2  unlinked    LG+G            bic         hcluster    success
+Prot_hcluster3  linked      allx            bic         hcluster    success (this is to test if we can parse output from all of RAxMLs types of model)
 Prot_rcluster1  linked      all_protein     bic         rcluster    failure (weight = "1, 0, 100, egg")
 Prot_rcluster2  linked      LG+I+G          bic         rcluster    success (rcluster-percent = 12; weight = "1,0,0,0")
 Prot_rcluster3  linked      LG+I+G          bic         rcluster    success (weight = "0,0,0,0")

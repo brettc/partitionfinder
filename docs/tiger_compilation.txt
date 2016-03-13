@@ -1,0 +1,51 @@
+Instructions for compiling fast_TIGER and the cython version of tiger.
+
+fast_TIGER:
+
+Pre-requisites:
+On a Mac, you should have a compiler installed (mac uses llvm instead of gcc now, it seems to work just fine). If you are working with OSX Yosemite, you can do this by downloading the most recent version of XCode from the Mac App store. Once XCode is installed, open it and install any updates that it requires.
+
+Next, open a terminal window and enter the command, 'xcode-select --install'. This will allow you to install the command line tools for XCode. After this is done, you should exit your terminal session.
+
+fast_TIGER install:
+
+- Open a web browser and navigate to https://github.com/pbfrandsen/fast_TIGER and click the 'Download ZIP'
+- Open your terminal application and enter the following commands:
+    - cd ~/Downloads
+    - unzip fast_TIGER-master.zip
+    - cd fast_TIGER-master
+    - make
+- Then you will want to copy your newly compiled program into the partitionfinder/programs directory
+    - To do this you can either open the fast_TIGER-master directory in finder and drag it into partitionfinder/programs, or you can enter the command: 'cp fast_TIGER <path_to_partitionfinder_directory>/programs' into your terminal window.
+
+fast_TIGER run:
+
+Now you are ready to run kmeans with fast_TIGER. To do so, set up the kmeans run as indicated in the manual and add '--kmeans fast_tiger' to your command.
+
+cython tiger:
+
+Pre-requisites:
+You should have a compiler installed. You can follow the instructions given for fast_TIGER to do this. You also need cython and the C++ boost library. Cython should be installed as part of the anaconda distribution. You can update it by typing 'conda update cython' in your terminal window.
+
+The easiest way to install the boost C++ library is to use homebrew. You can follow the directions on the homebrew website here (http://brew.sh). This involves issuing a single command to your terminal window and following the instructions.
+
+Restart your terminal window, then install boost by typing, 'brew install boost'. Once boost is installed you are ready to compile the cython version of tiger. You may need to add the path to your CFLAGS. Something like this might work:
+
+export CFLAGS="-I <path_to_include_dir>"
+
+The default path to the include dir is often /usr/local/include, so this might do it:
+
+export CFLAGS="-I /usr/local/include"
+
+
+Install:
+
+- Open a new terminal window and change directories into your partitionfinder directory. An easy way to find the path to the partitionfinder directory is to drag it from finder into your terminal window.
+    - cd <path_to_partitionfinder directory>
+- Then issue the following command:
+    - python setup.py
+- This should compile the cython version of tiger for you.
+
+cython tiger run:
+
+To run cython tiger, set up the kmeans run as described in the manual, then add '--kmeans tiger' to the command.

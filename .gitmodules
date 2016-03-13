@@ -1,0 +1,8 @@
+[submodule "submodules/raxml"]
+	path = submodules/raxml
+	url = https://brettc@github.com/brettc/standard-RAxML.git
+	branch = partfinder
+[submodule "submodules/phyml"]
+	path = submodules/phyml
+	url = https://brettc@github.com/brettc/phyml.git
+	branch = partfinder

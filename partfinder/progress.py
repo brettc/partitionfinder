@@ -1,23 +1,22 @@
-#Copyright (C) 2012 Robert Lanfear and Brett Calcott
+# Copyright (C) 2012 Robert Lanfear and Brett Calcott
 #
-#This program is free software: you can redistribute it and/or modify it
-#under the terms of the GNU General Public License as published by the
-#Free Software Foundation, either version 3 of the License, or (at your
-#option) any later version.
+# This program is free software: you can redistribute it and/or modify it under
+# the terms of the GNU General Public License as published by the Free Software
+# Foundation, either version 3 of the License, or (at your option) any later
+# version.
 #
-#This program is distributed in the hope that it will be useful, but
-#WITHOUT ANY WARRANTY; without even the implied warranty of
-#MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-#General Public License for more details. You should have received a copy
-#of the GNU General Public License along with this program.  If not, see
-#<http://www.gnu.org/licenses/>. PartitionFinder also includes the PhyML
-#program, the RAxML program, and the PyParsing library,
-#all of which are protected by their own licenses and conditions, using
-#PartitionFinder implies that you agree with those licences and conditions as well.
+# This program is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+# details. You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+# PartitionFinder also includes the PhyML program, the RAxML program, and the
+# PyParsing library, all of which are protected by their own licenses and
+# conditions, using PartitionFinder implies that you agree with those licences
+# and conditions as well.
 
-import logging
-log = logging.getLogger("progress")
-
+import logtools
+log = logtools.get_logger()
 
 class Progress(object):
     def __init__(self, cfg):
@@ -52,11 +51,12 @@ class TextProgress(Progress):
         self.schemes_analysed = 0
         self.subsets_analysed = set()
 
-        log.info("PartitionFinder will have to analyse %d subsets to complete this analysis", subset_count)
-        log.info("This will result in %s schemes being created", scheme_count)
-        if subset_count > 10000:
-            log.warning("%d is a lot of subsets, this might take a long time to analyse", subset_count)
-            log.warning("Perhaps consider using a different search scheme instead (see Manual)")
+        if "kmeans" not in self.cfg.search:
+            if subset_count > 10000:
+                log.warning("""%d is a lot of subsets, this might take a
+                long time to analyse. Perhaps consider using a different
+                search scheme instead (see the Manual)"""
+                % subset_count)
 
     def next_scheme(self):
         self.schemes_analysed += 1
@@ -68,12 +68,17 @@ class TextProgress(Progress):
 
     def subset_done(self, sub):
         old_num_done = len(self.subsets_analysed)
-        self.subsets_analysed.add(sub.name)
+        self.subsets_analysed.add(sub.subset_id)
         num_subs_done = len(self.subsets_analysed)
         if old_num_done != num_subs_done:
-            percent_done = (
-                float(num_subs_done) * 100.0) / float(self.subset_count)
-            log.info("Finished subset %d/%d, %.2f percent done", num_subs_done, self.subset_count, percent_done)
+
+            if "kmeans" in self.cfg.search:
+                pass
+            else:    
+                percent_done = (
+                    float(num_subs_done) * 100.0) / float(self.subset_count)
+                log.info("Finished subset %d/%d, %.2f percent done" %
+                         (num_subs_done, self.subset_count, percent_done))
 
     def end(self):
         pass

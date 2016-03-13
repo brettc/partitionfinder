@@ -1,112 +1,142 @@
-#Copyright (C) 2012 Robert Lanfear and Brett Calcott
+# Copyright (C) 2012 Robert Lanfear and Brett Calcott
 #
-#This program is free software: you can redistribute it and/or modify it
-#under the terms of the GNU General Public License as published by the
-#Free Software Foundation, either version 3 of the License, or (at your
-#option) any later version.
+# This program is free software: you can redistribute it and/or modify it under
+# the terms of the GNU General Public License as published by the Free Software
+# Foundation, either version 3 of the License, or (at your option) any later
+# version.
 #
-#This program is distributed in the hope that it will be useful, but
-#WITHOUT ANY WARRANTY; without even the implied warranty of
-#MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-#General Public License for more details. You should have received a copy
-#of the GNU General Public License along with this program.  If not, see
-#<http://www.gnu.org/licenses/>. PartitionFinder also includes the PhyML
-#program, the RAxML program, the PyParsing library, and the python-cluster library
-#all of which are protected by their own licenses and conditions, using
-#PartitionFinder implies that you agree with those licences and conditions as well.
+# This program is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+# details. You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+# PartitionFinder also includes the PhyML program, the RAxML program, and the
+# PyParsing library, all of which are protected by their own licenses and
+# conditions, using PartitionFinder implies that you agree with those licences
+# and conditions as well.
 
-"""Run raxml and parse the output"""
+import logtools
+log = logtools.get_logger()
 
-import logging
-log = logging.getLogger("raxml")
-
-import subprocess
-import shlex
 import os
-import shutil
 import sys
 import fnmatch
 import util
+from database import DataLayout, DataRecord
+from reporter import write_raxml_partitions
 
 from pyparsing import (
     Word, Literal, nums, Suppress, ParseException,
-    SkipTo, OneOrMore, Regex
+    SkipTo, OneOrMore, Regex, restOfLine, Optional
 )
 
 import raxml_models as models
 
+_protein_letters = "ARNDCQEGHILKMFPSTWYV"
+_dna_letters = "ATCG"
+
+# This is set as the binary name because the previously compiled raxml had a
+# bug when calculating site likelihoods, this needs to be changed back to
+# "raxml" once a newer version without the bug is compiled.
 _binary_name = 'raxml'
+_binary_name_pthreads = 'raxml_pthreads'
 if sys.platform == 'win32':
     _binary_name += ".exe"
-
-from util import PhylogenyProgramError
-
-
-class RaxmlError(PhylogenyProgramError):
-    pass
-
-
-def find_program():
-    """Locate the binary ..."""
-    pth = os.path.abspath(__file__)
-
-    # Split off the name and the directory...
-    pth, notused = os.path.split(pth)
-    pth, notused = os.path.split(pth)
-    pth = os.path.join(pth, "programs", _binary_name)
-    pth = os.path.normpath(pth)
-
-    log.debug("Checking for program %s", _binary_name)
-    if not os.path.exists(pth) or not os.path.isfile(pth):
-        log.error("No such file: '%s'", pth)
-        raise RaxmlError
-    log.debug("Found program %s at '%s'", _binary_name, pth)
-    return pth
-
 _raxml_binary = None
+_raxml_pthreads_binary = None
+
+
+def make_data_layout(cfg):
+    if cfg.datatype == "protein":
+        letters = _protein_letters
+    elif cfg.datatype == "DNA":
+        letters = _dna_letters
+    return DataLayout(letters)
 
 
 def run_raxml(command):
     global _raxml_binary
     if _raxml_binary is None:
-        _raxml_binary = find_program()
+        _raxml_binary = util.find_program(_binary_name)
+    util.run_program(_raxml_binary, command)
 
-    # Add in the command file
-    log.debug("Running 'raxml %s'", command)
-    command = "\"%s\" %s" % (_raxml_binary, command)
-
-    # Note: We use shlex.split as it does a proper job of handling command
-    # lines that are complex
-    p = subprocess.Popen(
-        shlex.split(command),
-        shell=False,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE)
-
-    # Capture the output, we might put it into the errors
-    stdout, stderr = p.communicate()
-    # p.terminate()
-
-    if p.returncode != 0:
-        log.error("RAxML did not execute successfully")
-        log.error("RAxML output follows, in case it's helpful for finding the problem")
-        log.error("%s", stdout)
-        log.error("%s", stderr)
-        raise RaxmlError
+def run_raxml_pthreads(command, cpus):
+    global _raxml_pthreads_binary
+    if _raxml_pthreads_binary is None:
+        _raxml_pthreads_binary = util.find_program(_binary_name_pthreads)
+    command = " ".join([command, "-T", str(cpus), " "])
+    util.run_program(_raxml_pthreads_binary, command)
 
 
-def dupfile(src, dst):
-    # Make a copy or a symlink so that we don't overwrite different model runs
-    # of the same alignment
+def write_partition_file(scheme, alignment_path):
+    ''' Write a raxml partitions file to make an ML tree '''
+    aln_dir, fname = os.path.split(alignment_path)
+    partition_filepath = os.path.join(aln_dir, 'partitions.txt')
+    partition_filehandle = open(partition_filepath, 'w')
+    sorted_subsets = [sub for sub in scheme]
+    sorted_subsets.sort(key=lambda sub: min(sub.columns), reverse=False)
+    write_raxml_partitions(scheme, partition_filehandle, sorted_subsets, use_lg = True)
+    return(partition_filepath)
 
-    # TODO maybe this should throw...?
-    try:
-        if os.path.exists(dst):
-            os.remove(dst)
-        shutil.copyfile(src, dst)
-    except OSError:
-        log.error("Cannot link/copy file %s to %s", src, dst)
-        raise RaxmlError
+
+def make_ml_topology(alignment_path, datatype, cmdline_extras, scheme, cpus):
+    '''Make a ML tree to from a given partitioning scheme'''
+    log.info("Estimating Maximum Likelihood tree with RAxML for %s", alignment_path)
+
+    partition_file = write_partition_file(scheme, alignment_path)
+
+    # First get the ML topology like this (-p is a hard-coded random number seed):
+    # we do this to an accuracy of 10 log likelihood units with -e 10
+    # we use the rapid ML option in RAxML -f E
+    if datatype == "DNA":
+        command = " -f E -s '%s' -m GTRGAMMA -O -n fastTREE -# 1 -p 123456789 -q '%s' -e 10 " % (
+            alignment_path, partition_file)
+    elif datatype == "protein":
+        command = " -f E -s '%s' -m PROTGAMMALG -O -n fastTREE -# 1 -p 123456789 -q '%s' -e 10 " % (
+            alignment_path, partition_file)
+    else:
+        log.error("Unrecognised datatype: '%s'" % (datatype))
+        raise util.PartitionFinderError
+
+    # Force raxml to write to the dir with the alignment in it
+    aln_dir, fname = os.path.split(alignment_path)
+    command = ''.join([command, " -w '%s'" % os.path.abspath(aln_dir)])
+
+    run_raxml_pthreads(command, cpus)
+    alndir, aln = os.path.split(alignment_path)
+
+    fast_tree_path = os.path.join(alndir, "RAxML_fastTree.fastTREE")
+
+    # now we make the branch lengths with a partitioned model without rate multipliers
+    if datatype == "DNA":
+        log.info("Estimating GTR+G branch lengths on ML tree using all partitions")
+        command = "-f e -s '%s' -t '%s' -m GTRGAMMA -O -n BLTREE -p 123456789 -q '%s' -w '%s' -e 10  " % (
+            alignment_path, fast_tree_path, partition_file, os.path.abspath(alndir)) 
+    elif datatype == "protein":
+        log.info("Estimating LG+G branch lengths on ML tree using all partitions")
+        command = "-f e -s '%s' -t '%s' -m PROTGAMMALG -O -n BLTREE -p 123456789 -q '%s' -w '%s' -e 10  " % (
+            alignment_path, fast_tree_path, partition_file, os.path.abspath(alndir)) 
+    else:
+        log.error("Unrecognised datatype: '%s'" % (datatype))
+        raise util.PartitionFinderError
+
+    run_raxml_pthreads(command, cpus)
+    tree_path = os.path.join(alndir, "RAxML_result.BLTREE")
+
+
+    if not os.path.exists(tree_path):
+        log.error("RAxML tree topology should be here but can't be be found: '%s'" % (tree_path))
+        raise(util.PartitionFinderError)
+    else:
+        log.debug("RAxML tree with branch lengths ('%s') looks like this: ", tree_path)
+        with open(tree_path, 'r') as fin:
+            log.debug('%s', fin.read())
+
+    log.info("ML topology estimation finished")
+
+    return tree_path
+
+
 
 
 def make_topology(alignment_path, datatype, cmdline_extras):
@@ -124,40 +154,61 @@ def make_topology(alignment_path, datatype, cmdline_extras):
             alignment_path, cmdline_extras)
     else:
         log.error("Unrecognised datatype: '%s'" % (datatype))
-        raise(RaxmlError)
+        raise util.PartitionFinderError
 
-    #force raxml to write to the dir with the alignment in it
+    # Force raxml to write to the dir with the alignment in it
     aln_dir, fname = os.path.split(alignment_path)
     command = ''.join([command, " -w '%s'" % os.path.abspath(aln_dir)])
 
     run_raxml(command)
     dir, aln = os.path.split(alignment_path)
     tree_path = os.path.join(dir, "RAxML_parsimonyTree.MPTREE")
+
+    if not os.path.exists(tree_path):
+        log.error("RAxML tree topology should be here but can't be be found: '%s'" % (tree_path))
+        raise(RaxmlError)
+    else:
+        log.debug("RAxML tree with branch lengths ('%s') looks like this: ", tree_path)
+        with open(tree_path, 'r') as fin:
+            log.debug('%s', fin.read())
+
+    log.info("Topology estimation finished")
+
     return tree_path
 
 
 def make_branch_lengths(alignment_path, topology_path, datatype, cmdline_extras):
-    #Now we re-estimate branchlengths using a GTR+G model on the (unpartitioned) dataset
+    # Now we re-estimate branchlengths using a GTR+G model on the
+    # (unpartitioned) dataset
     cmdline_extras = check_defaults(cmdline_extras)
     dir_path, fname = os.path.split(topology_path)
     tree_path = os.path.join(dir_path, 'topology_tree.phy')
     log.debug("Copying %s to %s", topology_path, tree_path)
-    dupfile(topology_path, tree_path)
+    util.dupfile(topology_path, tree_path)
     os.remove(topology_path)  # saves headaches later...
 
     if datatype == "DNA":
         log.info("Estimating GTR+G branch lengths on tree using RAxML")
-        command = "-f e -s '%s' -t '%s' -m GTRGAMMA -n BLTREE -w '%s' %s" % (
+        command = "-f e -s '%s' -t '%s' -m GTRGAMMA -n BLTREE -w '%s' %s  " % (
             alignment_path, tree_path, os.path.abspath(dir_path), cmdline_extras)
         run_raxml(command)
     if datatype == "protein":
         log.info("Estimating LG+G branch lengths on tree using RAxML")
-        command = "-f e -s '%s' -t '%s' -m PROTGAMMALG -n BLTREE -w '%s' %s" % (
+        command = "-f e -s '%s' -t '%s' -m PROTGAMMALG -n BLTREE -w '%s' %s " % (
             alignment_path, tree_path, os.path.abspath(dir_path), cmdline_extras)
         run_raxml(command)
 
     dir, aln = os.path.split(alignment_path)
     tree_path = os.path.join(dir, "RAxML_result.BLTREE")
+
+    if not os.path.exists(tree_path):
+        log.error("RAxML tree topology should be here but can't be be found: '%s'" % (tree_path))
+        raise(RaxmlError)
+    else:
+        log.debug("RAxML tree with branch lengths ('%s') looks like this: ", tree_path)
+        with open(tree_path, 'r') as fin:
+            log.debug('%s', fin.read())
+
     log.info("Branchlength estimation finished")
 
     # Now return the path of the final tree with branch lengths
@@ -165,30 +216,19 @@ def make_branch_lengths(alignment_path, topology_path, datatype, cmdline_extras)
 
 
 def check_defaults(cmdline_extras):
-    """We use some sensible defaults, but allow users to override them with extra cmdline options"""
+    # We use some sensible defaults, but allow users to override them with
+    # extra cmdline options
     if cmdline_extras.count("-e") > 0:
-        #then the user has specified a particular accuracy:
+        # then the user has specified a particular accuracy:
         accuracy = ""
     else:
-        #we specify a default accuracy of 1 lnL unit
+        # we specify a default accuracy of 1 lnL unit
         accuracy = " -e 1.0 "
 
-    #we set this in case people are using the PThreads version of RAxML
-    #note that this is intentionally set to give an error if people use Pthreads, because
-    #they will need to consider by hand what the optimal setting is. And, if we set it >1
-    #then we risk massively slowing things down because PF's default is to use all possible
-    #processors.
-    if cmdline_extras.count("-T") > 0:
-        num_threads = ""
-
-    else:
-        num_threads = " -T 1 "
-
-    #and we'll specify the -O option, so that the program doesn't exit if there are undetermined seqs.
-    #we'll put spaces at the start and end too, just in case...
-    cmdline_extras = ''.join(
-        [" ", cmdline_extras, accuracy, num_threads, "-O "])
-
+    # and we'll specify the -O option, so that the program doesn't exit if
+    # there are undetermined seqs.  we'll put spaces at the start and end too,
+    # just in case...
+    cmdline_extras = ''.join([" ", cmdline_extras, accuracy, "-O "])
     return cmdline_extras
 
 
@@ -208,9 +248,13 @@ def analyse(model, alignment_path, tree_path, branchlengths, cmdline_extras):
     else:
         # WTF?
         log.error("Unknown option for branchlengths: %s", branchlengths)
-        raise RaxmlError
+        raise util.PartitionFinderError
 
     cmdline_extras = check_defaults(cmdline_extras)
+
+    # we can save memory on gappy alignments like this
+    #if str(model).count('LG4')==0:
+    #    cmdline_extras = ' '.join([cmdline_extras, '-U '])
 
     #raxml doesn't append alignment names automatically, like PhyML, let's do that here
     analysis_ID = raxml_analysis_ID(alignment_path, model)
@@ -252,31 +296,30 @@ def remove_files(aln_path, model):
     analysis_ID = raxml_analysis_ID(aln_path, model)
     dir = os.path.abspath(dir)
     fs = os.listdir(dir)
-    fnames = fnmatch.filter(fs, '*%s*' % analysis_ID)
-    util.delete_files(fnames)
+    fnames = fnmatch.filter(fs, '*%s*%s*' % ("RAxML", analysis_ID))
+
+    pths = [os.path.join(dir, p) for p in fnames]
+    util.delete_files(pths)
 
 
-class RaxmlResult(object):
-
-    def __init__(self):
-        self.rates = {}
-        self.freqs = {}
-
-    def __str__(self):
-        return "RaxmlResult(lnl:%s, tree_size:%s, secs:%s, alphs:%s)" % (
-                self.lnl, self.tree_size, self.seconds, self.alpha)
+class RaxmlResult(DataRecord):
+    pass
 
 
 class Parser(object):
-    def __init__(self, datatype):
+    def __init__(self, cfg):
+        self.cfg = cfg
 
-        if datatype == "protein":
-            letters = "ARNDCQEGHILKMFPSTWYV"
-        elif datatype == "DNA":
-            letters = "ATCG"
+        if cfg.datatype == "protein":
+            letters = _protein_letters
+        elif cfg.datatype == "DNA":
+            letters = _dna_letters
         else:
-            log.error("Unknown datatype '%s', please check" % datatype)
-            raise RaxmlError
+            log.error("Unknown datatype '%s', please check" % self.cfg.datatype)
+            raise util.PartitionFinderError
+
+        self.rate_indexes = self.cfg.data_layout.rate_indexes
+        self.freq_indexes = self.cfg.data_layout.letter_indexes
 
         FLOAT = Word(nums + '.-').setParseAction(lambda x: float(x[0]))
 
@@ -303,6 +346,9 @@ class Parser(object):
         tree_size = labeled_float(TREE_SIZE_LABEL)
         tree_size.setParseAction(self.set_tree_size)
 
+        LG4X_LINE = "LG4X" + restOfLine
+        lg4x = Optional(LG4X_LINE + LG4X_LINE)
+
         rate = Suppress("rate") + L + Suppress("<->") + L + COLON + FLOAT
         rate.setParseAction(self.set_rate)
         rates = OneOrMore(rate)
@@ -311,8 +357,17 @@ class Parser(object):
         freq.setParseAction(self.set_freq)
         freqs = OneOrMore(freq)
 
+        LGM_LINE = "LGM" + restOfLine
+
+        rate_block = Optional(LGM_LINE) + rates + freqs
+        rate_block.setParseAction(self.rate_block)
+
         # Just look for these things
-        self.root_parser = seconds + lnl + alpha + tree_size + rates + freqs
+        self.root_parser = seconds + lnl + alpha + tree_size +\
+            lg4x + OneOrMore(rate_block)
+
+    def rate_block(self, tokens):
+        self.current_block += 1
 
     def set_seconds(self, tokens):
         self.result.seconds = tokens[0]
@@ -321,42 +376,54 @@ class Parser(object):
         self.result.lnl = tokens[0]
 
     def set_tree_size(self, tokens):
-        self.result.tree_size = tokens[0]
+        self.result.site_rate = tokens[0]
 
     def set_alpha(self, tokens):
         self.result.alpha = tokens[0]
 
     def set_rate(self, tokens):
+        # Ignore anything after the first rate block
+        if self.current_block > 1:
+            return
         basefrom, baseto, rate = tokens
-        self.result.rates[(basefrom, baseto)] = rate
+        index = self.rate_indexes["%s_%s" % (basefrom, baseto)]
+        self.result.rates[0, index] = rate
 
     def set_freq(self, tokens):
+        # Ignore anything after the first rate block
+        if self.current_block > 1:
+            return
         base, rate = tokens
-        self.result.freqs[base] = rate
+        index = self.freq_indexes[base]
+        self.result.freqs[0, index] = rate
 
     def parse(self, text):
         log.debug("Parsing raxml output...")
-        self.result = RaxmlResult()
+        self.result = RaxmlResult(self.cfg)
+
+        # The LGM produces multiple blocks of frequencies. We just want the
+        # first one, so we must remember where we are.
+        self.current_block = 1
         try:
             self.root_parser.parseString(text)
         except ParseException, p:
             log.error(str(p))
-            raise RaxmlError
+            raise util.ParseError
 
         log.debug("Result is %s", self.result)
         return self.result
 
 
-def parse(text, datatype):
-    the_parser = Parser(datatype)
+def parse(text, cfg):
+    the_parser = Parser(cfg)
     return the_parser.parse(text)
 
-if __name__ == '__main__':
-    logging.basicConfig(level=logging.DEBUG)
-    pth = "./tests/misc/raxml_nucleotide.output"
-    p = Parser('DNA')
-    result = p.parse(open(pth).read())
 
-    pth = "./tests/misc/raxml_aminoacid.output"
-    p = Parser('protein')
-    result = p.parse(open(pth).read())
+def fabricate(lnl):
+    result = Parser('DNA')
+    result.result = RaxmlResult()
+    result.result.lnl = lnl
+    result.result.tree_size = 0
+    result.result.seconds = 0
+    result.result.alpha = 0
+    return result.result

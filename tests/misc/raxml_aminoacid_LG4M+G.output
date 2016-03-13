@@ -1,0 +1,942 @@
+IMPORTANT WARNING: Alignment column 16 contains only undetermined values which will be treated as missing data
+IMPORTANT WARNING: Alignment column 17 contains only undetermined values which will be treated as missing data
+IMPORTANT WARNING: Alignment column 18 contains only undetermined values which will be treated as missing data
+IMPORTANT WARNING: Alignment column 19 contains only undetermined values which will be treated as missing data
+IMPORTANT WARNING: Alignment column 20 contains only undetermined values which will be treated as missing data
+IMPORTANT WARNING: Alignment column 21 contains only undetermined values which will be treated as missing data
+IMPORTANT WARNING: Alignment column 22 contains only undetermined values which will be treated as missing data
+IMPORTANT WARNING: Alignment column 23 contains only undetermined values which will be treated as missing data
+IMPORTANT WARNING: Alignment column 24 contains only undetermined values which will be treated as missing data
+IMPORTANT WARNING: Alignment column 25 contains only undetermined values which will be treated as missing data
+IMPORTANT WARNING: Alignment column 26 contains only undetermined values which will be treated as missing data
+IMPORTANT WARNING: Alignment column 27 contains only undetermined values which will be treated as missing data
+IMPORTANT WARNING: Alignment column 28 contains only undetermined values which will be treated as missing data
+IMPORTANT WARNING: Alignment column 29 contains only undetermined values which will be treated as missing data
+IMPORTANT WARNING: Alignment column 30 contains only undetermined values which will be treated as missing data
+IMPORTANT WARNING: Alignment column 31 contains only undetermined values which will be treated as missing data
+IMPORTANT WARNING: Alignment column 32 contains only undetermined values which will be treated as missing data
+IMPORTANT WARNING: Alignment column 33 contains only undetermined values which will be treated as missing data
+IMPORTANT WARNING: Alignment column 34 contains only undetermined values which will be treated as missing data
+IMPORTANT WARNING: Alignment column 35 contains only undetermined values which will be treated as missing data
+IMPORTANT WARNING: Alignment column 36 contains only undetermined values which will be treated as missing data
+
+IMPORTANT WARNING
+Found 21 columns that contain only undetermined values which will be treated as missing data.
+Normally these columns should be excluded from the analysis.
+
+An alignment file with undetermined columns removed has already
+been printed to file ./analysis/phylofiles/a8d53b0f5f557a9337ac4c910c33bb54.phy.reduced
+
+Alignment has 21 completely undetermined sites that will be automatically removed from the input data
+
+
+
+This is RAxML version 8.2.2 released by Alexandros Stamatakis on August 6 2015.
+
+With greatly appreciated code contributions by:
+Andre Aberer      (HITS)
+Simon Berger      (HITS)
+Alexey Kozlov     (HITS)
+Kassian Kobert    (HITS)
+David Dao         (KIT and HITS)
+Nick Pattengale   (Sandia)
+Wayne Pfeiffer    (SDSC)
+Akifumi S. Tanabe (NRIFS)
+
+Alignment has 40 distinct alignment patterns
+
+Proportion of gaps and completely undetermined characters in this alignment: 26.90%
+
+RAxML Branch length scaler and other model parameter optimization up to an accuracy of 1.000000 log likelihood units
+
+Using 1 distinct models/data partitions with individual per partition branch length optimization
+
+
+All free model parameters will be estimated by RAxML
+GAMMA model of rate heteorgeneity, ML estimate of alpha-parameter
+
+GAMMA Model parameters will be estimated up to an accuracy of 1.0000000000 Log Likelihood units
+
+Partition: 0
+Alignment Patterns: 40
+Name: No Name Provided
+DataType: AA
+Substitution Matrix: LG4M
+Using fixed base frequencies
+
+
+
+
+RAxML was called as follows:
+
+/Users/brett/Dropbox/Code/partitionfinder/programs/raxml -f B -s ./analysis/phylofiles/a8d53b0f5f557a9337ac4c910c33bb54.phy -t ./analysis/start_tree/RAxML_result.BLTREE -m PROTGAMMALG4M -n a8d53b0f5f557a9337ac4c910c33bb54_LG4M+G.txt -w /Users/brett/Dropbox/Code/partitionfinder/tests/clustering/prot_hcluster2/analysis/phylofiles -e 1.0 -O 
+
+
+Likelihood: -318.641970
+
+
+Overall Time for Tree Evaluation with branch length scalers: 0.121495
+Final GAMMA  likelihood: -318.641970
+
+Number of free parameters for AIC-TEST(BR-LEN): 2
+Number of free parameters for AIC-TEST(NO-BR-LEN): 1
+
+
+Model Parameters of Partition 0, Name: No Name Provided, Type of Data: AA
+alpha: 4.988615
+Branch length scaler: 1.702259
+Tree-Length: 0.128950
+
+LG4X rates: 0.501604 0.803687 1.083322 1.611387 
+
+LG4X weights: 0.250000 0.250000 0.250000 0.250000 
+
+LGM 0
+rate A <-> R: 0.104937
+rate A <-> N: 0.099198
+rate A <-> D: 0.092266
+rate A <-> C: 0.976558
+rate A <-> Q: 0.139899
+rate A <-> E: 0.118702
+rate A <-> G: 0.659214
+rate A <-> H: 0.098170
+rate A <-> I: 0.422805
+rate A <-> L: 0.263509
+rate A <-> K: 0.069799
+rate A <-> M: 0.637709
+rate A <-> F: 0.091751
+rate A <-> P: 0.493083
+rate A <-> S: 2.091546
+rate A <-> T: 0.599752
+rate A <-> W: 0.054912
+rate A <-> Y: 0.077857
+rate A <-> V: 3.676110
+rate R <-> N: 0.058825
+rate R <-> D: 0.012414
+rate R <-> C: 0.365679
+rate R <-> Q: 0.135694
+rate R <-> E: 0.060778
+rate R <-> G: 0.111675
+rate R <-> H: 0.359071
+rate R <-> I: 0.126864
+rate R <-> L: 0.234684
+rate R <-> K: 0.378436
+rate R <-> M: 0.200730
+rate R <-> F: 0.048284
+rate R <-> P: 0.015648
+rate R <-> S: 0.183484
+rate R <-> T: 0.127318
+rate R <-> W: 0.146339
+rate R <-> Y: 0.057216
+rate R <-> V: 0.111401
+rate N <-> D: 0.257001
+rate N <-> C: 0.380150
+rate N <-> Q: 0.271829
+rate N <-> E: 0.147155
+rate N <-> G: 0.220163
+rate N <-> H: 0.493864
+rate N <-> I: 0.318952
+rate N <-> L: 0.084554
+rate N <-> K: 0.523516
+rate N <-> M: 0.261214
+rate N <-> F: 0.038880
+rate N <-> P: 0.067539
+rate N <-> S: 2.052093
+rate N <-> T: 0.657716
+rate N <-> W: 0.009804
+rate N <-> Y: 0.314127
+rate N <-> V: 0.154154
+rate D <-> C: 0.068388
+rate D <-> Q: 0.033729
+rate D <-> E: 0.174986
+rate D <-> G: 0.148189
+rate D <-> H: 0.120657
+rate D <-> I: 0.014732
+rate D <-> L: 0.002935
+rate D <-> K: 0.052107
+rate D <-> M: 0.027760
+rate D <-> F: 0.011854
+rate D <-> P: 0.010745
+rate D <-> S: 0.304087
+rate D <-> T: 0.110545
+rate D <-> W: 0.001074
+rate D <-> Y: 0.091263
+rate D <-> V: 0.050995
+rate C <-> Q: 0.037389
+rate C <-> E: 0.025210
+rate C <-> G: 0.240753
+rate C <-> H: 0.152112
+rate C <-> I: 0.445764
+rate C <-> L: 0.621719
+rate C <-> K: 0.047714
+rate C <-> M: 0.597981
+rate C <-> F: 0.349583
+rate C <-> P: 0.101282
+rate C <-> S: 1.942588
+rate C <-> T: 0.541268
+rate C <-> W: 0.312250
+rate C <-> Y: 0.559848
+rate C <-> V: 2.375512
+rate Q <-> E: 1.691888
+rate Q <-> G: 0.078722
+rate Q <-> H: 0.913252
+rate Q <-> I: 0.208269
+rate Q <-> L: 0.261479
+rate Q <-> K: 0.383314
+rate Q <-> M: 2.060470
+rate Q <-> F: 0.043725
+rate Q <-> P: 0.226115
+rate Q <-> S: 0.346962
+rate Q <-> T: 0.128499
+rate Q <-> W: 0.100227
+rate Q <-> Y: 0.124544
+rate Q <-> V: 0.201136
+rate E <-> G: 0.102988
+rate E <-> H: 0.084836
+rate E <-> I: 0.086801
+rate E <-> L: 0.061722
+rate E <-> K: 0.387315
+rate E <-> M: 0.099593
+rate E <-> F: 0.008777
+rate E <-> P: 0.034301
+rate E <-> S: 0.147250
+rate E <-> T: 0.090298
+rate E <-> W: 0.040393
+rate E <-> Y: 0.003926
+rate E <-> V: 0.196229
+rate G <-> H: 0.040847
+rate G <-> I: 0.024421
+rate G <-> L: 0.027453
+rate G <-> K: 0.086070
+rate G <-> M: 0.036700
+rate G <-> F: 0.018501
+rate G <-> P: 0.056724
+rate G <-> S: 0.683954
+rate G <-> T: 0.045590
+rate G <-> W: 0.051815
+rate G <-> Y: 0.014360
+rate G <-> V: 0.086866
+rate H <-> I: 0.221073
+rate H <-> L: 0.297756
+rate H <-> K: 0.159964
+rate H <-> M: 0.100217
+rate H <-> F: 0.297234
+rate H <-> P: 0.055977
+rate H <-> S: 0.306365
+rate H <-> T: 0.175312
+rate H <-> W: 0.134738
+rate H <-> Y: 1.364903
+rate H <-> V: 0.058107
+rate I <-> L: 3.205079
+rate I <-> K: 0.150966
+rate I <-> M: 10.000000
+rate I <-> F: 0.523727
+rate I <-> P: 0.116436
+rate I <-> S: 0.205417
+rate I <-> T: 1.375922
+rate I <-> W: 0.146941
+rate I <-> Y: 0.233229
+rate I <-> V: 5.324382
+rate L <-> K: 0.070561
+rate L <-> M: 2.656971
+rate L <-> F: 0.337276
+rate L <-> P: 0.397441
+rate L <-> S: 0.260170
+rate L <-> T: 0.281132
+rate L <-> W: 0.327129
+rate L <-> Y: 0.287904
+rate L <-> V: 1.164201
+rate K <-> M: 0.619941
+rate K <-> F: 0.015164
+rate K <-> P: 0.000278
+rate K <-> S: 0.257118
+rate K <-> T: 0.193862
+rate K <-> W: 0.068948
+rate K <-> Y: 0.060169
+rate K <-> V: 0.063398
+rate M <-> F: 0.791218
+rate M <-> P: 0.074032
+rate M <-> S: 0.285159
+rate M <-> T: 1.048693
+rate M <-> W: 0.197015
+rate M <-> Y: 0.225580
+rate M <-> V: 2.327420
+rate F <-> P: 0.036609
+rate F <-> S: 0.326358
+rate F <-> T: 0.059254
+rate F <-> W: 0.650703
+rate F <-> Y: 1.654069
+rate F <-> V: 0.328597
+rate P <-> S: 0.528157
+rate P <-> T: 0.271958
+rate P <-> W: 0.035570
+rate P <-> Y: 0.029035
+rate P <-> V: 0.232746
+rate S <-> T: 6.358826
+rate S <-> W: 0.081854
+rate S <-> Y: 0.176956
+rate S <-> V: 0.273170
+rate T <-> W: 0.005129
+rate T <-> Y: 0.090744
+rate T <-> V: 1.823342
+rate W <-> Y: 0.459143
+rate W <-> V: 0.116914
+rate Y <-> V: 0.162177
+
+freq pi(A): 0.082276
+freq pi(R): 0.055172
+freq pi(N): 0.043853
+freq pi(D): 0.053484
+freq pi(C): 0.018957
+freq pi(Q): 0.028152
+freq pi(E): 0.046679
+freq pi(G): 0.157817
+freq pi(H): 0.033297
+freq pi(I): 0.028284
+freq pi(L): 0.054284
+freq pi(K): 0.025275
+freq pi(M): 0.023665
+freq pi(F): 0.041874
+freq pi(P): 0.063071
+freq pi(S): 0.066501
+freq pi(T): 0.065424
+freq pi(W): 0.023837
+freq pi(Y): 0.038633
+freq pi(V): 0.049465
+LGM 1
+rate A <-> R: 0.108723
+rate A <-> N: 0.274175
+rate A <-> D: 0.090184
+rate A <-> C: 3.246944
+rate A <-> Q: 0.335044
+rate A <-> E: 0.353923
+rate A <-> G: 6.372433
+rate A <-> H: 0.165761
+rate A <-> I: 0.032293
+rate A <-> L: 0.061617
+rate A <-> K: 0.144451
+rate A <-> M: 0.342125
+rate A <-> F: 0.057946
+rate A <-> P: 0.779833
+rate A <-> S: 9.530356
+rate A <-> T: 2.314853
+rate A <-> W: 0.024557
+rate A <-> Y: 0.054624
+rate A <-> V: 0.552395
+rate R <-> N: 0.609028
+rate R <-> D: 0.085443
+rate R <-> C: 0.153104
+rate R <-> Q: 2.102403
+rate R <-> E: 0.161213
+rate R <-> G: 0.133836
+rate R <-> H: 1.732101
+rate R <-> I: 0.019963
+rate R <-> L: 0.065119
+rate R <-> K: 8.434503
+rate R <-> M: 0.156731
+rate R <-> F: 0.015978
+rate R <-> P: 1.216822
+rate R <-> S: 0.292222
+rate R <-> T: 0.177625
+rate R <-> W: 0.314894
+rate R <-> Y: 0.105781
+rate R <-> V: 0.033797
+rate N <-> D: 3.881157
+rate N <-> C: 1.293044
+rate N <-> Q: 1.550421
+rate N <-> E: 0.240965
+rate N <-> G: 0.351020
+rate N <-> H: 7.622065
+rate N <-> I: 0.109970
+rate N <-> L: 0.069087
+rate N <-> K: 0.842922
+rate N <-> M: 0.267942
+rate N <-> F: 0.072162
+rate N <-> P: 0.307171
+rate N <-> S: 1.950672
+rate N <-> T: 1.508550
+rate N <-> W: 0.096656
+rate N <-> Y: 0.283540
+rate N <-> V: 0.075134
+rate D <-> C: 0.247938
+rate D <-> Q: 0.356421
+rate D <-> E: 6.073870
+rate D <-> G: 0.125090
+rate D <-> H: 0.878825
+rate D <-> I: 0.012179
+rate D <-> L: 0.011487
+rate D <-> K: 0.031143
+rate D <-> M: 0.006774
+rate D <-> F: 0.011015
+rate D <-> P: 0.269946
+rate D <-> S: 0.178439
+rate D <-> T: 0.089281
+rate D <-> W: 0.054709
+rate D <-> Y: 0.050246
+rate D <-> V: 0.019270
+rate C <-> Q: 0.196824
+rate C <-> E: 0.006865
+rate C <-> G: 1.463287
+rate C <-> H: 0.123958
+rate C <-> I: 0.119926
+rate C <-> L: 0.250706
+rate C <-> K: 0.034986
+rate C <-> M: 0.718052
+rate C <-> F: 0.460690
+rate C <-> P: 0.258711
+rate C <-> S: 7.402304
+rate C <-> T: 3.534435
+rate C <-> W: 0.154678
+rate C <-> Y: 0.244894
+rate C <-> V: 1.033558
+rate Q <-> E: 2.679469
+rate Q <-> G: 0.219320
+rate Q <-> H: 10.000000
+rate Q <-> I: 0.027615
+rate Q <-> L: 0.407212
+rate Q <-> K: 1.773323
+rate Q <-> M: 1.140994
+rate Q <-> F: 0.058442
+rate Q <-> P: 1.127697
+rate Q <-> S: 0.624079
+rate Q <-> T: 0.622685
+rate Q <-> W: 0.099286
+rate Q <-> Y: 0.077552
+rate Q <-> V: 0.093963
+rate E <-> G: 0.197466
+rate E <-> H: 0.227324
+rate E <-> I: 0.004541
+rate E <-> L: 0.018565
+rate E <-> K: 0.261128
+rate E <-> M: 0.137142
+rate E <-> F: 0.016302
+rate E <-> P: 0.744690
+rate E <-> S: 0.191257
+rate E <-> T: 0.133805
+rate E <-> W: 0.005710
+rate E <-> Y: 0.077862
+rate E <-> V: 0.044944
+rate G <-> H: 0.072943
+rate G <-> I: 0.005893
+rate G <-> L: 0.018700
+rate G <-> K: 0.083786
+rate G <-> M: 0.130682
+rate G <-> F: 0.033354
+rate G <-> P: 0.182334
+rate G <-> S: 2.944288
+rate G <-> T: 0.253696
+rate G <-> W: 0.111724
+rate G <-> Y: 0.036285
+rate G <-> V: 0.070727
+rate H <-> I: 0.018494
+rate H <-> L: 0.131123
+rate H <-> K: 0.373605
+rate H <-> M: 0.498062
+rate H <-> F: 0.508459
+rate H <-> P: 2.123303
+rate H <-> S: 0.790263
+rate H <-> T: 0.188281
+rate H <-> W: 0.475758
+rate H <-> Y: 1.713441
+rate H <-> V: 0.049417
+rate I <-> L: 1.229096
+rate I <-> K: 0.017249
+rate I <-> M: 1.236582
+rate I <-> F: 0.311246
+rate I <-> P: 0.023864
+rate I <-> S: 0.027465
+rate I <-> T: 0.289717
+rate I <-> W: 0.016777
+rate I <-> Y: 0.037486
+rate I <-> V: 6.695730
+rate L <-> K: 0.063740
+rate L <-> M: 6.312043
+rate L <-> F: 1.433482
+rate L <-> P: 0.055492
+rate L <-> S: 0.034990
+rate L <-> T: 0.129763
+rate L <-> W: 0.186049
+rate L <-> Y: 0.081402
+rate L <-> V: 0.495498
+rate K <-> M: 0.250345
+rate K <-> F: 0.036298
+rate K <-> P: 1.254036
+rate K <-> S: 0.192639
+rate K <-> T: 0.327836
+rate K <-> W: 0.000099
+rate K <-> Y: 0.013881
+rate K <-> V: 0.050218
+rate M <-> F: 1.261805
+rate M <-> P: 0.038641
+rate M <-> S: 0.260152
+rate M <-> T: 0.922961
+rate M <-> W: 0.386094
+rate M <-> Y: 0.156420
+rate M <-> V: 0.473173
+rate F <-> P: 0.148559
+rate F <-> S: 0.101614
+rate F <-> T: 0.086919
+rate F <-> W: 2.549064
+rate F <-> Y: 6.803440
+rate F <-> V: 0.149756
+rate P <-> S: 0.683504
+rate P <-> T: 0.218869
+rate P <-> W: 0.024646
+rate P <-> Y: 0.000762
+rate P <-> V: 0.065245
+rate S <-> T: 7.981441
+rate S <-> W: 0.076290
+rate S <-> Y: 0.111728
+rate S <-> V: 0.079707
+rate T <-> W: 0.096878
+rate T <-> Y: 0.036362
+rate T <-> V: 1.169473
+rate W <-> Y: 3.398436
+rate W <-> V: 0.019057
+rate Y <-> V: 0.031810
+
+freq pi(A): 0.120900
+freq pi(R): 0.036460
+freq pi(N): 0.026510
+freq pi(D): 0.040410
+freq pi(C): 0.015980
+freq pi(Q): 0.021132
+freq pi(E): 0.025191
+freq pi(G): 0.036369
+freq pi(H): 0.015884
+freq pi(I): 0.111029
+freq pi(L): 0.162852
+freq pi(K): 0.024820
+freq pi(M): 0.028023
+freq pi(F): 0.074058
+freq pi(P): 0.012065
+freq pi(S): 0.041963
+freq pi(T): 0.039072
+freq pi(W): 0.012666
+freq pi(Y): 0.040478
+freq pi(V): 0.114137
+LGM 2
+rate A <-> R: 0.290232
+rate A <-> N: 0.218000
+rate A <-> D: 0.197146
+rate A <-> C: 2.780895
+rate A <-> Q: 0.611442
+rate A <-> E: 0.524275
+rate A <-> G: 0.519848
+rate A <-> H: 0.393915
+rate A <-> I: 0.111781
+rate A <-> L: 0.212327
+rate A <-> K: 0.268961
+rate A <-> M: 0.718517
+rate A <-> F: 0.249876
+rate A <-> P: 1.210163
+rate A <-> S: 2.740242
+rate A <-> T: 1.768260
+rate A <-> W: 0.195524
+rate A <-> Y: 0.167178
+rate A <-> V: 1.927322
+rate R <-> N: 0.477960
+rate R <-> D: 0.041311
+rate R <-> C: 0.935947
+rate R <-> Q: 1.924429
+rate R <-> E: 0.160656
+rate R <-> G: 0.277739
+rate R <-> H: 1.598935
+rate R <-> I: 0.058753
+rate R <-> L: 0.197881
+rate R <-> K: 5.282700
+rate R <-> M: 0.251306
+rate R <-> F: 0.050626
+rate R <-> P: 0.060009
+rate R <-> S: 0.615872
+rate R <-> T: 0.368156
+rate R <-> W: 0.343250
+rate R <-> Y: 0.137291
+rate R <-> V: 0.073851
+rate N <-> D: 4.245222
+rate N <-> C: 0.488127
+rate N <-> Q: 1.173171
+rate N <-> E: 0.261076
+rate N <-> G: 1.535507
+rate N <-> H: 3.846603
+rate N <-> I: 0.065966
+rate N <-> L: 0.039289
+rate N <-> K: 1.146845
+rate N <-> M: 0.202135
+rate N <-> F: 0.089096
+rate N <-> P: 0.068471
+rate N <-> S: 3.788932
+rate N <-> T: 1.477980
+rate N <-> W: 0.052015
+rate N <-> Y: 0.325520
+rate N <-> V: 0.041988
+rate D <-> C: 0.043891
+rate D <-> Q: 0.333889
+rate D <-> E: 2.779954
+rate D <-> G: 0.760148
+rate D <-> H: 0.610342
+rate D <-> I: 0.004225
+rate D <-> L: 0.004896
+rate D <-> K: 0.072472
+rate D <-> M: 0.026184
+rate D <-> F: 0.013841
+rate D <-> P: 0.112929
+rate D <-> S: 0.963250
+rate D <-> T: 0.283594
+rate D <-> W: 0.030190
+rate D <-> Y: 0.059241
+rate D <-> V: 0.020490
+rate C <-> Q: 0.285592
+rate C <-> E: 0.056512
+rate C <-> G: 0.287170
+rate C <-> H: 0.992177
+rate C <-> I: 0.338432
+rate C <-> L: 0.661087
+rate C <-> K: 0.093083
+rate C <-> M: 1.024746
+rate C <-> F: 1.373536
+rate C <-> P: 0.167411
+rate C <-> S: 2.464540
+rate C <-> T: 1.571106
+rate C <-> W: 0.920516
+rate C <-> Y: 1.406145
+rate C <-> V: 2.058719
+rate Q <-> E: 3.405716
+rate Q <-> G: 0.316675
+rate Q <-> H: 2.827735
+rate Q <-> I: 0.072274
+rate Q <-> L: 0.399132
+rate Q <-> K: 2.319330
+rate Q <-> M: 1.159330
+rate Q <-> F: 0.078965
+rate Q <-> P: 0.222621
+rate Q <-> S: 0.954967
+rate Q <-> T: 0.615601
+rate Q <-> W: 0.212740
+rate Q <-> Y: 0.181130
+rate Q <-> V: 0.135988
+rate E <-> G: 0.350476
+rate E <-> H: 0.397584
+rate E <-> I: 0.031375
+rate E <-> L: 0.046269
+rate E <-> K: 0.449888
+rate E <-> M: 0.132642
+rate E <-> F: 0.016043
+rate E <-> P: 0.043390
+rate E <-> S: 0.397202
+rate E <-> T: 0.364125
+rate E <-> W: 0.096605
+rate E <-> Y: 0.058305
+rate E <-> V: 0.135788
+rate G <-> H: 0.295596
+rate G <-> I: 0.003243
+rate G <-> L: 0.016822
+rate G <-> K: 0.315521
+rate G <-> M: 0.048598
+rate G <-> F: 0.044457
+rate G <-> P: 0.136974
+rate G <-> S: 1.194857
+rate G <-> T: 0.093567
+rate G <-> W: 0.103953
+rate G <-> Y: 0.022230
+rate G <-> V: 0.030557
+rate H <-> I: 0.068201
+rate H <-> L: 0.236438
+rate H <-> K: 0.567807
+rate H <-> M: 0.153469
+rate H <-> F: 1.028381
+rate H <-> P: 0.132980
+rate H <-> S: 0.704011
+rate H <-> T: 0.357599
+rate H <-> W: 0.971807
+rate H <-> Y: 5.351027
+rate H <-> V: 0.080483
+rate I <-> L: 2.623374
+rate I <-> K: 0.089519
+rate I <-> M: 3.122535
+rate I <-> F: 0.767558
+rate I <-> P: 0.043394
+rate I <-> S: 0.044899
+rate I <-> T: 0.670513
+rate I <-> W: 0.082632
+rate I <-> Y: 0.106138
+rate I <-> V: 4.924993
+rate L <-> K: 0.100391
+rate L <-> M: 3.296327
+rate L <-> F: 1.469717
+rate L <-> P: 0.124280
+rate L <-> S: 0.089007
+rate L <-> T: 0.193503
+rate L <-> W: 0.564124
+rate L <-> Y: 0.206689
+rate L <-> V: 1.274364
+rate K <-> M: 0.458636
+rate K <-> F: 0.028730
+rate K <-> P: 0.041124
+rate K <-> S: 0.413828
+rate K <-> T: 0.613589
+rate K <-> W: 0.055556
+rate K <-> Y: 0.080831
+rate K <-> V: 0.081358
+rate M <-> F: 1.329535
+rate M <-> P: 0.089150
+rate M <-> S: 0.266972
+rate M <-> T: 1.260668
+rate M <-> W: 0.734868
+rate M <-> Y: 0.302087
+rate M <-> V: 1.378508
+rate F <-> P: 0.045345
+rate F <-> S: 0.307455
+rate F <-> T: 0.130308
+rate F <-> W: 2.588326
+rate F <-> Y: 10.000000
+rate F <-> V: 0.486513
+rate P <-> S: 0.895128
+rate P <-> T: 0.388645
+rate P <-> W: 0.050609
+rate P <-> Y: 0.061477
+rate P <-> V: 0.188032
+rate S <-> T: 5.368827
+rate S <-> W: 0.299903
+rate S <-> Y: 0.243182
+rate S <-> V: 0.066823
+rate T <-> W: 0.135991
+rate T <-> Y: 0.148500
+rate T <-> V: 1.255310
+rate W <-> Y: 3.484188
+rate W <-> V: 0.149596
+rate Y <-> V: 0.119242
+
+freq pi(A): 0.072639
+freq pi(R): 0.051691
+freq pi(N): 0.038642
+freq pi(D): 0.055580
+freq pi(C): 0.009829
+freq pi(Q): 0.031374
+freq pi(E): 0.048731
+freq pi(G): 0.065283
+freq pi(H): 0.023791
+freq pi(I): 0.086640
+freq pi(L): 0.120847
+freq pi(K): 0.052177
+freq pi(M): 0.026728
+freq pi(F): 0.032589
+freq pi(P): 0.039238
+freq pi(S): 0.046748
+freq pi(T): 0.053361
+freq pi(W): 0.008024
+freq pi(Y): 0.037426
+freq pi(V): 0.098662
+LGM 3
+rate A <-> R: 0.216909
+rate A <-> N: 0.213689
+rate A <-> D: 0.310350
+rate A <-> C: 0.309734
+rate A <-> Q: 0.472188
+rate A <-> E: 0.458777
+rate A <-> G: 0.678949
+rate A <-> H: 0.194585
+rate A <-> I: 0.068103
+rate A <-> L: 0.170203
+rate A <-> K: 0.250049
+rate A <-> M: 0.325430
+rate A <-> F: 0.122157
+rate A <-> P: 0.403973
+rate A <-> S: 1.444742
+rate A <-> T: 0.792864
+rate A <-> W: 0.061636
+rate A <-> Y: 0.090793
+rate A <-> V: 0.686909
+rate R <-> N: 0.187726
+rate R <-> D: 0.019086
+rate R <-> C: 1.705139
+rate R <-> Q: 0.816876
+rate R <-> E: 0.058166
+rate R <-> G: 0.227644
+rate R <-> H: 1.082086
+rate R <-> I: 0.167375
+rate R <-> L: 0.326148
+rate R <-> K: 1.092861
+rate R <-> M: 0.314374
+rate R <-> F: 0.078663
+rate R <-> P: 0.065441
+rate R <-> S: 0.332932
+rate R <-> T: 0.282361
+rate R <-> W: 0.307994
+rate R <-> Y: 0.113861
+rate R <-> V: 0.164065
+rate N <-> D: 1.242891
+rate N <-> C: 0.486332
+rate N <-> Q: 0.537597
+rate N <-> E: 0.154908
+rate N <-> G: 0.800194
+rate N <-> H: 1.824305
+rate N <-> I: 0.207425
+rate N <-> L: 0.075684
+rate N <-> K: 0.791337
+rate N <-> M: 0.238176
+rate N <-> F: 0.105540
+rate N <-> P: 0.015806
+rate N <-> S: 1.721205
+rate N <-> T: 0.874671
+rate N <-> W: 0.027227
+rate N <-> Y: 0.397216
+rate N <-> V: 0.067421
+rate D <-> C: 0.038374
+rate D <-> Q: 0.169215
+rate D <-> E: 1.194279
+rate D <-> G: 0.480525
+rate D <-> H: 0.270938
+rate D <-> I: 0.008863
+rate D <-> L: 0.010064
+rate D <-> K: 0.048184
+rate D <-> M: 0.029817
+rate D <-> F: 0.015693
+rate D <-> P: 0.101774
+rate D <-> S: 0.354921
+rate D <-> T: 0.126463
+rate D <-> W: 0.025704
+rate D <-> Y: 0.092966
+rate D <-> V: 0.034537
+rate C <-> Q: 0.327035
+rate C <-> E: 0.018914
+rate C <-> G: 0.601861
+rate C <-> H: 1.440267
+rate C <-> I: 0.884553
+rate C <-> L: 1.059394
+rate C <-> K: 0.075377
+rate C <-> M: 0.792828
+rate C <-> F: 1.802736
+rate C <-> P: 0.045666
+rate C <-> S: 2.482027
+rate C <-> T: 0.622941
+rate C <-> W: 1.244410
+rate C <-> Y: 3.667586
+rate C <-> V: 1.358909
+rate Q <-> E: 0.805150
+rate Q <-> G: 0.189236
+rate Q <-> H: 1.521058
+rate Q <-> I: 0.139356
+rate Q <-> L: 0.619366
+rate Q <-> K: 0.943418
+rate Q <-> M: 0.614987
+rate Q <-> F: 0.040291
+rate Q <-> P: 0.132287
+rate Q <-> S: 0.406615
+rate Q <-> T: 0.449516
+rate Q <-> W: 0.140722
+rate Q <-> Y: 0.094079
+rate Q <-> V: 0.244522
+rate E <-> G: 0.180515
+rate E <-> H: 0.110221
+rate E <-> I: 0.053530
+rate E <-> L: 0.051033
+rate E <-> K: 0.285935
+rate E <-> M: 0.081492
+rate E <-> F: 0.025491
+rate E <-> P: 0.086049
+rate E <-> S: 0.175210
+rate E <-> T: 0.232371
+rate E <-> W: 0.020451
+rate E <-> Y: 0.048931
+rate E <-> V: 0.247223
+rate G <-> H: 0.224620
+rate G <-> I: 0.006256
+rate G <-> L: 0.027163
+rate G <-> K: 0.125580
+rate G <-> M: 0.095029
+rate G <-> F: 0.064497
+rate G <-> P: 0.084826
+rate G <-> S: 1.181230
+rate G <-> T: 0.119971
+rate G <-> W: 0.179423
+rate G <-> Y: 0.019713
+rate G <-> V: 0.084795
+rate H <-> I: 0.188534
+rate H <-> L: 0.440029
+rate H <-> K: 0.234581
+rate H <-> M: 0.250508
+rate H <-> F: 1.251692
+rate H <-> P: 0.141588
+rate H <-> S: 0.421525
+rate H <-> T: 0.301567
+rate H <-> W: 0.414257
+rate H <-> Y: 4.345449
+rate H <-> V: 0.178237
+rate I <-> L: 2.144439
+rate I <-> K: 0.206102
+rate I <-> M: 3.009571
+rate I <-> F: 1.116368
+rate I <-> P: 0.021846
+rate I <-> S: 0.136478
+rate I <-> T: 1.677508
+rate I <-> W: 0.147934
+rate I <-> Y: 0.394337
+rate I <-> V: 7.490795
+rate L <-> K: 0.136907
+rate L <-> M: 4.424011
+rate L <-> F: 1.932758
+rate L <-> P: 0.146958
+rate L <-> S: 0.226771
+rate L <-> T: 0.218427
+rate L <-> W: 0.641257
+rate L <-> Y: 0.496820
+rate L <-> V: 1.130173
+rate K <-> M: 0.412932
+rate K <-> F: 0.031946
+rate K <-> P: 0.080652
+rate K <-> S: 0.269909
+rate K <-> T: 0.521119
+rate K <-> W: 0.032271
+rate K <-> Y: 0.052620
+rate K <-> V: 0.170515
+rate M <-> F: 1.521930
+rate M <-> P: 0.022195
+rate M <-> S: 0.190795
+rate M <-> T: 1.326117
+rate M <-> W: 0.649612
+rate M <-> Y: 0.500795
+rate M <-> V: 1.479391
+rate F <-> P: 0.047548
+rate F <-> S: 0.543810
+rate F <-> T: 0.178120
+rate F <-> W: 2.046607
+rate F <-> Y: 10.000000
+rate F <-> V: 0.637054
+rate P <-> S: 0.539321
+rate P <-> T: 0.162907
+rate P <-> W: 0.019994
+rate P <-> Y: 0.017689
+rate P <-> V: 0.139372
+rate S <-> T: 2.152037
+rate S <-> W: 0.187708
+rate S <-> Y: 0.277707
+rate S <-> V: 0.140613
+rate T <-> W: 0.087279
+rate T <-> Y: 0.118009
+rate T <-> V: 1.253591
+rate W <-> Y: 1.944524
+rate W <-> V: 0.122954
+rate Y <-> V: 0.324047
+
+freq pi(A): 0.104843
+freq pi(R): 0.078835
+freq pi(N): 0.043513
+freq pi(D): 0.090498
+freq pi(C): 0.002924
+freq pi(Q): 0.066163
+freq pi(E): 0.151640
+freq pi(G): 0.038843
+freq pi(H): 0.022556
+freq pi(I): 0.018383
+freq pi(L): 0.038687
+freq pi(K): 0.104462
+freq pi(M): 0.010166
+freq pi(F): 0.009089
+freq pi(P): 0.066950
+freq pi(S): 0.053667
+freq pi(T): 0.049486
+freq pi(W): 0.004409
+freq pi(Y): 0.012924
+freq pi(V): 0.031963
+

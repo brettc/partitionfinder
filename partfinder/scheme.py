@@ -1,28 +1,27 @@
-#Copyright (C) 2012 Robert Lanfear and Brett Calcott
+# Copyright (C) 2012 Robert Lanfear and Brett Calcott
 #
-#This program is free software: you can redistribute it and/or modify it
-#under the terms of the GNU General Public License as published by the
-#Free Software Foundation, either version 3 of the License, or (at your
-#option) any later version.
+# This program is free software: you can redistribute it and/or modify it under
+# the terms of the GNU General Public License as published by the Free Software
+# Foundation, either version 3 of the License, or (at your option) any later
+# version.
 #
-#This program is distributed in the hope that it will be useful, but
-#WITHOUT ANY WARRANTY; without even the implied warranty of
-#MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-#General Public License for more details. You should have received a copy
-#of the GNU General Public License along with this program.  If not, see
-#<http://www.gnu.org/licenses/>. PartitionFinder also includes the PhyML
-#program, the RAxML program, and the PyParsing library,
-#all of which are protected by their own licenses and conditions, using
-#PartitionFinder implies that you agree with those licences and conditions as well.
+# This program is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+# details. You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+# PartitionFinder also includes the PhyML program, the RAxML program, and the
+# PyParsing library, all of which are protected by their own licenses and
+# conditions, using PartitionFinder implies that you agree with those licences
+# and conditions as well.
 
-import logging
-log = logging.getLogger("scheme")
-import subset
+import logtools
+log = logtools.get_logger()
+
+import subset_ops
 import submodels
 
-from math import log as logarithm
-
-from util import PartitionFinderError
+from util import PartitionFinderError, get_aic, get_aicc, get_bic
 
 
 class SchemeError(PartitionFinderError):
@@ -40,15 +39,16 @@ class SchemeResult(object):
         self.nsubs = len(sch.subsets)  # number of subsets
         sum_subset_k = sum([s.best_params for s in sch])  # sum of number of parameters in the best model of each subset
 
-        log.debug("Calculating number of parameters in scheme:")
-        log.debug("Total parameters from subset models: %d" % (sum_subset_k))
+        log.debug("""Calculating number of parameters in scheme.
+                  Total parameters from subset models: %d""" % (sum_subset_k))
 
         if branchlengths == 'linked':  # linked brlens - only one extra parameter per subset
             self.sum_k = sum_subset_k + (self.nsubs - 1) + (
                 (2 * nseq) - 3)  # number of parameters in a scheme
-            log.debug("Total parameters from brlens: %d" % ((2 * nseq) - 3))
-            log.debug(
-                "Parameters from subset multipliers: %d" % (self.nsubs - 1))
+            log.debug("Total parameters from brlens: %d" %
+                      ((2 * nseq) - 3))
+            log.debug("Parameters from subset multipliers: %d" %
+                      (self.nsubs - 1))
 
         elif branchlengths == 'unlinked':  # unlinked brlens - every subset has its own set of brlens
             self.sum_k = sum_subset_k + (self.nsubs * (
@@ -59,34 +59,22 @@ class SchemeResult(object):
         else:
             # WTF?
             log.error("Unknown option for branchlengths: %s", branchlengths)
-            raise AnalysisError
+            raise PartitionFinderError
 
         log.debug("Grand total parameters: %d" % (self.sum_k))
 
         self.lnl = sum([s.best_lnl for s in sch])
-        self.nsites = sum([len(s.columnset) for s in sch])
+        self.nsites = sum([len(s.column_set) for s in sch])
 
         K = float(self.sum_k)
         n = float(self.nsites)
         lnL = float(self.lnl)
 
-        log.debug("n: %d\tK: %d" % (n, K))
+        log.debug("n: %d\tK: %d\tlnL: %d" % (n, K, lnL))
 
-        #here we put in a catch for small subsets, where n<K+2
-        #if this happens, the AICc actually starts rewarding very small datasets, which is wrong
-        #a simple but crude catch for this is just to never allow n to go below k+2
-        self.aic = (-2.0 * lnL) + (2.0 * K)
-        self.bic = (-2.0 * lnL) + (K * logarithm(n))
-
-        if n < (K + 2):
-            log.warning("Scheme '%s' has a very small"
-                        " number of sites (%d) compared to the number of parameters"
-                        " in the models that make up the subsets"
-                        " This may give misleading AICc results, so please check carefully"
-                        " if you are using the AICc for your analyses." % (sch.name, n,))
-            n = K + 2
-
-        self.aicc = (-2.0 * lnL) + ((2.0 * K) * (n / (n - K - 1.0)))
+        self.aic = get_aic(lnL, K)
+        self.bic = get_bic(lnL, K, n)
+        self.aicc = get_aicc(lnL, K, n)
 
     @property
     def score(self):
@@ -100,49 +88,19 @@ class Scheme(object):
     def __init__(self, cfg, name, subsets, description=None):
         """A set of subsets of partitions"""
         self.name = name
-        self.subsets = set()
+        self.subsets = set(subsets)
         self.description = description
 
-        # This one is a set of frozensets of partitions...
-        part_subsets = set()
-
-        # This is really long-winded, but it is mainly for error-checking
-        partitions = set()
-        duplicates = []
-        for s in subsets:
-            for p in s:
-                if p in partitions:
-                    # This is an error -- we'll collect them up
-                    duplicates.append(str(p))
-                else:
-                    partitions.add(p)
-            self.subsets.add(s)
-            part_subsets.add(s.partitions)
-
-        self.part_subsets = frozenset(part_subsets)
-
-        # Report the errors
-        if duplicates:
-            log.error("Scheme '%s' contains duplicate partitions: %s",
-                      name, ', '.join(duplicates))
-            raise SchemeError
-
-        # Hm. It seems this is the only way to get just one item out of a set
-        # as pop would remove one...
-        pset = cfg.partitions
-
-        # Do a set-difference to see what is missing...
-        missing = pset.partitions - partitions
-        if missing:
-            log.error("Scheme '%s' is missing partitions: %s",
-                      name, ', '.join([str(p) for p in missing]))
-            raise SchemeError
-
-        # This locks down whether new partitions can be created.
-        if not cfg.partitions.finalised:
-            cfg.partitions.finalise()
-
-        log.debug("Created %s", self)
+        # TODO: Fix this!
+        if subset_ops.subsets_overlap(subsets):
+           log.error("Scheme '%s' contains overlapping subsets", name)
+           raise SchemeError
+        #
+        #if subset_ops.has_missing(subsets):
+        #    log.error("Scheme '%s' has missing subsets", name)
+        #    raise SchemeError
+        #
+        #log.debug("Created %s" % self)
 
     def __iter__(self):
         return iter(self.subsets)
@@ -150,6 +108,13 @@ class Scheme(object):
     def __str__(self):
         ss = ', '.join([str(s) for s in self.subsets])
         return "Scheme(%s, %s)" % (self.name, ss)
+
+    def get_fabricated_subsets(self):
+        fabricated_subsets = []
+        for sub in self.subsets:
+            if sub.fabricated:
+                fabricated_subsets.append(sub)
+        return fabricated_subsets
 
 
 class SchemeSet(object):
@@ -160,7 +125,7 @@ class SchemeSet(object):
 
     def clear_schemes(self):
         self.schemes_by_name = {}
-        self.schemes_by_subsets = {}
+        # self.schemes_by_subsets = {}
 
     def add_scheme(self, scheme):
         if scheme.name in self.schemes_by_name:
@@ -168,16 +133,17 @@ class SchemeSet(object):
                       scheme.name)
             raise SchemeError
 
-        if scheme.part_subsets in self.schemes_by_subsets:
-            existing_scheme = \
-                self.schemes_by_subsets[scheme.part_subsets]
-            log.warning(
-                "Scheme named %s being added is identical to existing %s",
-                scheme.name, existing_scheme)
-            # raise SchemeError
+        # TODO: Recheck schemes to make sure they're ok...
+        # if scheme.part_subsets in self.schemes_by_subsets:
+            # existing_scheme = \
+                # self.schemes_by_subsets[scheme.part_subsets]
+            # log.warning(
+                # "Scheme named %s being added is identical to existing %s",
+                # scheme.name, existing_scheme)
+            # # raise SchemeError
 
         self.schemes_by_name[scheme.name] = scheme
-        self.schemes_by_subsets[scheme.part_subsets] = scheme
+        # self.schemes_by_subsets[scheme.part_subsets] = scheme
 
     def __len__(self):
         return len(self.schemes_by_name)
@@ -192,11 +158,10 @@ def create_scheme(cfg, scheme_name, scheme_description):
     indexes of the partitions e.g. [0,1,2,3,4,5,6,7]
     """
 
-    partition_count = len(
-        cfg.partitions)  # total number of partitions defined by user
+    subset_count = len(cfg.user_subsets)
 
     # Check that the correct number of items are in the list
-    if len(scheme_description) != partition_count:
+    if len(scheme_description) != subset_count:
         log.error("There's a problem with the description of scheme %s" %
                   scheme_name)
         raise SchemeError
@@ -212,7 +177,8 @@ def create_scheme(cfg, scheme_name, scheme_description):
     # set of values which are the index for the partition
     created_subsets = []
     for sub_indexes in subs.values():
-        sub = subset.Subset(*tuple([cfg.partitions[i] for i in sub_indexes]))
+        subs_to_merge = [cfg.user_subsets[i] for i in sub_indexes]
+        sub = subset_ops.merge_subsets(subs_to_merge)
         created_subsets.append(sub)
 
     return Scheme(cfg, str(scheme_name), created_subsets, description=scheme_description)
@@ -230,7 +196,8 @@ def model_to_scheme(model, scheme_name, cfg):
     # set of values which are the index for the partition
     created_subsets = []
     for sub_indexes in subs.values():
-        sub = subset.Subset(*tuple([cfg.partitions[i] for i in sub_indexes]))
+        subs_to_merge = [cfg.user_subsets[i] for i in sub_indexes]
+        sub = subset_ops.merge_subsets(subs_to_merge)
         created_subsets.append(sub)
 
     return Scheme(cfg, str(scheme_name), created_subsets)
@@ -243,11 +210,10 @@ def generate_all_schemes(cfg):
 
     log.info("Generating all possible schemes for the partitions...")
 
-    partition_count = len(
-        cfg.partitions)  # total number of partitions defined by user
+    subset_count = len(cfg.user_subsets)
 
     # Now generate the pattern for this many partitions
-    all_schemes = submodels.get_submodels(partition_count)
+    all_schemes = submodels.get_submodels(subset_count)
     scheme_name = 1
     scheme_list = []
     for scheme in all_schemes:
@@ -260,12 +226,11 @@ def generate_all_schemes(cfg):
         # set of values which are the index for the partition
         created_subsets = []
         for sub_indexes in subs.values():
-            sub = subset.Subset(
-                *tuple([cfg.partitions[i] for i in sub_indexes]))
+            sub = subset_ops.merge_subsets(
+                [cfg.user_subsets[i] for i in sub_indexes])
             created_subsets.append(sub)
 
-        scheme_list.append(
-            Scheme(cfg, str(scheme_name), created_subsets))
+        scheme_list.append(Scheme(cfg, str(scheme_name), created_subsets))
 
         log.debug("Created scheme %d of %d" % (scheme_name, len(all_schemes)))
 

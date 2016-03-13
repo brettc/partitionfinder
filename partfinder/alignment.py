@@ -21,230 +21,403 @@
     http://www.atgc-montpellier.fr/phyml/usersguide.php?type=command
 
 """
-import logging
-log = logging.getLogger("alignment")
-
+import logtools
 import os
-
-from pyparsing import (
-    Word, OneOrMore, alphas, nums, Suppress, Optional, Group, stringEnd,
-    delimitedList, ParseException, line, lineno, col, LineStart, restOfLine,
-    LineEnd, White, Literal, Combine, Or, MatchFirst, ZeroOrMore)
-
 from util import PartitionFinderError
+import numpy
+import cStringIO
+from itertools import chain
+
+log = logtools.get_logger()
+
+# From the Phyml Website
+# http://www.atgc-montpellier.fr/phyml/usersguide.php?type=command
+valid_nucleotide = "AGCTUMRWSYKBDHVNX.-?"
+valid_amino = "ARNBDCQZEGHILKMFPSTWYVX.-?"
+dna_dict = {
+    'A': set('A'),
+    'G': set('G'),
+    'C': set('C'),
+    'T': set('T'),
+    'U': set('T'),
+    'M': set('AC'),
+    'R': set('AG'),
+    'W': set('AT'),
+    'S': set('CG'),
+    'Y': set('CT'),
+    'K': set('GT'),
+    'B': set('CGT'),
+    'D': set('AGT'),
+    'H': set('ACT'),
+    'V': set('ACG'),
+    'N': set(''),
+    '?': set(''),
+    '-': set(''),
+}
+dna_states = set(chain(*dna_dict.values()))
+amino_dict = {
+    'A': set(['Alanine']),
+    'R': set(['Arginine']),
+    'N': set(['Asparagine']),
+    'B': set(['Asparagine']),
+    'D': set(['Aspartic acid']),
+    'C': set(['Cysteine']),
+    'Q': set(['Glutamine']),
+    'Z': set(['Glutamine']),
+    'E': set(['Glutamic acid']),
+    'G': set(['Glycine']),
+    'H': set(['Histidine']),
+    'I': set(['Isoleucine']),
+    'L': set(['Leucine']),
+    'K': set(['Lysine']),
+    'M': set(['Methionine']),
+    'F': set(['Phenylalanine']),
+    'P': set(['Proline']),
+    'S': set(['Serine']),
+    'T': set(['Threonine']),
+    'W': set(['Tryptophan']),
+    'Y': set(['Tyrosine']),
+    'V': set(['Valine']),
+    'X': set([]),
+    '?': set([]),
+    '-': set([])
+}
+amino_states = set(chain(*amino_dict.values()))
+
+
 class AlignmentError(PartitionFinderError):
     pass
 
+
 class AlignmentParser(object):
-    """Parses an alignment and returns species sequence tuples"""
+    def __init__(self, stream, valid_bases=None):
+        self.stream = stream
+        self.current_line = 0
+        self.cur_len = 0
+        self.start_base = 0
+        self.end_base = 0
+        self.valid_bases = valid_bases
+        self.block_len = None
+        self.interleave_blocks_done = 0
 
-    # I think this covers it...
-    BASES = Word(alphas + "?.-")
+        # This is the stuff we'll copy across
+        self.species = []
+        self.species_count = 0
+        self.sequence_length = 0
+        self.data = None
 
-    def __init__(self):
-        self.sequence_length = None
-        self.species_count = None
-        self.sequences = []
-        self.current_sequence = 0
+    def bases_to_array(self, bases=""):
+        upper_bases = bases.upper()
+        if self.valid_bases is not None:
+            should_be_empty = upper_bases.translate(None, self.valid_bases)
+            if should_be_empty != "":
+                log.error("Line %d: Invalid bases '%s' found.",
+                          self.current_line, should_be_empty)
+                raise AlignmentError
 
-        self.root_parser = self.phylip_parser() + stringEnd
+        # Which is faster?
+        # return array.array("B", upper_bases)
+        return numpy.fromstring(upper_bases, dtype='u1')
 
-    def phylip_parser(self):
+    def parse(self):
+        # Parse the header...
+        self.parse_header()
 
-        INTEGER = Word(nums)
-        INTEGER.setParseAction(lambda x: int(x[0]))
+        # We now know how big it is, so allocate the array.
+        self.data = numpy.zeros((
+            self.species_count,
+            self.sequence_length
+        ), 'u1')
 
-        header = INTEGER("species_count") + INTEGER("sequence_length") +\
-                Suppress(restOfLine)
-        header.setParseAction(self.set_header)
+        # Get the block with species in it
+        self.parse_species_block()
 
-        sequence_name = Word(
-            alphas + nums + "!#$%&\'*+-./;<=>?@[\\]^_`{|}~",
-            max=100)
+        # Look for any further blocks
+        while self.parse_interleave_block():
+            self.interleave_blocks_done += 1
 
-        # Take a copy and disallow line breaks in the bases
-        bases = self.BASES.copy()
-        bases.setWhitespaceChars(" \t")
-        seq_start = sequence_name("species") + bases("sequence") + Suppress(LineEnd())
-        seq_start.setParseAction(self.set_seq_start)
-        seq_start_block = OneOrMore(seq_start)
-        seq_start_block.setParseAction(self.set_start_block)
+    def parse_header(self):
+        while 1:
+            line = self.stream.readline()
+            self.current_line += 1
 
-        seq_continue = bases("sequence") + Suppress(LineEnd())
-        seq_continue.setParseAction(self.set_seq_continue)
+            if len(line) == 0:
+                log.error("Line %d, Found no data in file", self.current_line)
 
-        seq_continue_block = Suppress(LineEnd()) + OneOrMore(seq_continue)
-        seq_continue_block.setParseAction(self.set_continue_block)
+            # Skip blank lines
+            if len(line.strip()) == 0:
+                continue
 
-        return header + seq_start_block + ZeroOrMore(seq_continue_block)
+            # `split` works on whitespace
+            bits = line.split()
 
-    def set_header(self, text, loc, tokens):
-        self.sequence_length = tokens.sequence_length
-        self.species_count = tokens.species_count
-
-    def set_seq_start(self, text, loc, tokens):
-        self.sequences.append([tokens.species, tokens.sequence])
-        self.current_sequence += 1
-
-    def set_start_block(self, tokens):
-        # End of block
-        # Reset the counter
-        self.current_sequence = 0
-
-    def set_seq_continue(self, text, loc, tokens):
-        append_to = self.sequences[self.current_sequence]
-        append_to[1] += tokens.sequence
-        self.current_sequence += 1
-
-    def set_continue_block(self, tokens):
-        self.current_sequence = 0
-
-    def parse(self, s):
-        try:
-            defs = self.root_parser.parseString(s)
-        except ParseException, p:
-            log.error("Error in Alignment Parsing:" + str(p))
-            log.error("A common cause of this error is having whitespace"
-            ", i.e. spaces or tabs, in the species names. Please check this and remove"
-            " all whitespace from species names, or replace them with e.g. underscores")
-
-            raise AlignmentError
-
-        # Check that all the sequences are equal length
-        slen = None
-        for nm, seq in self.sequences:
-            if slen is None:
-                # Use the first as the test case
-                slen = len(seq)
+            # We're looking for 2 bits, species count and bases
+            if len(bits) == 2:
+                # Convert them to integers
+                S, C = map(int, bits)
+                self.species_count = S
+                self.sequence_length = C
+                # We're done!
+                return
             else:
-                if len(seq) != slen:
-                    log.error("Bad alignment file: Not all species have the same sequences length")
+                log.error("""Line %d: Failed to find the Phyml header that
+                          specifies the species count, and sequence length""",
+                          self.current_line)
+                raise AlignmentError
+
+    def check_block(self):
+        # Do some checking on the line in the block
+        if self.block_len is None:
+            # Mark the length we got.
+            self.block_len = self.cur_len
+            self.end_base = self.start_base + self.block_len
+            if self.end_base > self.sequence_length + 1:
+                log.error("""Line %d: More supplied than defined in the
+                            header""", self.current_line)
+                raise AlignmentError
+        else:
+            # Make sure all species report the same length.
+            if self.cur_len != self.block_len:
+                log.error("""Line %d: Number of bases differs in length
+                            from previous line(s)""", self.current_line)
+                raise AlignmentError
+
+    def parse_species_block(self):
+        """Most sequences just have a block like this.
+
+        Species1 ATCT
+        Species2 ATCG
+        ...
+        """
+        self.block_len = None
+
+        # Look for species followed by bases, separated by whitespace.
+        cur_species = 0
+        while cur_species < self.species_count:
+            line = self.stream.readline()
+            self.current_line += 1
+
+            if len(line) == 0:
+                # We've run out of species! There must be too many species in
+                # the header.
+                log.error("""Phyml format error. Only found {} species,
+                            but header says there are {}.
+                          """.format(cur_species, self.species_count))
+                raise AlignmentError
+
+            bits = line.split()
+            num_bits = len(bits)
+            if num_bits == 0:
+                # Skip blanks lines
+                continue
+
+            # Should be two pieces -- [species, bases]
+            if len(bits) != 2:
+                log.error("""Line %d: Line should be species and bases
+                          separated by whitespace""", self.current_line)
+                raise AlignmentError
+
+            spec, bases = bits
+            self.cur_len = len(bases)
+
+            self.check_block()
+            self.species.append(spec)
+
+            # Write into the array at the right position.
+            arr = self.bases_to_array(bases)
+            self.data[cur_species, self.start_base:self.end_base] = arr
+
+            cur_species += 1
+
+        self.start_base += self.block_len
+
+    def parse_interleave_block(self):
+        species_num = 0
+        blank_lines = 0
+        self.block_len = None
+
+        while species_num < self.species_count:
+            curline = self.stream.readline()
+            self.current_line += 1
+            self.cur_len = len(curline)
+
+            if self.cur_len == 0:
+                # If we read nothing, it is the end of the file
+                if species_num != 0:
+                    log.error("""Line %d: "Did not find enough lines for all
+                              species in interleave block""",
+                              self.current_line)
+                    raise AlignmentError
+                return False
+
+            # Strip any whitespace
+            bases = curline.strip()
+            self.cur_len = len(bases)
+
+            if self.cur_len == 0:
+                # Skip blanks
+                if species_num != 0:
+                    log.error("""Line %d: Found blank line in interleave
+                              block""", self.current_line)
                     raise AlignmentError
 
-        # Not all formats have a heading, but if we have one do some checking
-        if self.sequence_length is not None:
-            if self.sequence_length != slen:
-                log.error("Bad Alignment file: sequence length count in header does not match"
-                " sequence length in file, please check")
+                blank_lines += 1
+                continue
+
+            if blank_lines == 0:
+                if self.interleave_blocks_done == 0:
+                    # No blank line. And we've not yet done an interleave
+                    # block. Let's guess there are just too many species.
+                    log.error("""Line %d: Found too many species (there should be {})
+                              """.format(self.current_line, self.species_count))
+                else:
+                    log.error("""Line %d: Expected a blank line between blocks""",
+                              self.current_line)
                 raise AlignmentError
 
-        if self.species_count is not None:
-            if len(self.sequences) != self.species_count:
-                log.error("Bad Alignment file: species count in header does not match"
-                " number of sequences in file, please check")
-                raise AlignmentError
+            self.check_block()
 
-        return self.sequences
+            arr = self.bases_to_array(bases)
+            self.data[species_num, self.start_base:self.end_base] = arr
 
-def parse(s):
-    return AlignmentParser().parse(s)
+            species_num += 1
+
+        self.start_base += self.block_len
+        return True
+
 
 class Alignment(object):
     def __init__(self):
-        self.species = {}
-        self.sequence_len = 0
+        self.species = []
+        self.sequence_length = 0
+        self.data = None
+
+    @property
+    def species_count(self):
+        return len(self.species)
 
     def __str__(self):
-        return "Alignment(%s species, %s codons)" % self.species, self.sequence_len
+        return "Alignment(%s species, %s bases)"\
+               % (self.species_count, self.sequence_length)
 
     def same_as(self, other):
-        if self.sequence_len != other.sequence_len:
-            log.warning("Alignments not the same, length differs %s: %s", self.sequence_len, other.sequence_len)
+        if self.sequence_length != other.sequence_length:
+            log.warning("Alignments not the same, length differs %s: %s",
+                        self.sequence_length, other.sequence_length)
             return False
 
-        if self.species != other.species:
-            log.warning("Alignments not the same. " 
-                        "This alignment has %s species, the alignment from the previous "
-                        "analysis had %s.", len(self.species), len(other.species))
+        if self.species_count != other.species_count:
+            log.warning("""Alignments not the same. This alignment has %s
+                        species, the alignment from the previous  analysis had
+                        %s.""",
+                        len(self.species), len(other.species))
+            return False
+
+        if not (self.data == other.data).all():
+            log.warning("Alignments not the same. Some of sequence differs.")
             return False
 
         return True
 
-    def from_parser_output(self, defs):
-        """A series of species / sequences tuples
-        e.g def = ("dog", "GATC"), ("cat", "GATT")
-        """
-        species = {}
-        sequence_len = None
-        for spec, seq in defs:
-            # log.debug("Found Sequence for %s: %s...", spec, seq[:20])
-            if spec in species:
-                log.error("Repeated species name '%s' is repeated "
-                          "in alignment", spec)
-                raise AlignmentError
+    def parse_stream(self, stream):
+        p = AlignmentParser(stream)
+        p.parse()
 
-            # Assign it
-            species[spec] = seq
-
-            if sequence_len is None:
-                sequence_len = len(seq)
-            else:
-                if len(seq) != sequence_len:
-                    log.error("Sequence length of %s "
-                              "differs from previous sequences", spec)
-                    raise AlignmentError
-        log.debug("Found %d species with sequence length %d",
-                  len(species), sequence_len)
-
-        # Overwrite these
-        self.species = species
-        self.sequence_len = sequence_len
+        # Copy everything from the import parser
+        self.sequence_length = p.sequence_length
+        self.species = p.species
+        self.data = p.data
 
     def read(self, pth):
+        log.info("Reading alignment file '%s'", pth)
         if not os.path.exists(pth):
-            log.error("Cannot find sequence file '%s'", pth)
+            log.error("Cannot find alignment file '%s'", pth)
             raise AlignmentError
 
-        log.info("Reading alignment file '%s'", pth)
-        text = open(pth, 'rU').read()
-        self.from_parser_output(parse(text))
+        with open(pth, 'rU') as stream:
+            self.parse_stream(stream)
+
+    def parse(self, text):
+        stream = cStringIO.StringIO(text)
+        self.parse_stream(stream)
 
     def write(self, pth):
-        self.write_phylip(pth)
-
-    def write_phylip(self, pth):
         fd = open(pth, 'w')
         log.debug("Writing phylip file '%s'", pth)
-
-        species_count = len(self.species)
-        sequence_len = len(iter(self.species.itervalues()).next())
-
-        fd.write("%d %d\n" % (species_count, sequence_len))
-        for species, sequence in self.species.iteritems():
-            # we use a version of phylip which can have longer species names, up to 100
-            shortened = "%s    " %(species[:99])
-            fd.write(shortened)
-            fd.write(sequence)
-            fd.write("\n")
+        self.write_phylip(fd)
         fd.close()
+
+    def write_phylip(self, stream):
+        species_count = len(self.species)
+        stream.write("%d %d\n" % (species_count, self.sequence_length))
+        for i in range(species_count):
+            spec = self.species[i]
+            sequence = self.data[i]
+            # We use a version of phylip which can have longer species names,
+            # up to 100
+            shortened = "%s    " % (spec[:99])
+            stream.write(shortened)
+            stream.write(sequence.tostring())
+            stream.write("\n")
+
+    def check_state_probs(self, subset, cfg):
+        # There's no problem if the user doesn't care about how many states
+        # are in a subset
+        if not cfg.all_states:
+            return False
+
+        sub_aln = SubsetAlignment(self, subset)
+
+        # 1. Get set of all states in the alignment, obs([])
+        observed_states = numpy.unique(sub_aln.data).tostring()
+
+        # 2. run through all states for each state, extend a set of observed
+        #    states, e.g. obs.add(x)
+        expanded_states = set([])
+        if cfg.datatype == 'protein':
+            all_states = amino_states
+            state_dict = amino_dict
+        elif cfg.datatype == 'DNA':
+            all_states = dna_states
+            state_dict = dna_dict
+
+        for state in observed_states:
+            try:
+                ex = state_dict[state]
+            except KeyError:
+                ex = set(state)
+
+            expanded_states = expanded_states.union(ex)
+
+        # 3. Compare set of observed states to set of all states. If all
+        #    states are in the observed states, return TRUE else return FALSE.
+        if len(all_states.difference(expanded_states)) > 0:
+            # some states are missing
+            return True
+        else:
+            return False
+
 
 class SubsetAlignment(Alignment):
     """Create an alignment based on some others and a subset definition"""
+
     def __init__(self, source, subset):
         """create an alignment for this subset"""
         Alignment.__init__(self)
 
-        #let's do a basic check to make sure that the specified sites aren't > alignment length
-        site_max = max(subset.columns)+1
-        log.debug("Max site in data_blocks: %d; max site in alignment: %d" %(site_max, source.sequence_len))
-        if site_max>source.sequence_len:
-            log.error("Site %d is specified in [data_blocks], but the alignment only has %d sites. Please check." %(site_max, source.sequence_len))
+        # Let's do a basic check to make sure that the specified sites
+        # aren't > alignment length
+        site_max = max(subset.columns) + 1
+        log.debug("Max site in data_blocks: %d; max site in alignment: %d"
+                  % (site_max, source.sequence_length))
+        if site_max > source.sequence_length:
+            log.error("Site %d is specified in [data_blocks], "
+                      "but the alignment only has %d sites. "
+                      "Please check." % (site_max, source.sequence_length))
             raise AlignmentError
 
-        # Pull out the columns we need
-        for species_name, old_sequence in source.species.iteritems():
-            new_sequence = ''.join([old_sequence[i] for i in subset.columns])
-            self.species[species_name] = new_sequence
-
-        if not self.species:
-            log.error("No species found in %s", self)
-            raise AlignmentError
-
-        self.sequence_len = len(self.species.itervalues().next())
-
-class TestAlignment(Alignment):
-    """Good for testing stuff"""
-    def __init__(self, text):
-        Alignment.__init__(self)
-        self.from_parser_output(parse(text))
-
+        self.species = source.species
+        # Pull out the columns we need using the magic of numpy indexing
+        self.data = source.data[:, subset.columns]
+        self.sequence_length = len(subset.columns)
+        assert self.sequence_length == self.data.shape[1]
