@@ -33,6 +33,8 @@ from database import DataRecord, DataLayout
 _binary_name = 'phyml'
 if sys.platform == 'win32':
     _binary_name += ".exe"
+if sys.platform == "linux" or sys.platform == "linux2":
+    _binary_name += ".linux"
 _phyml_binary = None
 
 def make_data_layout(cfg):
@@ -147,14 +149,15 @@ def analyse(model, alignment_path, tree_path, branchlengths, cmdline_extras):
 
 def make_tree_path(alignment_path):
     pth, ext = os.path.splitext(alignment_path)
-    return pth + ".phy_phyml_tree"
+
+    return pth + ".phy_phyml_tree.txt"
 
 
 def make_output_path(aln_path, model):
     # analyse_path = os.path.join(root_path, name + ".phy")
     pth, ext = os.path.splitext(aln_path)
-    stats_path = "%s.phy_phyml_stats_%s" % (pth, model)
-    tree_path = "%s.phy_phyml_tree_%s" % (pth, model)
+    stats_path = "%s.phy_phyml_stats_%s.txt" % (pth, model)
+    tree_path = "%s.phy_phyml_tree_%s.txt" % (pth, model)
     return stats_path, tree_path
 
 

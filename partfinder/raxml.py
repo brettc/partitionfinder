@@ -41,7 +41,12 @@ _dna_letters = "ATCG"
 _binary_name = 'raxml'
 _binary_name_pthreads = 'raxml_pthreads'
 if sys.platform == 'win32':
-    _binary_name += ".exe"
+    _binary_name            += ".exe"
+    _binary_name_pthreads   += ".exe"
+if sys.platform == "linux" or sys.platform == "linux2":
+    _binary_name            += ".linux"
+    _binary_name_pthreads   += ".linux"
+
 _raxml_binary = None
 _raxml_pthreads_binary = None
 

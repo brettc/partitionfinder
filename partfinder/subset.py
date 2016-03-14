@@ -220,6 +220,11 @@ class Subset(object):
 
 
     def finalise(self, cfg):
+
+        log.debug("Finalising subset %s", self.subset_id)
+
+        log.debug("models not done: %s", self.models_not_done)
+
         if self.models_not_done:
             return False
 
@@ -241,6 +246,8 @@ class Subset(object):
         self.models_to_process = []
         self.status = DONE
         cfg.progress.subset_done(self)
+
+
         return True
 
     def prepare(self, cfg, alignment):
@@ -276,6 +283,8 @@ class Subset(object):
     def parse_model_result(self, cfg, model):
         pth, tree_path = cfg.processor.make_output_path(
             self.alignment_path, model)
+
+        print("Lokking for pth: %s", pth)
 
         if not os.path.exists(pth):
             # If it ain't there, we can't do it
