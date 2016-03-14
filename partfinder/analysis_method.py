@@ -164,7 +164,7 @@ class GreedyAnalysis(Analysis):
         subsets = [s for s in start_scheme.subsets]
 
         step = 1
-        while True:
+        while len(set(start_scheme.subsets)) > 1:
             with logtools.indented(log, "***Greedy algorithm step %d***" % step):
                 name_prefix = "step_%d" % (step)
 
@@ -267,10 +267,6 @@ class GreedyAnalysis(Analysis):
                 if not the_config.quick:
                     the_config.reporter.write_scheme_summary(
                         best_scheme, best_result)
-
-
-                if len(set(start_scheme.subsets)) == 1:
-                    break
 
                 step += 1
 
