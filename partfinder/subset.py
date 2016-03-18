@@ -284,8 +284,6 @@ class Subset(object):
         pth, tree_path = cfg.processor.make_output_path(
             self.alignment_path, model)
 
-        print("Lokking for pth: %s", pth)
-
         if not os.path.exists(pth):
             # If it ain't there, we can't do it
             return
