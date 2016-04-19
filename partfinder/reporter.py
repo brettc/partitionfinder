@@ -216,9 +216,11 @@ class TextReporter(object):
                      "then this MrBayes block will just set that model "
                      "to nst = 6 for DNA, or 'wag' for Protein. Similarly, the only additional parameters "
                      "that this MrBayes block will include are +I and +G. Other "
-                     " parameters, such as +F and +X, are ignored" 
-                     "Please "
-                     "check the MrBayes block carefully before you use it.\n\n"
+                     " parameters, such as +F and +X, are ignored. " 
+                     "If you want to use this MrBayes block for your analysis, "
+                     "please make sure to check it carefully before you use it "
+                     "we've done our best to make it accurate, but there may "
+                     "be errors that remain!\n\n"
                     )
 
         output.write("begin mrbayes;\n\n")
@@ -250,10 +252,12 @@ class TextReporter(object):
             output.write(model_text)
             subset_number += 1
 
-        output.write('\n\tprset applyto=(all) ratepr=variable;\n')
-        output.write('\tunlink statefreq=(all) revmat=(all) shape=(all) pinvar=(all) tratio=(all);\n')
-        if the_config.branchlengths == 'unlinked':
-            output.write('\tunlink brlens=(all);\n')
+        if len(sorted_subsets)>1:
+            output.write('\n\tprset applyto=(all) ratepr=variable;\n')
+            output.write('\tunlink statefreq=(all) revmat=(all) shape=(all) pinvar=(all) tratio=(all);\n')
+
+            if the_config.branchlengths == 'unlinked':
+                output.write('\tunlink brlens=(all);\n')
 
         output.write('\nend;\n')
 
