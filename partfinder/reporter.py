@@ -229,7 +229,7 @@ class TextReporter(object):
         for sub in sorted_subsets:
             if self.cfg.search in _odd_searches:
                 sites = [x + 1 for x in sub.columns]
-                partition_sites = str(sites).strip('[]')
+                partition_sites = str(sites).strip('[]').replace(',','')
             else:
                 partition_sites = sub.site_description_no_commas
 
