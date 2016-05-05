@@ -37,7 +37,7 @@ class Configuration(object):
     options = {
         'branchlengths': ['linked', 'unlinked'],
         'model_selection': ['aic', 'aicc', 'bic'],
-        'search': ['all', 'user', 'greedy', 'hcluster', 'rcluster', 'rclusterf', 'kmeans']
+        'search': ['all', 'user', 'greedy', 'hcluster', 'rcluster', 'rclusterf', 'kmeans', 'krmeans']
     }
 
     def __init__(self):

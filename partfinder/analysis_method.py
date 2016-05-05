@@ -897,7 +897,7 @@ def choose_method(search):
         method = RelaxedClusteringAnalysis
     elif search == 'rclusterf':
         method = RelaxedClusteringAnalysis
-    elif search == 'kmeans':
+    elif search == 'kmeans' or search == 'krmeans':
         method = KmeansAnalysis
     else:
         log.error("Search algorithm '%s' is not recognised", search)
