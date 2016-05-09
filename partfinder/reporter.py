@@ -29,7 +29,7 @@ scheme_subset_template = "%-6s | %-10s | %-10s | %-32s | %-100s\n"
 subset_template = "%-15s | %-15s | %-15s | %-15s  | %-15s | %-15s\n"
 
 # We write different output for these searches
-_odd_searches = ['kmeans']
+_odd_searches = ['kmeans', 'krmeans']
 _scheme_data_csv = 'scheme_data.csv'
 
 class TextReporter(object):
@@ -287,7 +287,7 @@ class TextReporter(object):
             output.write(scheme_header_template % ("rcluster-max",
                                                        self.cfg.cluster_max))
 
-        if self.cfg.search == "kmeans":
+        if self.cfg.search == "kmeans" or self.cfg.search == "krmeans":
             output.write(scheme_header_template % ("min-subset-size",
                                                    self.cfg.min_subset_size))
             output.write(scheme_header_template % ("kmeans based on",
@@ -402,7 +402,7 @@ def write_citation_text(self):
     if self.cfg.search == "rcluster" or self.cfg.search == "hcluster":
         citation_text.append("%s\n" % ref_rcluster)
 
-    elif self.cfg.search == "kmeans":
+    elif self.cfg.search == "kmeans" or self.cfg.search == "krmeans":
         citation_text.append("%s\n" % ref_kmeans)
 
     elif self.cfg.search == "greedy":
