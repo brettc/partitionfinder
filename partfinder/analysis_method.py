@@ -732,6 +732,17 @@ class KmeansAnalysis(Analysis):
 
     def setup(self):
 
+        log.error("Warning as of April 2016: We have noticed that the kmeans \
+            algorithm does not perform well on some simulated datasets. \
+            We are working on investigating and addressing this \
+            but in the mean time we suggest being very cautious about using \
+            this algorithm. At the very least, you should try other approaches \
+            (e.g. partitioning by locus), and investigate your answers carefully \
+            (both the trees and the partitioning schemes). If you have any \
+            questions, please get in touch on the google group."   
+            )
+
+
         # set the default subset size to 100 for kmeans analyses
         if the_config.min_subset_size == False:
             the_config.min_subset_size = 100
