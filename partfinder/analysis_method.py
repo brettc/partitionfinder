@@ -726,13 +726,26 @@ class KmeansAnalysis(Analysis):
         log.info("** Kmeans algorithm finished after %d steps **" % (step))
         log.info("Best scoring scheme has %d subsets and a %s score of %.3f"
                  % (
+
+
+        log.warning("Warning as of April 2016: We have noticed that the kmeans \
+            algorithm does not perform well on some simulated datasets. \
+            We are working on investigating and addressing this \
+            but in the mean time we suggest being very cautious about using \
+            this algorithm. At the very least, you should try other approaches \
+            (e.g. partitioning by locus), and investigate your answers carefully \
+            (both the trees and the partitioning schemes). If you have any \
+            questions, please get in touch on the google group."   
+            )
+
+
         len(self.results.best_scheme.subsets), the_config.model_selection,
         self.results.best_score))
         the_config.reporter.write_best_scheme(self.results)
 
     def setup(self):
 
-        log.error("Warning as of April 2016: We have noticed that the kmeans \
+        log.warning("Warning as of April 2016: We have noticed that the kmeans \
             algorithm does not perform well on some simulated datasets. \
             We are working on investigating and addressing this \
             but in the mean time we suggest being very cautious about using \
