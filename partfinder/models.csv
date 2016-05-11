@@ -373,5 +373,5 @@ id,name,base_frequencies,rate_variation,matrix_params,basefreq_params,ratevar_pa
 372,GTR+I+G+X,ML,"invariant, gamma",189,19,2,protein,NA, -m PROTGAMMAIGTRX,,0,1,0,0,0,0,0
 373,BINARY+G,,gamma,0,1,1,morphology,NA,-m BINGAMMA,for binary morphological data,0,0,0,0,0,0,0
 374,BINARY+G+A,,gamma,0,1,1,morphology,NA,-m ASC_BINGAMMA --asc-corr=lewis,for binary morphological data,0,0,0,0,0,0,0
-375,MULTISTATE+G,,gamma,0,1,1,morphology,NA,-m MULTIGAMMA,for multistate morphological data,0,0,0,0,0,0,0
-376,MULTISTATE+G+A,,gamma,0,1,1,morphology,NA,-m ASC_MULTIGAMMA --asc-corr=lewis,for multistate morphological data,0,0,0,0,0,0,0
+375,MULTISTATE+G,,gamma,0,1,1,morphology,NA,-m MULTIGAMMA -K MK,"for multistate morphological data, assumes the MK model",0,0,0,0,0,0,0
+376,MULTISTATE+G+A,,gamma,0,1,1,morphology,NA,-m ASC_MULTIGAMMA -K MK --asc-corr=lewis,"for multistate morphological data, assumes the MK model",0,0,0,0,0,0,0
