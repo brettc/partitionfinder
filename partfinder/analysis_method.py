@@ -726,7 +726,9 @@ class KmeansAnalysis(Analysis):
         log.info("** Kmeans algorithm finished after %d steps **" % (step))
         log.info("Best scoring scheme has %d subsets and a %s score of %.3f"
                  % (
-
+        len(self.results.best_scheme.subsets), the_config.model_selection,
+        self.results.best_score))
+        the_config.reporter.write_best_scheme(self.results)
 
         log.warning("Warning as of April 2016: We have noticed that the kmeans \
             algorithm does not perform well on some simulated datasets. \
@@ -739,9 +741,6 @@ class KmeansAnalysis(Analysis):
             )
 
 
-        len(self.results.best_scheme.subsets), the_config.model_selection,
-        self.results.best_score))
-        the_config.reporter.write_best_scheme(self.results)
 
     def setup(self):
 
