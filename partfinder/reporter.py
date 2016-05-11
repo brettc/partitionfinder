@@ -103,7 +103,8 @@ class TextReporter(object):
         self.write_subsets(sch, result, output, sorted_subsets)
         self.write_nexus_summary(output, sorted_subsets)
         self.write_raxml(sch, result, output, sorted_subsets)
-        self.write_mrbayes(sch, result, output, sorted_subsets)
+        if self.cfg.datatype != "morphology":
+            self.write_mrbayes(sch, result, output, sorted_subsets)
 
     def write_scheme_header(self, sch, result, output):
         output.write(scheme_header_template % ("Scheme Name", sch.name))
@@ -335,6 +336,9 @@ def write_raxml_partitions(sch, output, sorted_subsets, use_lg = False):
                 model = get_raxml_protein_modelstring(sub.best_model)
             else:
                 model = get_raxml_protein_modelstring("LG+G")
+        elif the_config.datatype == "morphology":
+            model = get_raxml_morphology_modelstring(sub.best_model)
+
         else:
             raise RuntimeError
 
