@@ -24,6 +24,7 @@ import fnmatch
 import util
 from database import DataLayout, DataRecord
 from reporter import write_raxml_partitions
+from config import the_config
 
 from pyparsing import (
     Word, Literal, nums, Suppress, ParseException,
@@ -34,6 +35,7 @@ import raxml_models as models
 
 _protein_letters = "ARNDCQEGHILKMFPSTWYV"
 _dna_letters = "ATCG"
+_morph_chars = "0123456789"
 
 # This is set as the binary name because the previously compiled raxml had a
 # bug when calculating site likelihoods, this needs to be changed back to
@@ -56,6 +58,8 @@ def make_data_layout(cfg):
         letters = _protein_letters
     elif cfg.datatype == "DNA":
         letters = _dna_letters
+    elif cfg.datatype == "morphology":
+        letters = _morph_chars
     return DataLayout(letters)
 
 
@@ -99,6 +103,9 @@ def make_ml_topology(alignment_path, datatype, cmdline_extras, scheme, cpus):
     elif datatype == "protein":
         command = " -f E -s '%s' -m PROTGAMMALG -O -n fastTREE -# 1 -p 123456789 -q '%s' -e 10 " % (
             alignment_path, partition_file)
+    elif datatype == "morphology":
+        log.error("ML starting tree is not implemented for morphology yet. Sorry.")
+        raise util.PartitionFinderError
     else:
         log.error("Unrecognised datatype: '%s'" % (datatype))
         raise util.PartitionFinderError
@@ -157,6 +164,13 @@ def make_topology(alignment_path, datatype, cmdline_extras):
     elif datatype == "protein":
         command = "-y -s '%s' -m PROTGAMMALG -n MPTREE -p 123456789 %s" % (
             alignment_path, cmdline_extras)
+    elif datatype == "morphology":
+        # LOOK OUT: this relies on the assumption that we can only specify a single
+        # model for morphology analyses...
+        # choose a model for the data - necessary for RAxML to load the data properly
+        model = models.get_model_commandline(the_config.models[0])
+        command = "-y -s %s %s -K MK -n MPTREE -p 123456789 %s" % (
+            alignment_path, model, cmdline_extras)
     else:
         log.error("Unrecognised datatype: '%s'" % (datatype))
         raise util.PartitionFinderError
@@ -196,19 +210,31 @@ def make_branch_lengths(alignment_path, topology_path, datatype, cmdline_extras)
         log.info("Estimating GTR+G branch lengths on tree using RAxML")
         command = "-f e -s '%s' -t '%s' -m GTRGAMMA -n BLTREE -w '%s' %s  " % (
             alignment_path, tree_path, os.path.abspath(dir_path), cmdline_extras)
-        run_raxml(command)
     if datatype == "protein":
         log.info("Estimating LG+G branch lengths on tree using RAxML")
         command = "-f e -s '%s' -t '%s' -m PROTGAMMALG -n BLTREE -w '%s' %s " % (
             alignment_path, tree_path, os.path.abspath(dir_path), cmdline_extras)
-        run_raxml(command)
+    elif datatype == "morphology":
+        # LOOK OUT: this relies on the assumption that we can only specify a single
+        # model for morphology analyses...
+        # choose a model for the data - necessary for RAxML to load the data properly
+        model = models.get_model_commandline(the_config.models[0])
+        log.info("Estimating %s branch lengths on tree using RAxML", the_config.models[0])
+        command = "-f e -s %s -t %s %s -K MK -n BLTREE -w %s %s" % (
+                alignment_path, tree_path, model, os.path.abspath(dir_path), cmdline_extras)
+    else:
+        log.error("Unrecognised datatype: '%s'" % (datatype))
+        raise util.PartitionFinderError
+
+    run_raxml(command)
+
 
     dir, aln = os.path.split(alignment_path)
     tree_path = os.path.join(dir, "RAxML_result.BLTREE")
 
     if not os.path.exists(tree_path):
         log.error("RAxML tree topology should be here but can't be be found: '%s'" % (tree_path))
-        raise(RaxmlError)
+        raise util.PartitionFinderError
     else:
         log.debug("RAxML tree with branch lengths ('%s') looks like this: ", tree_path)
         with open(tree_path, 'r') as fin:
@@ -319,6 +345,8 @@ class Parser(object):
             letters = _protein_letters
         elif cfg.datatype == "DNA":
             letters = _dna_letters
+        elif cfg.datatype == "morphology":
+            letters = "0123456789"
         else:
             log.error("Unknown datatype '%s', please check" % self.cfg.datatype)
             raise util.PartitionFinderError
