@@ -74,6 +74,10 @@ def kmeans(rate_array, number_of_ks, n_jobs):
     time_taken = "k-means splitting took %s seconds" % (stop - start)
     log.debug(time_taken)
 
+    print(np.mean(rate_array))
+    print(np.mean(np.take(rate_array, np.array(cluster_dict[0])-1)))
+    print(np.mean(np.take(rate_array, np.array(cluster_dict[1])-1)))
+
     # Return centroids and dictionary with lists of sites for each k
     return centroid_list, dict(cluster_dict)
 
