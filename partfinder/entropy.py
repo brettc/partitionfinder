@@ -126,6 +126,7 @@ def sitewise_entropies_scaled(alignment):
         props = np.array([num/float(sum) for num in col])
         column_entropy.append([entropy_calc(props)]) 
     column_entropy = np.array(column_entropy)
+    column_entropy = column_entropy.reshape(len(column_entropy), 1)
     return column_entropy
 
 
