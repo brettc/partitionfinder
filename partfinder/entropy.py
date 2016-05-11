@@ -31,7 +31,7 @@ def entropy_calc(p):
 
 
 def get_morph_entropies(alignment):
-    morph_align = alignment.T
+    morph_align = alignment.data.T
     column_counts = []
     for col in morph_align:
         new_col = col[col != ord('-')]
@@ -51,34 +51,36 @@ def sitewise_entropies(alignment):
         dna_states = "ACGT"
         dna_list = [np.sum(alignment.data == ord(nuc), axis = 0) for nuc in list(dna_states)]
         states = np.array(dna_list, dtype=float)
-
     elif the_config.datatype == 'protein':
         log.debug("Calculating protein entropies")
         aa_states = "ARNDCQEGHILKMFPSTWYV"
         amino_list = [np.sum(alignment.data == ord(aa), axis = 0) for aa in list(aa_states)]
         states = np.array(amino_list, dtype = float)
     elif the_config.datatype == 'morphology':
-        return(get_morph_entropies(alignment))
+        column_entropy = get_morph_entropies(alignment)
     else:
         log.error("Unknown datatype '%s'" % the_config.datatype)
         raise PartitionFinderError
 
-    states = states.T
-    totals = np.sum(states, axis=1)
-    totals.shape = len(states),1
+    if the_config.datatype != 'morphology':
+        states = states.T
+        totals = np.sum(states, axis=1)
+        totals.shape = len(states),1
 
-    # for a column of all gaps, we'll have a zero total, so we just hack that here
-    totals = np.where(totals==0, 1, totals)
+        # for a column of all gaps, we'll have a zero total, so we just hack that here
+        totals = np.where(totals==0, 1, totals)
 
-    prob = states/totals
+        prob = states/totals
 
-    column_entropy = [[entropy_calc(t)] for t in prob]
+        column_entropy = [[entropy_calc(t)] for t in prob]
 
     column_entropy = np.array(column_entropy)
 
     if the_config.search == 'krmeans':
         # the definition of krmeans is that we reassign the zero entropies
         column_entropy = reassign_zero_entropies(column_entropy)
+
+    print column_entropy
 
     return column_entropy
 
