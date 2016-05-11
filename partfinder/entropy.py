@@ -81,8 +81,6 @@ def sitewise_entropies(alignment):
         # the definition of krmeans is that we reassign the zero entropies
         column_entropy = reassign_zero_entropies(column_entropy)
 
-    print column_entropy
-
     return column_entropy
 
 def find_nearest(array,value):
