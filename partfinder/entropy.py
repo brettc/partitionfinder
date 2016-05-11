@@ -43,6 +43,8 @@ def get_morph_entropies(alignment):
         props = np.array([num/float(sum) for num in col])
         column_entropy.append(entropy_calc(props))
     column_entropy = np.array(column_entropy)
+    column_entropy = column_entropy.reshape(len(column_entropy), 1)
+
     return column_entropy
 
 def sitewise_entropies(alignment):
@@ -73,8 +75,7 @@ def sitewise_entropies(alignment):
         prob = states/totals
 
         column_entropy = [[entropy_calc(t)] for t in prob]
-
-    column_entropy = np.array(column_entropy)
+        column_entropy = np.array(column_entropy)
 
     if the_config.search == 'krmeans':
         # the definition of krmeans is that we reassign the zero entropies
