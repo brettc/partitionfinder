@@ -104,6 +104,18 @@ def check_all_models(the_config):
                  (located in the /partfinder folder) for more information.""")
         raise PartitionFinderError
 
+    # specific case for morphology - only alllow a single model
+    if the_config.datatype == 'morphology' and len(models)>1:
+        log.error("""For morphology analyses, you can only specify a single model. Please 
+            check and try again.""") 
+        log.info("""If you have multiple data types in your alignment (e.g. a combination
+            of binary and multistate columns, or one subset which requires an ascertainment
+            bias correction and another that doesn't, please split these into separate 
+            files and run separate PartitionFinder analyses.""")
+        raise PartitionFinderError
+
+
+
 def check_all_models_and_lists(the_config):
     # everything has to be either a model in the_config.available_models
     # OR a valid option from the _available_models
