@@ -20,9 +20,12 @@ import math
 import scheme
 import submodels
 from analysis import Analysis, AnalysisError
+from alignment import SubsetAlignment
 import neighbour
 import kmeans
+from subset import Subset
 import subset_ops
+import entropy
 from scipy import spatial
 from scipy.misc import comb
 import numpy as np
@@ -844,7 +847,7 @@ class KmeansAnalysis(Analysis):
 
         # 4. Are we done yet?
         if len(new_scheme_subs) == len(list(start_subsets)):
-            log.info("""Could not improve %s score. Algorithm finished."""
+            log.info("""Could not improve %s score. Kmeans algorithm finished."""
                      % (the_config.model_selection))
             done = True
         else:
@@ -863,6 +866,45 @@ class KmeansAnalysis(Analysis):
             done = False
 
         return done, start_subsets
+
+    def reassign_invariant_sites(self, subsets):
+
+        #TODO add a skip: 
+        #if(len(subsets)==1):
+        #   return(subsets)
+
+        # get entropies for whole alignment for this subset
+        onesub = subset_ops.merge_subsets(subsets)
+        entropies = entropy.sitewise_entropies(SubsetAlignment(self.alignment, onesub))
+
+        # find nearest site for each invariant site
+        # replacements is a dict of: key: invariant col; value: replacement col, 
+        # e.g. 
+        # {512: 513, 514: 513, 515: 513, 516: 517}
+        replacements = entropy.get_replacement_sites(entropies, onesub.columns)
+
+        # now make a dict of the CURRENT subsets: key: site; value: subset
+        sch_dict = {}
+        for i, sub in enumerate(subsets):
+            for site in sub.columns:
+                sch_dict[site] = i
+
+        # then reassign the sites as necessary based on replacements
+        for r in replacements:
+            sch_dict[r] = sch_dict[replacements[r]]
+
+        # now build subsets according to the new sites
+        sub_dict = {} # this gives us the subsets to build
+        for k, v in sch_dict.iteritems():
+            sub_dict.setdefault(v, []).append(k)
+
+        new_subsets = []
+        for s in sub_dict:
+            n = Subset(the_config, set(sub_dict[s]))
+            new_subsets.append(n)
+
+        return(new_subsets)
+
 
     @logtools.log_info(log, "Performing k-means Analysis")
     def do_analysis(self):
@@ -900,7 +942,16 @@ class KmeansAnalysis(Analysis):
         # Ok, we're done. we just need deal with fabricated subsets
         final_scheme = self.finalise_fabrication(start_subsets, step)
 
+        # Finally, for krmeans, we put the invariant sites back with their
+        # nearest variable neighbours
+        if the_config.search == 'krmeans':
+            log.info("Reassigning invariant sites for krmeans algorithm")
+            # the definition of krmeans is that we reassign the zero entropies
+            final_subsets = self.reassign_invariant_sites(final_scheme.subsets)
+            final_scheme = scheme.Scheme(the_config, "final_scheme_reassigned", final_subsets)
+
         log.info("Analysing final scheme")
+
         final_result = self.analyse_scheme(final_scheme)
 
         self.report(step)
