@@ -29,6 +29,7 @@ class AnalysisError(PartitionFinderError):
     pass
 
 
+
 def columnset_to_string(colset):
     s = list(colset)
     s.sort()
