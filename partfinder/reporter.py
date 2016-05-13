@@ -386,7 +386,7 @@ def write_citation_text(self):
 
     ref_morph = ("Lewis, P. O. (2001). A likelihood approach to estimating "
                  "phylogeny from discrete morphological character data. "
-                 "Systematic biology, 50(6), 913-925."
+                 "Systematic biology, 50(6), 913-925.")
 
     citation_text.append("\n\n\n*Citations for this analysis*\n")
     citation_text.append("-----------------------------")
