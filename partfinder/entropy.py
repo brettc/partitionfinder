@@ -77,19 +77,15 @@ def sitewise_entropies(alignment):
         column_entropy = [[entropy_calc(t)] for t in prob]
         column_entropy = np.array(column_entropy)
 
-    if the_config.search == 'krmeans':
-        # the definition of krmeans is that we reassign the zero entropies
-        column_entropy = reassign_zero_entropies(column_entropy)
-
     return column_entropy
 
 def find_nearest(array,value):
     idx = (np.abs(array-value)).argmin()
     return array[idx]
 
-def reassign_zero_entropies(column_entropy):
-    """take an array of entropies and reassign zeros to be equal to the phyisically
-    closest non-zero value"""
+def get_replacement_sites(column_entropy, columns):
+    """take an array of entropies and return the nearest site
+    to each site that has zero entropy"""
 
     zeros = np.where(column_entropy==0)[0]
     nonzeros = np.nonzero(column_entropy)[0]
@@ -99,15 +95,13 @@ def reassign_zero_entropies(column_entropy):
         return(column_entropy)
         
     # figure out the replacement values
-    replacements = []
+    replacements = {} # key: zero_entropy_site; value: replacement
     for z in zeros:
-        replacements.append(column_entropy[find_nearest(nonzeros, z)])
+        nearest_nonzero = find_nearest(nonzeros, z)
+        #replacements.setdefault(columns[nearest_nonzero], []).append(columns[z])
+        replacements[columns[z]] = columns[nearest_nonzero]
 
-    # now put them in
-    for i, z in enumerate(zeros):
-        column_entropy[z] = replacements[i]
-
-    return(column_entropy)
+    return(replacements)
 
 def sitewise_entropies_scaled(alignment): 
     """This function will calculate entropies for DNA based on the assumption
