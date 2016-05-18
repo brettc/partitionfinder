@@ -30,6 +30,7 @@ from config import the_config
 import entropy
 import sys
 from util import PartitionFinderError
+import morph_tiger as mt
 
 import subset_ops
 
@@ -127,6 +128,11 @@ def get_per_site_stats(alignment, cfg, a_subset):
         a_subset.make_alignment(cfg, alignment)
         phylip_file = a_subset.alignment_path
         return sitewise_tiger_rates(cfg, str(phylip_file))
+    elif cfg.kmeans == 'tiger' and cfg.datatype == 'morphology':
+        sub_align = SubsetAlignment(alignment, a_subset)
+        set_parts = mt.create_set_parts(sub_align)
+        rates = mt.calculate_rates(set_parts)
+        return rates
     elif cfg.kmeans == 'tiger':
         sub_align = SubsetAlignment(alignment, a_subset)
         tiger = the_config.TigerDNA()
@@ -134,6 +140,7 @@ def get_per_site_stats(alignment, cfg, a_subset):
         rate_array = tiger.calc_rates()
         rate_array.shape = rate_array.shape[0], 1
         return rate_array
+
     else: #wtf
         log.error("Unkown option passed to 'kmeans'. Please check and try again")
         raise PartitionFinderError
