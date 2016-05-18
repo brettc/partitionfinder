@@ -25,17 +25,28 @@ from util import PartitionFinderError
 
 # Create a set partition for each column in the alignment
 def create_set_parts(alignment):
-    print("creating set partitions")
+    log.debug("Creating set partitions")
     morph_align = alignment.data.T
     set_parts = []
+    part_set_dict = {}
     for col in morph_align:
-        # This is where the problem is. The ord() function changes all of the states
-        state_map = {}
-        for taxon, state in enumerate(col):
-            state_map.setdefault(state, []).append(taxon)
-        set_parts.append([state_map.get(index, []) for index in \
-            range(max(state_map)+1)])
-    print("These are the set parts: %s" % set_parts)
+        part_set_dict = {}
+        for tax,i in enumerate(col):
+            if i in part_set_dict:
+                part_set_dict[i].append(tax)
+            else:
+                part_set_dict[i] = [tax]
+        interim = []
+        for i in part_set_dict:
+            interim.append(part_set_dict[i])
+        set_parts.append(interim)
+    # for col in morph_align:
+    #     state_map = {}
+    #     for taxon, state in enumerate(col):
+    #         state_map.setdefault(state, []).append(taxon)
+    #     set_parts.append([state_map.get(index, []) for index in \
+    #         range(max(state_map)+1)])
+    # print("These are the set parts: %s" % set_parts)
     return set_parts
 
 # Calculate similarity between two set partitions
@@ -53,7 +64,7 @@ def axpi(set_part_1, set_part_2):
 
 # Estimate rates by comparing each set partition axpi score
 def calculate_rates(set_parts):
-    print("estimating rates")
+    log.debug("Estimating TIGER rates")
     rates = []
     total = len(set_parts)
     for count0,i in enumerate(set_parts):
@@ -64,7 +75,8 @@ def calculate_rates(set_parts):
             else:
                 number += axpi(i, j)
         rates.append([number/(total-1)])
-    print("Here are the rates: %s" % rates)
+    # print("Here are the rates: %s" % rates)
+    # print("There are %d rates in this list" % len(rates))
     return rates
 
 

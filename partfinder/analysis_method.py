@@ -798,23 +798,23 @@ class KmeansAnalysis(Analysis):
             tree_path = the_config.processor.make_tree_path(
                 self.filtered_alignment_path)
 
-        # if the_config.kmeans == 'tiger':
-        #     try:
-        #         from _tiger import TigerDNA
-        #         the_config.TigerDNA = TigerDNA
-        #     except:
-        #         log.error("Couldn't find compiled tiger code.")
-        #         log.error("You have selected kmeans and tiger \
-        #             rates. This is an unsupported option, if you still wish to use \
-        #             this option, you must compile the tiger code.")
-        #         log.error("Once you compile the tiger code, this option will work. \
-        #             But please note that this is an \
-        #             unsupported option. For empirical work we recommend using \
-        #             entropy calculations for site rates, which is the default \
-        #             behaviour for the kmeans algorithm in PF2.")
-        #         raise AnalysisError
-        # else:
-        #     the_config.TigerDNA = None
+        if the_config.kmeans == 'tiger' and the_config.datatype != 'morphology':
+            try:
+                from _tiger import TigerDNA
+                the_config.TigerDNA = TigerDNA
+            except:
+                log.error("Couldn't find compiled tiger code.")
+                log.error("You have selected kmeans and tiger \
+                    rates. This is an unsupported option, if you still wish to use \
+                    this option, you must compile the tiger code.")
+                log.error("Once you compile the tiger code, this option will work. \
+                    But please note that this is an \
+                    unsupported option. For empirical work we recommend using \
+                    entropy calculations for site rates, which is the default \
+                    behaviour for the kmeans algorithm in PF2.")
+                raise AnalysisError
+        else:
+            the_config.TigerDNA = None
 
 
         return start_result, start_scheme, tree_path
