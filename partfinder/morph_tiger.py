@@ -25,14 +25,17 @@ from util import PartitionFinderError
 
 # Create a set partition for each column in the alignment
 def create_set_parts(alignment):
+    print("creating set partitions")
     morph_align = alignment.data.T
     set_parts = []
     for col in morph_align:
+        # This is where the problem is. The ord() function changes all of the states
         state_map = {}
         for taxon, state in enumerate(col):
             state_map.setdefault(state, []).append(taxon)
         set_parts.append([state_map.get(index, []) for index in \
             range(max(state_map)+1)])
+    print("These are the set parts: %s" % set_parts)
     return set_parts
 
 # Calculate similarity between two set partitions
@@ -50,6 +53,7 @@ def axpi(set_part_1, set_part_2):
 
 # Estimate rates by comparing each set partition axpi score
 def calculate_rates(set_parts):
+    print("estimating rates")
     rates = []
     total = len(set_parts)
     for count0,i in enumerate(set_parts):
@@ -59,7 +63,8 @@ def calculate_rates(set_parts):
                 pass
             else:
                 number += axpi(i, j)
-        rates.append(number/(total-1))
+        rates.append([number/(total-1)])
+    print("Here are the rates: %s" % rates)
     return rates
 
 

@@ -174,7 +174,7 @@ class GreedyAnalysis(Analysis):
                 # get distances between subsets
                 max_schemes = comb(len(start_scheme.subsets), 2)
 
-                # this is a fake distance matrix, so that the greedy algorithm 
+                # this is a fake distance matrix, so that the greedy algorithm
                 # can use all the tricks of the relaxed clustering algorithm
                 dim = len(subsets)
                 d_matrix = np.zeros((((dim*dim)-dim))/2)
@@ -263,7 +263,7 @@ class GreedyAnalysis(Analysis):
 
                 # 5. reset_c_matrix and the subset list
                 c_matrix = neighbour.reset_c_matrix(c_matrix, list(best_pair), [best_merged], subsets)
-                                
+
                 # we updated the subset list in a special way, which matches how we update the c matrix:
                 subsets = neighbour.reset_subsets(subsets, list(best_pair), [best_merged])
 
@@ -300,17 +300,17 @@ class RelaxedClusteringAnalysis(Analysis):
                 while keep_going > 0:
 
                     subsets = [s for s in start_scheme.subsets]
-                    
+
                     # sort the subsets, to keep results consistent over re-runs
                     subsets.sort(key = lambda x: 1.0/float(len(x.columns)))
-                    
+
                     # run through all subsets
                     for i, sub in enumerate(subsets):
                         found = 0
                         state_problems = self.alignment.check_state_probs(sub, the_config)
 
                         if  (
-                                len(sub.columns) < the_config.min_subset_size or 
+                                len(sub.columns) < the_config.min_subset_size or
                                 state_problems == True
                             ):
 
@@ -441,7 +441,7 @@ class RelaxedClusteringAnalysis(Analysis):
                 median_improvement = np.median(c_matrix[c_matrix<0])
 
                 while best_change <= median_improvement:
- 
+
                     best_pair = neighbour.get_best_pair(c_matrix, best_change, subsets)
                     best_merged = subset_ops.merge_subsets(best_pair)
                     best_scheme = neighbour.make_clustered_scheme(
@@ -450,10 +450,10 @@ class RelaxedClusteringAnalysis(Analysis):
 
                     log.info("Combining subsets: '%s' and '%s'" %(best_pair[0].name, best_pair[1].name))
                     log.info("This improves the %s score by: %s", the_config.model_selection, str(abs(best_change)))
-   
+
                     # reset_c_matrix and the subset list
                     c_matrix = neighbour.reset_c_matrix(c_matrix, list(best_pair), [best_merged], subsets)
-                                    
+
                     # we update the subset list in a way that means its structure tracks the c-matrix
                     subsets = neighbour.reset_subsets(subsets, list(best_pair), [best_merged])
 
@@ -501,7 +501,7 @@ class RelaxedClusteringAnalysis(Analysis):
             best_result = self.analyse_scheme(best_scheme)
 
             # scores after cleaning can be worse, so we reset these trackers...
-            self.results.best_result = best_result 
+            self.results.best_result = best_result
             self.results.best_score = best_result.score
             self.results.best_scheme = best_scheme
             log.info("Best scoring scheme after cleaning is scheme %s, with %s score of %.3f"
@@ -523,8 +523,8 @@ class KmeansAnalysis(Analysis):
             state_probs = self.alignment.check_state_probs(sub, the_config)
 
             if  (
-                    len(sub.columns) == 1 or 
-                    len(sub.columns) < the_config.min_subset_size or 
+                    len(sub.columns) == 1 or
+                    len(sub.columns) < the_config.min_subset_size or
                     state_probs == True or
                     sub.dont_split == True
                 ):
@@ -604,7 +604,7 @@ class KmeansAnalysis(Analysis):
                     # centroid of None by scikit-learn. The true entropy here
                     # is 0.0 for all sites, so the true centroid is 0.0
                     for s in all_subs:
-                        if s.centroid == None: 
+                        if s.centroid == None:
                             s.centroid = [0.0]
                             log.debug("Fixed a subset with a centroid of None")
                             log.debug("The subset has %d columns" % len(s.columns))
@@ -666,7 +666,7 @@ class KmeansAnalysis(Analysis):
     def build_new_subset_list(self, name_prefix, split_subs, start_subsets):
         new_scheme_subs = []
         for i, sub in enumerate(start_subsets):
-            if len(sub.columns) == 1: 
+            if len(sub.columns) == 1:
                 new_scheme_subs.append(sub)
                 log.debug("Split %d: parent subset has only one site, %s unchanged" %
                          (i+1, the_config.model_selection.upper()))
@@ -678,7 +678,7 @@ class KmeansAnalysis(Analysis):
 
             else:  # compare split to un-split
                 log.debug("Splitting new subset")
-                
+
                 # get list of split subsets from dictionary
                 split_subsets = split_subs[sub]
 
@@ -699,7 +699,7 @@ class KmeansAnalysis(Analysis):
                               score_diff))
 
                     lnL, sum_k, subs_len = subset_ops.subset_list_stats([sub], the_config, self.alignment)
-                    
+
                     per_site_improvement = score_diff / subs_len
 
                     log.debug("Per site improvement: %.1f" % (per_site_improvement))
@@ -740,7 +740,7 @@ class KmeansAnalysis(Analysis):
             this algorithm. At the very least, you should try other approaches \
             (e.g. partitioning by locus), and investigate your answers carefully \
             (both the trees and the partitioning schemes). If you have any \
-            questions, please get in touch on the google group."   
+            questions, please get in touch on the google group."
             )
 
 
@@ -754,7 +754,7 @@ class KmeansAnalysis(Analysis):
             this algorithm. At the very least, you should try other approaches \
             (e.g. partitioning by locus), and investigate your answers carefully \
             (both the trees and the partitioning schemes). If you have any \
-            questions, please get in touch on the google group."   
+            questions, please get in touch on the google group."
             )
 
 
@@ -787,7 +787,7 @@ class KmeansAnalysis(Analysis):
                 check and try again." %(the_config.min_subset_size, site_max)
                 )
             raise AnalysisError
-            
+
 
         with logtools.indented(log, "**Analysing starting scheme (scheme %s)**" % start_scheme.name):
             start_result = self.analyse_scheme(start_scheme)
@@ -798,23 +798,23 @@ class KmeansAnalysis(Analysis):
             tree_path = the_config.processor.make_tree_path(
                 self.filtered_alignment_path)
 
-        if the_config.kmeans == 'tiger':
-            try:
-                from _tiger import TigerDNA
-                the_config.TigerDNA = TigerDNA
-            except:
-                log.error("Couldn't find compiled tiger code.")
-                log.error("You have selected kmeans and tiger \
-                    rates. This is an unsupported option, if you still wish to use \
-                    this option, you must compile the tiger code.")
-                log.error("Once you compile the tiger code, this option will work. \
-                    But please note that this is an \
-                    unsupported option. For empirical work we recommend using \
-                    entropy calculations for site rates, which is the default \
-                    behaviour for the kmeans algorithm in PF2.")
-                raise AnalysisError
-        else:
-            the_config.TigerDNA = None
+        # if the_config.kmeans == 'tiger':
+        #     try:
+        #         from _tiger import TigerDNA
+        #         the_config.TigerDNA = TigerDNA
+        #     except:
+        #         log.error("Couldn't find compiled tiger code.")
+        #         log.error("You have selected kmeans and tiger \
+        #             rates. This is an unsupported option, if you still wish to use \
+        #             this option, you must compile the tiger code.")
+        #         log.error("Once you compile the tiger code, this option will work. \
+        #             But please note that this is an \
+        #             unsupported option. For empirical work we recommend using \
+        #             entropy calculations for site rates, which is the default \
+        #             behaviour for the kmeans algorithm in PF2.")
+        #         raise AnalysisError
+        # else:
+        #     the_config.TigerDNA = None
 
 
         return start_result, start_scheme, tree_path
@@ -868,7 +868,7 @@ class KmeansAnalysis(Analysis):
 
     def reassign_invariant_sites(self, subsets):
 
-        #TODO add a skip: 
+        #TODO add a skip:
         #if(len(subsets)==1):
         #   return(subsets)
 
@@ -877,8 +877,8 @@ class KmeansAnalysis(Analysis):
         entropies = entropy.sitewise_entropies(SubsetAlignment(self.alignment, onesub))
 
         # find nearest site for each invariant site
-        # replacements is a dict of: key: invariant col; value: replacement col, 
-        # e.g. 
+        # replacements is a dict of: key: invariant col; value: replacement col,
+        # e.g.
         # {512: 513, 514: 513, 515: 513, 516: 517}
         replacements = entropy.get_replacement_sites(entropies, onesub.columns)
 
