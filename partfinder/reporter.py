@@ -103,7 +103,8 @@ class TextReporter(object):
         self.write_subsets(sch, result, output, sorted_subsets)
         self.write_nexus_summary(output, sorted_subsets)
         self.write_raxml(sch, result, output, sorted_subsets)
-        self.write_mrbayes(sch, result, output, sorted_subsets)
+        if self.cfg.datatype != "morphology":
+            self.write_mrbayes(sch, result, output, sorted_subsets)
 
     def write_scheme_header(self, sch, result, output):
         output.write(scheme_header_template % ("Scheme Name", sch.name))
@@ -335,6 +336,9 @@ def write_raxml_partitions(sch, output, sorted_subsets, use_lg = False):
                 model = get_raxml_protein_modelstring(sub.best_model)
             else:
                 model = get_raxml_protein_modelstring("LG+G")
+        elif the_config.datatype == "morphology":
+            model = get_raxml_morphology_modelstring(sub.best_model)
+
         else:
             raise RuntimeError
 
@@ -380,6 +384,10 @@ def write_citation_text(self):
                  "phylogenetic analysis and post-analysis of large phylogenies. "
                  "Bioinformatics, 30(9), 1312-1313.")
 
+    ref_morph = ("Lewis, P. O. (2001). A likelihood approach to estimating "
+                 "phylogeny from discrete morphological character data. "
+                 "Systematic biology, 50(6), 913-925.")
+
     citation_text.append("\n\n\n*Citations for this analysis*\n")
     citation_text.append("-----------------------------")
 
@@ -421,5 +429,9 @@ def write_citation_text(self):
         citation_text.append("Your analysis also used RAxML, so please cite:\n")
         citation_text.append("%s\n" % ref_raxml)
     citation_text.append("\n")
+
+    if self.cfg.datatype == 'morphology':
+        citation_text.append("For the model of morphological evolution you used, please cite:\n")
+        citation_text.append("%s\n" % ref_morph)
 
     return citation_text

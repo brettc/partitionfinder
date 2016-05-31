@@ -733,7 +733,6 @@ class KmeansAnalysis(Analysis):
         self.results.best_score))
         the_config.reporter.write_best_scheme(self.results)
 
-
         log.warning("Warning as of April 2016: We have noticed that the kmeans \
             algorithm does not perform well on some simulated datasets. \
             We are working on investigating and addressing this \

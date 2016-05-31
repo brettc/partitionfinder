@@ -24,7 +24,7 @@
 import logtools
 import os
 from util import PartitionFinderError
-import numpy
+import numpy as np
 import cStringIO
 from itertools import chain
 
@@ -34,6 +34,7 @@ log = logtools.get_logger()
 # http://www.atgc-montpellier.fr/phyml/usersguide.php?type=command
 valid_nucleotide = "AGCTUMRWSYKBDHVNX.-?"
 valid_amino = "ARNBDCQZEGHILKMFPSTWYVX.-?"
+valid_morph = "0123456789.-?"
 dna_dict = {
     'A': set('A'),
     'G': set('G'),
@@ -83,7 +84,21 @@ amino_dict = {
     '-': set([])
 }
 amino_states = set(chain(*amino_dict.values()))
-
+morph_dict = {
+    '0': set('0'),
+    '1': set('1'),
+    '2': set('2'),
+    '3': set('3'),
+    '4': set('4'),
+    '5': set('5'),
+    '6': set('6'),
+    '7': set('7'),
+    '8': set('8'),
+    '9': set('9'),
+    '?': set(''),
+    '-': set(''),
+}
+morph_states = set(chain(*morph_dict.values()))
 
 class AlignmentError(PartitionFinderError):
     pass
@@ -117,14 +132,14 @@ class AlignmentParser(object):
 
         # Which is faster?
         # return array.array("B", upper_bases)
-        return numpy.fromstring(upper_bases, dtype='u1')
+        return np.fromstring(upper_bases, dtype='u1')
 
     def parse(self):
         # Parse the header...
         self.parse_header()
 
         # We now know how big it is, so allocate the array.
-        self.data = numpy.zeros((
+        self.data = np.zeros((
             self.species_count,
             self.sequence_length
         ), 'u1')
@@ -369,7 +384,7 @@ class Alignment(object):
         sub_aln = SubsetAlignment(self, subset)
 
         # 1. Get set of all states in the alignment, obs([])
-        observed_states = numpy.unique(sub_aln.data).tostring()
+        observed_states = np.unique(sub_aln.data).tostring()
 
         # 2. run through all states for each state, extend a set of observed
         #    states, e.g. obs.add(x)
@@ -380,6 +395,9 @@ class Alignment(object):
         elif cfg.datatype == 'DNA':
             all_states = dna_states
             state_dict = dna_dict
+        elif cfg.datatype == 'morphology':
+            all_states = morph_states
+            state_dict = morph_dict
 
         for state in observed_states:
             try:
@@ -417,7 +435,7 @@ class SubsetAlignment(Alignment):
             raise AlignmentError
 
         self.species = source.species
-        # Pull out the columns we need using the magic of numpy indexing
+        # Pull out the columns we need using the magic of np indexing
         self.data = source.data[:, subset.columns]
         self.sequence_length = len(subset.columns)
         assert self.sequence_length == self.data.shape[1]
