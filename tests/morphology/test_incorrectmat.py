@@ -7,6 +7,7 @@ def test_incmat():
 	'''This test should fail due to incorrect line length'''
 	HERE = os.path.abspath(os.path.dirname(__file__))
 	full_path = os.path.join(HERE, "incmat")
-	main.call_main("morphology", '--min-subset-size 1 --raxml "%s"' % full_path)	
+	with pytest.raises(util.PartitionFinderError):
+		main.call_main("morphology", '--min-subset-size 1 --raxml "%s"' % full_path)
 
     
