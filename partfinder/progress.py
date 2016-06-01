@@ -72,7 +72,9 @@ class TextProgress(Progress):
         num_subs_done = len(self.subsets_analysed)
         if old_num_done != num_subs_done:
 
-            if "kmeans" in self.cfg.search or "krmeans" in self.cfg.search:
+            if self.cfg.search in ["kmeans", "krmeans", "user"]:
+                # we don't know the total number of possible subsets
+                # log.info("Finished subset %d" %(num_subs_done))
                 pass
             else:    
                 percent_done = (
