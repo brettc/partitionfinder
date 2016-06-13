@@ -33,6 +33,7 @@ from config import the_config
 from util import PartitionFinderError, ExternalProgramError
 import util
 import raxml
+from shutil import copyfile
 
 class AnalysisError(PartitionFinderError):
     pass
@@ -189,6 +190,13 @@ class Analysis(object):
 
                 topology_path = raxml.make_ml_topology(
                     self.filtered_alignment_path, the_config.datatype, the_config.cmdline_extras, tree_scheme, self.threads)
+                
+                # here we copy the ML tree topology so it can be used with PhyML too
+                # TODO: this is a hack, and it would be better to decide on a universal
+                # name for the different types of tree we might have.
+                phyml_tree = os.path.join(os.path.dirname(topology_path), "filtered_source.phy_phyml_tree.txt")
+                copyfile(topology_path, phyml_tree)
+
                 need_bl = False
 
             if need_bl == True:
