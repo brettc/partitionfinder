@@ -34,19 +34,13 @@ def create_set_parts(alignment):
         for tax,i in enumerate(col):
             if i in part_set_dict:
                 part_set_dict[i].append(tax)
-            else:
+            elif i != ord('?') and i != ord('-'):
                 part_set_dict[i] = [tax]
         interim = []
         for i in part_set_dict:
             interim.append(part_set_dict[i])
         set_parts.append(interim)
-    # for col in morph_align:
-    #     state_map = {}
-    #     for taxon, state in enumerate(col):
-    #         state_map.setdefault(state, []).append(taxon)
-    #     set_parts.append([state_map.get(index, []) for index in \
-    #         range(max(state_map)+1)])
-    # print("These are the set parts: %s" % set_parts)
+    print("Here are the set parts: %s" % set_parts)
     return set_parts
 
 # Calculate similarity between two set partitions
@@ -75,8 +69,7 @@ def calculate_rates(set_parts):
             else:
                 number += axpi(i, j)
         rates.append([number/(total-1)])
-    # print("Here are the rates: %s" % rates)
-    # print("There are %d rates in this list" % len(rates))
+    print("Here are the rates: %s" % rates)
     return rates
 
 
