@@ -40,7 +40,6 @@ def create_set_parts(alignment):
         for i in part_set_dict:
             interim.append(part_set_dict[i])
         set_parts.append(interim)
-    print("Here are the set parts: %s" % set_parts)
     return set_parts
 
 # Calculate similarity between two set partitions
@@ -69,7 +68,6 @@ def calculate_rates(set_parts):
             else:
                 number += axpi(i, j)
         rates.append([number/(total-1)])
-    print("Here are the rates: %s" % rates)
     return rates
 
 
