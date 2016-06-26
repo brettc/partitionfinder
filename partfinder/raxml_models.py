@@ -63,6 +63,10 @@ def get_model_difficulty(modelstring):
         # that's a tough model with 189 free parameters
         difficulty += 10000
 
+    if "LG4" in modelstring:
+        # these models are hard
+        difficulty += 9000
+
     extras = modelstring.count("+")
     total = model_params + extras + difficulty
     log.debug("Model: %s Difficulty: %d" % (modelstring, total))
