@@ -29,6 +29,7 @@ _available_lists = ["ALL", # all models, excluding those with base frequencies e
                     "MRBAYES", # all models available in MrBayes 3.3
                     "GAMMA", # only models with gamma distributed rates only (i.e. +G, not +I+G, not free-rates models like LG4X)
                     "GAMMAI", # only modles with +I+G
+                    "GAMMALG4X", # only modles +G, with the LG4X model in there too
                     ]
 
 
