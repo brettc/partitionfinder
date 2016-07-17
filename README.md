@@ -1,5 +1,7 @@
 # PartitionFinder
 
+[![Join the chat at https://gitter.im/brettc/partitionfinder](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/brettc/partitionfinder?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+
 PartitionFinder and PartitionFinderProtein are Python programs for simultaneously 
 choosing partitioning schemes and models of molecular evolution for sequence data. 
 You can use them before running a phylogenetic analysis, in order
