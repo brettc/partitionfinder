@@ -66,10 +66,6 @@ def get_raxml_protein_modelstring(modelstring):
 def get_raxml_morphology_modelstring(modelstring):
     """Start with a model like this: MULTI+G+A, return a model in raxml format like this:
     MULTI. This is only used for printing out RAxML partition files
-    NB. In RAxML you can't specify different rate hetero parameters in each protein model
-    you have to choose either ALL +G or ALL +I+G. PartitionFinder allows you to mix and 
-    match here, but if you're going to use RAxML downstream, you will need to be smarter
-    and run two analyses - one with just +I+G models, and one with +G models. 
     """
 
     elements = modelstring.split("+")
