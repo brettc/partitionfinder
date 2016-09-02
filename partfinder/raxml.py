@@ -71,6 +71,11 @@ def run_raxml(command):
 
 def run_raxml_pthreads(command, cpus):
     global _raxml_pthreads_binary
+
+    # fall back on standard raxml if the number of cpus is 1
+    if(cpus==1):
+        run_raxml(commmand)
+
     if _raxml_pthreads_binary is None:
         _raxml_pthreads_binary = util.find_program(_binary_name_pthreads)
     command = " ".join([command, "-T", str(cpus), " "])
@@ -115,6 +120,7 @@ def make_ml_topology(alignment_path, datatype, cmdline_extras, scheme, cpus):
     command = ''.join([command, " -w '%s'" % os.path.abspath(aln_dir)])
 
     run_raxml_pthreads(command, cpus)
+
     alndir, aln = os.path.split(alignment_path)
 
     fast_tree_path = os.path.join(alndir, "RAxML_fastTree.fastTREE")

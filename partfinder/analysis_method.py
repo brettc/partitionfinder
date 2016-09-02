@@ -762,13 +762,24 @@ class KmeansAnalysis(Analysis):
         if the_config.min_subset_size == False:
             the_config.min_subset_size = 100
 
-        partnum = len(the_config.user_subsets)
-        the_config.progress.begin(1, 1)
+
+        # we start by putting all the partitions together.
+        # we do this because I don't like the idea of starting with user-defined
+        # partitions and trying to split them one by one. But I don't know if 
+        # this is really defensible. Still, we have to start somewhere.
+        # but doing it this way allows us to first estimate an ML tree with 
+        # all subsets separate, which is generally useful.
+        user_partnum = len(the_config.user_subsets)
 
         # Start with the most partitioned scheme
-        start_description = range(partnum)
+        start_description = [0]*user_partnum
         start_scheme = scheme.create_scheme(
             the_config, "start_scheme", start_description)
+
+        partnum = 1
+        the_config.progress.begin(1, 1)
+
+        print start_scheme.subsets
 
         if len(start_scheme.subsets)>1:
             log.error("The k-means algorithm is designed to analyse \
