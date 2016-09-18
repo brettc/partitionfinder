@@ -16,6 +16,7 @@
 # and conditions as well.
 
 import sys
+from partfinder import dependencies
 from partfinder import main
 
 if __name__ == "__main__":
