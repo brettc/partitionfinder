@@ -24,4 +24,4 @@ def pytest_generate_tests(metafunc):
 
 def test_quick_analysis(test_folder):
     full_path = os.path.join(HERE, test_folder)
-    main.call_main("DNA", '"%s" --force-restart' % full_path)
+    main.call_main("DNA", '--no-ml-tree "%s" --force-restart' % full_path)

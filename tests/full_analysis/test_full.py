@@ -1,7 +1,7 @@
 import os
 import pytest
 from partfinder import main, util, analysis, config
-from zipfile import ZipFile
+from zipfile import ZipFile, ZIP_DEFLATED
 
 HERE = os.path.abspath(os.path.dirname(__file__))
 
@@ -9,9 +9,8 @@ organise_tests = {
     "dna"               : ["DNA%d" % n for n in range(1, 9)],
     "prot"              : ["prot%d" % n for n in range(1, 9)],
     "rerun_success"     : ["rerun%02d" % int(n) for n in "1 2 3 4 5 6 7 8".split()],
-    "rerun_pf_error"    : ["rerun%02d" % int(n) for n in "9 10 11 12 13 16 17 20 21".split()],
+    "rerun_pf_error"    : ["rerun%02d" % int(n) for n in "9 10 11 12 13 20 21".split()],
     "rerun_ana_error"   : ["rerun%02d" % int(n) for n in "14 15".split()],
-    "rerun_conf_error"  : ["rerun%02d" % int(n) for n in "18 19".split()],
 }
 
 
@@ -24,12 +23,12 @@ def pytest_generate_tests(metafunc):
 
 def test_dna(dna):
     full_path = os.path.join(HERE, dna)
-    main.call_main("DNA", '--compare "%s"' % full_path)
+    main.call_main("DNA", '--no-ml-tree --compare "%s"' % full_path)
 
 
 def test_prot(prot):
     full_path = os.path.join(HERE, prot)
-    main.call_main("protein", '--compare "%s"' % full_path)
+    main.call_main("protein", '--no-ml-tree --compare "%s"' % full_path)
 
 
 def load_rerun(pth):
@@ -40,25 +39,19 @@ def load_rerun(pth):
 def test_rerun_success(rerun_success):
     full_path = os.path.join(HERE, rerun_success)
     load_rerun(full_path)
-    main.call_main("DNA", '"%s"' % full_path)
+    main.call_main("DNA", '--no-ml-tree "%s"' % full_path)
 
 
 def test_rerun_pf_error(rerun_pf_error):
     full_path = os.path.join(HERE, rerun_pf_error)
     load_rerun(full_path)
     with pytest.raises(util.PartitionFinderError):
-        main.call_main("DNA", '"%s"' % full_path)
+        main.call_main("DNA", '--no-ml-tree "%s"' % full_path)
 
 
 def test_rerun_analysis_error(rerun_ana_error):
     full_path = os.path.join(HERE, rerun_ana_error)
     load_rerun(full_path)
     with pytest.raises(analysis.AnalysisError):
-        main.call_main("DNA", '"%s"' % full_path)
+        main.call_main("DNA", '--no-ml-tree "%s"' % full_path)
 
-
-def test_rerun_config_error(rerun_conf_error):
-    full_path = os.path.join(HERE, rerun_conf_error)
-    load_rerun(full_path)
-    with pytest.raises(config.ConfigurationError):
-        main.call_main("DNA", '"%s"' % full_path)

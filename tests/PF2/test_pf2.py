@@ -24,13 +24,13 @@ def path_from_function():
 # details of the exception.
 
 def test_missing_sites_warning(caplog):
-    main.call_main("protein", '"%s"' % path_from_function())
+    main.call_main("protein", '--no-ml-tree "%s"' % path_from_function())
     assert "These columns are missing from the block definitions" in caplog.text()
 
 
 def test_overlapping_blocks(caplog):
     with pytest.raises(PartitionFinderError):
-        main.call_main("protein", '"%s"' % path_from_function())
+        main.call_main("protein", '--no-ml-tree "%s"' % path_from_function())
     assert "following sites overlap" in caplog.text()
 
 
