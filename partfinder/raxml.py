@@ -92,6 +92,10 @@ def make_ml_topology(alignment_path, datatype, cmdline_extras, scheme, cpus):
     '''Make a ML tree to from a given partitioning scheme'''
     log.info("Estimating Maximum Likelihood tree with RAxML for %s", alignment_path)
 
+    if(the_config.datatype != "morphology"):
+        partition_file = write_partition_file(scheme, alignment_path)
+
+
     # First get the ML topology like this (-p is a hard-coded random number seed):
     # we do this to an accuracy of 10 log likelihood units with -e 10
     # we use the rapid ML option in RAxML -f E
@@ -112,8 +116,6 @@ def make_ml_topology(alignment_path, datatype, cmdline_extras, scheme, cpus):
         log.error("Unrecognised datatype: '%s'" % (datatype))
         raise util.PartitionFinderError
 
-    if(the_config.datatype != "morphology"):
-        partition_file = write_partition_file(scheme, alignment_path)
 
     # Force raxml to write to the dir with the alignment in it
     aln_dir, fname = os.path.split(alignment_path)

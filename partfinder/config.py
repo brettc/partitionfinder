@@ -203,9 +203,9 @@ class Configuration(object):
             log.debug("Setting rcluster-max to %d" % self.cluster_max)
 
     def validate_kmeans(self):
-        if self.kmeans not in ('entropy', 'fast_tiger', 'tiger'):
+        if self.kmeans not in ('entropy', 'tiger'):
             log.error(
-                "The --kmeans setting must be 'entropy', 'fast_tiger' \
+                "The --kmeans setting must be 'entropy' \
                 or 'tiger'. Please check and restart")
             raise ConfigurationError
 

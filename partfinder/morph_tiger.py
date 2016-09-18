@@ -71,8 +71,6 @@ def calculate_rates(set_parts):
     return rates
 
 
-
-
 if __name__ == "__main__":
     set_parts = [[[1,3],[2],[4]], [[1],[2],[3],[4]], [[1,2,3],[4]], [[1,2],[3,4]], [[1,2,3,4]]]
     print calculate_rates(set_parts)

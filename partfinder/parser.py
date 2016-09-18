@@ -212,11 +212,13 @@ class Parser(object):
     def check_blocks(self, text, loc, partref):
         # Make sure that the user subsets don't overlap.
         ov = subset_ops.subsets_overlap(self.cfg.user_subsets)
+
         if ov:
-            raise ParserError(text, loc, "The following sites overlap "
-                              " in your block definitions: %s. "
-                              "Please change the configuration so each "
-                              "site occurs in only one block" % ", ".join(map(str, ov)))
+            log.error("The following sites overlap in your block definitions")
+            log.error("%s" %ov)
+            log.error("Please change your definitions so each site occurs"
+                      " in only one block, and try again.")
+            raise ParserError(text, loc, 'Problem occurred ')
 
     def check_block_exists(self, text, loc, partref):
         if partref.name not in self.cfg.user_subsets_by_name:

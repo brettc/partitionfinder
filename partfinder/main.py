@@ -194,7 +194,7 @@ def parse_args(datatype, cmdargs=None):
         type="str", dest="kmeans", default='entropy', metavar="type",
         help="This defines which sitewise values to use: entropy or tiger "
              "\n--kmeans entropy: use entropies for sitewise values"
-             "\n--kmeans tiger: use TIGER rates for sitewise values"
+             "\n--kmeans tiger: use TIGER rates for sitewise values (only valid for Morphology)"
     )
     op.add_option(
         "--rcluster-percent",
