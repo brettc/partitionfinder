@@ -78,9 +78,9 @@ def test_clustering(folder_name):
     full_path = os.path.join(HERE, folder_name)
     error, kind, cmdline = test_container[folder_name]
     if error is None:
-        main.call_main(kind, '"%s" --raxml %s' % (full_path, cmdline))
+        main.call_main(kind, '--no-ml-tree "%s" --raxml %s' % (full_path, cmdline))
     elif type(error) == type((0, 0)):
         pytest.xfail(error[1])
     else:
         with pytest.raises(error):
-            main.call_main(kind, '"%s" --raxml %s' % (full_path, cmdline))
+            main.call_main(kind, '--no-ml-tree "%s" --raxml %s' % (full_path, cmdline))

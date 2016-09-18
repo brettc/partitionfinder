@@ -159,9 +159,11 @@ def parse_args(datatype, cmdargs=None):
     )
 
     op.add_option(
-        "-m", "--ml-tree",
-        action="store_true", dest="ml_tree", default=False,
-        help="Estimate a starting tree using maximum likelihood in RAxML"
+        "-n", "--no-ml-tree",
+        action="store_true", dest="no_ml_tree", default=False,
+        help="Estimate a starting tree with NJ (PhyML) or MP (RaxML) instead"
+             " of the default which is to estimate a starting tree with ML "
+             " using in RAxML. Not recommended."
     )
 
     op.add_option(
@@ -379,7 +381,7 @@ def main(name, datatype, passed_args=None):
                                    options.quick,
                                    options.min_subset_size,
                                    options.all_states,
-                                   options.ml_tree)
+                                   options.no_ml_tree)
         cfg = config.the_config
 
         # Set up the progress callback

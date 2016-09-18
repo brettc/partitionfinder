@@ -35,6 +35,7 @@ def get_ranked_list(distance_matrix, subsets, N):
     # a ~7x faster solution here, which uses np.argpartition()
     # see here: http://stackoverflow.com/questions/20540889/
     # extract-the-n-closest-pairs-from-a-numpy-distance-array
+    N = int(N)
     closest = distance_matrix.argsort()[:N]
     n = len(subsets)
     ti = np.triu_indices(n, 1)

@@ -175,13 +175,13 @@ class Analysis(object):
                 topology_path = os.path.join(the_config.start_tree_path, 'user_topology.phy')
                 util.dupfile(user_path, topology_path)
                 need_bl = True
-            elif the_config.ml_tree == False:
+            elif the_config.no_ml_tree == True:
                 log.debug(
                     "didn't find tree at %s, making a new one" % tree_path)
                 topology_path = the_config.processor.make_topology(
                     self.filtered_alignment_path, the_config.datatype, the_config.cmdline_extras)
                 need_bl = True
-            elif the_config.ml_tree == True:
+            elif the_config.no_ml_tree == False:
                 log.debug(
                     "didn't find tree at %s, making an ML tree with RAxML" % tree_path)
 

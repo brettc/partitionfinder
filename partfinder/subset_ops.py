@@ -122,14 +122,18 @@ def check_against_alignment(full_subset, alignment, the_config):
         log.warning(
             "These columns are missing from the block definitions: %s",
             columnset_to_string(leftout))
-        if the_config.ml_tree:
+        if the_config.no_ml_tree == False:
             log.error(
-                "You cannot use the --ml-tree option (to estimate a Maximum"
-                " Likelihood starting tree) when you have columns missing "
-                "from your data block defintions. You can do one of three "
-                "things: (i) change your block definitions to include all "
-                "sites; (ii) remove the sites you don't want from your "
-                "alignment; or (iii) do not use the --ml-tree option"
+                "You cannot estimate a Maximum Likelihood (ML) starting tree"
+                " (the default behaviour) when you have columns missing from"
+                " your data block definitions, because the method we use "
+                "to estimate the ML tree requires all sites in the alignment"
+                " to be assigned to a data block. We recommend that you "
+                " either remove the sites you don't want from your alignment"
+                " or (if possible) include the missing sites in appropriate"
+                " data blocks. Failing that, you can use the --no-ml-tree "
+                " command line option. In this case, a NJ (PhyML) or MP"
+                "(RaxML) starting tree will be estimated for your analysis. "
             )
             raise AnalysisError
 
