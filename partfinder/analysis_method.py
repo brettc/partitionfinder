@@ -941,6 +941,10 @@ class KmeansAnalysis(Analysis):
 
         self.report(step)
 
+        if not the_config.quick:
+            the_config.reporter.write_scheme_summary(final_scheme, final_result)
+
+
         return(final_scheme)
 
 
