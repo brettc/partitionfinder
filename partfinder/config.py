@@ -45,8 +45,9 @@ class Configuration(object):
 
     def init(self, datatype="DNA", phylogeny_program='phyml',
                  save_phylofiles=False, cmdline_extras="", cluster_weights=None,
-                 cluster_percent=10.0, cluster_max=1000, kmeans='entropy', quick=False, min_subset_size = 100, all_states = False, ml_tree = False):
-
+                 cluster_percent=10.0, cluster_max=1000, kmeans='entropy', 
+                 quick=False, min_subset_size = 100, all_states = False, 
+                 no_ml_tree = False):
 
         log.info("------------- Configuring Parameters -------------")
         # Only required if user adds them
@@ -66,7 +67,7 @@ class Configuration(object):
         self.quick = quick
         self.min_subset_size = min_subset_size
         self.all_states = all_states
-        self.ml_tree = ml_tree
+        self.no_ml_tree = no_ml_tree
 
 
         # Record this
@@ -403,7 +404,7 @@ class Configuration(object):
             'program' : self.phylogeny_program,
             'datablocks' : datablocks,
             'topology' : topology,
-            'start_tree': self.ml_tree
+            'start_tree': self.no_ml_tree
             # self.partitions.partitions,
         }
 
@@ -468,7 +469,7 @@ class Configuration(object):
             fail.append("user_tree_topology")
 
         if not old_restart_info['start_tree'] == restart_info['start_tree']:
-            fail.append("starting tree (i.e. the --ml-tree option)")
+            fail.append("starting tree (i.e. the --no-ml-tree option)")
 
 
         if len(fail) > 0:

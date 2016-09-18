@@ -92,23 +92,28 @@ def make_ml_topology(alignment_path, datatype, cmdline_extras, scheme, cpus):
     '''Make a ML tree to from a given partitioning scheme'''
     log.info("Estimating Maximum Likelihood tree with RAxML for %s", alignment_path)
 
-    partition_file = write_partition_file(scheme, alignment_path)
-
     # First get the ML topology like this (-p is a hard-coded random number seed):
     # we do this to an accuracy of 10 log likelihood units with -e 10
     # we use the rapid ML option in RAxML -f E
     if datatype == "DNA":
+        log.info("Using a separate GTR+G model for each data block")
         command = " -f E -s '%s' -m GTRGAMMA -O -n fastTREE -# 1 -p 123456789 -q '%s' -e 10 " % (
             alignment_path, partition_file)
     elif datatype == "protein":
+        log.info("Using a separate LG+G model for each data block")
         command = " -f E -s '%s' -m PROTGAMMALG -O -n fastTREE -# 1 -p 123456789 -q '%s' -e 10 " % (
             alignment_path, partition_file)
     elif datatype == "morphology":
-        log.error("ML starting tree is not implemented for morphology yet. Sorry.")
-        raise util.PartitionFinderError
+        model = models.get_model_commandline(the_config.models[0])
+        log.info("Using the model specified in the .cfg file")
+        command = "-f E -s %s %s -n fastTREE -p 123456789 %s" % (
+            alignment_path, model, cmdline_extras)
     else:
         log.error("Unrecognised datatype: '%s'" % (datatype))
         raise util.PartitionFinderError
+
+    if(the_config.datatype != "morphology"):
+        partition_file = write_partition_file(scheme, alignment_path)
 
     # Force raxml to write to the dir with the alignment in it
     aln_dir, fname = os.path.split(alignment_path)
@@ -128,13 +133,16 @@ def make_ml_topology(alignment_path, datatype, cmdline_extras, scheme, cpus):
         log.info("Estimating LG+G branch lengths on ML tree using all partitions")
         command = "-f e -s '%s' -t '%s' -m PROTGAMMALG -O -n BLTREE -p 123456789 -q '%s' -w '%s' -e 10  " % (
             alignment_path, fast_tree_path, partition_file, os.path.abspath(alndir)) 
+    elif datatype == "morphology":
+        log.info("Estimating branch lengths on ML tree")
+        command = "-f e -s '%s' -t '%s' %s -O -n BLTREE -p 123456789 -w '%s' -e 10  " % (
+            alignment_path, fast_tree_path, model, os.path.abspath(alndir)) 
     else:
         log.error("Unrecognised datatype: '%s'" % (datatype))
         raise util.PartitionFinderError
 
     run_raxml_pthreads(command, cpus)
     tree_path = os.path.join(alndir, "RAxML_result.BLTREE")
-
 
     if not os.path.exists(tree_path):
         log.error("RAxML tree topology should be here but can't be be found: '%s'" % (tree_path))
