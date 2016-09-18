@@ -86,61 +86,19 @@ def rate_parser(rates_name):
     rate_array = np.array(rates_list)
     return rate_array
 
-_binary_name = 'fast_TIGER'
 if sys.platform == 'win32':
     _binary_name += ".exe"
-_tiger_binary = None
-
-def run_rates(command):
-    global _tiger_binary
-    if _tiger_binary is None:
-        _tiger_binary = util.find_program(_binary_name)
-
-    try:
-        util.run_program(_tiger_binary, command)
-    except util.ExternalProgramError:
-        log.error("fast_TIGER did not execute successfully")
-        log.error("fast_TIGER output follows, in case it's helpful for \
-            finding the problem")
-        log.error("You probably just need to recompile the fast_TIGER \
-            code for your system. But please note that this is an \
-            unsupported option. For empirical work we recommend using \
-            entropy calculations for site rates, which is the default \
-            behaviour for the kmeans algorithm in PF2.")
-        raise
-
-
-def sitewise_tiger_rates(cfg, phylip_file):
-    if cfg.datatype == 'DNA':
-        command = " dna " + phylip_file
-    elif cfg.datatype == 'morphology':
-        command = " morphology " + phylip_file
-    run_rates(command)
-    rates_name = ("%s_r8s.txt" % phylip_file)
-    return rate_parser(rates_name)
 
 
 def get_per_site_stats(alignment, cfg, a_subset):
     if cfg.kmeans == 'entropy':
         sub_align = SubsetAlignment(alignment, a_subset)
         return entropy.sitewise_entropies(sub_align)
-    elif cfg.kmeans == 'fast_tiger':
-        a_subset.make_alignment(cfg, alignment)
-        phylip_file = a_subset.alignment_path
-        return sitewise_tiger_rates(cfg, str(phylip_file))
     elif cfg.kmeans == 'tiger' and cfg.datatype == 'morphology':
         sub_align = SubsetAlignment(alignment, a_subset)
         set_parts = mt.create_set_parts(sub_align)
         rates = mt.calculate_rates(set_parts)
         return rates
-    elif cfg.kmeans == 'tiger':
-        sub_align = SubsetAlignment(alignment, a_subset)
-        tiger = the_config.TigerDNA()
-        tiger.build_bitsets(sub_align)
-        rate_array = tiger.calc_rates()
-        rate_array.shape = rate_array.shape[0], 1
-        return rate_array
-
     else: #wtf
         log.error("Unkown option passed to 'kmeans'. Please check and try again")
         raise PartitionFinderError

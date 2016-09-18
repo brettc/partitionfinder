@@ -776,14 +776,6 @@ class KmeansAnalysis(Analysis):
         start_scheme = scheme.create_scheme(
             the_config, "start_scheme", start_description)
 
-        if len(start_scheme.subsets)>1:
-            log.error("The k-means algorithm is designed to analyse \
-                the entire alignment at once. To use it, please define a \
-                single data block that includes all of your sites, and \
-                again."
-                )
-            raise AnalysisError
-
         site_max = sum([ len(s.columns) for s in start_scheme.subsets])
 
         if the_config.min_subset_size > site_max:
@@ -805,23 +797,11 @@ class KmeansAnalysis(Analysis):
                 self.filtered_alignment_path)
 
         if the_config.kmeans == 'tiger' and the_config.datatype != 'morphology':
-            try:
-                from _tiger import TigerDNA
-                the_config.TigerDNA = TigerDNA
-            except:
-                log.error("Couldn't find compiled tiger code.")
-                log.error("You have selected kmeans and tiger \
-                    rates. This is an unsupported option, if you still wish to use \
-                    this option, you must compile the tiger code.")
-                log.error("Once you compile the tiger code, this option will work. \
-                    But please note that this is an \
-                    unsupported option. For empirical work we recommend using \
-                    entropy calculations for site rates, which is the default \
-                    behaviour for the kmeans algorithm in PF2.")
-                raise AnalysisError
-        else:
-            the_config.TigerDNA = None
-
+            log.error("You have selected kmeans and tiger \
+                rates. This is an unsupported option for anything except \
+                morphological data. The kmeans algorithm \
+                now works with entropies, not TIGER rates.")
+            raise AnalysisError
 
         return start_result, start_scheme, tree_path
 
