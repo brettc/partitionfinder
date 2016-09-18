@@ -283,8 +283,8 @@ class AlignmentParser(object):
                 if self.interleave_blocks_done == 0:
                     # No blank line. And we've not yet done an interleave
                     # block. Let's guess there are just too many species.
-                    log.error("""Line %d: Found too many species (there should be {})
-                              """.format(self.current_line, self.species_count))
+                    log.error("""Line %d: Found too many species (the header says there should be %d)
+                              """ %(self.current_line, self.species_count))
                 else:
                     log.error("""Line %d: Expected a blank line between blocks""",
                               self.current_line)
