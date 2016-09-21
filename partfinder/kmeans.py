@@ -86,9 +86,6 @@ def rate_parser(rates_name):
     rate_array = np.array(rates_list)
     return rate_array
 
-if sys.platform == 'win32':
-    _binary_name += ".exe"
-
 
 def get_per_site_stats(alignment, cfg, a_subset):
     if cfg.kmeans == 'entropy':
