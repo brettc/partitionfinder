@@ -23,9 +23,11 @@ then drop it into the /programs folder in partitionfinder, replacing the existin
 
 The versions bundled in PF are from here:
 
-https://github.com/stamatak/standard-RAxML/commit/3abe69bf5339ffe3e1d0abe9f6cc1e8980ab1be7
+https://github.com/stamatak/standard-RAxML/commit/5d9558ac18ddb2c69dd75a9dc971bcf541bbfeb2
 
-If the binaries that come with PF don't work for you, try other binaries (if you're on Windows) from the link above, renaming them and replacing the version that comes with PF as instructed below. Remember to get both the single-processor and PTHREADS versions.
+The Windows versions are precompiled and generally older (see below). The Mac and Linux versions are ones we compiled from that commit.
+
+If they don't work on your machine, you may want to try recompiling the binaries, and/or updating to the very latest version of RAxML (in case any bugs in the version we used have since been fixed). Instructions for all operating systems are below.
 
 ### Building RAxML on a mac
 
@@ -59,8 +61,8 @@ Then rename the pthreads executable 'raxml_pthreads.linux', and the non-pthreads
 
 This is hard, and if you want to do this you will need either expertise, or time and a lot of studying of the google group.
 
-For our purposes, we used the pre-compiled executables that are in the version of RAxML from the commit linked above, which are in the folder within that repository called 'WindowsExecutables_v8.2.7_Alternate/', e.g. https://github.com/stamatak/standard-RAxML/tree/master/WindowsExecutables_v8.2.7_Alternate
+For our purposes, we used the pre-compiled executables that are in the version of RAxML from the commit linked above, which are in the folder within that repository called 'WindowsExecutables_v8.2.7_Alternate/', i.e. https://github.com/stamatak/standard-RAxML/tree/master/WindowsExecutables_v8.2.7_Alternate
 
-If they don't work for you, try one of the other windows exectuble folders. Failing that, you will need to compile it yourself. Please don't request help with this on the PartitionFinder google group - we don't know how to do it.
+If they don't work for you, try one of the other windows exectuble folders. Failing that, you will need to compile it yourself. Please don't request help with this on the PartitionFinder google group - we don't know how to do it. It's worth appealing for recent executables from the raxml google group though - someone can usually help.
 
 Once you have a windows version to try, rename the pthreads executable 'raxml_pthreads.exe', and the non-pthreads executable 'raxml.exe' and drop them in the programs folder. Overwite the old versions.
