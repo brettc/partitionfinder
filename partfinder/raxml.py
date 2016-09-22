@@ -129,15 +129,15 @@ def make_ml_topology(alignment_path, datatype, cmdline_extras, scheme, cpus):
     # now we make the branch lengths with a partitioned model without rate multipliers
     if datatype == "DNA":
         log.info("Estimating GTR+G branch lengths on ML tree using all partitions")
-        command = "-f e -s '%s' -t '%s' -m GTRGAMMA -O -n BLTREE -p 123456789 -q '%s' -w '%s' -e 10  " % (
+        command = "-f e -s '%s' -t '%s' -m GTRGAMMA -O -n BLTREE -p 123456789 -q '%s' -w '%s' -e 1  " % (
             alignment_path, fast_tree_path, partition_file, os.path.abspath(alndir)) 
     elif datatype == "protein":
         log.info("Estimating LG+G branch lengths on ML tree using all partitions")
-        command = "-f e -s '%s' -t '%s' -m PROTGAMMALG -O -n BLTREE -p 123456789 -q '%s' -w '%s' -e 10  " % (
+        command = "-f e -s '%s' -t '%s' -m PROTGAMMALG -O -n BLTREE -p 123456789 -q '%s' -w '%s' -e 1  " % (
             alignment_path, fast_tree_path, partition_file, os.path.abspath(alndir)) 
     elif datatype == "morphology":
         log.info("Estimating branch lengths on ML tree")
-        command = "-f e -s '%s' -t '%s' %s -O -n BLTREE -p 123456789 -w '%s' -e 10  " % (
+        command = "-f e -s '%s' -t '%s' %s -O -n BLTREE -p 123456789 -w '%s' -e 1  " % (
             alignment_path, fast_tree_path, model, os.path.abspath(alndir)) 
     else:
         log.error("Unrecognised datatype: '%s'" % (datatype))
