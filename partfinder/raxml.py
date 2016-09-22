@@ -90,7 +90,7 @@ def write_partition_file(scheme, alignment_path):
 
 def make_ml_topology(alignment_path, datatype, cmdline_extras, scheme, cpus):
     '''Make a ML tree to from a given partitioning scheme'''
-    log.info("Estimating Maximum Likelihood tree with RAxML for %s", alignment_path)
+    log.info("Estimating Maximum Likelihood tree with RAxML fast experimental tree search for %s", alignment_path)
 
     if(the_config.datatype != "morphology"):
         partition_file = write_partition_file(scheme, alignment_path)
