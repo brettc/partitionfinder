@@ -449,7 +449,7 @@ class RelaxedClusteringAnalysis(Analysis):
                     start_scheme = best_scheme
 
                     log.info("Combining subsets: '%s' and '%s'" %(best_pair[0].name, best_pair[1].name))
-                    log.info("This improves the %s score by: %s", the_config.model_selection, str(abs(best_change)))
+                    log.debug("This improves the %s score by: %s", the_config.model_selection, str(abs(best_change)))
 
                     # reset_c_matrix and the subset list
                     c_matrix = neighbour.reset_c_matrix(c_matrix, list(best_pair), [best_merged], subsets)
