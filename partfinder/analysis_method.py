@@ -347,6 +347,10 @@ class RelaxedClusteringAnalysis(Analysis):
         model_selection = the_config.model_selection
         partnum = len(the_config.user_subsets)
 
+        if the_config.cluster_max == -987654321:
+            the_config.cluster_max = max([1000, (20 * len(the_config.user_subsets))])
+            log.info("Set rcluster-max to %d" %the_config.cluster_max) 
+
         scheme_count = submodels.count_relaxed_clustering_schemes(
             partnum, the_config.cluster_percent, the_config.cluster_max)
         subset_count = submodels.count_relaxed_clustering_subsets(

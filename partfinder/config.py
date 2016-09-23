@@ -45,7 +45,7 @@ class Configuration(object):
 
     def init(self, datatype="DNA", phylogeny_program='phyml',
                  save_phylofiles=False, cmdline_extras="", cluster_weights=None,
-                 cluster_percent=10.0, cluster_max=1000, kmeans='entropy', 
+                 cluster_percent=10.0, cluster_max=-987654321, kmeans='entropy', 
                  quick=False, min_subset_size = 100, all_states = False, 
                  no_ml_tree = False):
 
@@ -68,6 +68,7 @@ class Configuration(object):
         self.min_subset_size = min_subset_size
         self.all_states = all_states
         self.no_ml_tree = no_ml_tree
+
 
 
         # Record this
@@ -195,7 +196,7 @@ class Configuration(object):
         if self.cluster_max != None:
             self.cluster_max = int(self.cluster_max)
             try:
-                assert self.cluster_max > 0
+                assert self.cluster_max > 0 or self.cluster_max == -987654321
             except:
                 log.error("The rcluster-max variable must greater than zero, yours "
                           "is %d. Please check and try again." % self.cluster_max)
