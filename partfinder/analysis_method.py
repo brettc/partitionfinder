@@ -348,7 +348,7 @@ class RelaxedClusteringAnalysis(Analysis):
         partnum = len(the_config.user_subsets)
 
         if the_config.cluster_max == -987654321:
-            the_config.cluster_max = max([1000, (20 * len(the_config.user_subsets))])
+            the_config.cluster_max = max([1000, (10 * len(the_config.user_subsets))])
             log.info("Set rcluster-max to %d" %the_config.cluster_max) 
 
         scheme_count = submodels.count_relaxed_clustering_schemes(

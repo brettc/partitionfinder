@@ -208,7 +208,7 @@ def parse_args(datatype, cmdargs=None):
         type="int", dest="cluster_max", default=-987654321, metavar="N",
         help="This defines the number of possible schemes that the relaxed clustering"
              " algorithm will consider before it stops looking. The default is to look at "
-             "the larger value out of 1000, and 20 times the number of data blocks you have."
+             "the larger value out of 1000, and 10 times the number of data blocks you have."
              "\ne.g. --rcluster-max 1000"
     )
     op.add_option(
