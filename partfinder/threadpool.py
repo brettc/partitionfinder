@@ -90,8 +90,8 @@ class Pool(object):
     def join(self):
         # TODO: I don't think we need this bit....
         # Wait till all tasks have been taken
-        while self.more_tasks:
-            sleep(.1)
+        #while self.more_tasks:
+        #    sleep(.1)
         # ... now wait for them all to finish
         for t in self.threads:
             t.join()
