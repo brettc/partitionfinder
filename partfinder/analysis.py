@@ -263,32 +263,44 @@ class Analysis(object):
         pool = threadpool.Pool(tasks, self.threads)
         pool.join()
 
-    def analyse_list_of_subsets(self, subsets):
+    def analyse_list_of_subsets(self, all_subsets, ):
         # get a whole list of subsets analysed in parallel
 
         # analyse bigger subsets first, for efficiency
-        subsets.sort(key = lambda x: 1.0/float(len(x.columns)))
+        all_subsets.sort(key = lambda x: 1.0/float(len(x.columns)))
 
-        # prepare the list of tasks
-        tasks = []
-        for sub in subsets:
-            if sub.is_done:
-                pass
-            elif sub.is_prepared:
-                self.add_tasks_for_sub(tasks, sub)
-            else:
-                sub.prepare(the_config, self.alignment)
-                self.add_tasks_for_sub(tasks, sub)
+        # chunk the list into blocks of where there are 
+        # 10 * as many tasks as processors
 
-        if tasks:
-            # Now do the analysis
-            if self.threads == 1:
-                self.run_concurrent(tasks)
-            else:
-                self.run_threaded(tasks)
+        n = self.threads * 10
+        
+        n = int(n / len(the_config.models))
+        if(n<1): n = 1
+
+        log.debug("chunk size (in number of subsets) = %d", n)
+
+        subset_chunks = [all_subsets[i:i + n] for i in xrange(0, len(all_subsets), n)]
+        
+        for subsets in subset_chunks:
+            # prepare the list of tasks
+            tasks = []
+            for sub in subsets:
+                if sub.is_done:
+                    pass
+                elif sub.is_prepared:
+                    self.add_tasks_for_sub(tasks, sub)
+                else:
+                    sub.prepare(the_config, self.alignment)
+                    self.add_tasks_for_sub(tasks, sub)
+            if tasks:
+                # Now do the analysis
+                if self.threads == 1:
+                    self.run_concurrent(tasks)
+                else:
+                    self.run_threaded(tasks)
 
         # Now see if we're done
-        for sub in subsets:
+        for sub in all_subsets:
             # ALL subsets should already be finalised in the task. We just
             # check again here
             if not sub.finalise(the_config):
