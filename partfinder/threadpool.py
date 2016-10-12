@@ -62,6 +62,9 @@ class Pool(object):
         if numtasks < numthreads:
             numthreads = numtasks
 
+        self.numtasks = numtasks
+        self.curtask = 0
+
         log.debug("Creating %s threads for %s tasks", numthreads, numtasks)
         for i in range(numthreads):
             t = Thread(self)
@@ -71,11 +74,13 @@ class Pool(object):
     def next_task(self):
         self.task_lock.acquire()
         try:
-            if not self.tasks:
+            if self.curtask == self.numtasks:
                 self.more_tasks = False
                 return None, None
             else:
-                return self.tasks.pop(0)
+                task = self.tasks[self.curtask]
+                self.curtask += 1 
+                return task
         finally:
             self.task_lock.release()
 
