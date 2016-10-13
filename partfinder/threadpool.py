@@ -47,7 +47,7 @@ class Pool(object):
         """Initialize the thread pool with numthreads workers and all tasks"""
         self.more_tasks = True
         self.tasks = tasks
-        self.task_lock = threading.Condition(threading.Lock())
+        #self.task_lock = threading.Condition(threading.Lock())
         self.threads = []
         self.failed = False
 
@@ -72,7 +72,7 @@ class Pool(object):
             t.start()
 
     def next_task(self):
-        self.task_lock.acquire()
+        #self.task_lock.acquire()
         try:
             if self.curtask == self.numtasks:
                 self.more_tasks = False
@@ -82,15 +82,16 @@ class Pool(object):
                 self.curtask += 1 
                 return task
         finally:
-            self.task_lock.release()
+            #self.task_lock.release()
+            pass
 
     def kill(self, e):
-        self.task_lock.acquire()
+        #self.task_lock.acquire()
         self.tasks = []
         self.more_tasks = False
         self.failed = True
         self.exception = e
-        self.task_lock.release()
+        #self.task_lock.release()
 
     def join(self):
         # TODO: I don't think we need this bit....
