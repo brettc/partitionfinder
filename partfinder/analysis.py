@@ -269,13 +269,11 @@ class Analysis(object):
         # analyse bigger subsets first, for efficiency
         all_subsets.sort(key = lambda x: 1.0/float(len(x.columns)))
 
-        # chunk the list into blocks of where there are 
-        # 10 * as many tasks as processors
-
-        n = self.threads * 10
-        
+        # chunk the list into blocks of ~1000 tasks 
+        # in empirical testing, this speeds things up lot
+        # though we are not entirely sure why...
+        n = 1000        
         n = int(n / len(the_config.models))
-        if(n<1): n = 1
 
         log.debug("chunk size (in number of subsets) = %d", n)
 
