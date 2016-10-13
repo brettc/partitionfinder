@@ -249,9 +249,11 @@ class Analysis(object):
         finally:
             self.lock.release()
 
-    def add_tasks_for_sub(self, tasks, sub):
+    def add_tasks_for_sub(self, tasks, sub, cur_task):
         for m in sub.models_to_process:
-            tasks.append((self.run_task, (m, sub)))
+            tasks[cur_task] = (self.run_task, (m, sub))
+            cur_task = cur_task + 1
+        return cur_task
 
     def run_concurrent(self, tasks):
         for func, args in tasks:
@@ -269,16 +271,25 @@ class Analysis(object):
         # analyse bigger subsets first, for efficiency
         subsets.sort(key = lambda x: 1.0/float(len(x.columns)))
 
+        # we might need to do this many tasks
+        max_tasks = len(subsets) * len(the_config.models)
+
         # prepare the list of tasks
-        tasks = []
+        tasks = [None] * max_tasks
+        cur_task = 0
         for sub in subsets:
             if sub.is_done:
                 pass
             elif sub.is_prepared:
-                self.add_tasks_for_sub(tasks, sub)
+                cur_task = self.add_tasks_for_sub(tasks, sub, cur_task)
             else:
                 sub.prepare(the_config, self.alignment)
-                self.add_tasks_for_sub(tasks, sub)
+                cur_task = self.add_tasks_for_sub(tasks, sub, cur_task)
+
+        print(len(tasks))
+        # clean the list
+        tasks = filter(None, tasks)
+        print(len(tasks))
 
         if tasks:
             # Now do the analysis
