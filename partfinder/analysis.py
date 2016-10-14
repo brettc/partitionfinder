@@ -249,11 +249,9 @@ class Analysis(object):
         finally:
             self.lock.release()
 
-    def add_tasks_for_sub(self, tasks, sub, cur_task):
+    def add_tasks_for_sub(self, tasks, sub):
         for m in sub.models_to_process:
-            tasks[cur_task] = (self.run_task, (m, sub))
-            cur_task = cur_task + 1
-        return cur_task
+            tasks.append((self.run_task, (m, sub)))
 
     def run_concurrent(self, tasks):
         for func, args in tasks:
@@ -283,18 +281,15 @@ class Analysis(object):
         
         for subsets in subset_chunks:
             # prepare the list of tasks
-            # we might need to do this many tasks
-            max_tasks = len(subsets) * len(the_config.models)
-            tasks = [None] * max_tasks
-            cur_task = 0
+            tasks = []
             for sub in subsets:
                 if sub.is_done:
                     pass
                 elif sub.is_prepared:
-                    cur_task = self.add_tasks_for_sub(tasks, sub, cur_task)
+                    self.add_tasks_for_sub(tasks, sub)
                 else:
                     sub.prepare(the_config, self.alignment)
-                    cur_task = self.add_tasks_for_sub(tasks, sub, cur_task)
+                    self.add_tasks_for_sub(tasks, sub)
             if tasks:
                 # Now do the analysis
                 if self.threads == 1:
