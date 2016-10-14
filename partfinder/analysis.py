@@ -274,6 +274,7 @@ class Analysis(object):
         # though we are not entirely sure why...
         n = 1000        
         n = int(n / len(the_config.models))
+        if(n<1): n=1 # seems unlikely...
 
         log.debug("chunk size (in number of subsets) = %d", n)
 
