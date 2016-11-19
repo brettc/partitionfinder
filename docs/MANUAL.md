@@ -25,6 +25,57 @@ often be more than one). The correct citations are listed in the
 ‘Citations’ section below, and will also included in the program's
 output.
 
+**Table of contents**
+
+  * [Disclaimer](#disclaimer)
+  * [What PartitionFinder2 is for](#what-partitionfinder2-is-for)
+  * [Operating systems (Mac, Windows and Linux work)](#operating-systems-mac-windows-and-linux-work)
+  * [QuickStart – simple use cases](#quickstart-%E2%80%93-simple-use-cases)
+    + [For a small multilocus dataset (e.g. ~10 loci)](#for-a-small-multilocus-dataset-eg-10-loci)
+    + [For a larger dataset (e.g. ~100 loci)](#for-a-larger-dataset-eg-100-loci)
+    + [For a really big dataset (e.g. ~1000 loci)](#for-a-really-big-dataset-eg-1000-loci)
+    + [When you can't define meaningful data blocks (e.g. morphology, UCEs)](#when-you-cant-define-meaningful-data-blocks-eg-morphology-uces)
+    + [To compare all possible models of evolution](#to-compare-all-possible-models-of-evolution)
+  * [Overview](#overview)
+  * [Installing and Running PartitionFinder2 on a Mac or Linux](#installing-and-running-partitionfinder2-on-a-mac-or-linux)
+  * [Installing and Running PartitionFinder2 on Windows](#installing-and-running-partitionfinder2-on-windows)
+  * [Input Files](#input-files)
+    + [Alignment File in phylip format](#alignment-file-in-phylip-format)
+      - [The phylip format](#the-phylip-format)
+      - [Converting other formats to phylip](#converting-other-formats-to-phylip)
+      - [One more thing](#one-more-thing)
+    + [Configuration File](#configuration-file)
+      - [`alignment`](#alignment)
+      - [`branchlengths`](#branchlengths-linked--unlinked)
+      - [`models`](#models-all--allx--beast--mrbayes--gamma--gammai--list-models)
+      - [`model_selection`](#model_selection-aic--aicc--bic)
+      - [`[data_blocks]`](#data_blocks)
+      - [`[schemes]`](#schemes)
+      - [`search`](#search-all--greedy--rcluster--rclusterf--hcluster--kmeans--user)
+      - [`user_tree_topology`](#user_tree_topology)
+  * [Output files](#output-files)
+    + [best_schemes.txt](#best_schemestxt)
+    + [subsets folder](#subsets-folder)
+    + [schemes folder](#schemes-folder)
+  * [Command line options](#command-line-options)
+      - [`--all-states`](#--all-states)
+      - [`--force-restart`](#--force-restart)
+      - [`--min-subset-size`](#--min-subset-size)
+      - [`--no-ml-tree`](#--no-ml-tree)
+      - [`--processors N`, `-p N`](#--processors-n--p-n)
+      - [`--quick`, `-q`](#--quick--q)
+      - [`--raxml`](#--raxml)
+      - [`--rcluster-max N`](#--rcluster-max-n)
+      - [`--rcluster-percent N`](#--rcluster-percent-n)
+      - [`--save-phylofiles`](#--save-phylofiles)
+      - [`--weights “Wrate, Wbase, Wmodel, Walpha”`](#--weights-wrate-wbase-wmodel-walpha)
+  * [Citations](#citations)
+    + [PartitionFinder2](#partitionfinder2-1)
+    + [Using `search = rcluster` or `search = hcluster`](#using-search--rcluster-or-search--hcluster)
+    + [Using `search = kmeans`](#using-search--kmeans)
+    + [PhyML](#phyml)
+    + [Using the `--raxml` command line option](#using-the---raxml-command-line-option)
+
 ## Disclaimer
 
 *Copyright (C) 2011-2015 Robert Lanfear, Paul Frandsen, and Brett Calcott*
@@ -395,8 +446,7 @@ however you like, and then install the following dependencies:
     scipy
     sklearn
 
-2. Install PartitionFinder2
----------------------------
+### 2. Install PartitionFinder2
 
 1.  Download the latest version of PartitionFinder2 from
     [www.robertlanfear.com/partitionfinder](http://www.robertlanfear.com/partitionfinder)
@@ -406,8 +456,7 @@ however you like, and then install the following dependencies:
 
 3.  Move it to wherever you want to store PartitionFinder2
 
-3. Run PartitionFinder2
------------------------
+### 3. Run PartitionFinder2
 
 These instructions describe how to run the ‘example/nucleotide’ analysis
 using PartitionFinder. This is a DNA alignment. To use partitionfinder
@@ -1389,4 +1438,4 @@ If you use the `--raxml` commandline option, PF2 uses RAxML v8.0 for
 calculations. If you use it, please cite:
 
 Stamatakis, A. (2006), RAxML-VI-HPC: maximum likelihood-based phylogenetic
-analyses with thousands of taxa and mixed models, *Bioinformatics*, *22*, 2688-2690 
+analyses with thousands of taxa and mixed models, *Bioinformatics*, *22*, 2688-2690
