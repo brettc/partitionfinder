@@ -744,10 +744,7 @@ class KmeansAnalysis(Analysis):
             this algorithm. At the very least, you should try other approaches \
             (e.g. partitioning by locus), and investigate your answers carefully \
             (both the trees and the partitioning schemes). If you have any \
-            questions, please get in touch on the google group. Note that this \
-            warning does not apply to cases where you are using models that have \
-            an ascertainment bias for datasets that include only variable sites \
-            as is often the case with morphological analyses."
+            questions, please get in touch on the google group."
             )
 
 
@@ -761,10 +758,7 @@ class KmeansAnalysis(Analysis):
             this algorithm. At the very least, you should try other approaches \
             (e.g. partitioning by locus), and investigate your answers carefully \
             (both the trees and the partitioning schemes). If you have any \
-            questions, please get in touch on the google group. Note that this \
-            warning does not apply to cases where you are using models that have \
-            an ascertainment bias for datasets that include only variable sites \
-            as is often the case with morphological analyses."
+            questions, please get in touch on the google group."
             )
 
 
