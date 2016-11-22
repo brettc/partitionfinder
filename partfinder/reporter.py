@@ -350,10 +350,10 @@ def write_citation_text(self):
 
     citation_text = []
 
-    ref_PF2 = ("Lanfear, R., Frandsen, P., Wright, A., Senfeldova, T., Calcott, B. (2016) Forthcoming. "
+    ref_PF2 = ("Lanfear, R., Frandsen, P. B., Wright, A. M., Senfeld, T., Calcott, B. (2016) "
              "PartitionFinder 2: new methods for selecting partitioned models of evolution for" 
              "molecular and morphological phylogenetic analyses. "
-             "Submitted to MBE.")
+             "Molecular biology and evolution. DOI: dx.doi.org/10.1093/molbev/msw260")
 
     ref_PF1 = ("Lanfear, R., Calcott, B., Ho, S. Y., & Guindon, S. (2012). "
              "PartitionFinder: combined selection of partitioning schemes "
