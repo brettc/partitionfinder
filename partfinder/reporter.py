@@ -102,6 +102,7 @@ class TextReporter(object):
         sorted_subsets.sort(key=lambda sub: min(sub.columns), reverse=False)
         self.write_subsets(sch, result, output, sorted_subsets)
         self.write_nexus_summary(output, sorted_subsets)
+        self.write_IQtree_summary(output, sorted_subsets)
         self.write_raxml(sch, result, output, sorted_subsets)
         if self.cfg.datatype != "morphology":
             self.write_mrbayes(sch, result, output, sorted_subsets)
@@ -138,6 +139,30 @@ class TextReporter(object):
             subset_number += 1
         output.write('\tcharpartition PartitionFinder = %s;\n' % ', '.join(charpartition))
         output.write('end;\n')
+
+
+    def write_IQtree_summary(self, output, sorted_subsets):
+        output.write("\n\nNexus formatted character sets for IQtree\n")
+        output.write("Warning: the models written in the charpartition are just the best model found in this analysis. Not all models are available in IQtree, so you may need to set up specific model lists for your analysis\n\n")
+        output.write("#nexus\n")
+        output.write("begin sets;\n")
+
+        subset_number = 1
+        charpartition = []
+        for sub in sorted_subsets:
+            if self.cfg.search in _odd_searches:
+                sites = [x + 1 for x in sub.columns]
+                partition_sites = str(sites).strip('[]')
+            else:
+                partition_sites = sub.site_description_no_commas
+
+            output.write("\tcharset Subset%s = %s;\n" % (subset_number, partition_sites))
+            charpartition.append("%s:Subset%s" % (sub.best_model, subset_number))
+            subset_number += 1
+
+        output.write('\tcharpartition PartitionFinder = %s;\n' % ', '.join(charpartition))
+        output.write('end;\n')
+
 
     def write_subsets(self, sch, result, output, sorted_subsets):
         
