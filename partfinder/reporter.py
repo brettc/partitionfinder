@@ -32,6 +32,10 @@ subset_template = "%-15s | %-15s | %-15s | %-15s  | %-15s | %-15s\n"
 _odd_searches = ['kmeans', 'krmeans']
 _scheme_data_csv = 'scheme_data.csv'
 
+
+kmeans_warning = "USE CAUTION: There is increasing evidence that the kmeans algorithm can lead to poor inferences, so we have discontinued its use for most data types (i.e. amino acid and nucleotide data). More information on the empirical issues can be found in this paper: http://www.sciencedirect.com/science/article/pii/S1055790316302780. We have kept the method available for morphological data, but warn users that the method is: experimental, untested on morphological data (either empirical or simulated), and may give incorrect topologies and branch lengths (see link to paper above).\n\n"
+
+
 class TextReporter(object):
     def __init__(self, config):
         self.cfg = config
@@ -97,6 +101,8 @@ class TextReporter(object):
             )
 
     def output_scheme(self, sch, result, output):
+        if self.cfg.search == "kmeans" or self.cfg.search == "krmeans":
+            output.write(kmeans_warning)
         self.write_scheme_header(sch, result, output)
         sorted_subsets = [sub for sub in sch]
         sorted_subsets.sort(key=lambda sub: min(sub.columns), reverse=False)
@@ -319,22 +325,6 @@ class TextReporter(object):
             if self.cfg.all_states == True:
                 output.write(scheme_header_template % ("--all_states setting used",
                                                        self.cfg.all_states))
-            output.write("Warning: There is increasing evidence that the kmeans \
-            algorithm can lead to poor inferences, so we do not recommend \
-            using it. We suggest avoiding it entirely for \
-            empirical research. \
-            You should instead use other approaches \
-            (e.g. partitioning by locus and codon position). If you have any \
-            questions, please get in touch on the google group. More \
-            information on the empirical issues \
-            can be found in this paper: \
-            http://www.sciencedirect.com/science/article/pii/S1055790316302780.\
-            However, the issues are not (yet) well understood.\
-            The method remains available for developlment purposes, e.g. \
-            to compare it to new improved methods. We re-iterate that we don't\
-             recommend its use for estimating partitioning schemes for \
-            emprical work."
-            )
 
 
         output.write('\n\nBest partitioning scheme\n\n')

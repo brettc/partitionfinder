@@ -7,7 +7,8 @@ HERE = os.path.abspath(os.path.dirname(__file__))
 
 def test_DNA_entropy():
     full_path = os.path.join(HERE, "DNA_entropy")
-    main.call_main("DNA", '--raxml --kmeans entropy --min-subset-size 10 "%s"' % full_path)
+    with pytest.raises(util.PartitionFinderError):
+        main.call_main("DNA", '--raxml --kmeans entropy --min-subset-size 10 "%s"' % full_path)
 
 def test_DNA_tiger():
     full_path = os.path.join(HERE, "DNA_tiger")

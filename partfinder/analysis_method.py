@@ -737,43 +737,53 @@ class KmeansAnalysis(Analysis):
         self.results.best_score))
         the_config.reporter.write_best_scheme(self.results)
 
-        log.warning("Warning: There is increasing evidence that the kmeans \
-            algorithm can lead to poor inferences, so we do not recommend \
-            using it. We suggest avoiding it entirely for \
-            empirical research. \
-            You should instead use other approaches \
-            (e.g. partitioning by locus and codon position). If you have any \
-            questions, please get in touch on the google group. More \
-            information on the empirical issues \
+        log.warning("USE CAUTION: \
+            There is increasing evidence that the kmeans \
+            algorithm can lead to poor inferences, so we have \
+            discontinued its use for most data types \
+            (i.e. amino acid and nucleotide data). \
+            More information on the empirical issues \
             can be found in this paper: \
-            http://www.sciencedirect.com/science/article/pii/S1055790316302780.\
-            However, the issues are not (yet) well understood.\
-            The method remains available for developlment purposes, e.g. \
-            to compare it to new improved methods. We re-iterate that we don't\
-             recommend its use for estimating partitioning schemes for \
-            emprical work."
+            http://www.sciencedirect.com/science/article/pii/S1055790316302780. \
+            We have kept the method available for morphological \
+            data, but warn users that the method is: experimental, \
+            untested on morphological data (either empirical or \
+            simulated), and may give incorrect topologies and branch \
+            lengths (see link to paper above)." 
             )
 
 
 
     def setup(self):
 
-        log.warning("Warning: There is increasing evidence that the kmeans \
-            algorithm can lead to poor inferences, so we do not recommend \
-            using it. We suggest avoiding it entirely for \
-            empirical research. \
-            You should instead use other approaches \
-            (e.g. partitioning by locus and codon position). If you have any \
-            questions, please get in touch on the google group. More \
-            information on the empirical issues \
-            can be found in this paper: \
-            http://www.sciencedirect.com/science/article/pii/S1055790316302780.\
-            However, the issues are not (yet) well understood.\
-            The method remains available for developlment purposes, e.g. \
-            to compare it to new improved methods. We re-iterate that we don't\
-             recommend its use for estimating partitioning schemes for \
-            emprical work."
-            )
+        if the_config.datatype != 'morphology':
+            log.warning("METHOD DISCONTINUED: \
+                There is increasing evidence that the kmeans \
+                algorithm can lead to poor inferences, so we have \
+                discontinued its use for most data types. \
+                You should instead use other approaches \
+                (e.g. partitioning by locus and codon position). If you have any \
+                questions, please get in touch on the google group. More \
+                information on the empirical issues \
+                can be found in this paper: \
+                http://www.sciencedirect.com/science/article/pii/S1055790316302780."
+                )
+            raise AnalysisError
+        else:
+            log.warning("USE CAUTION: \
+                There is increasing evidence that the kmeans \
+                algorithm can lead to poor inferences, so we have \
+                discontinued its use for most data types \
+                (i.e. amino acid and nucleotide data). \
+                More information on the empirical issues \
+                can be found in this paper: \
+                http://www.sciencedirect.com/science/article/pii/S1055790316302780. \
+                We have kept the method available for morphological \
+                data, but warn users that the method is: experimental, \
+                untested on morphological data (either empirical or \
+                simulated), and may give incorrect topologies and branch \
+                lengths (see link to paper above)." 
+                )
 
 
         # set the default subset size to 100 for kmeans analyses
