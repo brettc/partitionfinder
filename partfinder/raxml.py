@@ -110,7 +110,7 @@ def make_ml_topology(alignment_path, datatype, cmdline_extras, scheme, cpus):
     elif datatype == "morphology":
         model = models.get_model_commandline(the_config.models[0])
         log.info("Using the model specified in the .cfg file")
-        command = "-f E -s %s %s -n fastTREE -p 123456789 %s" % (
+        command = "-f E -s '%s' %s -n fastTREE -p 123456789 %s" % (
             alignment_path, model, cmdline_extras)
     else:
         log.error("Unrecognised datatype: '%s'" % (datatype))
@@ -179,7 +179,7 @@ def make_topology(alignment_path, datatype, cmdline_extras):
         # model for morphology analyses...
         # choose a model for the data - necessary for RAxML to load the data properly
         model = models.get_model_commandline(the_config.models[0])
-        command = "-y -s %s %s -K MK -n MPTREE -p 123456789 %s" % (
+        command = "-y -s '%s' %s -K MK -n MPTREE -p 123456789 %s" % (
             alignment_path, model, cmdline_extras)
     else:
         log.error("Unrecognised datatype: '%s'" % (datatype))
@@ -230,7 +230,7 @@ def make_branch_lengths(alignment_path, topology_path, datatype, cmdline_extras)
         # choose a model for the data - necessary for RAxML to load the data properly
         model = models.get_model_commandline(the_config.models[0])
         log.info("Estimating %s branch lengths on tree using RAxML", the_config.models[0])
-        command = "-f e -s %s -t %s %s -K MK -n BLTREE -w %s %s" % (
+        command = "-f e -s '%s' -t '%s' %s -K MK -n BLTREE -w '%s' %s" % (
                 alignment_path, tree_path, model, os.path.abspath(dir_path), cmdline_extras)
     else:
         log.error("Unrecognised datatype: '%s'" % (datatype))
