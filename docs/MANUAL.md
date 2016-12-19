@@ -1,6 +1,6 @@
 # PartitionFinder2
 
-Rob Lanfear, August 2015
+Rob Lanfear, December 2016
 
 ![pie](pie.jpeg)
 
@@ -28,7 +28,6 @@ PartitionFinder2 incorporates many years of hard work from many people, presente
     + [For a small multilocus dataset (e.g. ~10 loci)](#for-a-small-multilocus-dataset-eg-10-loci)
     + [For a larger dataset (e.g. ~100 loci)](#for-a-larger-dataset-eg-100-loci)
     + [For a really big dataset (e.g. ~1000 loci)](#for-a-really-big-dataset-eg-1000-loci)
-    + [When you can't define meaningful data blocks (e.g. morphology, UCEs)](#when-you-cant-define-meaningful-data-blocks-eg-morphology-uces)
     + [To compare all possible models of evolution](#to-compare-all-possible-models-of-evolution)
   * [Overview](#overview)
   * [Installing and Running PartitionFinder2 on a Mac or Linux](#installing-and-running-partitionfinder2-on-a-mac-or-linux)
@@ -159,22 +158,6 @@ For datasets of this size, the greedy algorithm is likely to be too slow. So we 
         python “<PartitionFinder.py>” “<InputFoldername>” --raxml --rcluster-max 100
 
     The rcluster algorithm gives you a lot of control over the balance between speed and accuracy with two parameters: `--rcluster-max` and `--rcluster-percent`. Read below for more information on these
-
-### When you can't define meaningful data blocks (e.g. morphology, UCEs)
-
-Some datasets don't lend themselves to defining useful data blocks, like UCE (Ultra Conserved Element) datasets and datasets of morphological characters. In this case, we made an algorithm that does its best to group together similar sites, without you having to decide beforehand what those groupings should be. In our experience this is very quick, even on very large datasets. However, while the approach may seem simple and attractive, we also urge caution: it has not been tested on a wide range of simulated datasets, and some users have reported odd results when using it.
-
-1.  Define a single data block with all of your sites
-
-2.  Set the .cfg file options as above, except:
-
-        search=kmeans;
-
-3.  Run PartitionFinder using PhyML or RAxML (depending on what models you are interested in, and the size of your dataset), e.g. with RAxML:
-
-        python “<PartitionFinder.py>” “<InputFoldername>” --raxml
-
-    This implements the k-means partitioning algorithm described in Frandsen et al 2015 (Automatic selection of partitioning schemes for phylogenetic analyses using iterative k-means clustering of site rates. *BMC Evolutionary Biology*, *15*: 13), with one important difference – we use entropy (instead of TIGER rates) to group similar sites together. This is faster and gives better results, and because of that we no longer support TIGER rates.
 
 ### To compare all possible models of evolution
 
@@ -464,15 +447,13 @@ To help with cutting and pasting from Nexus files (like those used by MrBayes) y
     charset Gene1_codon3 = 3-1000\3;
     charset intron = 1001-2000;
 
-Note that if you are using the k-means algorithm (i.e. `search = kmeans`), you should define your datablocks exactly as above (NB: this is different from PartitionFinder 1). The extra biological information you provide in your data blocks helps PartitionFinder estimate a good starting tree for your anlaysis, and that's important.
-
 #### `[schemes]`
 
 On the lines following this statement, you define how you want to look for good partitioning schemes, and any user schemes you want to define. You only need to define user schemes if you choose `search = user`.
 
 #### `search`: *`all | greedy | rcluster | rclusterf | hcluster | kmeans | user`*
 
-This option defines which partitioning schemes PartitionFinder will analyse, and how thorough the search will be. In general `all` is only practical for analyses that start with 12 or fewer data blocks defined (see below). A rough guide is to use `all` for very small datasets, `greedy` for datasets of ~10 loci, and `rcluster` for datasets of 100's of loci. We do not recommend you use `hcluster`, but rather that if `rcluster` is too slow, you make it quicker using the `--rcluster-max` commandline argument (see below). `kmeans` can be useful if you do not have data for which you can define useful data blocks, but we urge caution with this algorithm as it has not been thoroughly tested on simulated data. We suggest that you prefer biologically-motivated partitioning schemes (like genes and codon positions) where possible.
+This option defines which partitioning schemes PartitionFinder will analyse, and how thorough the search will be. In general `all` is only practical for analyses that start with 12 or fewer data blocks defined (see below). A rough guide is to use `all` for very small datasets, `greedy` for datasets of ~10 loci, and `rcluster` for datasets of 100's of loci. We do not recommend you use `hcluster`, but rather that if `rcluster` is too slow, you make it quicker using the `--rcluster-max` commandline argument (see below). `kmeans` has been disabled for all but morphological data, for which it remains experimental (see `search = kmeans` below).  We suggest that you prefer biologically-motivated partitioning schemes (like genes and codon positions) where possible.
 
 `search = all;` Tells PartitionFinder to analyse all possible partitioning schemes. That is, every scheme that includes all of your data blocks in any combination at all. Whether you can analyse all schemes will depend on how much time you have, and on what is computationally possible. **If you have any more than 12 data blocks to start with you should not choose `all`.** This is because the number of possible schemes can be extremely large. For instance, with 13 data blocks there are almost 28 million possible schemes, and for 16 data blocks the number of possible schemes is over 10 billion. It's just not possible to analyse that many schemes exhaustively. For 12 data blocks the number of possible schemes is about 4 million, so it might be possible to analyse all schemes if you have time to wait, and a fast computer with lots of processors.
 
@@ -488,7 +469,7 @@ This option defines which partitioning schemes PartitionFinder will analyse, and
 
 `search = hcluster;` Not recommended for empirical analyses. Tells PartitionFinder to use a strict hierarchical clustering algorithm to search for a good partitioning scheme. This option only works with the `--raxml` commandline option. This algorithm often performs a great deal worse than the rcluster algorithm. In general, I do not recommend using this algorithm under any circumstances. It is better to use the `rcluster` algorithm with `--rcluster-max` set to some very low number (e.g. 10, see below) instead. The hcluster algorithm is almost the same as using the rcluster algorithm with `--rcluster-max` set to 1. You can control this algorithm using the `--weights` command line options (see below). The algorithm remains in PartitionFinder purely because it makes our research that proved it was not worth using replicable. If you use this algorithm, please cite the 2014 paper in which it is described (see Citations, or here: http://www.biomedcentral.com/1471-2148/14/82).
 
-`search = kmeans;` Use caution: **this algorithm has not been thoroughly tested on simulated data, and some users have reported odd results on empirical datasets.** It remains in the program so that users can test, compare, and potentially improve it. Tells PartitionFinder to use a kmeans algorithm to group together sites that have been evolving at similar rates. This is very different to the other search algorithms. All of the other algorithms start with data blocks that you define, and then *group together* similar data blocks. The kmeans algorithm starts by looking at all of the data together, then *splits up* those sites into groups with similar evolutionary rates. The kmeans algorithm might be useful for datasets in which it is not possible to define useful datablocks. E.g. UCE datasets often comprise bits of intergenic DNA, and we don't know much about their biology. It is therefore difficult to divide a UCE up into sensible datablocks (unlike e.g. a protein coding gene, where we know that the different codons positions are likely to evolve at different rates a-priori, so we can define sensible data blocks). Before using this algorithm, we recommend that you read the paper that describes it, and consider carefully whether the partitioning schemes it suggests make biological and methodological sense. As always, please cite the paper if you use the kmeans algorithm in your published work (see Citations, or here: http://www.biomedcentral.com/1471-2148/15/13).
+`search = kmeans;` **This method has been discontinued for all but morphological data, and we caution that it remains experimental for morphological data.** There is increasing evidence that the kmeans algorithm can lead to poor inferences, so we have  discontinued its use for most data types. You should instead use other approaches (e.g. partitioning by locus and codon position). If you have any questions, please get in touch on the google group. More information on the empirical issues can be found in this paper: http://www.sciencedirect.com/science/article/pii/S1055790316302780. We have kept the method available for morphological data, but warn users that the method is: experimental, untested on morphological data (either empirical or simulated), and may give incorrect topologies and branch lengths (see link to paper above). We are working on improved methods (that build on the original method here: http://www.biomedcentral.com/1471-2148/15/13), but these are likely to take some time to finalise.
 
 `search = user;` Use this option to compare partitioning schemes that you define by hand. User-defined schemes are listed, one-per-line, on the lines following `search=user`. A scheme is defined by a name, followed by an “=” and then a definition. To define a scheme, simply use parentheses to join together data blocks that you would like to combine. Within parentheses, each data block is separated by a comma. Between parentheses, there is no comma. All user schemes must contain all of the data blocks defined in `[data_blocks]`.
 
