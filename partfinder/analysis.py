@@ -255,6 +255,7 @@ class Analysis(object):
 
     def run_concurrent(self, tasks):
         for func, args in tasks:
+            log.debug("About to analyse subset %s", args[1].name)
             func(*args)
 
     def run_threaded(self, tasks):
