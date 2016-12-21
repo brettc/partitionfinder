@@ -253,6 +253,7 @@ class Subset(object):
     def prepare(self, cfg, alignment):
         """Get everything ready for running the analysis
         """
+        log.debug("Preparing to analyse subset %s", self.name)
         cfg.progress.subset_begin(self)
 
         # Load the cached results
