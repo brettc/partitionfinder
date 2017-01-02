@@ -9,6 +9,7 @@ dat <- dat[order(as.Date(dat$date)),]
 
 dat$Mac <- cumsum(dat$Mac)
 dat$Windows <- cumsum(dat$Windows)
+
  
 
 # Download plot
@@ -25,12 +26,19 @@ dl$date <- as.Date(dl$date, format = "%d/%m/%Y")
 quartz(width=10, height=5)
 p <- ggplot(dl, aes(date, downloads))
 p + geom_area(aes(colour = OS, fill= OS), position = 'stack')
-dev.copy2pdf(file="~/Documents/github/partitionfinder/docs/downloadplot.pdf")
+dev.copy2pdf(file="~/Documents/github/partitionfinder/docs/downloadplot_v1.pdf")
+dev.off()
+
+dat$date <- as.Date(dat$date, format = "%d/%m/%Y")
+quartz(width=10, height=5)
+p <- ggplot(dat, aes(date, combined))
+p + geom_point() + geom_smooth(stat="identity")
+dev.copy2pdf(file="~/Documents/github/partitionfinder/docs/downloadplot_combined.pdf")
 dev.off()
 
 
 # Citation plot
-c <- dat[,c(1,5)]
+c <- dat[,c(1,6)]
 c$date <- as.Date(c$date, format = "%d/%m/%Y")
 c <- c[complete.cases(c),]
 
