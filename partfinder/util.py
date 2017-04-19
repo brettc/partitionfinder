@@ -31,9 +31,9 @@ class PartitionFinderError(Exception):
     pass
 
 class ExternalProgramError(PartitionFinderError):
-    def __init__(self, stderr, stdout):
-        self.stderr = stderr
+    def __init__(self, stdout, stderr):
         self.stdout = stdout
+        self.stderr = stderr
 
 class ParseError(PartitionFinderError):
     pass
@@ -74,13 +74,13 @@ def run_program(binary, command):
         shlex.split(command),
         shell=False,
         stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE)
+        stderr=subprocess.STDOUT)
 
-    # Capture the output, we might put it into the errors
-    stdout, stderr = p.communicate()
-    # p.terminate()
+    err = p.wait()
 
-    if p.returncode != 0:
+    if err:
+        # Capture the output to put into the error
+        stdout, stderr = p.communicate()
         raise ExternalProgramError(stdout, stderr)
 
 def dupfile(src, dst):
