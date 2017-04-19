@@ -416,7 +416,6 @@ def main(name, datatype, passed_args=None):
         log.error("""A program that Partitionfinder uses failed. Output
                   follows, in case it's helpful for finding the problem""")
         log.error("%s", e.stdout)
-        log.error("%s", e.stderr)
         if options.show_python_exceptions or passed_args is not None:
             raise
 
