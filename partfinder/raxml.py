@@ -269,7 +269,8 @@ def check_defaults(cmdline_extras):
     # and we'll specify the -O option, so that the program doesn't exit if
     # there are undetermined seqs.  we'll put spaces at the start and end too,
     # just in case...
-    cmdline_extras = ''.join([" ", cmdline_extras, accuracy, "-O "])
+    # --silent stops RAxML printing warnings, which reduces the burden on stdout and stderr
+    cmdline_extras = ''.join([" ", cmdline_extras, accuracy, "-O ", "--­­silent "])
     return cmdline_extras
 
 
