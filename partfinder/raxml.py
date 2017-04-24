@@ -73,7 +73,7 @@ def run_raxml_pthreads(command, cpus):
     global _raxml_pthreads_binary
     if _raxml_pthreads_binary is None:
         _raxml_pthreads_binary = util.find_program(_binary_name_pthreads)
-    command = " ".join([command, "-T", str(cpus), " "])
+    command = " ".join([command, "-T", str(cpus), "--silent --no-seq-check "])
     util.run_program(_raxml_pthreads_binary, command)
 
 
@@ -270,7 +270,7 @@ def check_defaults(cmdline_extras):
     # there are undetermined seqs.  we'll put spaces at the start and end too,
     # just in case...
     # --silent stops RAxML printing warnings, which reduces the burden on stdout and stderr
-    cmdline_extras = ''.join([" ", cmdline_extras, accuracy, "-O ", "--silent "])
+    cmdline_extras = ''.join([" ", cmdline_extras, accuracy, "-O ", "--silent --no-seq-check "])
     return cmdline_extras
 
 
