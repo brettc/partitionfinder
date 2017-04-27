@@ -2,6 +2,7 @@
 
 We have done our best to provide versions of PhyML and RAxML that will work for people on mac, windows, and linux. This document provides some guidance if the programs don't work for your particular setup.
 
+
 ##PhyML
 
 We use the PhyML 3.1 binaries released here: http://www.atgc-montpellier.fr/download/binaries/phyml/PhyML-3.1.zip
@@ -18,6 +19,7 @@ windows: 'phyml.exe'
 linux: 'phyml.linux'
 
 then drop it into the /programs folder in partitionfinder, replacing the existing version.
+
 
 ## RAxML
 
@@ -40,9 +42,11 @@ make -f Makefile.SSE3.PTHREADS.mac
 rm *.o
 make -f Makefile.SSE3.mac
 rm *.o
+mv raxmlHPC-PTHREADS-SSE3 raxml_pthreads
+mv raxmlHPC-SSE3 raxml
 ```
 
-Then rename the pthreads executable 'raxml_pthreads', and the non-pthreads executable 'raxml' and drop them in the programs folder. Overwite the old versions.
+Then use the new versions you've just made to replace the versions in the `/programs` folder of PartitionFinder, i.e. delete the old versions and drop in the new ones.
 
 ### Building RAxML on linux
 
@@ -53,9 +57,11 @@ make -f Makefile.SSE3.PTHREADS.gcc
 rm *.o
 make -f Makefile.SSE3.gcc
 rm *.o
+mv raxmlHPC-PTHREADS-SSE3 raxml_pthreads.linux
+mv raxmlHPC-SSE3 raxml.linux
 ```
 
-Then rename the pthreads executable 'raxml_pthreads.linux', and the non-pthreads executable 'raxml.linux' and drop them in the programs folder. Overwite the old versions.
+Then use the new versions you've just made to replace the versions in the `/programs` folder of PartitionFinder, i.e. delete the old versions and drop in the new ones.
 
 ### Building RAxML on Windows
 
