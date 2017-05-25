@@ -172,7 +172,7 @@ class GreedyAnalysis(Analysis):
                 name_prefix = "step_%d" % (step)
 
                 # get distances between subsets
-                max_schemes = comb(len(start_scheme.subsets), 2)
+                max_schemes = comb(len(start_scheme.subsets), 2, exact=True)
 
                 # this is a fake distance matrix, so that the greedy algorithm
                 # can use all the tricks of the relaxed clustering algorithm
