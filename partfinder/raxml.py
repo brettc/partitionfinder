@@ -40,6 +40,8 @@ _morph_chars = "0123456789"
 # This is set as the binary name because the previously compiled raxml had a
 # bug when calculating site likelihoods, this needs to be changed back to
 # "raxml" once a newer version without the bug is compiled.
+
+# new comment
 _binary_name = 'raxml'
 _binary_name_pthreads = 'raxml_pthreads'
 if sys.platform == 'win32':
@@ -104,7 +106,10 @@ def make_ml_topology(alignment_path, datatype, cmdline_extras, scheme, cpus):
         command = " -f E -s '%s' -m GTRGAMMA -O -n fastTREE -# 1 -p 123456789 -q '%s' -e 10 " % (
             alignment_path, partition_file)
     elif datatype == "protein":
-        log.info("Using a separate LG+G model for each data block")
+        log.info("Checking data")
+        command = " -f C -s '%s' -m PROTGAMMALG -O -n fastTREE -# 1 -p 123456789 -q '%s' -e 10 " % (
+            alignment_path, partition_file)
+        log.info("Running full ML tree")
         command = " -f E -s '%s' -m PROTGAMMALG -O -n fastTREE -# 1 -p 123456789 -q '%s' -e 10 " % (
             alignment_path, partition_file)
     elif datatype == "morphology":
