@@ -238,6 +238,7 @@ class Analysis(object):
         # Not entirely sure that WE NEED to block here, but it is safer to do
         # It shouldn't hold things up toooo long...
         self.lock.acquire()
+        log.debug("Getting lock")
         try:
             if fabricate:
                 sub.fabricate_model_result(the_config, model_name)
@@ -248,6 +249,7 @@ class Analysis(object):
             sub.finalise(the_config)
         finally:
             self.lock.release()
+            log.debug("Release lock")
 
     def add_tasks_for_sub(self, tasks, sub):
         for m in sub.models_to_process:

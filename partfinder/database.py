@@ -121,6 +121,10 @@ class Database(object):
         self.cfg = cfg
         self.path = os.path.join(self.cfg.subsets_path, 'data.db')
         self.results = None
+        self.h5 = None
+
+    def _open(self):
+        assert self.h5 is None
         if os.path.exists(self.path):
             try:
                 self.h5 = tables.open_file(self.path, 'a')
@@ -143,26 +147,37 @@ class Database(object):
             f = tables.Filters(complib='blosc', complevel=5)
             self.h5 = tables.open_file(self.path, 'w', filters=f)
             self.results = self.h5.create_table(
-                '/', 'results', cfg.data_layout.data_type)
+                '/', 'results', self.cfg.data_layout.data_type)
             self.results.cols.subset_id.create_csindex()
 
         assert isinstance(self.results, tables.Table)
         assert self.results.indexed
 
     def get_results_for_subset(self, subset):
+        self._open()
         conditions = {'current_id':  subset.subset_id}
         matching = self.results.read_where(
             'subset_id == current_id', conditions)
+        self.close()
         return matching
 
     def is_empty(self):
-        return self.results.nrows == 0
+        self._open()
+        res = self.results.nrows == 0
+        self.close()
+        return res
 
     def save_result(self, subset, n):
+        log.debug("begin saving result")
+        self._open()
         # We have to take a slice here, as pytables can't handle single
         # elements
         self.results.append(subset.result_array[n:n+1])
         self.cfg.database.results.flush()
+        self.close()
+        log.debug("done saving result")
 
     def close(self):
-        self.h5.close()
+        if self.h5 is not None:
+            self.h5.close()
+            self.h5 = None
