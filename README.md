@@ -13,9 +13,11 @@ Mac/Windows/Linux
 
 # Manual
 
-is in the /docs folder. 
+The manual includes installation instructions, quickstart, and (very) detailed instructions.
 
-includes installation instructions, quickstart, and (very) deailed instructions.
+* Enlgish: PDF is in the `/docs` folder. 
+* Chinese: [can be viewed here](http://htmlpreview.github.io/?https://github.com/brettc/partitionfinder/blob/master/docs/PartitionFinder2%E7%9A%84%E4%B8%80%E8%88%AC%E4%BD%BF%E7%94%A8%E6%96%B9%E6%B3%95%EF%BC%88%E4%B8%AD%E6%96%87%E7%89%88-%E7%BD%91%E9%A1%B5%E7%89%88%EF%BC%89.html), or in the `/docs` folder if you want the raw HTML
+
 
 # Tutorial / walk through
 
