@@ -1,3 +1,5 @@
+[![Github PartitionFinder Releases](https://img.shields.io/github/downloads/brettc/partitionfinder/total.svg?style=social&logo=github&label=iqtree2%20download)](https://github.com/brettc/partitionfinder/releases)
+
 # PartitionFinder 2
 
 PartitionFinder 2 is a Python program for simultaneously 
